@@ -24,7 +24,6 @@ import {
   bindPoseTimelineControls,
   bindSectionToggle,
   bindSelectionControls,
-  isTextInput,
 } from './tuningPanelBindings.js';
 import { timelineDurationFromFrames } from './tuningPlayback.js';
 import { schedulePreviewStop, stopPreviewTimer } from './previewPlayback.js';
@@ -141,6 +140,7 @@ import {
 } from './settingsPanelState.js';
 import { drawAttackHitboxPreview, drawBodyHitbox } from './settingsDebugRenderer.js';
 import { drawEffectSettingsPreview } from './settingsEffectPreviewRenderer.js';
+import { handlePanelKeyboardShortcut } from './tuningPanelShortcuts.js';
 import { MASTER_PART_KEY, POSE_MAX_FRAMES, POSE_MIN_FRAMES, POSE_PART_KEYS, TUNING_FIELDS } from './gameConfig.js';
 
 export function createTuningPanel({
@@ -2186,27 +2186,11 @@ export function createTuningPanel({
   }
 
   function handleKeyboardShortcut(event) {
-    if ((event.metaKey || event.ctrlKey) && isSettingsPanelOpen() && !isTextInput(event.target)) {
-      if (event.code === 'KeyZ') {
-        event.preventDefault();
-        event.stopPropagation();
-        undoTuningChangeGlobal?.();
-        return true;
-      }
-      if (event.code === 'KeyC') {
-        event.preventDefault();
-        event.stopPropagation();
-        poseFrameCopyGlobal?.();
-        return true;
-      }
-      if (event.code === 'KeyV') {
-        event.preventDefault();
-        event.stopPropagation();
-        poseFramePasteGlobal?.();
-        return true;
-      }
-    }
-    return false;
+    return handlePanelKeyboardShortcut(event, {
+      undo: undoTuningChangeGlobal,
+      copyFrame: poseFrameCopyGlobal,
+      pasteFrame: poseFramePasteGlobal,
+    });
   }
 
   function renderPanelEditHandles() {
