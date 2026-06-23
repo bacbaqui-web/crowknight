@@ -133,6 +133,7 @@ import {
 import { canvasPointFromEvent } from './canvasDragMath.js';
 import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvasDragState.js';
 import { updateRigPartValue } from './canvasVisualValues.js';
+import { canvasGroupDragItems, canvasPartEditState } from './tuningCanvasEditState.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
@@ -1941,37 +1942,23 @@ export function createTuningPanel({
     }
 
     function canvasEditState(part, context) {
-      const base = isMasterPart(part) ? masterPartBase() : partPositionSources(selectedActor.tuning.rig)[part];
       if (context === 'pose') {
         ensurePoseOffset(selectedActor.tuning, poseSelect.value, part);
-        return {
-          context,
-          part,
-          base,
-          target: currentPoseFrameValue(part),
-        };
       }
 
-      return { context, part, base, target: base };
+      return canvasPartEditState({
+        part,
+        context,
+        tuning: selectedActor.tuning,
+        poseValue: context === 'pose' ? currentPoseFrameValue(part) : null,
+      });
     }
 
     function createGroupCanvasDragItems(parts) {
-      return parts
-        .map((part) => {
-          const editState = canvasEditState(part, 'pose');
-          const handle = selectedActor.player.editHandles?.[part];
-          if (!handle) return null;
-          return {
-            part,
-            target: editState.target,
-            base: editState.base,
-            handle,
-            startAnchor: { ...handle.anchor },
-            startValues: pickDragValues(editState),
-            startVisual: pickVisualValues(editState),
-          };
-        })
-        .filter(Boolean);
+      return canvasGroupDragItems(parts, {
+        editStateForPart: (part) => canvasEditState(part, 'pose'),
+        editHandles: selectedActor.player.editHandles,
+      });
     }
 
     function createCurrentGroupDrag(mode) {
@@ -2007,10 +1994,6 @@ export function createTuningPanel({
         ensurePoseOffset(selectedActor.tuning, poseSelect.value, part);
         writePoseFrameValue(part, 'opacity', opacity);
       });
-    }
-
-    function masterPartBase() {
-      return { x: 0, y: 0, w: 1, h: 1, rot: 0, opacity: 1, anchorX: 0, anchorY: 0 };
     }
 
     function refreshCanvasDragTarget() {
