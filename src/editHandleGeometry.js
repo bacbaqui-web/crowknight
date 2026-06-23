@@ -1,4 +1,10 @@
-import { addScreenVector, distanceToSegment, normalizeScreenVector } from './screenGeometry.js';
+import {
+  addScreenVector,
+  axisFromCanvasMatrix,
+  distanceToSegment,
+  normalizeScreenVector,
+  transformCanvasPoint,
+} from './screenGeometry.js';
 import { ANCHOR_HANDLE_RADIUS, MOVE_HANDLE_RADIUS, handleLineStart } from './editHandleDrawing.js';
 import { isMasterPart } from './tuningLabels.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
@@ -94,6 +100,26 @@ export function createEffectEditHandleGeometry(info) {
       size: { mode: 'size', point: addScreenVector(anchor, sizeDir, 78), radius: 18 },
       opacity: { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 },
     },
+  };
+}
+
+export function createEffectEditHandleInfo(ctx, frame, key) {
+  const matrix = ctx.getTransform();
+  const anchor = transformCanvasPoint(matrix, 0, 0);
+  const xInfo = axisFromCanvasMatrix(matrix, anchor, 1, 0);
+  const yInfo = axisFromCanvasMatrix(matrix, anchor, 0, 1);
+  return {
+    key,
+    frame,
+    anchor,
+    xAxis: xInfo.axis,
+    yAxis: yInfo.axis,
+    xUnit: xInfo.unit,
+    yUnit: yInfo.unit,
+    moveXAxis: xInfo.axis,
+    moveYAxis: yInfo.axis,
+    moveXUnit: xInfo.unit,
+    moveYUnit: yInfo.unit,
   };
 }
 

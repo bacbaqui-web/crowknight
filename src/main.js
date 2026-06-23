@@ -35,7 +35,6 @@ import {
   poseKeyframesFor,
   replaceObject,
 } from './tuningNormalize.js';
-import { axisFromCanvasMatrix, transformCanvasPoint } from './screenGeometry.js';
 import { clamp, clone, setPath } from './utils.js';
 import { applyWorldView, drawWorld } from './worldRenderer.js';
 import {
@@ -145,6 +144,7 @@ import {
 } from './editHandleDrawing.js';
 import {
   createEffectEditHandleGeometry,
+  createEffectEditHandleInfo,
   createGroupEditHandleGeometry,
   createPartEditHandleGeometry,
   findEditHandleAt,
@@ -919,7 +919,7 @@ function drawEffectSettingsPreview(actor, key) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate((Number(frame.rot || 0) * Math.PI) / 180);
-  recordEffectEditHandle(ctx, frame, key);
+  effectEditHandle = createEffectEditHandleInfo(ctx, frame, key);
   ctx.globalAlpha = clamp(Number(frame.opacity ?? 1), 0, 1) * 0.88;
   if (asset) {
     ctx.drawImage(asset, -width / 2 - anchorOffsetX, -height / 2 - anchorOffsetY, width, height);
@@ -939,26 +939,6 @@ function drawEffectSettingsPreview(actor, key) {
   ctx.arc(cx, cy, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-}
-
-function recordEffectEditHandle(ctx, frame, key) {
-  const matrix = ctx.getTransform();
-  const anchor = transformCanvasPoint(matrix, 0, 0);
-  const xInfo = axisFromCanvasMatrix(matrix, anchor, 1, 0);
-  const yInfo = axisFromCanvasMatrix(matrix, anchor, 0, 1);
-  effectEditHandle = {
-    key,
-    frame,
-    anchor,
-    xAxis: xInfo.axis,
-    yAxis: yInfo.axis,
-    xUnit: xInfo.unit,
-    yUnit: yInfo.unit,
-    moveXAxis: xInfo.axis,
-    moveYAxis: yInfo.axis,
-    moveXUnit: xInfo.unit,
-    moveYUnit: yInfo.unit,
-  };
 }
 
 function drawEditHandles() {
