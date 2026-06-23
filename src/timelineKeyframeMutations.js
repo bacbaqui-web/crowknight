@@ -1,17 +1,21 @@
-import { defaultEffectImageKey, effectFrameValue, frameValue } from './animationFrames.js';
+import {
+  defaultEffectImageKey,
+  effectFrameValue,
+  frameValue,
+  interpolateEffectFrameValues,
+  interpolateFrameValues,
+  syncFrameAliases,
+} from './animationFrames.js';
 import { POSE_PART_KEYS } from './gameConfig.js';
 import {
   effectKeyframesFor,
   ensureEffectOffset,
   ensurePoseOffset,
-  interpolateEffectFrameValues,
-  interpolateFrameValues,
   makePoseKeyframeId,
   normalizeEffectOffsets,
   normalizePoseFrameValue,
   poseKeyframesFor,
   sortPoseKeyframes,
-  syncFrameAliases,
 } from './tuningNormalize.js';
 
 export function addPoseTimelineKeyframe(tuning, poseKey, t) {
