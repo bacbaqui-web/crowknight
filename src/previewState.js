@@ -25,3 +25,23 @@ export function createEffectPreview({ key, playing = false, t = null, now }) {
     startedAt: now,
   };
 }
+
+export function clearActorPosePreviews(actors) {
+  actors.forEach((actor) => {
+    actor.player.posePreview = null;
+  });
+}
+
+export function clearActorEffectPreviews(actors) {
+  actors.forEach((actor) => {
+    actor.player.effectPreview = null;
+  });
+}
+
+export function clearActorEditPreviews(actors) {
+  actors.forEach((actor) => {
+    actor.player.anchorDebugPart = null;
+    actor.player.posePreview = null;
+    actor.player.effectPreview = null;
+  });
+}

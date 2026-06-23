@@ -134,7 +134,15 @@ import {
   timelineSlotToValue,
   timelineValueToSlot,
 } from './timelineState.js';
-import { createEffectPreview, createPosePreview, shouldPreviewEffect, shouldPreviewPose } from './previewState.js';
+import {
+  clearActorEditPreviews,
+  clearActorEffectPreviews,
+  clearActorPosePreviews,
+  createEffectPreview,
+  createPosePreview,
+  shouldPreviewEffect,
+  shouldPreviewPose,
+} from './previewState.js';
 import { getCameraX, getViewTransform } from './cameraView.js';
 import {
   MOVE_HANDLE_RADIUS,
@@ -2113,9 +2121,7 @@ function buildTuningPanel() {
   }
 
   function syncPosePreview() {
-    actors.forEach((actor) => {
-      actor.player.posePreview = null;
-    });
+    clearActorPosePreviews(actors);
     if (!poseSection.classList.contains('is-open')) {
       posePlayback.classList.toggle('is-active', false);
       renderPoseTimeline();
@@ -2419,9 +2425,7 @@ function buildTuningPanel() {
   function clearEffectSelection() {
     stopEffectPreview();
     resetEffectSelectionState();
-    actors.forEach((actor) => {
-      actor.player.effectPreview = null;
-    });
+    clearActorEffectPreviews(actors);
     renderEffectFields();
   }
 
@@ -2529,9 +2533,7 @@ function buildTuningPanel() {
   }
 
   function syncEffectPreview() {
-    actors.forEach((actor) => {
-      actor.player.effectPreview = null;
-    });
+    clearActorEffectPreviews(actors);
     if (!effectSection.classList.contains('is-open')) {
       effectPlayback.classList.toggle('is-active', false);
       renderEffectTimeline();
@@ -2977,11 +2979,7 @@ function buildTuningPanel() {
   }
 
   function clearActorPreviewState() {
-    actors.forEach((actor) => {
-      actor.player.anchorDebugPart = null;
-      actor.player.posePreview = null;
-      actor.player.effectPreview = null;
-    });
+    clearActorEditPreviews(actors);
   }
 
   function closePanel() {
