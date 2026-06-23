@@ -31,11 +31,9 @@ import {
   ensureEffectSettings,
   ensurePoseOffset,
   ensurePoseSettings,
-  makePoseKeyframeId,
   mergeTuning,
   poseKeyframesFor,
   replaceObject,
-  sortPoseKeyframes,
 } from './tuningNormalize.js';
 import { axisFromCanvasMatrix, transformCanvasPoint } from './screenGeometry.js';
 import { clamp, clone, setPath } from './utils.js';
@@ -1602,17 +1600,8 @@ function buildTuningPanel() {
       ? selectedEffectSlot
       : null;
     if (slot === null) return null;
-    ensureEffectOffset(selectedActor.tuning, effectSelect.value);
-    const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
     const t = effectSlotToT(slot);
-    const id = makePoseKeyframeId();
-    effect.keyframes.push({
-      id,
-      t,
-      ...interpolateEffectFrameValues(effectKeyframesFor(effect, effectSelect.value), t, effectSelect.value),
-    });
-    sortPoseKeyframes(effect.keyframes);
-    syncFrameAliases(effect);
+    const id = addEffectTimelineKeyframe(selectedActor.tuning, effectSelect.value, t);
     effectFrame = null;
     selectedEffectSlot = slot;
     return id;
