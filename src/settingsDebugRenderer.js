@@ -26,3 +26,15 @@ export function drawAttackHitboxPreview(ctx, actor, key) {
   ctx.fillText(key === 'jumpAttack' ? '점공' : `${key.replace('attack', '')}타`, box.x + 4, box.y - 6);
   ctx.restore();
 }
+
+export function drawEffectPreviewBounds(ctx, { cx, cy, width, height, anchorOffsetX, anchorOffsetY }) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(124, 195, 162, .92)';
+  ctx.fillStyle = 'rgba(124, 195, 162, .92)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - width / 2 - anchorOffsetX, cy - height / 2 - anchorOffsetY, width, height);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}

@@ -162,7 +162,7 @@ import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import { activeAttackSettingsKey, activeEffectSettingsKey, isCollisionSectionOpen } from './settingsPanelState.js';
-import { drawAttackHitboxPreview, drawBodyHitbox } from './settingsDebugRenderer.js';
+import { drawAttackHitboxPreview, drawBodyHitbox, drawEffectPreviewBounds } from './settingsDebugRenderer.js';
 import {
   ACTOR_DEFS,
   DEATH_RESULT_DELAY,
@@ -930,15 +930,7 @@ function drawEffectSettingsPreview(actor, key) {
   }
   ctx.restore();
 
-  ctx.save();
-  ctx.strokeStyle = 'rgba(124, 195, 162, .92)';
-  ctx.fillStyle = 'rgba(124, 195, 162, .92)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(cx - width / 2 - anchorOffsetX, cy - height / 2 - anchorOffsetY, width, height);
-  ctx.beginPath();
-  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  drawEffectPreviewBounds(ctx, { cx, cy, width, height, anchorOffsetX, anchorOffsetY });
 }
 
 function drawEditHandles() {
