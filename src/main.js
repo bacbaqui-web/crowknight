@@ -133,11 +133,12 @@ import {
   applyCanvasGroupRotation,
   applyCanvasGroupScale,
   applyCanvasPartDrag,
+  applyEffectCanvasDrag,
 } from './canvasDragApply.js';
-import { canvasPointFromEvent, screenDeltaToLocal } from './canvasDragMath.js';
+import { canvasPointFromEvent } from './canvasDragMath.js';
 import { pickDragValues, pickVisualValues } from './canvasDragState.js';
 import { setPartAnchorValue } from './canvasVisualValues.js';
-import { clampEffectFrameSize, effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
+import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
   ACTOR_DEFS,
@@ -3043,7 +3044,7 @@ function buildTuningPanel() {
 
   function applyCanvasDrag(drag, dx, dy) {
     if (drag.context === 'effect') {
-      applyEffectCanvasDrag(drag, dx, dy);
+      applyEffectCanvasDrag(drag, dx, dy, effectSelect.value, writeEffectFrameValue);
       return;
     }
     if (drag.group) {
@@ -3052,55 +3053,6 @@ function buildTuningPanel() {
     }
 
     applyCanvasPartDrag(drag, dx, dy);
-  }
-
-  function applyEffectCanvasDrag(drag, dx, dy) {
-    const localX = screenDeltaToLocal(dx, dy, drag.handle.xAxis, drag.handle.xUnit);
-    const localY = screenDeltaToLocal(dx, dy, drag.handle.yAxis, drag.handle.yUnit);
-    const moveX = screenDeltaToLocal(dx, dy, drag.handle.moveXAxis, drag.handle.moveXUnit);
-    const moveY = screenDeltaToLocal(dx, dy, drag.handle.moveYAxis, drag.handle.moveYUnit);
-
-    if (drag.mode === 'anchor') {
-      writeEffectFrameValue('anchorX', drag.startValues.anchorX + localX);
-      writeEffectFrameValue('anchorY', drag.startValues.anchorY + localY);
-      return;
-    }
-
-    if (drag.mode === 'rotate') {
-      const currentX = drag.startX + dx;
-      const currentY = drag.startY + dy;
-      const angle = Math.atan2(currentY - drag.handle.anchor.y, currentX - drag.handle.anchor.x);
-      writeEffectFrameValue('rot', drag.startValues.rot + ((angle - drag.startAngle) * 180) / Math.PI);
-      return;
-    }
-
-    if (drag.mode === 'width') {
-      writeEffectFrameValue('w', clampEffectSize('w', drag.startValues.w - localX));
-      return;
-    }
-
-    if (drag.mode === 'height') {
-      writeEffectFrameValue('h', clampEffectSize('h', drag.startValues.h - localY));
-      return;
-    }
-
-    if (drag.mode === 'size') {
-      const baseW = defaultEffectSize(effectSelect.value).w;
-      const baseH = defaultEffectSize(effectSelect.value).h;
-      const deltaW = localX / Math.max(1, baseW);
-      const deltaH = localY / Math.max(1, baseH);
-      const scaleDelta = (deltaW + deltaH) / 2;
-      writeEffectFrameValue('w', clampEffectSize('w', drag.startValues.w + baseW * scaleDelta));
-      writeEffectFrameValue('h', clampEffectSize('h', drag.startValues.h + baseH * scaleDelta));
-      return;
-    }
-
-    writeEffectFrameValue('x', drag.startValues.x + moveX);
-    writeEffectFrameValue('y', drag.startValues.y + moveY);
-  }
-
-  function clampEffectSize(prop, value) {
-    return clampEffectFrameSize(effectSelect.value, prop, value);
   }
 
   function syncPanel() {

@@ -7,6 +7,8 @@ import {
   setCanvasVisualValue,
   setPartAnchorValue,
 } from './canvasVisualValues.js';
+import { defaultEffectSize } from './animationFrames.js';
+import { clampEffectFrameSize } from './effectVisualValues.js';
 import { isMasterPart } from './tuningLabels.js';
 import { clamp } from './utils.js';
 
@@ -136,6 +138,51 @@ export function applyCanvasGroupRotation(drag, degrees) {
 
 export function applyCanvasGroupScale(drag, scale) {
   applyCanvasGroupTransform(drag, (point) => scalePointAround(point, drag.handle.anchor, scale), 0, scale);
+}
+
+export function applyEffectCanvasDrag(drag, dx, dy, effectKey, writeEffectFrameValue) {
+  const localX = screenDeltaToLocal(dx, dy, drag.handle.xAxis, drag.handle.xUnit);
+  const localY = screenDeltaToLocal(dx, dy, drag.handle.yAxis, drag.handle.yUnit);
+  const moveX = screenDeltaToLocal(dx, dy, drag.handle.moveXAxis, drag.handle.moveXUnit);
+  const moveY = screenDeltaToLocal(dx, dy, drag.handle.moveYAxis, drag.handle.moveYUnit);
+
+  if (drag.mode === 'anchor') {
+    writeEffectFrameValue('anchorX', drag.startValues.anchorX + localX);
+    writeEffectFrameValue('anchorY', drag.startValues.anchorY + localY);
+    return;
+  }
+
+  if (drag.mode === 'rotate') {
+    const currentX = drag.startX + dx;
+    const currentY = drag.startY + dy;
+    const angle = Math.atan2(currentY - drag.handle.anchor.y, currentX - drag.handle.anchor.x);
+    writeEffectFrameValue('rot', drag.startValues.rot + ((angle - drag.startAngle) * 180) / Math.PI);
+    return;
+  }
+
+  if (drag.mode === 'width') {
+    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', drag.startValues.w - localX));
+    return;
+  }
+
+  if (drag.mode === 'height') {
+    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', drag.startValues.h - localY));
+    return;
+  }
+
+  if (drag.mode === 'size') {
+    const baseW = defaultEffectSize(effectKey).w;
+    const baseH = defaultEffectSize(effectKey).h;
+    const deltaW = localX / Math.max(1, baseW);
+    const deltaH = localY / Math.max(1, baseH);
+    const scaleDelta = (deltaW + deltaH) / 2;
+    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', drag.startValues.w + baseW * scaleDelta));
+    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', drag.startValues.h + baseH * scaleDelta));
+    return;
+  }
+
+  writeEffectFrameValue('x', drag.startValues.x + moveX);
+  writeEffectFrameValue('y', drag.startValues.y + moveY);
 }
 
 function applyCanvasGroupTransform(drag, transformPoint, rotationDelta, scale) {
