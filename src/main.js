@@ -1,6 +1,7 @@
 import { PuppetPlayer } from './puppetPlayer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { drawActorShadow, drawHealthMeter } from './actorHudRenderer.js';
+import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
 import {
   defaultEffectImageKey,
@@ -187,7 +188,7 @@ let poseFrameSelectionActive = false;
 let effectEditHandle = null;
 
 window.addEventListener('resize', () => syncCanvasToLayout(true));
-lineUpActors();
+lineUpActorPositions(actors, world);
 bindBattleControls(
   { startBattleButton, homeStartButton, endBattleButton },
   {
@@ -195,7 +196,7 @@ bindBattleControls(
     endRun: () => {
       finishRun({ showResult: Boolean(resultScreen) });
       particleEffects.reset();
-      if (!resultScreen) lineUpActors();
+      if (!resultScreen) lineUpActorPositions(actors, world);
     },
   }
 );
@@ -759,7 +760,7 @@ function currentOpenEditContext() {
 
 function startRun() {
   hideResultScreen();
-  lineUpActors();
+  lineUpActorPositions(actors, world);
   battleActive = true;
   playerDeathPending = false;
   resultOpen = false;
@@ -796,7 +797,7 @@ function startRun() {
     resetPlayerActionState(actor.player);
     actor.player.onGround = true;
   });
-  placeEnemiesAhead();
+  placeEnemyActorsAhead(actors, playerActor, world);
   hideStartScreen();
   if (startBattleButton) startBattleButton.disabled = true;
   if (homeStartButton) homeStartButton.disabled = true;
@@ -854,61 +855,6 @@ function deleteRankingAt(index) {
 }
 
 bindSettingsRankingToggle(settingsRankingPanel, settingsRankingToggle);
-
-function placeEnemiesAhead() {
-  const startX = playerActor.player.x + 260;
-  actors.slice(1).forEach((actor, index) => {
-    syncActorHealthCapacity(actor, true);
-    actor.respawning = false;
-    actor.hpPips = actor.maxHpPips;
-    actor.player.x = startX + index * 170;
-    actor.respawnTargetX = actor.player.x;
-    actor.player.y = world.floorY;
-    actor.player.vx = 0;
-    actor.player.vy = 0;
-    actor.player.facing = -1;
-    actor.player.hurtTime = 0;
-    resetPlayerActionState(actor.player);
-    actor.player.updateState();
-  });
-}
-
-function lineUpActors() {
-  const slots = [480, 610, 740, 870, 1000];
-  actors.forEach((actor, index) => {
-    syncActorHealthCapacity(actor, true);
-    actor.hp = 100;
-    actor.hpPips = actor.maxHpPips;
-    actor.respawning = false;
-    actor.invulnTime = 0;
-    actor.wasRolling = false;
-    actor.hurtCooldown = 0;
-    actor.hitStun = 0;
-    actor.rollGhosts = [];
-    actor.rollGhostTimer = 0;
-    actor.lastHitSerials = {};
-    actor.player.x = slots[index];
-    actor.respawnTargetX = actor.player.x;
-    actor.player.y = world.floorY;
-    actor.player.vx = 0;
-    actor.player.vy = 0;
-    actor.player.facing = index === 0 ? 1 : -1;
-    actor.player.attackTime = 0;
-    actor.player.dashTime = 0;
-    actor.player.dashCooldown = 0;
-    actor.player.jumpHoldTime = 0;
-    actor.player.airFlapCooldownTime = 0;
-    actor.player.glideTime = actor.player.glideTimeMax;
-    actor.player.glideActive = false;
-    actor.player.attackCooldown = 0;
-    actor.player.attackCarrySpeed = 0;
-    actor.player.hurtTime = 0;
-    actor.player.dead = false;
-    resetPlayerActionState(actor.player);
-    actor.player.onGround = true;
-    actor.player.updateState();
-  });
-}
 
 function drawActor(actor) {
   drawActorShadow(ctx, world, actor);
