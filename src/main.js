@@ -128,16 +128,15 @@ import {
   createPartEditHandleGeometry,
   findEditHandleAt,
 } from './editHandleGeometry.js';
-import { canvasPointFromEvent, rotatePointAround, scalePointAround, screenDeltaToLocal } from './canvasDragMath.js';
-import { pickDragValues, pickVisualValues } from './canvasDragState.js';
 import {
-  anchorScaleForPart,
-  canvasSizeDelta,
-  canvasSizePercentBase,
-  isGroupScalablePart,
-  setCanvasVisualValue,
-  setPartAnchorValue,
-} from './canvasVisualValues.js';
+  applyCanvasGroupDrag,
+  applyCanvasGroupRotation,
+  applyCanvasGroupScale,
+  applyCanvasPartDrag,
+} from './canvasDragApply.js';
+import { canvasPointFromEvent, screenDeltaToLocal } from './canvasDragMath.js';
+import { pickDragValues, pickVisualValues } from './canvasDragState.js';
+import { setPartAnchorValue } from './canvasVisualValues.js';
 import { clampEffectFrameSize, effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
@@ -3003,14 +3002,13 @@ function buildTuningPanel() {
   function applyCurrentGroupRotation(degrees) {
     const drag = createCurrentGroupDrag('rotate');
     if (!drag.handle || !drag.parts.length) return;
-    const radians = (degrees * Math.PI) / 180;
-    applyCanvasGroupTransform(drag, (point) => rotatePointAround(point, drag.handle.anchor, radians), degrees, 1);
+    applyCanvasGroupRotation(drag, degrees);
   }
 
   function applyCurrentGroupScale(scale) {
     const drag = createCurrentGroupDrag('size');
     if (!drag.handle || !drag.parts.length) return;
-    applyCanvasGroupTransform(drag, (point) => scalePointAround(point, drag.handle.anchor, scale), 0, scale);
+    applyCanvasGroupScale(drag, scale);
   }
 
   function applyCurrentGroupOpacity(opacity) {
@@ -3049,59 +3047,11 @@ function buildTuningPanel() {
       return;
     }
     if (drag.group) {
-      applyCanvasGroupDrag(drag, dx, dy);
+      applyCanvasGroupDrag(drag, dx, dy, groupEditValues);
       return;
     }
 
-    const moveLocalX = screenDeltaToLocal(dx, dy, drag.handle.moveXAxis, drag.handle.moveXUnit);
-    const moveLocalY = screenDeltaToLocal(dx, dy, drag.handle.moveYAxis, drag.handle.moveYUnit);
-    const handleLocalX = screenDeltaToLocal(dx, dy, drag.handle.xAxis, drag.handle.xUnit);
-    const handleLocalY = screenDeltaToLocal(dx, dy, drag.handle.yAxis, drag.handle.yUnit);
-
-    if (drag.mode === 'anchor') {
-      if (isMasterPart(drag.part)) {
-        drag.target.anchorX = drag.startValues.anchorX + moveLocalX;
-        drag.target.anchorY = drag.startValues.anchorY + moveLocalY;
-        return;
-      }
-      const scaleX = anchorScaleForPart(drag.target, 'ax', drag.part);
-      const scaleY = anchorScaleForPart(drag.target, 'ay', drag.part);
-      setPartAnchorValue(drag.target, 'ax', drag.startValues.ax + moveLocalX / scaleX, drag.part);
-      setPartAnchorValue(drag.target, 'ay', drag.startValues.ay + moveLocalY / scaleY, drag.part);
-      return;
-    }
-
-    if (drag.mode === 'rotate') {
-      const currentX = drag.startX + dx;
-      const currentY = drag.startY + dy;
-      const angle = Math.atan2(currentY - drag.handle.anchor.y, currentX - drag.handle.anchor.x);
-      setCanvasVisualValue(drag, 'rot', drag.startVisual.rot + ((angle - drag.startAngle) * 180) / Math.PI);
-      return;
-    }
-
-    if (drag.mode === 'width') {
-      setCanvasVisualValue(drag, 'w', drag.startVisual.w + canvasSizeDelta(drag, 'w', -handleLocalX));
-      return;
-    }
-
-    if (drag.mode === 'height') {
-      setCanvasVisualValue(drag, 'h', drag.startVisual.h + canvasSizeDelta(drag, 'h', -handleLocalY));
-      return;
-    }
-
-    if (drag.mode === 'size') {
-      const baseW = canvasSizePercentBase(drag, 'w');
-      const baseH = canvasSizePercentBase(drag, 'h');
-      const deltaW = canvasSizeDelta(drag, 'w', handleLocalX);
-      const deltaH = canvasSizeDelta(drag, 'h', handleLocalY);
-      const sharedPercentDelta = (deltaW / baseW + deltaH / baseH) / 2;
-      setCanvasVisualValue(drag, 'w', drag.startVisual.w + baseW * sharedPercentDelta);
-      setCanvasVisualValue(drag, 'h', drag.startVisual.h + baseH * sharedPercentDelta);
-      return;
-    }
-
-    setCanvasVisualValue(drag, 'x', drag.startVisual.x + moveLocalX);
-    setCanvasVisualValue(drag, 'y', drag.startVisual.y + moveLocalY);
+    applyCanvasPartDrag(drag, dx, dy);
   }
 
   function applyEffectCanvasDrag(drag, dx, dy) {
@@ -3151,121 +3101,6 @@ function buildTuningPanel() {
 
   function clampEffectSize(prop, value) {
     return clampEffectFrameSize(effectSelect.value, prop, value);
-  }
-
-  function applyCanvasGroupDrag(drag, dx, dy) {
-    if (drag.mode === 'anchor') {
-      groupEditValues.anchorX = drag.handle.anchor.x + dx;
-      groupEditValues.anchorY = drag.handle.anchor.y + dy;
-      return;
-    }
-
-    if (drag.mode === 'rotate') {
-      const angle = Math.atan2(drag.startY + dy - drag.handle.anchor.y, drag.startX + dx - drag.handle.anchor.x);
-      const delta = angle - drag.startAngle;
-      const degrees = (delta * 180) / Math.PI;
-      groupEditValues.rot = degrees;
-      applyCanvasGroupTransform(drag, (point) => rotatePointAround(point, drag.handle.anchor, delta), degrees, 1);
-      return;
-    }
-
-    if (drag.mode === 'size') {
-      const distance = Math.max(
-        1,
-        Math.hypot(drag.startX + dx - drag.handle.anchor.x, drag.startY + dy - drag.handle.anchor.y)
-      );
-      const scale = clamp(distance / drag.startDistance, 0.1, 4);
-      groupEditValues.scale = scale * 100;
-      applyCanvasGroupTransform(drag, (point) => scalePointAround(point, drag.handle.anchor, scale), 0, scale);
-      return;
-    }
-
-    if (drag.mode === 'width') {
-      const scaleX = clamp(1 - dx / 90, 0.1, 4);
-      applyCanvasGroupAxisScale(drag, scaleX, 1);
-      return;
-    }
-
-    if (drag.mode === 'height') {
-      const scaleY = clamp(1 - dy / 90, 0.1, 4);
-      applyCanvasGroupAxisScale(drag, 1, scaleY);
-      return;
-    }
-
-    groupEditValues.x = dx;
-    groupEditValues.y = dy;
-    drag.parts.forEach((item) => {
-      const moveLocalX = screenDeltaToLocal(dx, dy, item.handle.moveXAxis, item.handle.moveXUnit);
-      const moveLocalY = screenDeltaToLocal(dx, dy, item.handle.moveYAxis, item.handle.moveYUnit);
-      setCanvasVisualValue(
-        {
-          context: 'pose',
-          part: item.part,
-          target: item.target,
-          base: item.base,
-        },
-        'x',
-        item.startVisual.x + moveLocalX
-      );
-      setCanvasVisualValue(
-        {
-          context: 'pose',
-          part: item.part,
-          target: item.target,
-          base: item.base,
-        },
-        'y',
-        item.startVisual.y + moveLocalY
-      );
-    });
-  }
-
-  function applyCanvasGroupTransform(drag, transformPoint, rotationDelta, scale) {
-    drag.parts.forEach((item) => {
-      const nextAnchor = transformPoint(item.startAnchor);
-      const screenDx = nextAnchor.x - item.startAnchor.x;
-      const screenDy = nextAnchor.y - item.startAnchor.y;
-      const moveLocalX = screenDeltaToLocal(screenDx, screenDy, item.handle.moveXAxis, item.handle.moveXUnit);
-      const moveLocalY = screenDeltaToLocal(screenDx, screenDy, item.handle.moveYAxis, item.handle.moveYUnit);
-      const itemDrag = {
-        context: 'pose',
-        part: item.part,
-        target: item.target,
-        base: item.base,
-      };
-      setCanvasVisualValue(itemDrag, 'x', item.startVisual.x + moveLocalX);
-      setCanvasVisualValue(itemDrag, 'y', item.startVisual.y + moveLocalY);
-      if (rotationDelta) setCanvasVisualValue(itemDrag, 'rot', item.startVisual.rot + rotationDelta);
-      if (scale !== 1 && isGroupScalablePart(item.part)) {
-        setCanvasVisualValue(itemDrag, 'w', item.startVisual.w * scale);
-        setCanvasVisualValue(itemDrag, 'h', item.startVisual.h * scale);
-      }
-    });
-  }
-
-  function applyCanvasGroupAxisScale(drag, scaleX, scaleY) {
-    drag.parts.forEach((item) => {
-      const nextAnchor = {
-        x: drag.handle.anchor.x + (item.startAnchor.x - drag.handle.anchor.x) * scaleX,
-        y: drag.handle.anchor.y + (item.startAnchor.y - drag.handle.anchor.y) * scaleY,
-      };
-      const screenDx = nextAnchor.x - item.startAnchor.x;
-      const screenDy = nextAnchor.y - item.startAnchor.y;
-      const moveLocalX = screenDeltaToLocal(screenDx, screenDy, item.handle.moveXAxis, item.handle.moveXUnit);
-      const moveLocalY = screenDeltaToLocal(screenDx, screenDy, item.handle.moveYAxis, item.handle.moveYUnit);
-      const itemDrag = {
-        context: 'pose',
-        part: item.part,
-        target: item.target,
-        base: item.base,
-      };
-      setCanvasVisualValue(itemDrag, 'x', item.startVisual.x + moveLocalX);
-      setCanvasVisualValue(itemDrag, 'y', item.startVisual.y + moveLocalY);
-      if (isGroupScalablePart(item.part)) {
-        if (scaleX !== 1) setCanvasVisualValue(itemDrag, 'w', item.startVisual.w * scaleX);
-        if (scaleY !== 1) setCanvasVisualValue(itemDrag, 'h', item.startVisual.h * scaleY);
-      }
-    });
   }
 
   function syncPanel() {
