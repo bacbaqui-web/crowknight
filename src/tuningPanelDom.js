@@ -1,4 +1,5 @@
-import { EFFECT_KEYS, POSE_KEYS, POSE_PART_KEYS } from './gameConfig.js';
+import { defaultEffectImageKey } from './animationFrames.js';
+import { EFFECT_IMAGE_OPTIONS, EFFECT_KEYS, POSE_KEYS, POSE_PART_KEYS } from './gameConfig.js';
 import { getPath } from './utils.js';
 import { layerLabel, partLabel, poseLabel } from './tuningLabels.js';
 import { partPositionSources } from './tuningParts.js';
@@ -99,6 +100,21 @@ export function markPartPicker(picker, selectedKey, selectedKeys = null) {
 
 export function emptyPartMessage(text) {
   return `<div class="part-empty">${text}</div>`;
+}
+
+export function renderEffectImagePreview(preview, effectKey, effectAssets) {
+  if (!preview) return;
+
+  preview.innerHTML = '';
+  const imageKey = defaultEffectImageKey(effectKey);
+  const option = EFFECT_IMAGE_OPTIONS.find((item) => item.key === imageKey);
+  const asset = option?.asset ? effectAssets[option.asset] : null;
+  if (!asset) return;
+
+  const image = document.createElement('img');
+  image.src = asset.src;
+  image.alt = '';
+  preview.append(image);
 }
 
 export function bindPartPickerButtons(picker, onSelect) {

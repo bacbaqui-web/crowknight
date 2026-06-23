@@ -81,6 +81,7 @@ import {
   getTuningPanelElements,
   markPartPicker,
   populateTuningPanelSelects,
+  renderEffectImagePreview,
   renderLayerSelectOptions,
   syncNumericFields,
 } from './tuningPanelDom.js';
@@ -111,7 +112,6 @@ import { renderScrubGroups } from './tuningScrubControls.js';
 import {
   ACTOR_DEFS,
   DEATH_RESULT_DELAY,
-  EFFECT_IMAGE_OPTIONS,
   GAME_KEYS,
   KILL_SCORE,
   KILL_SCORE_WEIGHT,
@@ -2238,8 +2238,8 @@ function buildTuningPanel() {
   function renderEffectFields() {
     ensureActiveEffectFrame();
     renderEffectTimeline();
-    renderEffectImagePreview();
     ensureEffectOffset(selectedActor.tuning, effectSelect.value);
+    renderEffectImagePreview(effectImagePreview, effectSelect.value, effectAssets);
     effectFields.innerHTML = '';
     renderScrubGroups(
       effectFields,
@@ -2248,20 +2248,6 @@ function buildTuningPanel() {
       (prop, value) => updateEffectOffset(prop, value),
       scrubCallbacks
     );
-  }
-
-  function renderEffectImagePreview() {
-    if (!effectImagePreview) return;
-    ensureEffectOffset(selectedActor.tuning, effectSelect.value);
-    effectImagePreview.innerHTML = '';
-    const imageKey = defaultEffectImageKey(effectSelect.value);
-    const option = EFFECT_IMAGE_OPTIONS.find((item) => item.key === imageKey);
-    const asset = option?.asset ? effectAssets[option.asset] : null;
-    if (!asset) return;
-    const image = document.createElement('img');
-    image.src = asset.src;
-    image.alt = '';
-    effectImagePreview.append(image);
   }
 
   function readEffectDisplayValue(prop) {
