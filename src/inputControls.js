@@ -29,6 +29,16 @@ export function bindTouchControls(keys, pressed) {
   });
 }
 
+export function bindBattleControls({ startBattleButton, homeStartButton, endBattleButton }, actions) {
+  startBattleButton?.addEventListener('click', actions.startRun);
+  homeStartButton?.addEventListener('click', actions.startRun);
+
+  endBattleButton?.addEventListener('click', () => {
+    actions.endRun();
+    endBattleButton.blur();
+  });
+}
+
 export function bindCollapsibleSections() {
   document.querySelectorAll('[data-collapsible]').forEach((section) => {
     const button = section.querySelector('.section-toggle');

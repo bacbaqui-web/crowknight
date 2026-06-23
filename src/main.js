@@ -13,7 +13,7 @@ import {
 } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
-import { bindCollapsibleSections, bindTouchControls } from './inputControls.js';
+import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
 import {
   bindResultScreen as bindResultScreenControls,
   bindSettingsRankingToggle,
@@ -188,7 +188,17 @@ let effectEditHandle = null;
 
 window.addEventListener('resize', () => syncCanvasToLayout(true));
 lineUpActors();
-bindBattleControls();
+bindBattleControls(
+  { startBattleButton, homeStartButton, endBattleButton },
+  {
+    startRun,
+    endRun: () => {
+      finishRun({ showResult: Boolean(resultScreen) });
+      particleEffects.reset();
+      if (!resultScreen) lineUpActors();
+    },
+  }
+);
 bindTouchControls(keys, pressed);
 bindCollapsibleSections();
 bindResultScreen();
@@ -745,18 +755,6 @@ function currentOpenEditContext() {
   if (editFocusContext === 'part' && partSection?.classList.contains('is-open') && activePartKeyGlobal) return 'part';
   if (editFocusContext === 'pose' && poseSection?.classList.contains('is-open')) return 'pose';
   return null;
-}
-
-function bindBattleControls() {
-  startBattleButton?.addEventListener('click', startRun);
-  homeStartButton?.addEventListener('click', startRun);
-
-  endBattleButton?.addEventListener('click', () => {
-    finishRun({ showResult: Boolean(resultScreen) });
-    particleEffects.reset();
-    if (!resultScreen) lineUpActors();
-    endBattleButton.blur();
-  });
 }
 
 function startRun() {
