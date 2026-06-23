@@ -4,7 +4,6 @@ import { drawActor } from './actorRenderer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
-import { defaultEffectSize } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
 import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
@@ -25,7 +24,6 @@ import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
 import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
 import { loadSavedState as loadStoredSavedState, saveActorState } from './saveStateStorage.js';
 import {
-  effectFrameAt,
   effectKeyframesFor,
   ensureEffectOffset,
   ensureEffectSettings,
@@ -144,7 +142,6 @@ import {
 } from './editHandleDrawing.js';
 import {
   createEffectEditHandleGeometry,
-  createEffectEditHandleInfo,
   createGroupEditHandleGeometry,
   createPartEditHandleGeometry,
   findEditHandleAt,
@@ -162,7 +159,8 @@ import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import { activeAttackSettingsKey, activeEffectSettingsKey, isCollisionSectionOpen } from './settingsPanelState.js';
-import { drawAttackHitboxPreview, drawBodyHitbox, drawEffectPreviewBounds } from './settingsDebugRenderer.js';
+import { drawAttackHitboxPreview, drawBodyHitbox } from './settingsDebugRenderer.js';
+import { drawEffectSettingsPreview } from './settingsEffectPreviewRenderer.js';
 import {
   ACTOR_DEFS,
   DEATH_RESULT_DELAY,
@@ -882,55 +880,8 @@ function drawSettingsDebugBoxes() {
 
   const effectKey = activeEffectSettingsKey();
   if (effectKey) {
-    drawEffectSettingsPreview(selectedActor, effectKey);
+    effectEditHandle = drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
   }
-}
-
-function drawEffectSettingsPreview(actor, key) {
-  effectEditHandle = null;
-  const preview = actor.player.effectPreview;
-  let t = Number.isFinite(preview?.t) ? preview.t : 0;
-  if (preview?.key === key && preview.playing) {
-    const settings = actor.tuning.effectSettings?.[key] || {};
-    const duration = Math.max(
-      0.05,
-      Number(settings.duration || 0.3) / Math.max(0.1, Number(settings.playbackRate || 1))
-    );
-    const elapsed = (performance.now() - Number(preview.startedAt || performance.now())) / 1000;
-    if (settings.playback === 'loop') {
-      const cycle = (elapsed % (duration * 2)) / duration;
-      t = cycle <= 1 ? cycle : 2 - cycle;
-    } else {
-      t = clamp(elapsed / duration, 0, 1);
-    }
-  }
-
-  const frame = effectFrameAt(actor.tuning, key, t);
-  if (!frame || frame.image === 'none' || Number(frame.opacity ?? 1) <= 0) return;
-
-  const asset = effectAssets[frame.image];
-  const width = Math.max(1, Number(frame.w || defaultEffectSize(key).w));
-  const height = Math.max(1, Number(frame.h || defaultEffectSize(key).h));
-  const cx = actor.player.x + Number(frame.x || 0);
-  const cy = actor.player.y - 70 + Number(frame.y || 0);
-  const anchorOffsetX = Number(frame.anchorX || 0);
-  const anchorOffsetY = Number(frame.anchorY || 0);
-
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate((Number(frame.rot || 0) * Math.PI) / 180);
-  effectEditHandle = createEffectEditHandleInfo(ctx, frame, key);
-  ctx.globalAlpha = clamp(Number(frame.opacity ?? 1), 0, 1) * 0.88;
-  if (asset) {
-    ctx.drawImage(asset, -width / 2 - anchorOffsetX, -height / 2 - anchorOffsetY, width, height);
-  } else {
-    ctx.strokeStyle = 'rgba(255,255,255,.85)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(-width / 2, -height / 2, width, height);
-  }
-  ctx.restore();
-
-  drawEffectPreviewBounds(ctx, { cx, cy, width, height, anchorOffsetX, anchorOffsetY });
 }
 
 function drawEditHandles() {
