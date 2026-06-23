@@ -127,8 +127,7 @@ import {
   applyCanvasGroupDrag,
   applyCanvasGroupRotation,
   applyCanvasGroupScale,
-  applyCanvasPartDrag,
-  applyEffectCanvasDrag,
+  applyTuningCanvasDrag,
 } from './canvasDragApply.js';
 import { canvasPointFromEvent } from './canvasDragMath.js';
 import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvasDragState.js';
@@ -2016,16 +2015,11 @@ export function createTuningPanel({
     }
 
     function applyCanvasDrag(drag, dx, dy) {
-      if (drag.context === 'effect') {
-        applyEffectCanvasDrag(drag, dx, dy, effectSelect.value, writeEffectFrameValue);
-        return;
-      }
-      if (drag.group) {
-        applyCanvasGroupDrag(drag, dx, dy, groupEditValues);
-        return;
-      }
-
-      applyCanvasPartDrag(drag, dx, dy);
+      applyTuningCanvasDrag(drag, dx, dy, {
+        effectKey: effectSelect.value,
+        groupEditValues,
+        writeEffectFrameValue,
+      });
     }
 
     function syncPanel() {

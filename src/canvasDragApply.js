@@ -12,6 +12,19 @@ import { clampEffectFrameSize } from './effectVisualValues.js';
 import { isMasterPart } from './tuningLabels.js';
 import { clamp } from './utils.js';
 
+export function applyTuningCanvasDrag(drag, dx, dy, { effectKey, groupEditValues, writeEffectFrameValue }) {
+  if (drag.context === 'effect') {
+    applyEffectCanvasDrag(drag, dx, dy, effectKey, writeEffectFrameValue);
+    return;
+  }
+  if (drag.group) {
+    applyCanvasGroupDrag(drag, dx, dy, groupEditValues);
+    return;
+  }
+
+  applyCanvasPartDrag(drag, dx, dy);
+}
+
 export function applyCanvasPartDrag(drag, dx, dy) {
   const moveLocalX = screenDeltaToLocal(dx, dy, drag.handle.moveXAxis, drag.handle.moveXUnit);
   const moveLocalY = screenDeltaToLocal(dx, dy, drag.handle.moveYAxis, drag.handle.moveYUnit);
