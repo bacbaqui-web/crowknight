@@ -64,6 +64,12 @@ import {
   isTextInput,
 } from './tuningPanelBindings.js';
 import {
+  effectPropertyGroups,
+  groupPosePropertyGroups,
+  partPropertyGroups,
+  posePropertyGroups,
+} from './tuningFieldGroups.js';
+import {
   bindPartPickerButtons,
   emptyPartMessage,
   getTuningPanelElements,
@@ -72,7 +78,7 @@ import {
   renderLayerSelectOptions,
   syncNumericFields,
 } from './tuningPanelDom.js';
-import { axisProps, isMasterPart, partLabel } from './tuningLabels.js';
+import { isMasterPart, partLabel } from './tuningLabels.js';
 import {
   controlGroupPartKeys,
   imagePartKeys,
@@ -2208,7 +2214,7 @@ function buildTuningPanel() {
 
     renderScrubGroups(
       posePartFields,
-      posePropertyGroups(partKey),
+      posePropertyGroups(partKey, hasPoseFrameSelection()),
       (prop) => readPoseDisplayValue(partKey, offset, prop),
       (prop, value) => updatePoseOffset(prop, value),
       scrubCallbacks
@@ -2249,16 +2255,6 @@ function buildTuningPanel() {
     image.src = asset.src;
     image.alt = '';
     effectImagePreview.append(image);
-  }
-
-  function effectPropertyGroups() {
-    return [
-      { label: '앵커', props: axisProps('anchorX', 'anchorY', 'X', 'Y') },
-      { label: '위치', props: axisProps('x', 'y') },
-      { label: '크기', props: axisProps('w', 'h', 'W', 'H') },
-      { label: '회전', props: [{ prop: 'rot', label: 'R' }] },
-      { label: '투명', props: [{ prop: 'opacity', label: 'O' }] },
-    ];
   }
 
   function readEffectDisplayValue(prop) {
@@ -2355,15 +2351,6 @@ function buildTuningPanel() {
     return id;
   }
 
-  function groupPosePropertyGroups() {
-    return [
-      { label: '위치', props: axisProps('x', 'y') },
-      { label: '크기', props: [{ prop: 'scale', label: 'S' }] },
-      { label: '회전', props: [{ prop: 'rot', label: 'R' }] },
-      { label: '투명', props: [{ prop: 'opacity', label: 'O' }] },
-    ];
-  }
-
   function readGroupPoseValue(prop) {
     return groupEditValues[prop];
   }
@@ -2396,44 +2383,6 @@ function buildTuningPanel() {
     syncPosePreview();
     applySelected();
     return readGroupPoseValue(prop);
-  }
-
-  function partPropertyGroups(partKey) {
-    const groups = [];
-    if (imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey))
-      groups.push({ label: '기준점', props: axisProps('ax', 'ay') });
-    groups.push({ label: '위치', props: axisProps('x', 'y') });
-    if (imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
-      groups.push({
-        label: imagePartKeys().includes(partKey) ? '크기' : '그룹 크기',
-        props: axisProps('w', 'h', 'W', 'H'),
-      });
-    }
-    groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
-    if (imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
-      groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
-    }
-    return groups;
-  }
-
-  function posePropertyGroups(partKey) {
-    const groups = [];
-    if (isMasterPart(partKey) && !hasPoseFrameSelection()) {
-      groups.push({ label: '앵커', props: axisProps('anchorX', 'anchorY', 'X', 'Y') });
-      return groups;
-    }
-    groups.push({ label: '위치', props: axisProps('x', 'y') });
-    if (isMasterPart(partKey) || imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
-      groups.push({
-        label: isMasterPart(partKey) ? '크기' : imagePartKeys().includes(partKey) ? '크기' : '그룹 크기',
-        props: axisProps('w', 'h', 'W', 'H'),
-      });
-    }
-    groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
-    if (isMasterPart(partKey) || imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
-      groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
-    }
-    return groups;
   }
 
   function readPartDisplayValue(partKey, part, prop) {
