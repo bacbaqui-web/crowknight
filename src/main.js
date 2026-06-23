@@ -138,6 +138,7 @@ import {
   setCanvasVisualValue,
   setPartAnchorValue,
 } from './canvasVisualValues.js';
+import { clampEffectFrameSize, effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
   ACTOR_DEFS,
@@ -1529,9 +1530,7 @@ function buildTuningPanel() {
   function readEffectDisplayValue(prop) {
     const frame = currentEffectFrameValue();
     if (prop === 'w' || prop === 'h') {
-      const base = defaultEffectSize(effectSelect.value);
-      const baseValue = prop === 'w' ? base.w : base.h;
-      return Math.round((Number(frame[prop] || baseValue) / baseValue) * 1000) / 10;
+      return effectSizePercent(effectSelect.value, frame, prop);
     }
     return frame[prop];
   }
@@ -1544,10 +1543,7 @@ function buildTuningPanel() {
     if (!frame) return readEffectDisplayValue(prop);
 
     if (prop === 'w' || prop === 'h') {
-      const base = defaultEffectSize(effectSelect.value);
-      const baseValue = prop === 'w' ? base.w : base.h;
-      const scale = clamp(Number(value), 5, 300) / 100;
-      writeEffectFrameValue(prop, baseValue * scale);
+      writeEffectFrameValue(prop, effectSizeFromPercent(effectSelect.value, prop, value));
     } else {
       const limits = effectFieldLimits(prop);
       writeEffectFrameValue(prop, clamp(Number(value), limits.min, limits.max));
@@ -3154,9 +3150,7 @@ function buildTuningPanel() {
   }
 
   function clampEffectSize(prop, value) {
-    const base = defaultEffectSize(effectSelect.value);
-    const baseValue = prop === 'w' ? base.w : base.h;
-    return clamp(Number(value), baseValue * 0.05, baseValue * 3);
+    return clampEffectFrameSize(effectSelect.value, prop, value);
   }
 
   function applyCanvasGroupDrag(drag, dx, dy) {
