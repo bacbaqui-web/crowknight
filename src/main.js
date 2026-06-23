@@ -4,7 +4,7 @@ import { drawActor } from './actorRenderer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
-import { defaultEffectSize, frameValue, interpolateEffectFrameValues } from './animationFrames.js';
+import { defaultEffectSize, frameValue } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
 import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
@@ -101,6 +101,7 @@ import {
   resetGroupTransformValues as resetGroupTransformValueState,
 } from './panelEditState.js';
 import { renderKeyframeTimeline } from './timelineRenderer.js';
+import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   addEffectTimelineKeyframe,
   addPoseTimelineKeyframe,
@@ -1569,18 +1570,16 @@ function buildTuningPanel() {
   }
 
   function currentEffectFrameValue() {
-    ensureEffectOffset(selectedActor.tuning, effectSelect.value);
-    const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
-    if (activeEffectKeyframeId) return ensureEffectKeyframe(activeEffectKeyframeId);
-    if (!effectFrame && selectedEffectSlot !== null) {
-      return interpolateEffectFrameValues(
-        effectKeyframesFor(effect, effectSelect.value),
-        getActiveEffectT(),
-        effectSelect.value
-      );
-    }
-    if (!effectFrame) setEffectFrameSilently('start');
-    return effect[effectFrame === 'end' ? 'end' : 'start'];
+    return currentEffectTimelineFrame({
+      tuning: selectedActor.tuning,
+      effectKey: effectSelect.value,
+      activeKeyframeId: activeEffectKeyframeId,
+      fixedFrame: effectFrame,
+      selectedSlot: selectedEffectSlot,
+      activeT: getActiveEffectT(),
+      ensureKeyframe: ensureEffectKeyframe,
+      setFixedFrame: setEffectFrameSilently,
+    });
   }
 
   function writeEffectFrameValue(prop, value) {
