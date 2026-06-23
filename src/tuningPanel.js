@@ -113,11 +113,10 @@ import {
 import { handleCursor } from './editHandleDrawing.js';
 import { renderEditHandles as renderEditHandlesView } from './editHandleRenderer.js';
 import {
-  createEffectEditHandleGeometry,
-  createGroupEditHandleGeometry,
-  createPartEditHandleGeometry,
-  findEditHandleAt,
-} from './editHandleGeometry.js';
+  findTuningEditHandleAt,
+  tuningEditHandleGeometry,
+  tuningGroupEditHandleGeometry,
+} from './tuningEditHandleGeometry.js';
 import {
   applyCanvasGroupDrag,
   applyCanvasGroupRotation,
@@ -200,41 +199,31 @@ export function createTuningPanel({
   }
 
   function getEditHandleGeometry() {
-    if (!isSettingsPanelOpen()) return null;
-
-    const effectGeometry = getEffectEditHandleGeometry();
-    if (effectGeometry) return effectGeometry;
-
-    if (!editFocusPartKey) return null;
-
-    const groupGeometry = getGroupEditHandleGeometry();
-    if (groupGeometry) return groupGeometry;
-
-    return createPartEditHandleGeometry({
+    return tuningEditHandleGeometry({
+      isPanelOpen: isSettingsPanelOpen(),
+      openEditContext: currentOpenEditContext(),
+      effectEditHandle,
       editFocusPartKey,
-      editHandleInfo: selectedActor.player.editHandles?.[editFocusPartKey],
+      selectedActor,
       poseFrameSelectionActive,
+      editFocusContext,
+      selectedPosePartKeys: selectedPosePartKeysGlobal,
+      groupEditValues,
     });
   }
 
-  function getEffectEditHandleGeometry() {
-    if (currentOpenEditContext() !== 'effect' || !effectEditHandle) return null;
-    return createEffectEditHandleGeometry(effectEditHandle);
-  }
-
   function getGroupEditHandleGeometry() {
-    return createGroupEditHandleGeometry({
+    return tuningGroupEditHandleGeometry({
       editFocusContext,
       selectedPosePartKeys: selectedPosePartKeysGlobal,
       poseFrameSelectionActive,
-      editHandles: selectedActor.player.editHandles,
-      hitRegions: selectedActor.player.hitRegions,
+      selectedActor,
       groupEditValues,
     });
   }
 
   function getEditHandleAt(point) {
-    return findEditHandleAt(point, getEditHandleGeometry());
+    return findTuningEditHandleAt(point, getEditHandleGeometry());
   }
 
   function buildTuningPanel() {
