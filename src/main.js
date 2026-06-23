@@ -2046,9 +2046,7 @@ function buildTuningPanel() {
     if (!activeEffectKeyframeId) return;
     beginUndoSnapshot();
     deleteEffectTimelineKeyframe(selectedActor.tuning, effectSelect.value, activeEffectKeyframeId);
-    activeEffectKeyframeId = null;
-    effectFrame = null;
-    selectedEffectSlot = null;
+    resetEffectSelectionState();
     stopEffectPreview();
     renderEffectFields();
     syncEffectPreview();
@@ -2059,9 +2057,7 @@ function buildTuningPanel() {
   function resetCurrentEffectAnimation() {
     beginUndoSnapshot();
     resetEffectTimelineAnimation(selectedActor.tuning, effectSelect.value);
-    activeEffectKeyframeId = null;
-    effectFrame = null;
-    selectedEffectSlot = null;
+    resetEffectSelectionState();
     copiedEffectFrame = null;
     stopEffectPreview();
     renderEffectFields();
@@ -2721,9 +2717,7 @@ function buildTuningPanel() {
     activePosePartKey = null;
     activePoseKeyframeId = null;
     selectedPoseSlot = null;
-    activeEffectKeyframeId = null;
-    selectedEffectSlot = null;
-    effectFrame = null;
+    resetEffectSelectionState();
     if (clearCopiedEffect) copiedEffectFrame = null;
     resetGroupEditValues();
   }
@@ -2801,9 +2795,7 @@ function buildTuningPanel() {
   function handleEffectChange() {
     editContext = 'effect';
     stopEffectPreview();
-    effectFrame = null;
-    selectedEffectSlot = null;
-    activeEffectKeyframeId = null;
+    resetEffectSelectionState();
     ensureActiveEffectFrame();
     renderEffectFields();
     syncEffectPreview();
