@@ -63,6 +63,7 @@ import {
   bindSelectionControls,
   isTextInput,
 } from './tuningPanelBindings.js';
+import { previewTimeoutMs, timelineDurationFromFrames, timelineFrameCount } from './tuningPlayback.js';
 import {
   effectPropertyGroups,
   groupPosePropertyGroups,
@@ -116,7 +117,6 @@ import {
   KILL_SCORE,
   KILL_SCORE_WEIGHT,
   MASTER_PART_KEY,
-  POSE_FPS,
   POSE_MAX_FRAMES,
   POSE_MIN_FRAMES,
   POSE_PART_KEYS,
@@ -2426,8 +2426,7 @@ function buildTuningPanel() {
     beginUndoSnapshot();
     ensurePoseSettings(selectedActor.tuning);
     const settings = selectedActor.tuning.poseSettings[poseSelect.value];
-    if (prop === 'duration')
-      settings.duration = clamp(Math.round(Number(value)), POSE_MIN_FRAMES, POSE_MAX_FRAMES) / POSE_FPS;
+    if (prop === 'duration') settings.duration = timelineDurationFromFrames(value);
     if (prop === 'playback') settings.playback = value === 'once' ? 'once' : 'loop';
     if (prop === 'playbackRate') settings.playbackRate = clamp(Number(value), 0.1, 4);
     applySelected();
@@ -2543,14 +2542,11 @@ function buildTuningPanel() {
     const settings = selectedActor.tuning.poseSettings[poseSelect.value];
     if (settings.playback !== 'once') return;
 
-    posePreviewTimer = setTimeout(
-      () => {
-        posePreviewPlaying = false;
-        posePreviewTimer = null;
-        syncPosePreview();
-      },
-      Math.max(50, (Number(settings.duration || 0.2) / Math.max(0.1, Number(settings.playbackRate || 1))) * 1000)
-    );
+    posePreviewTimer = setTimeout(() => {
+      posePreviewPlaying = false;
+      posePreviewTimer = null;
+      syncPosePreview();
+    }, previewTimeoutMs(settings));
   }
 
   function stopPosePreview() {
@@ -2911,7 +2907,7 @@ function buildTuningPanel() {
   function getPoseFrameCount() {
     ensurePoseSettings(selectedActor.tuning);
     const settings = selectedActor.tuning.poseSettings[poseSelect.value] || {};
-    return clamp(Math.round(Number(settings.duration || 0.2) * POSE_FPS), POSE_MIN_FRAMES, POSE_MAX_FRAMES);
+    return timelineFrameCount(settings);
   }
 
   function getPoseLastSlot() {
@@ -2980,8 +2976,7 @@ function buildTuningPanel() {
     beginUndoSnapshot();
     ensureEffectSettings(selectedActor.tuning);
     const settings = selectedActor.tuning.effectSettings[effectSelect.value];
-    if (prop === 'duration')
-      settings.duration = clamp(Math.round(Number(value)), POSE_MIN_FRAMES, POSE_MAX_FRAMES) / POSE_FPS;
+    if (prop === 'duration') settings.duration = timelineDurationFromFrames(value);
     if (prop === 'playback') settings.playback = value === 'loop' ? 'loop' : 'once';
     if (prop === 'playbackRate') settings.playbackRate = clamp(Number(value), 0.1, 4);
     applySelected();
@@ -3028,14 +3023,11 @@ function buildTuningPanel() {
     const settings = selectedActor.tuning.effectSettings[effectSelect.value];
     if (settings.playback === 'loop') return;
 
-    effectPreviewTimer = setTimeout(
-      () => {
-        effectPreviewPlaying = false;
-        effectPreviewTimer = null;
-        syncEffectPreview();
-      },
-      Math.max(50, (Number(settings.duration || 0.2) / Math.max(0.1, Number(settings.playbackRate || 1))) * 1000)
-    );
+    effectPreviewTimer = setTimeout(() => {
+      effectPreviewPlaying = false;
+      effectPreviewTimer = null;
+      syncEffectPreview();
+    }, previewTimeoutMs(settings));
   }
 
   function stopEffectPreview() {
@@ -3362,7 +3354,7 @@ function buildTuningPanel() {
   function getEffectFrameCount() {
     ensureEffectSettings(selectedActor.tuning);
     const settings = selectedActor.tuning.effectSettings[effectSelect.value] || {};
-    return clamp(Math.round(Number(settings.duration || 0.2) * POSE_FPS), POSE_MIN_FRAMES, POSE_MAX_FRAMES);
+    return timelineFrameCount(settings);
   }
 
   function getEffectLastSlot() {
