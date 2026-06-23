@@ -112,6 +112,13 @@ import {
   resetPoseTimelineAnimation,
 } from './timelineKeyframeMutations.js';
 import {
+  createEffectFrameCopy,
+  createPoseFrameCopy,
+  poseFramePasteParts,
+  selectedPoseFrameCopyMode,
+  selectedPoseFrameCopyParts,
+} from './timelineFrameClipboard.js';
+import {
   activeTimelineT,
   timelineFrameCountFor,
   timelineLastSlot,
@@ -1890,36 +1897,17 @@ function buildTuningPanel() {
     if (!id) return;
     const reference = poseTimelineKeyframes().find((frame) => frame.id === id);
     if (!reference) return;
-    const selectedParts = selectedPoseFrameCopyParts();
-
-    copiedPoseFrame = {
-      mode: selectedPoseFrameCopyMode(),
-      pose: poseSelect.value,
-      sourceId: id,
-      sourcePart: activePosePartKey || null,
-      sourceParts: selectedParts,
-      parts: {},
-    };
-
-    selectedParts.forEach((part) => {
-      ensurePoseOffset(selectedActor.tuning, poseSelect.value, part);
-      const frames = selectedActor.tuning.poseOffsets[poseSelect.value][part];
-      const source = poseKeyframesFor(frames).find((frame) => frame.id === id);
-      copiedPoseFrame.parts[part] = frameValue(source || reference);
+    const selectedParts = selectedPoseFrameCopyParts(selectedPosePartKeysGlobal, activePosePartKey);
+    copiedPoseFrame = createPoseFrameCopy({
+      tuning: selectedActor.tuning,
+      poseKey: poseSelect.value,
+      id,
+      reference,
+      selectedParts,
+      mode: selectedPoseFrameCopyMode(selectedPosePartKeysGlobal, activePosePartKey),
+      activePosePartKey,
     });
     syncPoseToolbarButtons();
-  }
-
-  function selectedPoseFrameCopyParts() {
-    if (selectedPosePartKeysGlobal.size > 1) return [...selectedPosePartKeysGlobal];
-    if (activePosePartKey) return [activePosePartKey];
-    return POSE_PART_KEYS;
-  }
-
-  function selectedPoseFrameCopyMode() {
-    if (selectedPosePartKeysGlobal.size > 1) return 'parts';
-    if (activePosePartKey) return 'part';
-    return 'frame';
   }
 
   function pasteActivePoseFrame() {
@@ -1928,7 +1916,7 @@ function buildTuningPanel() {
     if (!isPoseTimelineFrameId(id)) return;
 
     beginUndoSnapshot();
-    const pasteParts = pastePoseFrameParts();
+    const pasteParts = poseFramePasteParts(copiedPoseFrame, selectedPosePartKeysGlobal, activePosePartKey);
 
     pasteParts.forEach(({ from, to }) => {
       pastePoseFramePart(id, from, to);
@@ -1957,20 +1945,6 @@ function buildTuningPanel() {
 
   function isPoseTimelineFrameId(id) {
     return Boolean(id && poseTimelineKeyframes().some((frame) => frame.id === id));
-  }
-
-  function pastePoseFrameParts() {
-    if (copiedPoseFrame.mode === 'part') {
-      return [{ from: copiedPoseFrame.sourcePart, to: activePosePartKey || copiedPoseFrame.sourcePart }];
-    }
-
-    if (copiedPoseFrame.mode === 'parts') {
-      const sourceParts = copiedPoseFrame.sourceParts || Object.keys(copiedPoseFrame.parts || {});
-      const targetParts = selectedPosePartKeysGlobal.size > 1 ? [...selectedPosePartKeysGlobal] : sourceParts;
-      return sourceParts.map((from, index) => ({ from, to: targetParts[index] || from }));
-    }
-
-    return POSE_PART_KEYS.map((part) => ({ from: part, to: part }));
   }
 
   function renderPoseTimeline() {
@@ -2337,10 +2311,7 @@ function buildTuningPanel() {
     const id = activeEffectKeyframeId || effectFrame;
     const source = id ? effectTimelineKeyframes().find((frame) => frame.id === id) : currentEffectFrameValue();
     if (!source) return;
-    copiedEffectFrame = {
-      effect: effectSelect.value,
-      frame: effectFrameValue(source, effectSelect.value),
-    };
+    copiedEffectFrame = createEffectFrameCopy(effectSelect.value, source);
     syncEffectToolbarButtons();
   }
 
