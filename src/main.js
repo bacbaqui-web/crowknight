@@ -49,6 +49,7 @@ import {
   transformCanvasPoint,
 } from './screenGeometry.js';
 import { clamp, clone, setPath } from './utils.js';
+import { applyWorldView, drawWorld } from './worldRenderer.js';
 import {
   bindNumberDragInput,
   clampPlaybackRateInput,
@@ -657,10 +658,10 @@ function finishRun({ showResult = false } = {}) {
 
 function draw() {
   const view = getViewTransform();
-  drawWorld(view);
+  drawWorld(ctx, world, view);
 
   ctx.save();
-  applyWorldView(view);
+  applyWorldView(ctx, world, view);
   particleEffects.drawDust();
   actors.forEach(drawRollGhosts);
   actors.forEach(drawActor);
@@ -771,12 +772,6 @@ function currentOpenEditContext() {
   return null;
 }
 
-function applyWorldView(view) {
-  ctx.translate(world.viewW / 2, world.viewH / 2);
-  ctx.scale(view.zoom, view.zoom);
-  ctx.translate(-view.focusX, -view.focusY);
-}
-
 function updateRollGhosts(dt) {
   actors.forEach((actor) => {
     actor.rollGhosts = actor.rollGhosts
@@ -842,43 +837,6 @@ function drawRollGhosts(actor) {
   player.dashTime = snapshot.dashTime;
   player.state = snapshot.state;
   player.anchorDebugPart = snapshot.anchorDebugPart;
-}
-
-function drawWorld(view) {
-  ctx.clearRect(0, 0, world.viewW, world.viewH);
-  ctx.fillStyle = '#171720';
-  ctx.fillRect(0, 0, world.viewW, world.viewH);
-
-  const bounds = visibleWorldBounds(view);
-  const startX = Math.floor(bounds.x / 80) * 80 - 80;
-  const endX = bounds.x + bounds.w + 160;
-
-  ctx.save();
-  applyWorldView(view);
-  ctx.fillStyle = '#222230';
-  ctx.fillRect(bounds.x - 8, world.floorY, bounds.w + 16, 110);
-  ctx.strokeStyle = '#55556a';
-  ctx.beginPath();
-  ctx.moveTo(bounds.x - 8, world.floorY);
-  ctx.lineTo(bounds.x + bounds.w + 8, world.floorY);
-  ctx.stroke();
-
-  ctx.fillStyle = '#1a1d26';
-  for (let x = startX + 40; x < endX; x += 80) {
-    ctx.fillRect(x, world.floorY + 36, 44, 4);
-  }
-  ctx.restore();
-}
-
-function visibleWorldBounds(view) {
-  const w = world.viewW / view.zoom;
-  const h = world.viewH / view.zoom;
-  return {
-    x: view.focusX - w / 2,
-    y: view.focusY - h / 2,
-    w,
-    h,
-  };
 }
 
 function bindBattleControls() {
