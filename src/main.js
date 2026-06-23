@@ -136,7 +136,7 @@ import {
   applyEffectCanvasDrag,
 } from './canvasDragApply.js';
 import { canvasPointFromEvent } from './canvasDragMath.js';
-import { pickDragValues, pickVisualValues } from './canvasDragState.js';
+import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvasDragState.js';
 import { setPartAnchorValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
@@ -2866,16 +2866,7 @@ function buildTuningPanel() {
       handle: handleHit.geometry,
       startX: point.x,
       startY: point.y,
-      startValues: {
-        x: Number(target.x || 0),
-        y: Number(target.y || 0),
-        w: Number(target.w || defaultEffectSize(effectSelect.value).w),
-        h: Number(target.h || defaultEffectSize(effectSelect.value).h),
-        rot: Number(target.rot || 0),
-        opacity: Number(target.opacity ?? 1),
-        anchorX: Number(target.anchorX || 0),
-        anchorY: Number(target.anchorY || 0),
-      },
+      startValues: pickEffectDragValues(target, effectSelect.value),
       startAngle: Math.atan2(point.y - handleHit.geometry.anchor.y, point.x - handleHit.geometry.anchor.x),
       mode: handleHit.mode,
       context: 'effect',
