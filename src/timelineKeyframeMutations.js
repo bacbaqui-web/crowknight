@@ -1,4 +1,4 @@
-import { defaultEffectImageKey } from './animationFrames.js';
+import { defaultEffectImageKey, effectFrameValue, frameValue } from './animationFrames.js';
 import { POSE_PART_KEYS } from './gameConfig.js';
 import {
   effectKeyframesFor,
@@ -72,4 +72,22 @@ export function resetEffectTimelineAnimation(tuning, effectKey) {
   tuning.effectOffsets[effectKey] = normalizeEffectOffsets({
     [effectKey]: { image: defaultEffectImageKey(effectKey) },
   })[effectKey];
+}
+
+export function pastePoseTimelineFramePart({ frames, id, sourceFrame, ensureKeyframe }) {
+  const target = ensureKeyframe(frames, id);
+  const keep = { id: target.id, t: target.t };
+  Object.assign(target, frameValue(sourceFrame), keep);
+  if (id === 'start') frames.start = frameValue(target);
+  if (id === 'end') frames.end = frameValue(target);
+  syncFrameAliases(frames);
+}
+
+export function pasteEffectTimelineFrame({ effect, effectKey, id, sourceFrame, ensureKeyframe }) {
+  const target = ensureKeyframe(id);
+  const keep = { id: target.id, t: target.t };
+  Object.assign(target, effectFrameValue(sourceFrame, effectKey), keep);
+  if (id === 'start') effect.start = effectFrameValue(target, effectKey);
+  if (id === 'end') effect.end = effectFrameValue(target, effectKey);
+  syncFrameAliases(effect);
 }

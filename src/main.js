@@ -6,7 +6,6 @@ import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyAc
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
 import {
   defaultEffectSize,
-  effectFrameValue,
   frameValue,
   interpolateEffectFrameValues,
   interpolateFrameValues,
@@ -108,6 +107,8 @@ import {
   addPoseTimelineKeyframe,
   deleteEffectTimelineKeyframe,
   deletePoseTimelineKeyframe,
+  pasteEffectTimelineFrame,
+  pastePoseTimelineFramePart,
   resetEffectTimelineAnimation,
   resetPoseTimelineAnimation,
 } from './timelineKeyframeMutations.js';
@@ -1935,12 +1936,12 @@ function buildTuningPanel() {
 
     ensurePoseOffset(selectedActor.tuning, poseSelect.value, to);
     const frames = selectedActor.tuning.poseOffsets[poseSelect.value][to];
-    const target = ensurePoseKeyframeForPart(frames, id);
-    const keep = { id: target.id, t: target.t };
-    Object.assign(target, frameValue(copiedPoseFrame.parts[from]), keep);
-    if (id === 'start') frames.start = frameValue(target);
-    if (id === 'end') frames.end = frameValue(target);
-    syncFrameAliases(frames);
+    pastePoseTimelineFramePart({
+      frames,
+      id,
+      sourceFrame: copiedPoseFrame.parts[from],
+      ensureKeyframe: ensurePoseKeyframeForPart,
+    });
   }
 
   function isPoseTimelineFrameId(id) {
@@ -2332,12 +2333,13 @@ function buildTuningPanel() {
 
   function pasteEffectFrameValue(id) {
     const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
-    const target = ensureEffectKeyframe(id);
-    const keep = { id: target.id, t: target.t };
-    Object.assign(target, effectFrameValue(copiedEffectFrame.frame, effectSelect.value), keep);
-    if (id === 'start') effect.start = effectFrameValue(target, effectSelect.value);
-    if (id === 'end') effect.end = effectFrameValue(target, effectSelect.value);
-    syncFrameAliases(effect);
+    pasteEffectTimelineFrame({
+      effect,
+      effectKey: effectSelect.value,
+      id,
+      sourceFrame: copiedEffectFrame.frame,
+      ensureKeyframe: ensureEffectKeyframe,
+    });
   }
 
   function isEffectTimelineFrameId(id) {
