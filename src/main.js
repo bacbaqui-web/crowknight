@@ -89,6 +89,7 @@ import {
   renderEffectImagePreview,
   renderLayerSelectOptions,
   syncNumericFields,
+  syncPanelToggleState,
 } from './tuningPanelDom.js';
 import { isMasterPart, partLabel } from './tuningLabels.js';
 import {
@@ -1157,13 +1158,7 @@ function buildTuningPanel() {
   poseFrameCopyGlobal = copyCurrentFrame;
   poseFramePasteGlobal = pasteCurrentFrame;
 
-  function syncPanelToggle() {
-    const isOpen = panel.classList.contains('is-open');
-    openButton.classList.toggle('is-panel-open', isOpen);
-    openButton.classList.toggle('is-flipped', isOpen);
-    openButton.setAttribute('aria-expanded', String(isOpen));
-    openButton.setAttribute('aria-label', isOpen ? '설정 접기' : '설정 열기');
-  }
+  const syncPanelToggle = () => syncPanelToggleState(panel, openButton);
 
   const fields = TUNING_FIELDS;
   const scrubCallbacks = {

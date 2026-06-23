@@ -60,6 +60,14 @@ export function getTuningPanelElements(panel) {
   };
 }
 
+export function syncPanelToggleState(panel, openButton) {
+  const isOpen = panel.classList.contains('is-open');
+  openButton.classList.toggle('is-panel-open', isOpen);
+  openButton.classList.toggle('is-flipped', isOpen);
+  openButton.setAttribute('aria-expanded', String(isOpen));
+  openButton.setAttribute('aria-label', isOpen ? '설정 접기' : '설정 열기');
+}
+
 export function replaceSelectOptions(select, options) {
   select.innerHTML = '';
   options.forEach(({ value, label }) => {
