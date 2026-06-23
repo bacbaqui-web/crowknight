@@ -114,6 +114,7 @@ import {
   timelineSlotToValue,
   timelineValueToSlot,
 } from './timelineState.js';
+import { createEffectPreview, createPosePreview, shouldPreviewEffect, shouldPreviewPose } from './previewState.js';
 import { getCameraX, getViewTransform } from './cameraView.js';
 import {
   MOVE_HANDLE_RADIUS,
@@ -2089,13 +2090,12 @@ function buildTuningPanel() {
       syncFrameAliases(frames);
     });
     applySelected();
-    selectedActor.player.posePreview = {
+    selectedActor.player.posePreview = createPosePreview({
       pose: poseSelect.value,
-      frame: null,
       playing: false,
       t,
-      startedAt: performance.now(),
-    };
+      now: performance.now(),
+    });
     poseTimelineTrack.querySelectorAll(`[data-keyframe-id="${id}"]`).forEach((button) => {
       button.style.left = `${slotToLeft(nextSlot)}%`;
       button.title = `${nextSlot + 1}칸`;
@@ -2106,13 +2106,12 @@ function buildTuningPanel() {
     activePoseKeyframeId = id;
     stopPosePreview();
     const t = getActivePoseT();
-    selectedActor.player.posePreview = {
+    selectedActor.player.posePreview = createPosePreview({
       pose: poseSelect.value,
-      frame: null,
       playing: false,
       t,
-      startedAt: performance.now(),
-    };
+      now: performance.now(),
+    });
     poseDeleteKeyframe.disabled = false;
     poseTimelineTrack.querySelectorAll('.pose-keyframe').forEach((button) => {
       button.classList.toggle('is-active', button.dataset.keyframeId === id);
@@ -2183,21 +2182,26 @@ function buildTuningPanel() {
       renderPoseTimeline();
       return;
     }
-    const shouldPreviewPose = posePreviewPlaying || activePoseKeyframeId || poseFrame || selectedPoseSlot !== null;
-    if (!shouldPreviewPose) {
+    const hasPosePreview = shouldPreviewPose({
+      playing: posePreviewPlaying,
+      activeKeyframeId: activePoseKeyframeId,
+      fixedFrame: poseFrame,
+      selectedSlot: selectedPoseSlot,
+    });
+    if (!hasPosePreview) {
       posePlayback.classList.toggle('is-active', false);
       renderPoseTimeline();
       return;
     }
     const settings = selectedActor.tuning.poseSettings[poseSelect.value] || {};
-    selectedActor.player.posePreview = {
+    selectedActor.player.posePreview = createPosePreview({
       pose: poseSelect.value,
-      frame: activePoseKeyframeId ? null : poseFrame,
+      fixedFrame: activePoseKeyframeId ? null : poseFrame,
       playing: posePreviewPlaying,
       loop: settings.playback !== 'once',
       t: activePoseKeyframeId || selectedPoseSlot !== null ? getActivePoseT() : null,
-      startedAt: performance.now(),
-    };
+      now: performance.now(),
+    });
     renderPoseTimeline();
   }
 
@@ -2527,12 +2531,12 @@ function buildTuningPanel() {
     sortPoseKeyframes(effect.keyframes);
     syncFrameAliases(effect);
     applySelected();
-    selectedActor.player.effectPreview = {
+    selectedActor.player.effectPreview = createEffectPreview({
       key: effectSelect.value,
       playing: false,
       t,
-      startedAt: performance.now(),
-    };
+      now: performance.now(),
+    });
     effectTimelineTrack.querySelectorAll(`[data-keyframe-id="${id}"]`).forEach((button) => {
       button.style.left = `${effectSlotToLeft(nextSlot)}%`;
       button.title = `${nextSlot + 1}칸`;
@@ -2543,12 +2547,12 @@ function buildTuningPanel() {
     activeEffectKeyframeId = id;
     stopEffectPreview();
     const t = getActiveEffectT();
-    selectedActor.player.effectPreview = {
+    selectedActor.player.effectPreview = createEffectPreview({
       key: effectSelect.value,
       playing: false,
       t,
-      startedAt: performance.now(),
-    };
+      now: performance.now(),
+    });
     effectDeleteKeyframe.disabled = false;
     effectTimelineTrack.querySelectorAll('.pose-keyframe').forEach((button) => {
       button.classList.toggle('is-active', button.dataset.keyframeId === id);
@@ -2619,19 +2623,23 @@ function buildTuningPanel() {
       renderEffectTimeline();
       return;
     }
-    const shouldPreviewEffect =
-      effectPreviewPlaying || activeEffectKeyframeId || effectFrame || selectedEffectSlot !== null;
-    if (!shouldPreviewEffect) {
+    const hasEffectPreview = shouldPreviewEffect({
+      playing: effectPreviewPlaying,
+      activeKeyframeId: activeEffectKeyframeId,
+      fixedFrame: effectFrame,
+      selectedSlot: selectedEffectSlot,
+    });
+    if (!hasEffectPreview) {
       effectPlayback.classList.toggle('is-active', false);
       renderEffectTimeline();
       return;
     }
-    selectedActor.player.effectPreview = {
+    selectedActor.player.effectPreview = createEffectPreview({
       key: effectSelect.value,
       playing: effectPreviewPlaying,
       t: effectPreviewPlaying ? null : getActiveEffectT(),
-      startedAt: performance.now(),
-    };
+      now: performance.now(),
+    });
     renderEffectTimeline();
   }
 
