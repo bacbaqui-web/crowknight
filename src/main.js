@@ -1633,9 +1633,7 @@ function buildTuningPanel() {
     if (!activePoseKeyframeId) return;
     beginUndoSnapshot();
     deletePoseTimelineKeyframe(selectedActor.tuning, poseSelect.value, activePoseKeyframeId);
-    activePoseKeyframeId = null;
-    poseFrame = null;
-    selectedPoseSlot = null;
+    resetPoseKeyframeSelectionState();
     stopPosePreview();
     resetGroupEditValues();
     renderPosePartFields();
@@ -1647,9 +1645,7 @@ function buildTuningPanel() {
   function resetCurrentPoseAnimation() {
     beginUndoSnapshot();
     resetPoseTimelineAnimation(selectedActor.tuning, poseSelect.value);
-    poseFrame = null;
-    activePoseKeyframeId = null;
-    selectedPoseSlot = null;
+    resetPoseKeyframeSelectionState();
     copiedPoseFrame = null;
     stopPosePreview();
     renderPosePartFields();
@@ -1781,10 +1777,14 @@ function buildTuningPanel() {
   }
 
   function clearPoseKeyframeSelection() {
+    resetPoseKeyframeSelectionState();
+    refreshPoseFrameSelection();
+  }
+
+  function resetPoseKeyframeSelectionState() {
     activePoseKeyframeId = null;
     poseFrame = null;
     selectedPoseSlot = null;
-    refreshPoseFrameSelection();
   }
 
   function refreshPoseFrameSelection() {
@@ -2780,9 +2780,7 @@ function buildTuningPanel() {
   function handlePoseChange() {
     editContext = 'pose';
     stopPosePreview();
-    poseFrame = null;
-    selectedPoseSlot = null;
-    activePoseKeyframeId = null;
+    resetPoseKeyframeSelectionState();
     const nextSelection = clearPosePartSelectionState(selectedPosePartKeysGlobal, MASTER_PART_KEY);
     resetGroupEditValues();
     activePosePartKey = nextSelection.activePosePartKey;
