@@ -4,13 +4,7 @@ import { drawActor } from './actorRenderer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
-import {
-  defaultEffectSize,
-  frameValue,
-  interpolateEffectFrameValues,
-  interpolateFrameValues,
-  syncFrameAliases,
-} from './animationFrames.js';
+import { defaultEffectSize, frameValue, interpolateEffectFrameValues, syncFrameAliases } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
 import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
@@ -109,6 +103,8 @@ import {
   addPoseTimelineKeyframe,
   deleteEffectTimelineKeyframe,
   deletePoseTimelineKeyframe,
+  ensureEffectTimelineKeyframe,
+  ensurePoseTimelineKeyframe,
   pasteEffectTimelineFrame,
   pastePoseTimelineFramePart,
   resetEffectTimelineAnimation,
@@ -2105,17 +2101,7 @@ function buildTuningPanel() {
   }
 
   function ensurePoseKeyframeForPart(frames, id) {
-    const keyframes = poseKeyframesFor(frames);
-    const found = keyframes.find((frame) => frame.id === id);
-    if (found) return found;
-
-    const reference = poseTimelineKeyframes().find((frame) => frame.id === id);
-    const t = Number(reference?.t ?? 0.5);
-    const created = { id, t, ...interpolateFrameValues(keyframes, t) };
-    keyframes.push(created);
-    sortPoseKeyframes(keyframes);
-    syncFrameAliases(frames);
-    return created;
+    return ensurePoseTimelineKeyframe(frames, id, poseTimelineKeyframes());
   }
 
   function poseTimelineKeyframes() {
@@ -2530,17 +2516,7 @@ function buildTuningPanel() {
   function ensureEffectKeyframe(id) {
     ensureEffectOffset(selectedActor.tuning, effectSelect.value);
     const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
-    const keyframes = effectKeyframesFor(effect, effectSelect.value);
-    const found = keyframes.find((frame) => frame.id === id);
-    if (found) return found;
-
-    const reference = effectTimelineKeyframes().find((frame) => frame.id === id);
-    const t = Number(reference?.t ?? 0.5);
-    const created = { id, t, ...interpolateEffectFrameValues(keyframes, t, effectSelect.value) };
-    keyframes.push(created);
-    sortPoseKeyframes(keyframes);
-    syncFrameAliases(effect);
-    return created;
+    return ensureEffectTimelineKeyframe(effect, effectSelect.value, id, effectTimelineKeyframes());
   }
 
   function effectTimelineKeyframes() {

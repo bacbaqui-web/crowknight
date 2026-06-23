@@ -31,6 +31,20 @@ export function addPoseTimelineKeyframe(tuning, poseKey, t) {
   return id;
 }
 
+export function ensurePoseTimelineKeyframe(frames, id, timelineKeyframes) {
+  const keyframes = poseKeyframesFor(frames);
+  const found = keyframes.find((frame) => frame.id === id);
+  if (found) return found;
+
+  const reference = timelineKeyframes.find((frame) => frame.id === id);
+  const t = Number(reference?.t ?? 0.5);
+  const created = { id, t, ...interpolateFrameValues(keyframes, t) };
+  keyframes.push(created);
+  sortPoseKeyframes(keyframes);
+  syncFrameAliases(frames);
+  return created;
+}
+
 export function deletePoseTimelineKeyframe(tuning, poseKey, id) {
   POSE_PART_KEYS.forEach((part) => {
     const frames = tuning.poseOffsets[poseKey]?.[part];
@@ -52,6 +66,20 @@ export function addEffectTimelineKeyframe(tuning, effectKey, t) {
   sortPoseKeyframes(effect.keyframes);
   syncFrameAliases(effect);
   return id;
+}
+
+export function ensureEffectTimelineKeyframe(effect, effectKey, id, timelineKeyframes) {
+  const keyframes = effectKeyframesFor(effect, effectKey);
+  const found = keyframes.find((frame) => frame.id === id);
+  if (found) return found;
+
+  const reference = timelineKeyframes.find((frame) => frame.id === id);
+  const t = Number(reference?.t ?? 0.5);
+  const created = { id, t, ...interpolateEffectFrameValues(keyframes, t, effectKey) };
+  keyframes.push(created);
+  sortPoseKeyframes(keyframes);
+  syncFrameAliases(effect);
+  return created;
 }
 
 export function deleteEffectTimelineKeyframe(tuning, effectKey, id) {
