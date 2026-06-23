@@ -131,15 +131,11 @@ import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
-  activeAttackSettingsKey,
-  activeEffectSettingsKey,
   currentCanvasSettingsEditContext,
   currentSettingsEditContext,
-  isCollisionSectionOpen,
   isSettingsPanelOpen,
 } from './settingsPanelState.js';
-import { drawAttackHitboxPreview, drawBodyHitbox } from './settingsDebugRenderer.js';
-import { drawEffectSettingsPreview } from './settingsEffectPreviewRenderer.js';
+import { drawTuningPanelDebugBoxes } from './tuningPanelDebugView.js';
 import { handlePanelKeyboardShortcut } from './tuningPanelShortcuts.js';
 import { MASTER_PART_KEY, POSE_MAX_FRAMES, POSE_MIN_FRAMES, POSE_PART_KEYS, TUNING_FIELDS } from './gameConfig.js';
 
@@ -199,21 +195,8 @@ export function createTuningPanel({
   }
 
   function drawSettingsDebugBoxes() {
-    if (!isSettingsPanelOpen()) return;
-
-    if (isCollisionSectionOpen()) {
-      drawBodyHitbox(ctx, selectedActor);
-    }
-
-    const attackKey = activeAttackSettingsKey();
-    if (attackKey) {
-      drawAttackHitboxPreview(ctx, selectedActor, attackKey);
-    }
-
-    const effectKey = activeEffectSettingsKey();
-    if (effectKey) {
-      effectEditHandle = drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
-    }
+    const nextDebugState = drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets);
+    if (nextDebugState.hasEffectHandleUpdate) effectEditHandle = nextDebugState.effectHandle;
   }
 
   function getEditHandleGeometry() {
