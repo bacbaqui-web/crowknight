@@ -148,6 +148,13 @@ export function renderEffectImagePreview(preview, effectKey, effectAssets) {
   preview.append(image);
 }
 
+export function renderPosePartHeader(container, partKey, selectedCount) {
+  const header = document.createElement('div');
+  header.className = 'pose-part-header';
+  header.textContent = partKey === 'group' ? `선택 그룹 ${selectedCount}` : partLabel(partKey);
+  container.append(header);
+}
+
 export function bindPartPickerButtons(picker, onSelect) {
   picker.querySelectorAll('[data-part]').forEach((button) => {
     button.title = button.textContent.trim();

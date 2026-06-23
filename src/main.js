@@ -69,13 +69,14 @@ import {
   populateTuningPanelSelects,
   renderEffectImagePreview,
   renderLayerSelectOptions,
+  renderPosePartHeader,
   syncActorSelectLabels,
   syncEffectToolbarButtonStates,
   syncNumericFields,
   syncPanelToggleState,
   syncPoseToolbarButtonStates,
 } from './tuningPanelDom.js';
-import { isMasterPart, partLabel } from './tuningLabels.js';
+import { isMasterPart } from './tuningLabels.js';
 import { effectFieldLimits, partPositionSources, poseFieldLimits, poseMotionGroups } from './tuningParts.js';
 import { isEmptyEditableSlot, selectedOrFirstEmptySlot, syncTimelinePlaybackControls } from './tuningTimelineDom.js';
 import {
@@ -1265,7 +1266,7 @@ function buildTuningPanel() {
     renderPoseTimeline();
     if (selectedPosePartKeysGlobal.size > 1) {
       posePartFields.innerHTML = '';
-      renderPosePartHeader('group');
+      renderPosePartHeader(posePartFields, 'group', selectedPosePartKeysGlobal.size);
       if (!hasPoseFrameSelection()) {
         posePartFields.insertAdjacentHTML('beforeend', emptyPartMessage('그룹을 편집할 프레임을 선택하세요.'));
         return;
@@ -1289,7 +1290,7 @@ function buildTuningPanel() {
     ensurePoseOffset(selectedActor.tuning, poseSelect.value, partKey);
     const offset = currentPoseFrameValue(partKey);
     posePartFields.innerHTML = '';
-    renderPosePartHeader(partKey);
+    renderPosePartHeader(posePartFields, partKey, selectedPosePartKeysGlobal.size);
 
     renderScrubGroups(
       posePartFields,
@@ -1298,13 +1299,6 @@ function buildTuningPanel() {
       (prop, value) => updatePoseOffset(prop, value),
       scrubCallbacks
     );
-  }
-
-  function renderPosePartHeader(partKey) {
-    const header = document.createElement('div');
-    header.className = 'pose-part-header';
-    header.textContent = partKey === 'group' ? `선택 그룹 ${selectedPosePartKeysGlobal.size}` : partLabel(partKey);
-    posePartFields.append(header);
   }
 
   function renderEffectFields() {
