@@ -1,0 +1,16 @@
+{
+  "name": "crow-knight",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "check": "npm run lint && prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.5.0",
+    "prettier": "^3.8.4"
+  }
+}

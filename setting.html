@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crow Knight Settings</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body class="settings-page full-stage">
+    <main class="app-shell">
+      <aside class="settings-ranking-panel" aria-labelledby="settingsRankingTitle">
+        <button
+          id="rankingToggle"
+          class="side-panel-toggle ranking-panel-toggle"
+          type="button"
+          aria-label="랭킹 접기"
+          aria-expanded="true"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6"></path>
+          </svg>
+        </button>
+        <h2 id="settingsRankingTitle">랭킹</h2>
+        <div class="settings-ranking-head" aria-hidden="true">
+          <span>이름</span>
+          <span>점수</span>
+          <span>기록</span>
+          <span>메세지</span>
+        </div>
+        <ol id="settingsRankingList" class="settings-ranking-list"></ol>
+      </aside>
+      <section class="stage-wrap" aria-label="게임 화면">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div class="control-hint" aria-label="조작키">
+          <button type="button" data-hold-code="ArrowLeft"><kbd>←</kbd><span>이동</span></button>
+          <button type="button" data-hold-code="ArrowRight"><kbd>→</kbd><span>이동</span></button>
+          <button type="button" data-hold-code="Space"><kbd>Space</kbd><span>점프</span></button>
+          <button type="button" data-tap-code="KeyQ"><kbd>Q</kbd><span>공격</span></button>
+          <button type="button" data-tap-code="KeyW"><kbd>W</kbd><span>구르기</span></button>
+          <button type="button" data-hold-code="KeyE"><kbd>E</kbd><span>방어</span></button>
+        </div>
+        <div class="battle-controls" aria-label="전투 제어">
+          <button id="startBattle" type="button">전투 시작</button>
+          <button id="endBattle" type="button" disabled>전투 끝</button>
+        </div>
+        <button
+          id="settingsToggle"
+          class="settings-toggle side-panel-toggle"
+          type="button"
+          aria-label="설정 열기"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6"></path>
+          </svg>
+        </button>
+      </section>
+
+      <div id="panelBackdrop" class="panel-backdrop" hidden></div>
+      <aside id="tuningPanel" class="tuning-panel" aria-label="캐릭터 설정" aria-hidden="true">
+        <header class="panel-header">
+          <div>
+            <h1>캐릭터 설정</h1>
+            <p>대상별 능력치, 히트박스, 파츠 위치</p>
+          </div>
+          <div class="panel-actions">
+            <button id="resetTuning" type="button">초기화</button>
+            <button id="closeTuning" type="button" aria-label="설정 닫기">×</button>
+          </div>
+        </header>
+
+        <section class="setting-section" data-collapsible data-section="collision">
+          <button class="section-toggle" type="button">전체</button>
+          <div class="section-content">
+            <label class="select-row">
+              <span>편집 대상</span>
+              <select id="actorSelect"></select>
+            </label>
+            <label class="select-row">
+              <span>이름</span>
+              <input id="actorName" type="text" maxlength="18" autocomplete="off" />
+            </label>
+            <label class="setting-row" data-field="maxHpPips">
+              <span>HP 칸</span>
+              <input type="range" min="1" max="20" step="1" />
+              <input type="number" min="1" max="20" step="1" />
+            </label>
+            <div class="setting-divider"></div>
+            <label class="setting-row" data-field="actorScale">
+              <span>전체 크기</span>
+              <input type="range" min="0.4" max="2.4" step="0.05" />
+              <input type="number" min="0.4" max="2.4" step="0.05" />
+            </label>
+            <label class="setting-row" data-field="anchorX">
+              <span>기준 X</span>
+              <input type="range" min="-160" max="160" step="1" />
+              <input type="number" min="-160" max="160" step="1" />
+            </label>
+            <label class="setting-row" data-field="anchorY">
+              <span>기준 Y</span>
+              <input type="range" min="-180" max="180" step="1" />
+              <input type="number" min="-180" max="180" step="1" />
+            </label>
+            <div class="setting-divider"></div>
+            <div class="field-grid">
+              <label data-field="hitboxX"
+                ><span>몸 X</span><input type="range" min="-120" max="80" step="1" /><input type="number" step="1"
+              /></label>
+              <label data-field="hitboxY"
+                ><span>몸 Y</span><input type="range" min="-180" max="20" step="1" /><input type="number" step="1"
+              /></label>
+              <label data-field="hitboxW"
+                ><span>몸 W</span><input type="range" min="10" max="160" step="1" /><input
+                  type="number"
+                  min="10"
+                  step="1"
+              /></label>
+              <label data-field="hitboxH"
+                ><span>몸 H</span><input type="range" min="10" max="220" step="1" /><input
+                  type="number"
+                  min="10"
+                  step="1"
+              /></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="setting-section" data-collapsible data-section="pose">
+          <button class="section-toggle" type="button">동작</button>
+          <div class="section-content">
+            <label class="select-row">
+              <span>동작</span>
+              <select id="poseSelect"></select>
+            </label>
+            <div class="pose-timeline-settings">
+              <div class="pose-frame-input">
+                <input id="poseDuration" type="number" min="2" max="50" step="1" />
+                <div class="pose-frame-steppers" aria-label="프레임 길이 조절">
+                  <button id="poseFrameUp" type="button" aria-label="프레임 늘리기">▲</button>
+                  <button id="poseFrameDown" type="button" aria-label="프레임 줄이기">▼</button>
+                </div>
+              </div>
+              <button id="posePlayback" class="icon-button" type="button" aria-label="재생">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5v14l11-7z"></path>
+                </svg>
+              </button>
+              <button id="posePlaybackMode" class="icon-button" type="button" aria-label="반복 재생 설정">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17 1l4 4-4 4"></path>
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                  <path d="M7 23l-4-4 4-4"></path>
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+              </button>
+              <button id="poseCopyFrame" class="icon-button" type="button" aria-label="프레임 복사">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 8h11v13H8z"></path>
+                  <path d="M5 16H4V3h11v1"></path>
+                </svg>
+              </button>
+              <button id="posePasteFrame" class="icon-button" type="button" aria-label="프레임 붙여넣기">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 4h6l1 2h3v15H5V6h3z"></path>
+                  <path d="M8 11h8"></path>
+                  <path d="M8 15h6"></path>
+                </svg>
+              </button>
+              <button id="poseUndoFrame" class="icon-button" type="button" aria-label="되돌리기">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 7H4v5"></path>
+                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                </svg>
+              </button>
+              <button id="poseAddKeyframe" class="icon-button" type="button" aria-label="중간 키프레임 추가">+</button>
+              <button id="poseDeleteKeyframe" class="icon-button" type="button" aria-label="선택 키프레임 삭제">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 6h18"></path>
+                  <path d="M8 6V4h8v2"></path>
+                  <path d="M6 6l1 15h10l1-15"></path>
+                  <path d="M10 11v6"></path>
+                  <path d="M14 11v6"></path>
+                </svg>
+              </button>
+              <button
+                id="poseResetAnimation"
+                class="icon-button"
+                type="button"
+                aria-label="현재 동작 애니메이션 초기화"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                  <path d="M4 5v5h5"></path>
+                  <path d="M12 8v8"></path>
+                  <path d="M8 12h8"></path>
+                </svg>
+              </button>
+            </div>
+            <label class="setting-row pose-playback-rate-row">
+              <span>재생 속도</span>
+              <input id="posePlaybackRateRange" type="range" min="0.1" max="4" step="0.05" />
+              <input id="posePlaybackRate" type="number" min="0.1" max="4" step="0.05" />
+            </label>
+            <div class="pose-timeline" aria-label="동작 키프레임 타임라인">
+              <div id="poseTimelineTrack" class="pose-timeline-track"></div>
+            </div>
+            <div class="part-picker" data-picker="pose" aria-label="동작 조절 부위 선택">
+              <button class="part-pick part-head" type="button" data-part="head">머리</button>
+              <button class="part-pick part-neck" type="button" data-part="cape">망토</button>
+              <button class="part-pick part-shoulder-l" type="button" data-part="shoulderL">오른쪽 어깨</button>
+              <button class="part-pick part-shoulder-r" type="button" data-part="shoulderR">왼쪽 어깨</button>
+              <button class="part-pick part-body" type="button" data-part="body">몸통</button>
+              <button class="part-pick part-upper-arm-l" type="button" data-part="upperArmL">오른쪽 윗팔</button>
+              <button class="part-pick part-lower-arm-l" type="button" data-part="lowerArmL">오른쪽 아랫팔</button>
+              <button class="part-pick part-upper-arm-r" type="button" data-part="upperArmR">왼쪽 윗팔</button>
+              <button class="part-pick part-lower-arm-r" type="button" data-part="lowerArmR">왼쪽 아랫팔</button>
+              <button class="part-pick part-hip-l" type="button" data-part="hipL">오른쪽 골반</button>
+              <button class="part-pick part-hip-r" type="button" data-part="hipR">왼쪽 골반</button>
+              <button class="part-pick part-shield" type="button" data-part="shield">방패</button>
+              <button class="part-pick part-weapon" type="button" data-part="weapon">무기</button>
+              <button class="part-pick part-upper-leg-l" type="button" data-part="upperLegL">오른쪽 윗다리</button>
+              <button class="part-pick part-lower-leg-l" type="button" data-part="lowerLegL">오른쪽 아랫다리</button>
+              <button class="part-pick part-upper-leg-r" type="button" data-part="upperLegR">왼쪽 윗다리</button>
+              <button class="part-pick part-lower-leg-r" type="button" data-part="lowerLegR">왼쪽 아랫다리</button>
+            </div>
+            <label class="select-row native-part-select">
+              <span>조절 부위</span>
+              <select id="posePartSelect"></select>
+            </label>
+            <div id="posePartFields" class="part-fields"></div>
+            <label class="setting-row" data-field="idleAnimationIntensity" data-motion-group="idle"
+              ><span>대기 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="runAnimationIntensity" data-motion-group="run"
+              ><span>이동 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="speed" data-motion-group="run"
+              ><span>이동 속도</span><input type="range" min="80" max="620" step="5" /><input
+                type="number"
+                min="80"
+                max="620"
+                step="5"
+            /></label>
+            <label class="setting-row" data-field="walkSpeed" data-motion-group="run"
+              ><span>이동 속도감</span><input type="range" min="4" max="24" step="1" /><input
+                type="number"
+                min="4"
+                max="24"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="walkBob" data-motion-group="run"
+              ><span>이동 상하</span><input type="range" min="0" max="18" step="1" /><input
+                type="number"
+                min="0"
+                max="18"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="walkBody" data-motion-group="run"
+              ><span>이동 몸통</span><input type="range" min="0" max="24" step="1" /><input
+                type="number"
+                min="0"
+                max="24"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="walkArmSwing" data-motion-group="run"
+              ><span>이동 팔</span><input type="range" min="0" max="90" step="1" /><input
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="walkLegSwing" data-motion-group="run"
+              ><span>이동 다리</span><input type="range" min="0" max="90" step="1" /><input
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="jumpAnimationIntensity" data-motion-group="jump"
+              ><span>점프 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="jumpPower" data-motion-group="jump"
+              ><span>점프 힘</span><input type="range" min="300" max="1200" step="10" /><input
+                type="number"
+                min="300"
+                max="1200"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="airFlapPower" data-motion-group="jump"
+              ><span>공중 점프 힘</span><input type="range" min="0" max="420" step="5" /><input
+                type="number"
+                min="0"
+                max="420"
+                step="5"
+            /></label>
+            <label class="setting-row" data-field="airFlapCooldown" data-motion-group="jump"
+              ><span>공중 점프 간격</span><input type="range" min="0" max="0.35" step="0.01" /><input
+                type="number"
+                min="0"
+                max="0.35"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="jumpHoldMax" data-motion-group="jump"
+              ><span>점프 유지</span><input type="range" min="0" max="0.35" step="0.01" /><input
+                type="number"
+                min="0"
+                max="0.35"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="jumpHoldForce" data-motion-group="jump"
+              ><span>추가 상승</span><input type="range" min="0" max="1400" step="10" /><input
+                type="number"
+                min="0"
+                max="1400"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="jumpRiseGravity" data-motion-group="jump"
+              ><span>상승 감속</span><input type="range" min="0.42" max="2.4" step="0.01" /><input
+                type="number"
+                min="0.42"
+                max="2.4"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="jumpRiseEase" data-motion-group="jump"
+              ><span>상승 이징</span><input type="range" min="0.4" max="5" step="0.1" /><input
+                type="number"
+                min="0.4"
+                max="5"
+                step="0.1"
+            /></label>
+            <label class="setting-row" data-field="fallAnimationIntensity" data-motion-group="fall"
+              ><span>낙하 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="glideAnimationIntensity" data-motion-group="glide"
+              ><span>활강 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="glideTimeMax" data-motion-group="glide"
+              ><span>활강 시간</span><input type="range" min="0" max="3" step="0.05" /><input
+                type="number"
+                min="0"
+                max="3"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="glideFallSpeed" data-motion-group="glide"
+              ><span>활강 낙하</span><input type="range" min="60" max="900" step="10" /><input
+                type="number"
+                min="60"
+                max="900"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="rollAnimationIntensity" data-motion-group="roll"
+              ><span>구르기 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="rollDistance" data-motion-group="roll"
+              ><span>구르기 거리</span><input type="range" min="60" max="520" step="10" /><input
+                type="number"
+                min="60"
+                max="520"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="dashDuration" data-motion-group="roll"
+              ><span>구르기 시간</span><input type="range" min="0.04" max="0.6" step="0.01" /><input
+                type="number"
+                min="0.04"
+                max="0.6"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="dashCooldownMax" data-motion-group="roll"
+              ><span>구르기 쿨타임</span><input type="range" min="0" max="1.8" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.8"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="rollEndInvuln" data-motion-group="roll"
+              ><span>구른 뒤 무적</span><input type="range" min="0" max="1.2" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="dashLean" data-motion-group="roll"
+              ><span>구르기 기울기</span><input type="range" min="-45" max="55" step="1" /><input
+                type="number"
+                min="-45"
+                max="55"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="rollSpin" data-motion-group="roll"
+              ><span>구르기 회전</span><input type="range" min="0" max="900" step="10" /><input
+                type="number"
+                min="0"
+                max="900"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="rollTuck" data-motion-group="roll"
+              ><span>구르기 접힘</span><input type="range" min="0" max="110" step="1" /><input
+                type="number"
+                min="0"
+                max="110"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="rollLift" data-motion-group="roll"
+              ><span>구르기 높이</span><input type="range" min="0" max="80" step="1" /><input
+                type="number"
+                min="0"
+                max="80"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="guardAnimationIntensity" data-motion-group="guard"
+              ><span>방어 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="guardBreakAnimationIntensity" data-motion-group="guardBreak"
+              ><span>방어 풀림 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="hurtAnimationIntensity" data-motion-group="hurt"
+              ><span>피격 애니메이션 강도</span><input type="range" min="0" max="2.5" step="0.05" /><input
+                type="number"
+                min="0"
+                max="2.5"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="hurtInvuln" data-motion-group="hurt"
+              ><span>피격 무적</span><input type="range" min="0" max="2" step="0.01" /><input
+                type="number"
+                min="0"
+                max="2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="attackCooldownMax" data-motion-group="attack"
+              ><span>공격 쿨타임</span><input type="range" min="0" max="1.5" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.5"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="comboResetTime" data-motion-group="attack"
+              ><span>콤보 유지</span><input type="range" min="0.2" max="2" step="0.01" /><input
+                type="number"
+                min="0.2"
+                max="2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackHitboxX" data-motion-group="jumpAttack"
+              ><span>점공 히트 X</span><input type="range" min="-160" max="180" step="1" /><input
+                type="number"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackHitboxY" data-motion-group="jumpAttack"
+              ><span>점공 히트 Y</span><input type="range" min="-120" max="120" step="1" /><input
+                type="number"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackHitboxW" data-motion-group="jumpAttack"
+              ><span>점공 히트 W</span><input type="range" min="6" max="240" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackHitboxH" data-motion-group="jumpAttack"
+              ><span>점공 히트 H</span><input type="range" min="6" max="180" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackHitboxRot" data-motion-group="jumpAttack"
+              ><span>점공 히트 회전</span><input type="range" min="-180" max="180" step="1" /><input
+                type="number"
+                step="1"
+            /></label>
+            <div class="setting-divider" data-motion-group="jumpAttack"></div>
+            <label class="setting-row" data-field="jumpAttackStun" data-motion-group="jumpAttack"
+              ><span>점공 경직</span><input type="range" min="0" max="1.2" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackKnockbackX" data-motion-group="jumpAttack"
+              ><span>점공 넉백 X</span><input type="range" min="0" max="1200" step="10" /><input
+                type="number"
+                min="0"
+                max="1200"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackKnockbackY" data-motion-group="jumpAttack"
+              ><span>점공 넉백 Y</span><input type="range" min="0" max="700" step="10" /><input
+                type="number"
+                min="0"
+                max="700"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="jumpAttackDeathBurst" data-motion-group="jumpAttack"
+              ><span>점공 파편 힘</span><input type="range" min="0" max="4" step="0.05" /><input
+                type="number"
+                min="0"
+                max="4"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="attack1HitboxX" data-motion-group="attack1"
+              ><span>1타 히트 X</span><input type="range" min="-160" max="180" step="1" /><input type="number" step="1"
+            /></label>
+            <label class="setting-row" data-field="attack1HitboxY" data-motion-group="attack1"
+              ><span>1타 히트 Y</span><input type="range" min="-120" max="120" step="1" /><input type="number" step="1"
+            /></label>
+            <label class="setting-row" data-field="attack1HitboxW" data-motion-group="attack1"
+              ><span>1타 히트 W</span><input type="range" min="6" max="240" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="attack1HitboxH" data-motion-group="attack1"
+              ><span>1타 히트 H</span><input type="range" min="6" max="180" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="attack1HitboxRot" data-motion-group="attack1"
+              ><span>1타 히트 회전</span><input type="range" min="-180" max="180" step="1" /><input
+                type="number"
+                step="1"
+            /></label>
+            <div class="setting-divider" data-motion-group="attack1"></div>
+            <label class="setting-row" data-field="attack1Stun" data-motion-group="attack1"
+              ><span>1타 경직</span><input type="range" min="0" max="1.2" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="attack1KnockbackX" data-motion-group="attack1"
+              ><span>1타 넉백 X</span><input type="range" min="0" max="1200" step="10" /><input
+                type="number"
+                min="0"
+                max="1200"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="attack1KnockbackY" data-motion-group="attack1"
+              ><span>1타 넉백 Y</span><input type="range" min="0" max="700" step="10" /><input
+                type="number"
+                min="0"
+                max="700"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="attack1DeathBurst" data-motion-group="attack1"
+              ><span>1타 파편 힘</span><input type="range" min="0" max="4" step="0.05" /><input
+                type="number"
+                min="0"
+                max="4"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="attack2HitboxX" data-motion-group="attack2"
+              ><span>2타 히트 X</span><input type="range" min="-160" max="180" step="1" /><input type="number" step="1"
+            /></label>
+            <label class="setting-row" data-field="attack2HitboxY" data-motion-group="attack2"
+              ><span>2타 히트 Y</span><input type="range" min="-120" max="120" step="1" /><input type="number" step="1"
+            /></label>
+            <label class="setting-row" data-field="attack2HitboxW" data-motion-group="attack2"
+              ><span>2타 히트 W</span><input type="range" min="6" max="240" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="attack2HitboxH" data-motion-group="attack2"
+              ><span>2타 히트 H</span><input type="range" min="6" max="180" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="attack2HitboxRot" data-motion-group="attack2"
+              ><span>2타 히트 회전</span><input type="range" min="-180" max="180" step="1" /><input
+                type="number"
+                step="1"
+            /></label>
+            <div class="setting-divider" data-motion-group="attack2"></div>
+            <label class="setting-row" data-field="attack2Stun" data-motion-group="attack2"
+              ><span>2타 경직</span><input type="range" min="0" max="1.2" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="attack2KnockbackX" data-motion-group="attack2"
+              ><span>2타 넉백 X</span><input type="range" min="0" max="1200" step="10" /><input
+                type="number"
+                min="0"
+                max="1200"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="attack2KnockbackY" data-motion-group="attack2"
+              ><span>2타 넉백 Y</span><input type="range" min="0" max="700" step="10" /><input
+                type="number"
+                min="0"
+                max="700"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="attack2DeathBurst" data-motion-group="attack2"
+              ><span>2타 파편 힘</span><input type="range" min="0" max="4" step="0.05" /><input
+                type="number"
+                min="0"
+                max="4"
+                step="0.05"
+            /></label>
+            <label class="setting-row" data-field="attack3HitboxX" data-motion-group="attack3"
+              ><span>3타 히트 X</span><input type="range" min="-180" max="220" step="1" /><input type="number" step="1"
+            /></label>
+            <label class="setting-row" data-field="attack3HitboxY" data-motion-group="attack3"
+              ><span>3타 히트 Y</span><input type="range" min="-140" max="140" step="1" /><input type="number" step="1"
+            /></label>
+            <label class="setting-row" data-field="attack3HitboxW" data-motion-group="attack3"
+              ><span>3타 히트 W</span><input type="range" min="6" max="280" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="attack3HitboxH" data-motion-group="attack3"
+              ><span>3타 히트 H</span><input type="range" min="6" max="220" step="1" /><input
+                type="number"
+                min="6"
+                step="1"
+            /></label>
+            <label class="setting-row" data-field="attack3HitboxRot" data-motion-group="attack3"
+              ><span>3타 히트 회전</span><input type="range" min="-180" max="180" step="1" /><input
+                type="number"
+                step="1"
+            /></label>
+            <div class="setting-divider" data-motion-group="attack3"></div>
+            <label class="setting-row" data-field="attack3Stun" data-motion-group="attack3"
+              ><span>3타 경직</span><input type="range" min="0" max="1.2" step="0.01" /><input
+                type="number"
+                min="0"
+                max="1.2"
+                step="0.01"
+            /></label>
+            <label class="setting-row" data-field="attack3KnockbackX" data-motion-group="attack3"
+              ><span>3타 넉백 X</span><input type="range" min="0" max="1200" step="10" /><input
+                type="number"
+                min="0"
+                max="1200"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="attack3KnockbackY" data-motion-group="attack3"
+              ><span>3타 넉백 Y</span><input type="range" min="0" max="700" step="10" /><input
+                type="number"
+                min="0"
+                max="700"
+                step="10"
+            /></label>
+            <label class="setting-row" data-field="attack3DeathBurst" data-motion-group="attack3"
+              ><span>3타 파편 힘</span><input type="range" min="0" max="4" step="0.05" /><input
+                type="number"
+                min="0"
+                max="4"
+                step="0.05"
+            /></label>
+          </div>
+        </section>
+
+        <section class="setting-section" data-collapsible data-section="effect">
+          <button class="section-toggle" type="button">효과</button>
+          <div class="section-content">
+            <label class="select-row">
+              <span>동작</span>
+              <select id="effectSelect"></select>
+            </label>
+            <div class="pose-timeline-settings">
+              <div class="pose-frame-input">
+                <input id="effectDuration" type="number" min="2" max="50" step="1" />
+                <div class="pose-frame-steppers" aria-label="효과 프레임 길이 조절">
+                  <button id="effectFrameUp" type="button" aria-label="프레임 늘리기">▲</button>
+                  <button id="effectFrameDown" type="button" aria-label="프레임 줄이기">▼</button>
+                </div>
+              </div>
+              <button id="effectPlayback" class="icon-button" type="button" aria-label="효과 재생">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5v14l11-7z"></path>
+                </svg>
+              </button>
+              <button id="effectPlaybackMode" class="icon-button" type="button" aria-label="효과 반복 재생 설정">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17 1l4 4-4 4"></path>
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                  <path d="M7 23l-4-4 4-4"></path>
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+              </button>
+              <button id="effectCopyFrame" class="icon-button" type="button" aria-label="효과 프레임 복사">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 8h11v13H8z"></path>
+                  <path d="M5 16H4V3h11v1"></path>
+                </svg>
+              </button>
+              <button id="effectPasteFrame" class="icon-button" type="button" aria-label="효과 프레임 붙여넣기">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 4h6l1 2h3v15H5V6h3z"></path>
+                  <path d="M8 11h8"></path>
+                  <path d="M8 15h6"></path>
+                </svg>
+              </button>
+              <button id="effectUndoFrame" class="icon-button" type="button" aria-label="효과 되돌리기">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 7H4v5"></path>
+                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                </svg>
+              </button>
+              <button id="effectAddKeyframe" class="icon-button" type="button" aria-label="효과 중간 키프레임 추가">
+                +
+              </button>
+              <button id="effectDeleteKeyframe" class="icon-button" type="button" aria-label="효과 선택 키프레임 삭제">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 6h18"></path>
+                  <path d="M8 6V4h8v2"></path>
+                  <path d="M6 6l1 15h10l1-15"></path>
+                  <path d="M10 11v6"></path>
+                  <path d="M14 11v6"></path>
+                </svg>
+              </button>
+              <button id="effectResetAnimation" class="icon-button" type="button" aria-label="현재 효과 초기화">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                  <path d="M4 5v5h5"></path>
+                  <path d="M12 8v8"></path>
+                  <path d="M8 12h8"></path>
+                </svg>
+              </button>
+            </div>
+            <label class="setting-row pose-playback-rate-row">
+              <span>재생 속도</span>
+              <input id="effectPlaybackRateRange" type="range" min="0.1" max="4" step="0.05" />
+              <input id="effectPlaybackRate" type="number" min="0.1" max="4" step="0.05" />
+            </label>
+            <div class="pose-timeline" aria-label="효과 키프레임 타임라인">
+              <div id="effectTimelineTrack" class="pose-timeline-track"></div>
+            </div>
+            <div class="effect-picker">
+              <div id="effectImagePreview" class="effect-image-preview" aria-hidden="true"></div>
+            </div>
+            <div id="effectFields" class="part-fields"></div>
+          </div>
+        </section>
+
+        <section class="setting-section" data-collapsible data-section="part">
+          <button class="section-toggle" type="button">파츠 위치</button>
+          <div class="section-content">
+            <div class="part-picker" data-picker="part" aria-label="파츠 위치 조절 부위 선택">
+              <button class="part-pick part-head" type="button" data-part="head">머리</button>
+              <button class="part-pick part-neck" type="button" data-part="cape">망토</button>
+              <button class="part-pick part-shoulder-l" type="button" data-part="shoulderL">오른쪽 어깨</button>
+              <button class="part-pick part-shoulder-r" type="button" data-part="shoulderR">왼쪽 어깨</button>
+              <button class="part-pick part-body" type="button" data-part="body">몸통</button>
+              <button class="part-pick part-upper-arm-l" type="button" data-part="upperArmL">오른쪽 윗팔</button>
+              <button class="part-pick part-lower-arm-l" type="button" data-part="lowerArmL">오른쪽 아랫팔</button>
+              <button class="part-pick part-upper-arm-r" type="button" data-part="upperArmR">왼쪽 윗팔</button>
+              <button class="part-pick part-lower-arm-r" type="button" data-part="lowerArmR">왼쪽 아랫팔</button>
+              <button class="part-pick part-hip-l" type="button" data-part="hipL">오른쪽 골반</button>
+              <button class="part-pick part-hip-r" type="button" data-part="hipR">왼쪽 골반</button>
+              <button class="part-pick part-shield" type="button" data-part="shield">방패</button>
+              <button class="part-pick part-weapon" type="button" data-part="weapon">무기</button>
+              <button class="part-pick part-upper-leg-l" type="button" data-part="upperLegL">오른쪽 윗다리</button>
+              <button class="part-pick part-lower-leg-l" type="button" data-part="lowerLegL">오른쪽 아랫다리</button>
+              <button class="part-pick part-upper-leg-r" type="button" data-part="upperLegR">왼쪽 윗다리</button>
+              <button class="part-pick part-lower-leg-r" type="button" data-part="lowerLegR">왼쪽 아랫다리</button>
+            </div>
+            <label class="select-row native-part-select">
+              <span>조절할 부위</span>
+              <select id="partSelect"></select>
+            </label>
+            <div id="partFields" class="part-fields"></div>
+          </div>
+        </section>
+
+        <section class="setting-section" data-collapsible>
+          <button class="section-toggle" type="button">레이어 순서</button>
+          <div class="section-content">
+            <select id="layerOrder" class="layer-order" size="7" aria-label="부위 레이어 순서"></select>
+            <div class="layer-actions">
+              <button id="layerUp" type="button">위로</button>
+              <button id="layerDown" type="button">아래로</button>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
