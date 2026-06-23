@@ -69,6 +69,7 @@ import {
   populateTuningPanelSelects,
   renderEffectImagePreview,
   renderLayerSelectOptions,
+  syncActorSelectLabels,
   syncEffectToolbarButtonStates,
   syncNumericFields,
   syncPanelToggleState,
@@ -2712,10 +2713,7 @@ function buildTuningPanel() {
   }
 
   function syncActorOptions() {
-    Array.from(actorSelect.options).forEach((option) => {
-      const actor = actors.find((item) => item.id === option.value);
-      option.textContent = `${actor.label} - ${actor.name}`;
-    });
+    syncActorSelectLabels(actorSelect, actors);
   }
 
   function openPanel() {

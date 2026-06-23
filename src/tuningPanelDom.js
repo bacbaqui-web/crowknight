@@ -155,6 +155,13 @@ export function bindPartPickerButtons(picker, onSelect) {
   });
 }
 
+export function syncActorSelectLabels(actorSelect, actors) {
+  Array.from(actorSelect.options).forEach((option) => {
+    const actor = actors.find((item) => item.id === option.value);
+    option.textContent = `${actor.label} - ${actor.name}`;
+  });
+}
+
 export function populateTuningPanelSelects(
   { actorSelect, partSelect, poseSelect, posePartSelect, effectSelect },
   actors,
