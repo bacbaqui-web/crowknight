@@ -55,7 +55,8 @@ import {
   bindSelectionControls,
   isTextInput,
 } from './tuningPanelBindings.js';
-import { previewTimeoutMs, timelineDurationFromFrames } from './tuningPlayback.js';
+import { timelineDurationFromFrames } from './tuningPlayback.js';
+import { schedulePreviewStop, stopPreviewTimer } from './previewPlayback.js';
 import {
   effectPropertyGroups,
   groupPosePropertyGroups,
@@ -1816,7 +1817,7 @@ function buildTuningPanel() {
 
   function playPosePreview() {
     ensurePoseSettings(selectedActor.tuning);
-    clearTimeout(posePreviewTimer);
+    posePreviewTimer = stopPreviewTimer(posePreviewTimer);
     posePreviewPlaying = true;
     activePoseKeyframeId = null;
     selectedActor.player.stateTime = 0;
@@ -1826,16 +1827,15 @@ function buildTuningPanel() {
     const settings = selectedActor.tuning.poseSettings[poseSelect.value];
     if (settings.playback !== 'once') return;
 
-    posePreviewTimer = setTimeout(() => {
+    posePreviewTimer = schedulePreviewStop(settings, () => {
       posePreviewPlaying = false;
       posePreviewTimer = null;
       syncPosePreview();
-    }, previewTimeoutMs(settings));
+    });
   }
 
   function stopPosePreview() {
-    clearTimeout(posePreviewTimer);
-    posePreviewTimer = null;
+    posePreviewTimer = stopPreviewTimer(posePreviewTimer);
     posePreviewPlaying = false;
   }
 
@@ -2230,7 +2230,7 @@ function buildTuningPanel() {
 
   function playEffectPreview() {
     ensureEffectSettings(selectedActor.tuning);
-    clearTimeout(effectPreviewTimer);
+    effectPreviewTimer = stopPreviewTimer(effectPreviewTimer);
     effectPreviewPlaying = true;
     activeEffectKeyframeId = null;
     syncEffectPreview();
@@ -2238,16 +2238,15 @@ function buildTuningPanel() {
     const settings = selectedActor.tuning.effectSettings[effectSelect.value];
     if (settings.playback === 'loop') return;
 
-    effectPreviewTimer = setTimeout(() => {
+    effectPreviewTimer = schedulePreviewStop(settings, () => {
       effectPreviewPlaying = false;
       effectPreviewTimer = null;
       syncEffectPreview();
-    }, previewTimeoutMs(settings));
+    });
   }
 
   function stopEffectPreview() {
-    clearTimeout(effectPreviewTimer);
-    effectPreviewTimer = null;
+    effectPreviewTimer = stopPreviewTimer(effectPreviewTimer);
     effectPreviewPlaying = false;
   }
 
