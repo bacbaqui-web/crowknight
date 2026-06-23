@@ -43,6 +43,7 @@ import {
   openTuningPanelShell,
   populateTuningPanelSelects,
   renderEffectImagePreview,
+  renderInactivePreviewTimeline,
   renderLayerSelectOptions,
   renderPosePartHeader,
   syncActorSelectLabels,
@@ -1240,8 +1241,7 @@ export function createTuningPanel({
     function syncPosePreview() {
       clearActorPosePreviews(actors);
       if (!poseSection.classList.contains('is-open')) {
-        posePlayback.classList.toggle('is-active', false);
-        renderPoseTimeline();
+        renderInactivePreviewTimeline(posePlayback, renderPoseTimeline);
         return;
       }
       const hasPosePreview = shouldPreviewPose({
@@ -1251,8 +1251,7 @@ export function createTuningPanel({
         selectedSlot: selectedPoseSlot,
       });
       if (!hasPosePreview) {
-        posePlayback.classList.toggle('is-active', false);
-        renderPoseTimeline();
+        renderInactivePreviewTimeline(posePlayback, renderPoseTimeline);
         return;
       }
       const settings = selectedActor.tuning.poseSettings[poseSelect.value] || {};
@@ -1659,8 +1658,7 @@ export function createTuningPanel({
     function syncEffectPreview() {
       clearActorEffectPreviews(actors);
       if (!effectSection.classList.contains('is-open')) {
-        effectPlayback.classList.toggle('is-active', false);
-        renderEffectTimeline();
+        renderInactivePreviewTimeline(effectPlayback, renderEffectTimeline);
         return;
       }
       const hasEffectPreview = shouldPreviewEffect({
@@ -1670,8 +1668,7 @@ export function createTuningPanel({
         selectedSlot: selectedEffectSlot,
       });
       if (!hasEffectPreview) {
-        effectPlayback.classList.toggle('is-active', false);
-        renderEffectTimeline();
+        renderInactivePreviewTimeline(effectPlayback, renderEffectTimeline);
         return;
       }
       selectedActor.player.effectPreview = createEffectPreview({

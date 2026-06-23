@@ -160,6 +160,11 @@ export function renderEffectImagePreview(preview, effectKey, effectAssets) {
   preview.append(image);
 }
 
+export function renderInactivePreviewTimeline(playbackButton, renderTimeline) {
+  playbackButton.classList.toggle('is-active', false);
+  renderTimeline();
+}
+
 export function renderPosePartHeader(container, partKey, selectedCount) {
   const header = document.createElement('div');
   header.className = 'pose-part-header';
