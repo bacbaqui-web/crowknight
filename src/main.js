@@ -120,6 +120,17 @@ import {
   timelineTToSlot,
 } from './tuningTimelineDom.js';
 import { getCameraX, getViewTransform } from './cameraView.js';
+import {
+  ANCHOR_HANDLE_RADIUS,
+  MOVE_HANDLE_RADIUS,
+  drawAnchorHandleDot,
+  drawHandleArrow,
+  drawHandleCircle,
+  drawHandleLine,
+  drawPolygon,
+  handleColor,
+  handleLineStart,
+} from './editHandleDrawing.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
   ACTOR_DEFS,
@@ -138,9 +149,6 @@ const isFullStage = document.body.classList.contains('full-stage');
 const keys = new Set();
 const pressed = new Set();
 
-const MOVE_HANDLE_RADIUS = 28;
-const ANCHOR_HANDLE_RADIUS = 8;
-const HANDLE_LINE_GAP = 6;
 const savedState = loadStoredSavedState();
 const world = { gravity: 1800, floorY: 430, minX: 80, maxX: Infinity, viewW: 960, viewH: 540 };
 syncCanvasToLayout();
@@ -963,24 +971,12 @@ function drawAttackHitboxPreview(actor, key) {
   ctx.fillStyle = 'rgba(255, 224, 72, 0.18)';
   ctx.strokeStyle = 'rgba(255, 224, 72, 0.95)';
   ctx.lineWidth = 2;
-  drawPolygon(box.points, true);
-  drawPolygon(box.points, false);
+  drawPolygon(ctx, box.points, true);
+  drawPolygon(ctx, box.points, false);
   ctx.fillStyle = 'rgba(255, 244, 168, 0.95)';
   ctx.font = '12px sans-serif';
   ctx.fillText(key === 'jumpAttack' ? '점공' : key.replace('attack', '') + '타', box.x + 4, box.y - 6);
   ctx.restore();
-}
-
-function drawPolygon(points, fill = false) {
-  if (!points?.length) return;
-  ctx.beginPath();
-  points.forEach((point, index) => {
-    if (index === 0) ctx.moveTo(point.x, point.y);
-    else ctx.lineTo(point.x, point.y);
-  });
-  ctx.closePath();
-  if (fill) ctx.fill();
-  else ctx.stroke();
 }
 
 function drawEditHandles() {
@@ -994,131 +990,45 @@ function drawEditHandles() {
   ctx.lineJoin = 'round';
   if (handles.width)
     drawHandleArrow(
+      ctx,
       handleLineStart(anchor, handles.width.point),
       handles.width.point,
       handleColor('width', activeMode)
     );
   if (handles.height)
     drawHandleArrow(
+      ctx,
       handleLineStart(anchor, handles.height.point),
       handles.height.point,
       handleColor('height', activeMode)
     );
   if (handles.size)
-    drawHandleArrow(handleLineStart(anchor, handles.size.point), handles.size.point, handleColor('size', activeMode));
+    drawHandleArrow(
+      ctx,
+      handleLineStart(anchor, handles.size.point),
+      handles.size.point,
+      handleColor('size', activeMode)
+    );
   if (handles.rotate)
     drawHandleLine(
+      ctx,
       handleLineStart(anchor, handles.rotate.point),
       handles.rotate.point,
       handleColor('rotate', activeMode)
     );
   if (handles.opacity)
     drawHandleLine(
+      ctx,
       handleLineStart(anchor, handles.opacity.point),
       handles.opacity.point,
       handleColor('opacity', activeMode)
     );
 
-  if (handles.rotate) drawHandleCircle(handles.rotate.point, 9, handleColor('rotate', activeMode), true);
-  if (handles.opacity) drawHandleCircle(handles.opacity.point, 8, handleColor('opacity', activeMode), true);
+  if (handles.rotate) drawHandleCircle(ctx, handles.rotate.point, 9, handleColor('rotate', activeMode), true);
+  if (handles.opacity) drawHandleCircle(ctx, handles.opacity.point, 8, handleColor('opacity', activeMode), true);
 
-  if (handles.move) drawHandleCircle(anchor, MOVE_HANDLE_RADIUS, handleColor('move', activeMode), false);
-  if (handles.anchor) drawAnchorHandleDot(anchor, handleColor('anchor', activeMode));
-  ctx.restore();
-}
-
-function handleLineStart(anchor, target) {
-  const dx = target.x - anchor.x;
-  const dy = target.y - anchor.y;
-  const length = Math.hypot(dx, dy) || 1;
-  const distance = MOVE_HANDLE_RADIUS + HANDLE_LINE_GAP;
-  return {
-    x: anchor.x + (dx / length) * distance,
-    y: anchor.y + (dy / length) * distance,
-  };
-}
-
-function handleColor(mode, activeMode) {
-  const active = mode === activeMode;
-  const colors = {
-    move: active ? '#80e8ff' : '#31b7da',
-    anchor: active ? '#d7fbff' : '#259fca',
-    width: active ? '#ffe58c' : '#f2bc4d',
-    height: active ? '#9cffc8' : '#55d88e',
-    size: active ? '#ffb0e8' : '#df72c5',
-    rotate: active ? '#bca6ff' : '#8f7bff',
-    opacity: active ? '#ffb28a' : '#f47c58',
-  };
-  return {
-    stroke: colors[mode] || '#f8fbff',
-    shadow: active,
-    width: active ? 3 : 2,
-  };
-}
-
-function drawAnchorHandleDot(point, style) {
-  ctx.save();
-  ctx.fillStyle = style.stroke;
-  if (style.shadow) {
-    ctx.shadowColor = style.stroke;
-    ctx.shadowBlur = 8;
-  }
-  ctx.beginPath();
-  ctx.arc(point.x, point.y, 4.8, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawHandleLine(from, to, style) {
-  ctx.save();
-  ctx.strokeStyle = style.stroke;
-  ctx.lineWidth = style.width;
-  if (style.shadow) {
-    ctx.shadowColor = style.stroke;
-    ctx.shadowBlur = 8;
-  }
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawHandleArrow(from, to, style) {
-  drawHandleLine(from, to, style);
-  const angle = Math.atan2(to.y - from.y, to.x - from.x);
-  const size = 10;
-  ctx.save();
-  ctx.strokeStyle = style.stroke;
-  ctx.lineWidth = style.width;
-  if (style.shadow) {
-    ctx.shadowColor = style.stroke;
-    ctx.shadowBlur = 8;
-  }
-  ctx.beginPath();
-  ctx.moveTo(to.x, to.y);
-  ctx.lineTo(to.x - Math.cos(angle - 0.62) * size, to.y - Math.sin(angle - 0.62) * size);
-  ctx.moveTo(to.x, to.y);
-  ctx.lineTo(to.x - Math.cos(angle + 0.62) * size, to.y - Math.sin(angle + 0.62) * size);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawHandleCircle(point, radius, style, fill) {
-  ctx.save();
-  ctx.strokeStyle = style.stroke;
-  ctx.lineWidth = style.width;
-  if (style.shadow) {
-    ctx.shadowColor = style.stroke;
-    ctx.shadowBlur = 8;
-  }
-  ctx.beginPath();
-  ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-  if (fill) {
-    ctx.fillStyle = 'rgba(12, 14, 20, 0.68)';
-    ctx.fill();
-  }
-  ctx.stroke();
+  if (handles.move) drawHandleCircle(ctx, anchor, MOVE_HANDLE_RADIUS, handleColor('move', activeMode), false);
+  if (handles.anchor) drawAnchorHandleDot(ctx, anchor, handleColor('anchor', activeMode));
   ctx.restore();
 }
 
