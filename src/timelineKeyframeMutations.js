@@ -1,0 +1,58 @@
+import { POSE_PART_KEYS } from './gameConfig.js';
+import {
+  effectKeyframesFor,
+  ensureEffectOffset,
+  ensurePoseOffset,
+  interpolateEffectFrameValues,
+  interpolateFrameValues,
+  makePoseKeyframeId,
+  poseKeyframesFor,
+  sortPoseKeyframes,
+  syncFrameAliases,
+} from './tuningNormalize.js';
+
+export function addPoseTimelineKeyframe(tuning, poseKey, t) {
+  const id = makePoseKeyframeId();
+  POSE_PART_KEYS.forEach((part) => {
+    ensurePoseOffset(tuning, poseKey, part);
+    const frames = tuning.poseOffsets[poseKey][part];
+    const next = {
+      id,
+      t,
+      ...interpolateFrameValues(poseKeyframesFor(frames), t),
+    };
+    frames.keyframes.push(next);
+    sortPoseKeyframes(frames.keyframes);
+    syncFrameAliases(frames);
+  });
+  return id;
+}
+
+export function deletePoseTimelineKeyframe(tuning, poseKey, id) {
+  POSE_PART_KEYS.forEach((part) => {
+    const frames = tuning.poseOffsets[poseKey]?.[part];
+    if (!frames?.keyframes) return;
+    frames.keyframes = frames.keyframes.filter((frame) => frame.id !== id);
+    syncFrameAliases(frames);
+  });
+}
+
+export function addEffectTimelineKeyframe(tuning, effectKey, t) {
+  ensureEffectOffset(tuning, effectKey);
+  const effect = tuning.effectOffsets[effectKey];
+  const id = makePoseKeyframeId();
+  effect.keyframes.push({
+    id,
+    t,
+    ...interpolateEffectFrameValues(effectKeyframesFor(effect, effectKey), t, effectKey),
+  });
+  sortPoseKeyframes(effect.keyframes);
+  syncFrameAliases(effect);
+  return id;
+}
+
+export function deleteEffectTimelineKeyframe(tuning, effectKey, id) {
+  const effect = tuning.effectOffsets[effectKey];
+  effect.keyframes = effect.keyframes.filter((frame) => frame.id !== id);
+  syncFrameAliases(effect);
+}

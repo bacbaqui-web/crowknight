@@ -107,6 +107,12 @@ import {
 } from './panelEditState.js';
 import { renderKeyframeTimeline } from './timelineRenderer.js';
 import {
+  addEffectTimelineKeyframe,
+  addPoseTimelineKeyframe,
+  deleteEffectTimelineKeyframe,
+  deletePoseTimelineKeyframe,
+} from './timelineKeyframeMutations.js';
+import {
   activeTimelineT,
   timelineFrameCountFor,
   timelineLastSlot,
@@ -1828,19 +1834,7 @@ function buildTuningPanel() {
     if (!slot) return;
     beginUndoSnapshot();
     const t = slotToT(slot);
-    const id = makePoseKeyframeId();
-    POSE_PART_KEYS.forEach((part) => {
-      ensurePoseOffset(selectedActor.tuning, poseSelect.value, part);
-      const frames = selectedActor.tuning.poseOffsets[poseSelect.value][part];
-      const next = {
-        id,
-        t,
-        ...interpolateFrameValues(poseKeyframesFor(frames), t),
-      };
-      frames.keyframes.push(next);
-      sortPoseKeyframes(frames.keyframes);
-      syncFrameAliases(frames);
-    });
+    const id = addPoseTimelineKeyframe(selectedActor.tuning, poseSelect.value, t);
     activePoseKeyframeId = id;
     selectedPoseSlot = slot;
     stopPosePreview();
@@ -1854,12 +1848,7 @@ function buildTuningPanel() {
   function deletePoseKeyframe() {
     if (!activePoseKeyframeId) return;
     beginUndoSnapshot();
-    POSE_PART_KEYS.forEach((part) => {
-      const frames = selectedActor.tuning.poseOffsets[poseSelect.value]?.[part];
-      if (!frames?.keyframes) return;
-      frames.keyframes = frames.keyframes.filter((frame) => frame.id !== activePoseKeyframeId);
-      syncFrameAliases(frames);
-    });
+    deletePoseTimelineKeyframe(selectedActor.tuning, poseSelect.value, activePoseKeyframeId);
     activePoseKeyframeId = null;
     poseFrame = null;
     selectedPoseSlot = null;
@@ -2309,17 +2298,8 @@ function buildTuningPanel() {
     );
     if (!slot) return;
     beginUndoSnapshot();
-    ensureEffectOffset(selectedActor.tuning, effectSelect.value);
-    const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
     const t = effectSlotToT(slot);
-    const id = makePoseKeyframeId();
-    effect.keyframes.push({
-      id,
-      t,
-      ...interpolateEffectFrameValues(effectKeyframesFor(effect, effectSelect.value), t, effectSelect.value),
-    });
-    sortPoseKeyframes(effect.keyframes);
-    syncFrameAliases(effect);
+    const id = addEffectTimelineKeyframe(selectedActor.tuning, effectSelect.value, t);
     activeEffectKeyframeId = id;
     selectedEffectSlot = slot;
     stopEffectPreview();
@@ -2332,9 +2312,7 @@ function buildTuningPanel() {
   function deleteEffectKeyframe() {
     if (!activeEffectKeyframeId) return;
     beginUndoSnapshot();
-    const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
-    effect.keyframes = effect.keyframes.filter((frame) => frame.id !== activeEffectKeyframeId);
-    syncFrameAliases(effect);
+    deleteEffectTimelineKeyframe(selectedActor.tuning, effectSelect.value, activeEffectKeyframeId);
     activeEffectKeyframeId = null;
     effectFrame = null;
     selectedEffectSlot = null;
