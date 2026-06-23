@@ -577,7 +577,10 @@ export function createTuningPanel({
 
     function clearInactiveEditHandleState() {
       if (editFocusPartKey) return;
+      clearEditHandleState();
+    }
 
+    function clearEditHandleState() {
       editHandleHover = null;
       editHandleActiveMode = null;
       canvas.style.cursor = '';
@@ -2082,10 +2085,6 @@ export function createTuningPanel({
       resetGroupEditValues();
     }
 
-    function clearActorPreviewState() {
-      clearActorEditPreviews(actors);
-    }
-
     function closePanel() {
       closeTuningPanelShell(panel, backdrop);
       syncPanelToggle();
@@ -2093,11 +2092,9 @@ export function createTuningPanel({
       stopEffectPreview();
       editFocusPartKey = null;
       editFocusContext = null;
-      editHandleHover = null;
-      editHandleActiveMode = null;
-      canvas.style.cursor = '';
+      clearEditHandleState();
       syncPartPickers();
-      clearActorPreviewState();
+      clearActorEditPreviews(actors);
       document.activeElement?.blur();
     }
 
