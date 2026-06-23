@@ -63,12 +63,7 @@ import {
   partPropertyGroups,
   posePropertyGroups,
 } from './tuningFieldGroups.js';
-import {
-  partSizeFromPercent,
-  partSizeToPercent,
-  poseSizeOffsetFromPercent,
-  poseSizeToPercent,
-} from './tuningFieldValues.js';
+import { partSizeToPercent, poseSizeOffsetFromPercent, poseSizeToPercent } from './tuningFieldValues.js';
 import {
   bindPartPickerButtons,
   emptyPartMessage,
@@ -83,13 +78,7 @@ import {
   syncPoseToolbarButtonStates,
 } from './tuningPanelDom.js';
 import { isMasterPart, partLabel } from './tuningLabels.js';
-import {
-  effectFieldLimits,
-  partFieldLimits,
-  partPositionSources,
-  poseFieldLimits,
-  poseMotionGroups,
-} from './tuningParts.js';
+import { effectFieldLimits, partPositionSources, poseFieldLimits, poseMotionGroups } from './tuningParts.js';
 import { isEmptyEditableSlot, selectedOrFirstEmptySlot, syncTimelinePlaybackControls } from './tuningTimelineDom.js';
 import {
   bindKeyframeDrag,
@@ -170,7 +159,7 @@ import {
 } from './canvasDragApply.js';
 import { canvasPointFromEvent } from './canvasDragMath.js';
 import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvasDragState.js';
-import { setPartAnchorValue } from './canvasVisualValues.js';
+import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
@@ -2580,17 +2569,7 @@ function buildTuningPanel() {
   function updatePartValue(prop, value) {
     beginUndoSnapshot();
     const part = partPositionSources(selectedActor.tuning.rig)[activePartKey];
-    const limits = partFieldLimits(prop, activePartKey);
-    const nextValue = clamp(Number(value), limits.min, limits.max);
-    if (prop === 'ax') {
-      setPartAnchorValue(part, 'ax', nextValue, activePartKey);
-    } else if (prop === 'ay') {
-      setPartAnchorValue(part, 'ay', nextValue, activePartKey);
-    } else if (prop === 'w' || prop === 'h') {
-      part[prop] = partSizeFromPercent(activePartKey, part, prop, nextValue);
-    } else {
-      part[prop] = nextValue;
-    }
+    updateRigPartValue(part, activePartKey, prop, value);
     applySelected();
     return readPartDisplayValue(activePartKey, part, prop);
   }

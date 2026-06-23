@@ -1,4 +1,5 @@
 import { isMasterPart } from './tuningLabels.js';
+import { partSizeFromPercent } from './tuningFieldValues.js';
 import { controlGroupPartKeys, imagePartKeys, partFieldLimits } from './tuningParts.js';
 import { clamp } from './utils.js';
 
@@ -60,4 +61,18 @@ export function anchorScaleForPart(part, prop, partKey = '') {
   const baseProp = prop === 'ax' ? 'baseW' : 'baseH';
   const base = Math.max(1, Number(part[baseProp] || part[sizeProp] || 1));
   return Math.max(0.001, Number(part[sizeProp] || base) / base);
+}
+
+export function updateRigPartValue(part, partKey, prop, value) {
+  const limits = partFieldLimits(prop, partKey);
+  const nextValue = clamp(Number(value), limits.min, limits.max);
+  if (prop === 'ax') {
+    setPartAnchorValue(part, 'ax', nextValue, partKey);
+  } else if (prop === 'ay') {
+    setPartAnchorValue(part, 'ay', nextValue, partKey);
+  } else if (prop === 'w' || prop === 'h') {
+    part[prop] = partSizeFromPercent(partKey, part, prop, nextValue);
+  } else {
+    part[prop] = nextValue;
+  }
 }
