@@ -5,7 +5,6 @@ import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
 import {
-  defaultEffectImageKey,
   defaultEffectSize,
   effectFrameValue,
   frameValue,
@@ -41,8 +40,6 @@ import {
   ensurePoseSettings,
   makePoseKeyframeId,
   mergeTuning,
-  normalizeEffectOffsets,
-  normalizePoseFrameValue,
   poseKeyframesFor,
   replaceObject,
   sortPoseKeyframes,
@@ -111,6 +108,8 @@ import {
   addPoseTimelineKeyframe,
   deleteEffectTimelineKeyframe,
   deletePoseTimelineKeyframe,
+  resetEffectTimelineAnimation,
+  resetPoseTimelineAnimation,
 } from './timelineKeyframeMutations.js';
 import {
   activeTimelineT,
@@ -1862,12 +1861,7 @@ function buildTuningPanel() {
 
   function resetCurrentPoseAnimation() {
     beginUndoSnapshot();
-    const pose = poseSelect.value;
-    selectedActor.tuning.poseOffsets ||= {};
-    selectedActor.tuning.poseOffsets[pose] = {};
-    POSE_PART_KEYS.forEach((part) => {
-      selectedActor.tuning.poseOffsets[pose][part] = normalizePoseFrameValue();
-    });
+    resetPoseTimelineAnimation(selectedActor.tuning, poseSelect.value);
     poseFrame = null;
     activePoseKeyframeId = null;
     selectedPoseSlot = null;
@@ -2325,10 +2319,7 @@ function buildTuningPanel() {
 
   function resetCurrentEffectAnimation() {
     beginUndoSnapshot();
-    const key = effectSelect.value;
-    selectedActor.tuning.effectOffsets[key] = normalizeEffectOffsets({ [key]: { image: defaultEffectImageKey(key) } })[
-      key
-    ];
+    resetEffectTimelineAnimation(selectedActor.tuning, effectSelect.value);
     activeEffectKeyframeId = null;
     effectFrame = null;
     selectedEffectSlot = null;

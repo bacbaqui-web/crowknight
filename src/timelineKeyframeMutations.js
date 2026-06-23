@@ -1,3 +1,4 @@
+import { defaultEffectImageKey } from './animationFrames.js';
 import { POSE_PART_KEYS } from './gameConfig.js';
 import {
   effectKeyframesFor,
@@ -6,6 +7,8 @@ import {
   interpolateEffectFrameValues,
   interpolateFrameValues,
   makePoseKeyframeId,
+  normalizeEffectOffsets,
+  normalizePoseFrameValue,
   poseKeyframesFor,
   sortPoseKeyframes,
   syncFrameAliases,
@@ -55,4 +58,18 @@ export function deleteEffectTimelineKeyframe(tuning, effectKey, id) {
   const effect = tuning.effectOffsets[effectKey];
   effect.keyframes = effect.keyframes.filter((frame) => frame.id !== id);
   syncFrameAliases(effect);
+}
+
+export function resetPoseTimelineAnimation(tuning, poseKey) {
+  tuning.poseOffsets ||= {};
+  tuning.poseOffsets[poseKey] = {};
+  POSE_PART_KEYS.forEach((part) => {
+    tuning.poseOffsets[poseKey][part] = normalizePoseFrameValue();
+  });
+}
+
+export function resetEffectTimelineAnimation(tuning, effectKey) {
+  tuning.effectOffsets[effectKey] = normalizeEffectOffsets({
+    [effectKey]: { image: defaultEffectImageKey(effectKey) },
+  })[effectKey];
 }
