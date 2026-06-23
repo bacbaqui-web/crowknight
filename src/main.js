@@ -2990,33 +2990,42 @@ function buildTuningPanel() {
     syncPanelToggle();
   }
 
-  function closePanel() {
-    panel.classList.remove('is-open');
-    panel.setAttribute('aria-hidden', 'true');
-    backdrop.hidden = true;
-    syncPanelToggle();
-    activePartKey = null;
+  function clearPanelSelectionState({ clearCopiedEffect = false } = {}) {
+    selectedPosePartKeysGlobal.clear();
     activePartKeyGlobal = null;
+    activePartKey = null;
     activePosePartKey = null;
     activePoseKeyframeId = null;
     selectedPoseSlot = null;
     activeEffectKeyframeId = null;
     selectedEffectSlot = null;
     effectFrame = null;
-    stopEffectPreview();
-    selectedPosePartKeysGlobal.clear();
+    if (clearCopiedEffect) copiedEffectFrame = null;
     resetGroupEditValues();
+  }
+
+  function clearActorPreviewState() {
+    actors.forEach((actor) => {
+      actor.player.anchorDebugPart = null;
+      actor.player.posePreview = null;
+      actor.player.effectPreview = null;
+    });
+  }
+
+  function closePanel() {
+    panel.classList.remove('is-open');
+    panel.setAttribute('aria-hidden', 'true');
+    backdrop.hidden = true;
+    syncPanelToggle();
+    clearPanelSelectionState();
+    stopEffectPreview();
     editFocusPartKey = null;
     editFocusContext = null;
     editHandleHover = null;
     editHandleActiveMode = null;
     canvas.style.cursor = '';
     syncPartPickers();
-    actors.forEach((actor) => {
-      actor.player.anchorDebugPart = null;
-      actor.player.posePreview = null;
-      actor.player.effectPreview = null;
-    });
+    clearActorPreviewState();
     document.activeElement?.blur();
   }
 
@@ -3024,15 +3033,7 @@ function buildTuningPanel() {
     pushUndoSnapshot();
     replaceObject(selectedActor.tuning, defaultTuningFor(selectedActor));
     selectedActor.name = selectedActor.label;
-    selectedPosePartKeysGlobal.clear();
-    activePartKeyGlobal = null;
-    activePartKey = null;
-    activePosePartKey = null;
-    activeEffectKeyframeId = null;
-    selectedEffectSlot = null;
-    effectFrame = null;
-    copiedEffectFrame = null;
-    resetGroupEditValues();
+    clearPanelSelectionState({ clearCopiedEffect: true });
     selectedActor.player.applyTuning(selectedActor.tuning);
     selectedActor.hp = 100;
     saveState();
@@ -3041,15 +3042,7 @@ function buildTuningPanel() {
 
   function handleActorChange() {
     selectedActor = actors.find((actor) => actor.id === actorSelect.value) || playerActor;
-    selectedPosePartKeysGlobal.clear();
-    activePartKeyGlobal = null;
-    activePartKey = null;
-    activePosePartKey = null;
-    activeEffectKeyframeId = null;
-    selectedEffectSlot = null;
-    effectFrame = null;
-    copiedEffectFrame = null;
-    resetGroupEditValues();
+    clearPanelSelectionState({ clearCopiedEffect: true });
     syncPanel();
   }
 
