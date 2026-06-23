@@ -90,7 +90,12 @@ import {
   poseMotionGroups,
 } from './tuningParts.js';
 import { isEmptyEditableSlot, selectedOrFirstEmptySlot, syncTimelinePlaybackControls } from './tuningTimelineDom.js';
-import { bindKeyframeDrag, timelinePointerValue } from './timelineDragControls.js';
+import {
+  bindKeyframeDrag,
+  markActiveKeyframeButton,
+  moveKeyframeButtons,
+  timelinePointerValue,
+} from './timelineDragControls.js';
 import {
   createDefaultGroupEditValues,
   resetGroupTransformValues as resetGroupTransformValueState,
@@ -2048,10 +2053,7 @@ function buildTuningPanel() {
       t,
       now: performance.now(),
     });
-    poseTimelineTrack.querySelectorAll(`[data-keyframe-id="${id}"]`).forEach((button) => {
-      button.style.left = `${slotToLeft(nextSlot)}%`;
-      button.title = `${nextSlot + 1}칸`;
-    });
+    moveKeyframeButtons(poseTimelineTrack, id, nextSlot, slotToLeft(nextSlot));
   }
 
   function selectPoseKeyframeForDrag(id) {
@@ -2065,9 +2067,7 @@ function buildTuningPanel() {
       now: performance.now(),
     });
     poseDeleteKeyframe.disabled = false;
-    poseTimelineTrack.querySelectorAll('.pose-keyframe').forEach((button) => {
-      button.classList.toggle('is-active', button.dataset.keyframeId === id);
-    });
+    markActiveKeyframeButton(poseTimelineTrack, id);
   }
 
   function getActivePoseT() {
@@ -2470,10 +2470,7 @@ function buildTuningPanel() {
       t,
       now: performance.now(),
     });
-    effectTimelineTrack.querySelectorAll(`[data-keyframe-id="${id}"]`).forEach((button) => {
-      button.style.left = `${effectSlotToLeft(nextSlot)}%`;
-      button.title = `${nextSlot + 1}칸`;
-    });
+    moveKeyframeButtons(effectTimelineTrack, id, nextSlot, effectSlotToLeft(nextSlot));
   }
 
   function selectEffectKeyframeForDrag(id) {
@@ -2487,9 +2484,7 @@ function buildTuningPanel() {
       now: performance.now(),
     });
     effectDeleteKeyframe.disabled = false;
-    effectTimelineTrack.querySelectorAll('.pose-keyframe').forEach((button) => {
-      button.classList.toggle('is-active', button.dataset.keyframeId === id);
-    });
+    markActiveKeyframeButton(effectTimelineTrack, id);
   }
 
   function ensureEffectKeyframe(id) {
