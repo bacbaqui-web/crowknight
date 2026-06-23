@@ -4,7 +4,7 @@ import { drawActor } from './actorRenderer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
-import { defaultEffectSize, frameValue } from './animationFrames.js';
+import { defaultEffectSize } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
 import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
@@ -101,7 +101,7 @@ import {
   resetGroupTransformValues as resetGroupTransformValueState,
 } from './panelEditState.js';
 import { renderKeyframeTimeline } from './timelineRenderer.js';
-import { currentEffectTimelineFrame } from './timelineFrameRead.js';
+import { currentEffectTimelineFrame, currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addEffectTimelineKeyframe,
   addPoseTimelineKeyframe,
@@ -1763,11 +1763,15 @@ function buildTuningPanel() {
   }
 
   function currentPoseFrameValue(part) {
-    ensurePoseOffset(selectedActor.tuning, poseSelect.value, part);
-    const frames = selectedActor.tuning.poseOffsets[poseSelect.value][part];
-    if (activePoseKeyframeId) return ensurePoseKeyframeForPart(frames, activePoseKeyframeId);
-    if (!poseFrame) return isMasterPart(part) ? frames : frameValue();
-    return frames[poseFrame === 'end' ? 'end' : 'start'];
+    return currentPoseTimelineFrame({
+      tuning: selectedActor.tuning,
+      poseKey: poseSelect.value,
+      part,
+      activeKeyframeId: activePoseKeyframeId,
+      fixedFrame: poseFrame,
+      isMasterPart: isMasterPart(part),
+      ensureKeyframe: ensurePoseKeyframeForPart,
+    });
   }
 
   function writePoseFrameValue(part, prop, value) {

@@ -1,5 +1,22 @@
-import { interpolateEffectFrameValues } from './animationFrames.js';
-import { effectKeyframesFor, ensureEffectOffset } from './tuningNormalize.js';
+import { frameValue, interpolateEffectFrameValues } from './animationFrames.js';
+import { effectKeyframesFor, ensureEffectOffset, ensurePoseOffset } from './tuningNormalize.js';
+
+export function currentPoseTimelineFrame({
+  tuning,
+  poseKey,
+  part,
+  activeKeyframeId,
+  fixedFrame,
+  isMasterPart,
+  ensureKeyframe,
+}) {
+  ensurePoseOffset(tuning, poseKey, part);
+  const frames = tuning.poseOffsets[poseKey][part];
+
+  if (activeKeyframeId) return ensureKeyframe(frames, activeKeyframeId);
+  if (!fixedFrame) return isMasterPart ? frames : frameValue();
+  return frames[fixedFrame === 'end' ? 'end' : 'start'];
+}
 
 export function currentEffectTimelineFrame({
   tuning,
