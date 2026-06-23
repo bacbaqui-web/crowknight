@@ -150,7 +150,13 @@ import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvas
 import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
-import { activeAttackSettingsKey, activeEffectSettingsKey, isCollisionSectionOpen } from './settingsPanelState.js';
+import {
+  activeAttackSettingsKey,
+  activeEffectSettingsKey,
+  currentSettingsEditContext,
+  isCollisionSectionOpen,
+  isSettingsPanelOpen,
+} from './settingsPanelState.js';
 import { drawAttackHitboxPreview, drawBodyHitbox } from './settingsDebugRenderer.js';
 import { drawEffectSettingsPreview } from './settingsEffectPreviewRenderer.js';
 import {
@@ -269,7 +275,7 @@ function syncCanvasToLayout(adjustActors = false) {
 addEventListener(
   'keydown',
   (e) => {
-    if ((e.metaKey || e.ctrlKey) && panelOpenForEdit() && !isTextInput(e.target)) {
+    if ((e.metaKey || e.ctrlKey) && isSettingsPanelOpen() && !isTextInput(e.target)) {
       if (e.code === 'KeyZ') {
         e.preventDefault();
         e.stopPropagation();
@@ -684,7 +690,7 @@ function draw() {
     particleEffects,
     playerDeathPending,
     resultOpen,
-    isEditPanelOpen: panelOpenForEdit(),
+    isEditPanelOpen: isSettingsPanelOpen(),
     hasActiveEditPart: Boolean(activeEditPartKey()),
   });
   drawWorld(ctx, world, view);
@@ -721,14 +727,10 @@ function syncRunHud() {
   syncRunHudView({ survivalTime: runSurvivalTime, kills: runKills, hudSurvivalTime, hudKills });
 }
 
-function panelOpenForEdit() {
-  const panel = document.querySelector('#tuningPanel');
-  return panel?.classList.contains('is-open');
-}
-
 function activeEditPartKey() {
-  if (currentOpenEditContext() === 'effect') return 'effect';
-  if (!currentOpenEditContext()) return null;
+  const context = currentOpenEditContext();
+  if (context === 'effect') return 'effect';
+  if (!context) return null;
   return editFocusPartKey;
 }
 
@@ -749,15 +751,7 @@ function resetGroupTransformValues() {
 }
 
 function currentOpenEditContext() {
-  const panel = document.querySelector('#tuningPanel');
-  if (!panel?.classList.contains('is-open')) return null;
-  const partSection = panel.querySelector('[data-section="part"]');
-  const poseSection = panel.querySelector('[data-section="pose"]');
-  const effectSection = panel.querySelector('[data-section="effect"]');
-  if (effectSection?.classList.contains('is-open')) return 'effect';
-  if (editFocusContext === 'part' && partSection?.classList.contains('is-open') && activePartKeyGlobal) return 'part';
-  if (editFocusContext === 'pose' && poseSection?.classList.contains('is-open')) return 'pose';
-  return null;
+  return currentSettingsEditContext({ editFocusContext, activePartKey: activePartKeyGlobal });
 }
 
 function startRun() {
@@ -833,7 +827,7 @@ function deleteRankingAt(index) {
 bindSettingsRankingToggle(settingsRankingPanel, settingsRankingToggle);
 
 function drawSettingsDebugBoxes() {
-  if (!panelOpenForEdit()) return;
+  if (!isSettingsPanelOpen()) return;
 
   if (isCollisionSectionOpen()) {
     drawBodyHitbox(ctx, selectedActor);
@@ -851,7 +845,7 @@ function drawSettingsDebugBoxes() {
 }
 
 function getEditHandleGeometry() {
-  if (!panelOpenForEdit()) return null;
+  if (!isSettingsPanelOpen()) return null;
 
   const effectGeometry = getEffectEditHandleGeometry();
   if (effectGeometry) return effectGeometry;
