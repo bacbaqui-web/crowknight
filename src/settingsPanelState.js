@@ -28,6 +28,27 @@ export function currentSettingsEditContext({ editFocusContext, activePartKey }) 
   return null;
 }
 
+export function currentCanvasSettingsEditContext({
+  partSection,
+  poseSection,
+  effectSection,
+  editFocusContext,
+  editContext,
+  activePartKey,
+}) {
+  const partOpen = partSection.classList.contains('is-open');
+  const poseOpen = poseSection.classList.contains('is-open');
+  const effectOpen = effectSection.classList.contains('is-open');
+  if (effectOpen) return 'effect';
+  if (editFocusContext === 'pose' && poseOpen) return 'pose';
+  if (editFocusContext === 'part' && partOpen && activePartKey) return 'part';
+  if (editContext === 'pose' && poseOpen) return 'pose';
+  if (editContext === 'part' && partOpen && activePartKey) return 'part';
+  if (partOpen) return 'part';
+  if (poseOpen) return 'pose';
+  return null;
+}
+
 function isSettingsSectionOpen(section) {
   return document.querySelector(`[data-section="${section}"]`)?.classList.contains('is-open');
 }
