@@ -98,7 +98,9 @@ import {
 } from './timelineFrameClipboard.js';
 import {
   activeTimelineT,
-  fixedTimelineFrameSlot,
+  clearedTimelineSelection,
+  emptyTimelineSlotSelection,
+  fixedTimelineFrameSelection,
   isTimelineFrameSelectionActive,
   isTimelineFrameId,
   isTimelineSlotSelectionActive,
@@ -911,9 +913,10 @@ export function createTuningPanel({
 
     function setPoseFrame(frame) {
       stopPosePreview();
-      poseFrame = frame;
-      selectedPoseSlot = fixedTimelineFrameSlot(frame, getPoseLastSlot());
-      activePoseKeyframeId = null;
+      const nextSelection = fixedTimelineFrameSelection(frame, getPoseLastSlot());
+      activePoseKeyframeId = nextSelection.activeKeyframeId;
+      poseFrame = nextSelection.fixedFrame;
+      selectedPoseSlot = nextSelection.selectedSlot;
       resetGroupEditValues();
       renderPosePartFields();
       syncPosePreview();
@@ -1125,9 +1128,10 @@ export function createTuningPanel({
         clearPoseKeyframeSelection();
         return;
       }
-      selectedPoseSlot = slot;
-      activePoseKeyframeId = null;
-      poseFrame = null;
+      const nextSelection = emptyTimelineSlotSelection(slot);
+      activePoseKeyframeId = nextSelection.activeKeyframeId;
+      poseFrame = nextSelection.fixedFrame;
+      selectedPoseSlot = nextSelection.selectedSlot;
       resetGroupEditValues();
       refreshPoseFrameSelection();
     }
@@ -1138,9 +1142,10 @@ export function createTuningPanel({
     }
 
     function resetPoseKeyframeSelectionState() {
-      activePoseKeyframeId = null;
-      poseFrame = null;
-      selectedPoseSlot = null;
+      const nextSelection = clearedTimelineSelection();
+      activePoseKeyframeId = nextSelection.activeKeyframeId;
+      poseFrame = nextSelection.fixedFrame;
+      selectedPoseSlot = nextSelection.selectedSlot;
     }
 
     function refreshPoseFrameSelection() {
@@ -1517,9 +1522,10 @@ export function createTuningPanel({
         clearEffectKeyframeSelection();
         return;
       }
-      selectedEffectSlot = slot;
-      activeEffectKeyframeId = null;
-      effectFrame = null;
+      const nextSelection = emptyTimelineSlotSelection(slot);
+      activeEffectKeyframeId = nextSelection.activeKeyframeId;
+      effectFrame = nextSelection.fixedFrame;
+      selectedEffectSlot = nextSelection.selectedSlot;
       refreshEffectFrameSelection();
     }
 
@@ -1531,9 +1537,10 @@ export function createTuningPanel({
     }
 
     function setEffectFrameSilently(frame) {
-      effectFrame = frame;
-      selectedEffectSlot = fixedTimelineFrameSlot(frame, getEffectLastSlot());
-      activeEffectKeyframeId = null;
+      const nextSelection = fixedTimelineFrameSelection(frame, getEffectLastSlot());
+      activeEffectKeyframeId = nextSelection.activeKeyframeId;
+      effectFrame = nextSelection.fixedFrame;
+      selectedEffectSlot = nextSelection.selectedSlot;
     }
 
     function ensureActiveEffectFrame() {
@@ -1555,9 +1562,10 @@ export function createTuningPanel({
     }
 
     function resetEffectSelectionState() {
-      activeEffectKeyframeId = null;
-      effectFrame = null;
-      selectedEffectSlot = null;
+      const nextSelection = clearedTimelineSelection();
+      activeEffectKeyframeId = nextSelection.activeKeyframeId;
+      effectFrame = nextSelection.fixedFrame;
+      selectedEffectSlot = nextSelection.selectedSlot;
     }
 
     function refreshEffectFrameSelection() {

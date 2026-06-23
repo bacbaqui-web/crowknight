@@ -37,6 +37,30 @@ export function isTimelineFrameId(id, keyframes) {
   return Boolean(id && keyframes.some((frame) => frame.id === id));
 }
 
+export function fixedTimelineFrameSelection(frame, lastSlot) {
+  return {
+    activeKeyframeId: null,
+    fixedFrame: frame,
+    selectedSlot: fixedTimelineFrameSlot(frame, lastSlot),
+  };
+}
+
+export function emptyTimelineSlotSelection(slot) {
+  return {
+    activeKeyframeId: null,
+    fixedFrame: null,
+    selectedSlot: slot,
+  };
+}
+
+export function clearedTimelineSelection() {
+  return {
+    activeKeyframeId: null,
+    fixedFrame: null,
+    selectedSlot: null,
+  };
+}
+
 export function activeTimelineT({
   activeKeyframeId,
   selectedSlot,
