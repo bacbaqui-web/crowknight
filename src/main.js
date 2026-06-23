@@ -88,6 +88,7 @@ import {
 import {
   activeEditPartKeyForContext,
   activeEditPartKeysForContext,
+  clearPosePartSelectionState,
   createDefaultGroupEditValues,
   posePartFocusAfterMultiSelect,
   resetGroupTransformValues as resetGroupTransformValueState,
@@ -1215,12 +1216,12 @@ function buildTuningPanel() {
   }
 
   function clearPosePartSelection() {
-    activePosePartKey = null;
-    selectedPosePartKeysGlobal.clear();
+    const nextSelection = clearPosePartSelectionState(selectedPosePartKeysGlobal, MASTER_PART_KEY);
+    activePosePartKey = nextSelection.activePosePartKey;
     resetGroupEditValues();
     editContext = 'pose';
     editFocusContext = 'pose';
-    editFocusPartKey = MASTER_PART_KEY;
+    editFocusPartKey = nextSelection.editFocusPartKey;
     renderPosePartFields();
     syncPosePreview();
   }
@@ -2788,10 +2789,10 @@ function buildTuningPanel() {
     poseFrame = null;
     selectedPoseSlot = null;
     activePoseKeyframeId = null;
-    selectedPosePartKeysGlobal.clear();
+    const nextSelection = clearPosePartSelectionState(selectedPosePartKeysGlobal, MASTER_PART_KEY);
     resetGroupEditValues();
-    activePosePartKey = null;
-    editFocusPartKey = MASTER_PART_KEY;
+    activePosePartKey = nextSelection.activePosePartKey;
+    editFocusPartKey = nextSelection.editFocusPartKey;
     renderPosePartFields();
     syncMotionRows();
     syncPosePreview();
@@ -2811,9 +2812,7 @@ function buildTuningPanel() {
   function handlePosePartChange() {
     editContext = 'pose';
     editFocusContext = 'pose';
-    activePosePartKey = posePartSelect.value;
-    selectedPosePartKeysGlobal.clear();
-    selectedPosePartKeysGlobal.add(activePosePartKey);
+    activePosePartKey = selectOnlyPosePart(selectedPosePartKeysGlobal, posePartSelect.value);
     resetGroupEditValues();
     editFocusPartKey = activePosePartKey;
     renderPosePartFields();

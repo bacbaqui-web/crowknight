@@ -37,6 +37,14 @@ export function selectOnlyPosePart(selectedPosePartKeys, partKey) {
   return partKey;
 }
 
+export function clearPosePartSelectionState(selectedPosePartKeys, masterPartKey) {
+  selectedPosePartKeys.clear();
+  return {
+    activePosePartKey: null,
+    editFocusPartKey: masterPartKey,
+  };
+}
+
 export function posePartFocusAfterMultiSelect(selectedPosePartKeys, partKey, masterPartKey) {
   const activePosePartKey = selectedPosePartKeys.size
     ? selectedPosePartKeys.has(partKey)
