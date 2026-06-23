@@ -34,3 +34,22 @@ export function canvasGroupDragItems(parts, { editStateForPart, editHandles }) {
     })
     .filter(Boolean);
 }
+
+export function refreshCanvasDragTargets(drag, { editStateForPart, effectFrameValue }) {
+  if (!drag) return;
+  if (drag.group) {
+    drag.parts.forEach((item) => {
+      const editState = editStateForPart(item.part, 'pose');
+      item.target = editState.target;
+      item.base = editState.base;
+    });
+    return;
+  }
+  if (drag.context === 'effect') {
+    drag.target = effectFrameValue();
+    return;
+  }
+  const editState = editStateForPart(drag.part, drag.context);
+  drag.target = editState.target;
+  drag.base = editState.base;
+}

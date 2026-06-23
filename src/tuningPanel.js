@@ -132,7 +132,7 @@ import {
 import { canvasPointFromEvent } from './canvasDragMath.js';
 import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvasDragState.js';
 import { updateRigPartValue } from './canvasVisualValues.js';
-import { canvasGroupDragItems, canvasPartEditState } from './tuningCanvasEditState.js';
+import { canvasGroupDragItems, canvasPartEditState, refreshCanvasDragTargets } from './tuningCanvasEditState.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
@@ -1996,22 +1996,10 @@ export function createTuningPanel({
     }
 
     function refreshCanvasDragTarget() {
-      if (!canvasDrag) return;
-      if (canvasDrag.group) {
-        canvasDrag.parts.forEach((item) => {
-          const editState = canvasEditState(item.part, 'pose');
-          item.target = editState.target;
-          item.base = editState.base;
-        });
-        return;
-      }
-      if (canvasDrag.context === 'effect') {
-        canvasDrag.target = currentEffectFrameValue();
-        return;
-      }
-      const editState = canvasEditState(canvasDrag.part, canvasDrag.context);
-      canvasDrag.target = editState.target;
-      canvasDrag.base = editState.base;
+      refreshCanvasDragTargets(canvasDrag, {
+        editStateForPart: canvasEditState,
+        effectFrameValue: currentEffectFrameValue,
+      });
     }
 
     function applyCanvasDrag(drag, dx, dy) {
