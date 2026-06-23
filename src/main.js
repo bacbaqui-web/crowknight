@@ -119,6 +119,7 @@ import {
   timelineSlotToT,
   timelineTToSlot,
 } from './tuningTimelineDom.js';
+import { getCameraX, getViewTransform } from './cameraView.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import {
   ACTOR_DEFS,
@@ -521,7 +522,7 @@ function queueEnemyRespawn(actor, withDeathBurst = true, deathBurst = actor.play
   actor.respawning = true;
   actor.invulnTime = 0;
   actor.wasRolling = false;
-  const cameraX = getCameraX();
+  const cameraX = getCameraX(playerActor, world);
   actor.respawnTargetX = fromLeft
     ? Math.max(world.minX + 40, cameraX + 120 + Math.random() * 150)
     : cameraX + world.viewW - 220 + Math.random() * 220;
@@ -546,7 +547,7 @@ function queueEnemyRespawn(actor, withDeathBurst = true, deathBurst = actor.play
 }
 
 function maintainEnemyFlow() {
-  const cameraX = getCameraX();
+  const cameraX = getCameraX(playerActor, world);
   actors.slice(1).forEach((actor) => {
     if (actor.respawning) return;
     if (actor.player.x < cameraX - 360) queueEnemyRespawn(actor, false);
@@ -647,7 +648,16 @@ function finishRun({ showResult = false } = {}) {
 }
 
 function draw() {
-  const view = getViewTransform();
+  const view = getViewTransform({
+    world,
+    playerActor,
+    selectedActor,
+    particleEffects,
+    playerDeathPending,
+    resultOpen,
+    isEditPanelOpen: panelOpenForEdit(),
+    hasActiveEditPart: Boolean(activeEditPartKey()),
+  });
   drawWorld(ctx, world, view);
 
   ctx.save();
@@ -674,47 +684,6 @@ function getRunScore() {
 
 function syncRunHud() {
   syncRunHudView({ survivalTime: runSurvivalTime, kills: runKills, hudSurvivalTime, hudKills });
-}
-
-function getCameraX() {
-  const target = playerActor.player.x - world.viewW / 2;
-  return Math.max(0, target);
-}
-
-function getViewTransform() {
-  if (playerDeathPending || resultOpen) {
-    const shake = particleEffects.getScreenShakeOffset();
-    return {
-      zoom: 1.72,
-      focusX: playerActor.player.x - shake.x,
-      focusY: playerActor.player.y - 72 - shake.y,
-    };
-  }
-
-  const zoom = getEditZoom();
-  const shake = particleEffects.getScreenShakeOffset();
-  if (zoom > 1) {
-    return {
-      zoom,
-      focusX: selectedActor.player.x - shake.x,
-      focusY: selectedActor.player.y - 88 - shake.y,
-    };
-  }
-
-  return {
-    zoom: 1,
-    focusX: getCameraX() + world.viewW / 2 - shake.x,
-    focusY: getCameraY() - shake.y,
-  };
-}
-
-function getCameraY() {
-  return clamp(playerActor.player.y - 120, world.viewH * 0.35, world.floorY - 120);
-}
-
-function getEditZoom() {
-  const hasPartSelection = Boolean(activeEditPartKey());
-  return panelOpenForEdit() && hasPartSelection ? 1.85 : 1;
 }
 
 function panelOpenForEdit() {
