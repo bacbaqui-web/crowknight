@@ -88,7 +88,10 @@ import {
   activeEditPartKeyForContext,
   activeEditPartKeysForContext,
   createDefaultGroupEditValues,
+  posePartFocusAfterMultiSelect,
   resetGroupTransformValues as resetGroupTransformValueState,
+  selectOnlyPosePart,
+  togglePosePartSelection,
 } from './panelEditState.js';
 import { renderKeyframeTimeline } from './timelineRenderer.js';
 import { currentEffectTimelineFrame, currentPoseTimelineFrame } from './timelineFrameRead.js';
@@ -1165,11 +1168,7 @@ function buildTuningPanel() {
   function togglePosePartMultiSelection(partKey) {
     editContext = 'pose';
     editFocusContext = 'pose';
-    if (selectedPosePartKeysGlobal.has(partKey)) {
-      selectedPosePartKeysGlobal.delete(partKey);
-    } else {
-      selectedPosePartKeysGlobal.add(partKey);
-    }
+    togglePosePartSelection(selectedPosePartKeysGlobal, partKey);
     resetGroupEditValues();
 
     syncActivePosePartAfterMultiSelect(partKey);
@@ -1182,19 +1181,15 @@ function buildTuningPanel() {
 
   function selectSinglePosePart(partKey) {
     editContext = 'pose';
-    activePosePartKey = partKey;
-    selectedPosePartKeysGlobal.clear();
-    selectedPosePartKeysGlobal.add(partKey);
+    activePosePartKey = selectOnlyPosePart(selectedPosePartKeysGlobal, partKey);
     resetGroupEditValues();
     posePartSelect.value = partKey;
   }
 
   function syncActivePosePartAfterMultiSelect(partKey) {
-    activePosePartKey = selectedPosePartKeysGlobal.size ? partKey : null;
-    if (activePosePartKey && !selectedPosePartKeysGlobal.has(activePosePartKey)) {
-      activePosePartKey = [...selectedPosePartKeysGlobal].at(-1) || null;
-    }
-    editFocusPartKey = selectedPosePartKeysGlobal.size > 1 ? activePosePartKey : activePosePartKey || MASTER_PART_KEY;
+    const nextFocus = posePartFocusAfterMultiSelect(selectedPosePartKeysGlobal, partKey, MASTER_PART_KEY);
+    activePosePartKey = nextFocus.activePosePartKey;
+    editFocusPartKey = nextFocus.editFocusPartKey;
   }
 
   function closeEditSection(context) {

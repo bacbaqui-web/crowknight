@@ -22,3 +22,30 @@ export function activeEditPartKeysForContext({ context, editFocusContext, select
   }
   return editFocusPartKey ? [editFocusPartKey] : [];
 }
+
+export function togglePosePartSelection(selectedPosePartKeys, partKey) {
+  if (selectedPosePartKeys.has(partKey)) {
+    selectedPosePartKeys.delete(partKey);
+    return;
+  }
+  selectedPosePartKeys.add(partKey);
+}
+
+export function selectOnlyPosePart(selectedPosePartKeys, partKey) {
+  selectedPosePartKeys.clear();
+  selectedPosePartKeys.add(partKey);
+  return partKey;
+}
+
+export function posePartFocusAfterMultiSelect(selectedPosePartKeys, partKey, masterPartKey) {
+  const activePosePartKey = selectedPosePartKeys.size
+    ? selectedPosePartKeys.has(partKey)
+      ? partKey
+      : [...selectedPosePartKeys].at(-1) || null
+    : null;
+
+  return {
+    activePosePartKey,
+    editFocusPartKey: selectedPosePartKeys.size > 1 ? activePosePartKey : activePosePartKey || masterPartKey,
+  };
+}
