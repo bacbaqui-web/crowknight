@@ -8,3 +8,17 @@ export function resetGroupTransformValues(values) {
   values.rot = 0;
   values.scale = 100;
 }
+
+export function activeEditPartKeyForContext(context, editFocusPartKey) {
+  if (context === 'effect') return 'effect';
+  if (!context) return null;
+  return editFocusPartKey;
+}
+
+export function activeEditPartKeysForContext({ context, editFocusContext, selectedPosePartKeys, editFocusPartKey }) {
+  if (!context) return [];
+  if (editFocusContext === 'pose' && selectedPosePartKeys.size > 1) {
+    return [...selectedPosePartKeys];
+  }
+  return editFocusPartKey ? [editFocusPartKey] : [];
+}

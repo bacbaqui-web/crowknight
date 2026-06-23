@@ -84,6 +84,8 @@ import {
   timelinePointerValue,
 } from './timelineDragControls.js';
 import {
+  activeEditPartKeyForContext,
+  activeEditPartKeysForContext,
   createDefaultGroupEditValues,
   resetGroupTransformValues as resetGroupTransformValueState,
 } from './panelEditState.js';
@@ -729,18 +731,16 @@ function syncRunHud() {
 }
 
 function activeEditPartKey() {
-  const context = currentOpenEditContext();
-  if (context === 'effect') return 'effect';
-  if (!context) return null;
-  return editFocusPartKey;
+  return activeEditPartKeyForContext(currentOpenEditContext(), editFocusPartKey);
 }
 
 function activeEditPartKeys() {
-  if (!currentOpenEditContext()) return [];
-  if (editFocusContext === 'pose' && selectedPosePartKeysGlobal.size > 1) {
-    return [...selectedPosePartKeysGlobal];
-  }
-  return editFocusPartKey ? [editFocusPartKey] : [];
+  return activeEditPartKeysForContext({
+    context: currentOpenEditContext(),
+    editFocusContext,
+    selectedPosePartKeys: selectedPosePartKeysGlobal,
+    editFocusPartKey,
+  });
 }
 
 function resetGroupEditValues() {
