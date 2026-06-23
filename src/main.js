@@ -139,7 +139,6 @@ import {
   drawHandleArrow,
   drawHandleCircle,
   drawHandleLine,
-  drawPolygon,
   handleColor,
   handleCursor,
   handleLineStart,
@@ -163,6 +162,7 @@ import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import { activeAttackSettingsKey, activeEffectSettingsKey, isCollisionSectionOpen } from './settingsPanelState.js';
+import { drawAttackHitboxPreview, drawBodyHitbox } from './settingsDebugRenderer.js';
 import {
   ACTOR_DEFS,
   DEATH_RESULT_DELAY,
@@ -872,12 +872,12 @@ function drawSettingsDebugBoxes() {
   if (!panelOpenForEdit()) return;
 
   if (isCollisionSectionOpen()) {
-    drawBodyHitbox(selectedActor);
+    drawBodyHitbox(ctx, selectedActor);
   }
 
   const attackKey = activeAttackSettingsKey();
   if (attackKey) {
-    drawAttackHitboxPreview(selectedActor, attackKey);
+    drawAttackHitboxPreview(ctx, selectedActor, attackKey);
   }
 
   const effectKey = activeEffectSettingsKey();
@@ -959,33 +959,6 @@ function recordEffectEditHandle(ctx, frame, key) {
     moveXUnit: xInfo.unit,
     moveYUnit: yInfo.unit,
   };
-}
-
-function drawBodyHitbox(actor) {
-  const h = actor.player.hitbox;
-  ctx.save();
-  ctx.fillStyle = 'rgba(255, 64, 64, 0.16)';
-  ctx.strokeStyle = 'rgba(255, 92, 92, 0.95)';
-  ctx.lineWidth = 2;
-  ctx.fillRect(h.x, h.y, h.w, h.h);
-  ctx.strokeRect(h.x, h.y, h.w, h.h);
-  ctx.restore();
-}
-
-function drawAttackHitboxPreview(actor, key) {
-  const box = actor.player.weaponAttackBox(actor.tuning.attackBoxes?.[key]);
-  if (!box) return;
-
-  ctx.save();
-  ctx.fillStyle = 'rgba(255, 224, 72, 0.18)';
-  ctx.strokeStyle = 'rgba(255, 224, 72, 0.95)';
-  ctx.lineWidth = 2;
-  drawPolygon(ctx, box.points, true);
-  drawPolygon(ctx, box.points, false);
-  ctx.fillStyle = 'rgba(255, 244, 168, 0.95)';
-  ctx.font = '12px sans-serif';
-  ctx.fillText(key === 'jumpAttack' ? '점공' : key.replace('attack', '') + '타', box.x + 4, box.y - 6);
-  ctx.restore();
 }
 
 function drawEditHandles() {
