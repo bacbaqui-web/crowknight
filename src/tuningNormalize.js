@@ -2,6 +2,7 @@ import {
   defaultEffectImageKey,
   effectFrameValue,
   frameValue,
+  interpolateEffectFrameValues,
   poseAnchorValue,
   syncFrameAliases,
   validEffectImageKey,
@@ -136,6 +137,22 @@ export function ensureEffectSettings(tuning) {
     tuning.effectSettings,
     DEFAULT_PLAYER_TUNING.effectSettings || DEFAULT_PLAYER_TUNING.poseSettings
   );
+}
+
+export function effectFrameAt(tuning, key, t = 0) {
+  ensureEffectOffset(tuning, key);
+  const effect = tuning.effectOffsets[key];
+  const frame = interpolateEffectFrameValues(effectKeyframesFor(effect, key), clamp(Number(t), 0, 1), key);
+  return {
+    ...frame,
+    image: defaultEffectImageKey(key),
+  };
+}
+
+export function effectKeyframesFor(effect, key) {
+  effect.keyframes = normalizeEffectKeyframes(effect.keyframes, effect.start, effect.end, key);
+  syncFrameAliases(effect);
+  return effect.keyframes;
 }
 
 function migrateSplitRigParts(rig, sourceRig = {}) {

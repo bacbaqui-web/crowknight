@@ -25,13 +25,14 @@ import { createParticleEffects } from './particleEffects.js';
 import { loadSavedState as loadStoredSavedState, saveActorState } from './saveStateStorage.js';
 import { formatSurvivalTime } from './scoreFormat.js';
 import {
+  effectFrameAt,
+  effectKeyframesFor,
   ensureEffectOffset,
   ensureEffectSettings,
   ensurePoseOffset,
   ensurePoseSettings,
   makePoseKeyframeId,
   mergeTuning,
-  normalizeEffectKeyframes,
   normalizeEffectOffsets,
   normalizePoseFrameValue,
   poseKeyframesFor,
@@ -1276,22 +1277,6 @@ function activePlayerEffectAction(player) {
   }
 
   return null;
-}
-
-function effectFrameAt(tuning, key, t = 0) {
-  ensureEffectOffset(tuning, key);
-  const effect = tuning.effectOffsets[key];
-  const frame = interpolateEffectFrameValues(effectKeyframesFor(effect, key), clamp(Number(t), 0, 1), key);
-  return {
-    ...frame,
-    image: defaultEffectImageKey(key),
-  };
-}
-
-function effectKeyframesFor(effect, key) {
-  effect.keyframes = normalizeEffectKeyframes(effect.keyframes, effect.start, effect.end, key);
-  syncFrameAliases(effect);
-  return effect.keyframes;
 }
 
 function drawShadow(actor) {
