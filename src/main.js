@@ -27,8 +27,8 @@ import {
 import { drawRankingHud } from './rankingCanvas.js';
 import { createParticleEffects } from './particleEffects.js';
 import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
+import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
 import { loadSavedState as loadStoredSavedState, saveActorState } from './saveStateStorage.js';
-import { formatSurvivalTime } from './scoreFormat.js';
 import {
   effectFrameAt,
   effectKeyframesFor,
@@ -121,14 +121,10 @@ import {
   ACTOR_DEFS,
   DEATH_RESULT_DELAY,
   GAME_KEYS,
-  KILL_SCORE,
-  KILL_SCORE_WEIGHT,
   MASTER_PART_KEY,
   POSE_MAX_FRAMES,
   POSE_MIN_FRAMES,
   POSE_PART_KEYS,
-  SURVIVAL_SCORE_PER_SECOND,
-  SURVIVAL_SCORE_WEIGHT,
   TUNING_FIELDS,
 } from './gameConfig.js';
 
@@ -660,14 +656,11 @@ function draw() {
 }
 
 function getRunScore() {
-  const survivalScore = runSurvivalTime * SURVIVAL_SCORE_PER_SECOND * SURVIVAL_SCORE_WEIGHT;
-  const killScore = runKills * KILL_SCORE * KILL_SCORE_WEIGHT;
-  return Math.max(0, Math.round(survivalScore + killScore));
+  return calculateRunScore(runSurvivalTime, runKills);
 }
 
 function syncRunHud() {
-  if (hudSurvivalTime) hudSurvivalTime.textContent = formatSurvivalTime(runSurvivalTime);
-  if (hudKills) hudKills.textContent = `${runKills}`;
+  syncRunHudView({ survivalTime: runSurvivalTime, kills: runKills, hudSurvivalTime, hudKills });
 }
 
 function getCameraX() {
