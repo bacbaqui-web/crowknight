@@ -162,6 +162,7 @@ import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvas
 import { updateRigPartValue } from './canvasVisualValues.js';
 import { effectSizeFromPercent, effectSizePercent } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
+import { activeAttackSettingsKey, activeEffectSettingsKey, isCollisionSectionOpen } from './settingsPanelState.js';
 import {
   ACTOR_DEFS,
   DEATH_RESULT_DELAY,
@@ -883,25 +884,6 @@ function drawSettingsDebugBoxes() {
   if (effectKey) {
     drawEffectSettingsPreview(selectedActor, effectKey);
   }
-}
-
-function isCollisionSectionOpen() {
-  return document.querySelector('[data-section="collision"]')?.classList.contains('is-open');
-}
-
-function activeAttackSettingsKey() {
-  const poseSection = document.querySelector('[data-section="pose"]');
-  const poseSelect = document.querySelector('#poseSelect');
-  if (!poseSection?.classList.contains('is-open')) return null;
-  const key = poseSelect?.value || '';
-  return /^attack[123]$/.test(key) || key === 'jumpAttack' ? key : null;
-}
-
-function activeEffectSettingsKey() {
-  const effectSection = document.querySelector('[data-section="effect"]');
-  const effectSelect = document.querySelector('#effectSelect');
-  if (!effectSection?.classList.contains('is-open')) return null;
-  return effectSelect?.value || null;
 }
 
 function drawEffectSettingsPreview(actor, key) {
