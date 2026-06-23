@@ -120,6 +120,7 @@ import {
   drawHandleLine,
   drawPolygon,
   handleColor,
+  handleCursor,
   handleLineStart,
 } from './editHandleDrawing.js';
 import {
@@ -2925,20 +2926,6 @@ function buildTuningPanel() {
         ? 'move'
         : hit?.mode || null;
     canvas.style.cursor = handleCursor(editHandleHover);
-  }
-
-  function handleCursor(mode) {
-    return (
-      {
-        anchor: 'crosshair',
-        move: 'grab',
-        width: 'ew-resize',
-        height: 'ns-resize',
-        size: 'nwse-resize',
-        rotate: 'grab',
-        opacity: 'pointer',
-      }[mode] || ''
-    );
   }
 
   function canvasEditState(part, context) {

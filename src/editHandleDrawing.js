@@ -43,6 +43,20 @@ export function handleColor(mode, activeMode) {
   };
 }
 
+export function handleCursor(mode) {
+  return (
+    {
+      anchor: 'crosshair',
+      move: 'grab',
+      width: 'ew-resize',
+      height: 'ns-resize',
+      size: 'nwse-resize',
+      rotate: 'grab',
+      opacity: 'pointer',
+    }[mode] || ''
+  );
+}
+
 export function drawAnchorHandleDot(ctx, point, style) {
   ctx.save();
   ctx.fillStyle = style.stroke;
