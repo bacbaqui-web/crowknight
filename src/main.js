@@ -100,6 +100,10 @@ import {
 } from './tuningParts.js';
 import { isEmptyEditableSlot, selectedOrFirstEmptySlot, syncTimelinePlaybackControls } from './tuningTimelineDom.js';
 import { bindKeyframeDrag, timelinePointerValue } from './timelineDragControls.js';
+import {
+  createDefaultGroupEditValues,
+  resetGroupTransformValues as resetGroupTransformValueState,
+} from './panelEditState.js';
 import { renderKeyframeTimeline } from './timelineRenderer.js';
 import {
   activeTimelineT,
@@ -197,7 +201,7 @@ let editHandleHover = null;
 let editHandleActiveMode = null;
 let activePartKeyGlobal = null;
 let selectedPosePartKeysGlobal = new Set();
-let groupEditValues = { x: 0, y: 0, rot: 0, scale: 100, opacity: 1, anchorX: null, anchorY: null };
+let groupEditValues = createDefaultGroupEditValues();
 let undoTuningChangeGlobal = null;
 let poseFrameCopyGlobal = null;
 let poseFramePasteGlobal = null;
@@ -727,14 +731,11 @@ function activeEditPartKeys() {
 }
 
 function resetGroupEditValues() {
-  groupEditValues = { x: 0, y: 0, rot: 0, scale: 100, opacity: 1, anchorX: null, anchorY: null };
+  groupEditValues = createDefaultGroupEditValues();
 }
 
 function resetGroupTransformValues() {
-  groupEditValues.x = 0;
-  groupEditValues.y = 0;
-  groupEditValues.rot = 0;
-  groupEditValues.scale = 100;
+  resetGroupTransformValueState(groupEditValues);
 }
 
 function currentOpenEditContext() {
@@ -2707,9 +2708,7 @@ function buildTuningPanel() {
     const actor = actors.find((item) => item.id === snapshot.actorId) || selectedActor;
     selectedActor = actor;
     replaceObject(actor.tuning, snapshot.tuning);
-    groupEditValues = snapshot.groupEditValues
-      ? clone(snapshot.groupEditValues)
-      : { x: 0, y: 0, rot: 0, scale: 100, opacity: 1, anchorX: null, anchorY: null };
+    groupEditValues = snapshot.groupEditValues ? clone(snapshot.groupEditValues) : createDefaultGroupEditValues();
     actor.player.applyTuning(actor.tuning);
     saveState();
     editSnapshotOpen = false;
