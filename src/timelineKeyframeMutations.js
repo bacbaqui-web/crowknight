@@ -54,6 +54,20 @@ export function deletePoseTimelineKeyframe(tuning, poseKey, id) {
   });
 }
 
+export function movePoseTimelineKeyframe(tuning, poseKey, id, t) {
+  let moved = false;
+  POSE_PART_KEYS.forEach((part) => {
+    const frames = tuning.poseOffsets[poseKey]?.[part];
+    const keyframe = frames?.keyframes?.find((frame) => frame.id === id);
+    if (!keyframe) return;
+    keyframe.t = t;
+    sortPoseKeyframes(frames.keyframes);
+    syncFrameAliases(frames);
+    moved = true;
+  });
+  return moved;
+}
+
 export function addEffectTimelineKeyframe(tuning, effectKey, t) {
   ensureEffectOffset(tuning, effectKey);
   const effect = tuning.effectOffsets[effectKey];
@@ -86,6 +100,16 @@ export function deleteEffectTimelineKeyframe(tuning, effectKey, id) {
   const effect = tuning.effectOffsets[effectKey];
   effect.keyframes = effect.keyframes.filter((frame) => frame.id !== id);
   syncFrameAliases(effect);
+}
+
+export function moveEffectTimelineKeyframe(tuning, effectKey, id, t) {
+  const effect = tuning.effectOffsets[effectKey];
+  const keyframe = effect.keyframes?.find((frame) => frame.id === id);
+  if (!keyframe) return false;
+  keyframe.t = t;
+  sortPoseKeyframes(effect.keyframes);
+  syncFrameAliases(effect);
+  return true;
 }
 
 export function resetPoseTimelineAnimation(tuning, poseKey) {

@@ -105,6 +105,8 @@ import {
   deletePoseTimelineKeyframe,
   ensureEffectTimelineKeyframe,
   ensurePoseTimelineKeyframe,
+  moveEffectTimelineKeyframe,
+  movePoseTimelineKeyframe,
   pasteEffectTimelineFrame,
   pastePoseTimelineFramePart,
   resetEffectTimelineAnimation,
@@ -2049,14 +2051,7 @@ function buildTuningPanel() {
     const occupied = poseTimelineKeyframes().some((frame) => frame.id !== id && tToSlot(frame.t) === nextSlot);
     if (occupied) return;
     t = slotToT(nextSlot);
-    POSE_PART_KEYS.forEach((part) => {
-      const frames = selectedActor.tuning.poseOffsets[poseSelect.value]?.[part];
-      const keyframe = frames?.keyframes?.find((frame) => frame.id === id);
-      if (!keyframe) return;
-      keyframe.t = t;
-      sortPoseKeyframes(frames.keyframes);
-      syncFrameAliases(frames);
-    });
+    if (!movePoseTimelineKeyframe(selectedActor.tuning, poseSelect.value, id, t)) return;
     applySelected();
     selectedActor.player.posePreview = createPosePreview({
       pose: poseSelect.value,
@@ -2478,12 +2473,7 @@ function buildTuningPanel() {
     const occupied = effectTimelineKeyframes().some((frame) => frame.id !== id && effectTToSlot(frame.t) === nextSlot);
     if (occupied) return;
     t = effectSlotToT(nextSlot);
-    const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
-    const keyframe = effect.keyframes?.find((frame) => frame.id === id);
-    if (!keyframe) return;
-    keyframe.t = t;
-    sortPoseKeyframes(effect.keyframes);
-    syncFrameAliases(effect);
+    if (!moveEffectTimelineKeyframe(selectedActor.tuning, effectSelect.value, id, t)) return;
     applySelected();
     selectedActor.player.effectPreview = createEffectPreview({
       key: effectSelect.value,
