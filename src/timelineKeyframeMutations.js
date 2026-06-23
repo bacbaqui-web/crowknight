@@ -143,3 +143,56 @@ export function pasteEffectTimelineFrame({ effect, effectKey, id, sourceFrame, e
   if (id === 'end') effect.end = effectFrameValue(target, effectKey);
   syncFrameAliases(effect);
 }
+
+export function writePoseTimelineFrameValue({
+  frames,
+  prop,
+  value,
+  activeKeyframeId,
+  fixedFrame,
+  allowRootAnchorWrite,
+  ensureKeyframe,
+}) {
+  if (allowRootAnchorWrite && !activeKeyframeId && !fixedFrame && (prop === 'anchorX' || prop === 'anchorY')) {
+    frames[prop] = value;
+    return true;
+  }
+
+  if (!activeKeyframeId && !fixedFrame) return false;
+
+  if (activeKeyframeId) {
+    const keyframe = ensureKeyframe(frames, activeKeyframeId);
+    keyframe[prop] = value;
+    syncFrameAliases(frames);
+    return true;
+  }
+
+  frames[fixedFrame][prop] = value;
+  poseKeyframesFor(frames).find((keyframe) => keyframe.id === fixedFrame)[prop] = value;
+  syncFrameAliases(frames);
+  return true;
+}
+
+export function writeEffectTimelineFrameValue({
+  effect,
+  effectKey,
+  prop,
+  value,
+  activeKeyframeId,
+  fixedFrame,
+  ensureKeyframe,
+}) {
+  if (!activeKeyframeId && !fixedFrame) return false;
+
+  if (activeKeyframeId) {
+    const keyframe = ensureKeyframe(activeKeyframeId);
+    keyframe[prop] = value;
+    syncFrameAliases(effect);
+    return true;
+  }
+
+  effect[fixedFrame][prop] = value;
+  effectKeyframesFor(effect, effectKey).find((keyframe) => keyframe.id === fixedFrame)[prop] = value;
+  syncFrameAliases(effect);
+  return true;
+}

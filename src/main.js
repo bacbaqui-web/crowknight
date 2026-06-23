@@ -4,7 +4,7 @@ import { drawActor } from './actorRenderer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
-import { defaultEffectSize, frameValue, interpolateEffectFrameValues, syncFrameAliases } from './animationFrames.js';
+import { defaultEffectSize, frameValue, interpolateEffectFrameValues } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
 import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
@@ -114,6 +114,8 @@ import {
   pastePoseTimelineFramePart,
   resetEffectTimelineAnimation,
   resetPoseTimelineAnimation,
+  writeEffectTimelineFrameValue,
+  writePoseTimelineFrameValue,
 } from './timelineKeyframeMutations.js';
 import {
   createEffectFrameCopy,
@@ -1586,17 +1588,15 @@ function buildTuningPanel() {
     if (!activeEffectKeyframeId && !effectFrame && selectedEffectSlot !== null) {
       activeEffectKeyframeId = createEffectKeyframeAtSelectedSlot();
     }
-    if (!activeEffectKeyframeId && !effectFrame) return;
-    if (activeEffectKeyframeId) {
-      const keyframe = ensureEffectKeyframe(activeEffectKeyframeId);
-      keyframe[prop] = value;
-      syncFrameAliases(effect);
-      return;
-    }
-
-    effect[effectFrame][prop] = value;
-    effectKeyframesFor(effect, effectSelect.value).find((keyframe) => keyframe.id === effectFrame)[prop] = value;
-    syncFrameAliases(effect);
+    writeEffectTimelineFrameValue({
+      effect,
+      effectKey: effectSelect.value,
+      prop,
+      value,
+      activeKeyframeId: activeEffectKeyframeId,
+      fixedFrame: effectFrame,
+      ensureKeyframe: ensureEffectKeyframe,
+    });
   }
 
   function createEffectKeyframeAtSelectedSlot() {
@@ -1773,21 +1773,15 @@ function buildTuningPanel() {
 
   function writePoseFrameValue(part, prop, value) {
     const frames = selectedActor.tuning.poseOffsets[poseSelect.value][part];
-    if (isMasterPart(part) && !activePoseKeyframeId && !poseFrame && (prop === 'anchorX' || prop === 'anchorY')) {
-      frames[prop] = value;
-      return;
-    }
-    if (!activePoseKeyframeId && !poseFrame) return;
-    if (activePoseKeyframeId) {
-      const keyframe = ensurePoseKeyframeForPart(frames, activePoseKeyframeId);
-      keyframe[prop] = value;
-      syncFrameAliases(frames);
-      return;
-    }
-
-    frames[poseFrame][prop] = value;
-    poseKeyframesFor(frames).find((keyframe) => keyframe.id === poseFrame)[prop] = value;
-    syncFrameAliases(frames);
+    writePoseTimelineFrameValue({
+      frames,
+      prop,
+      value,
+      activeKeyframeId: activePoseKeyframeId,
+      fixedFrame: poseFrame,
+      allowRootAnchorWrite: isMasterPart(part),
+      ensureKeyframe: ensurePoseKeyframeForPart,
+    });
   }
 
   function setPoseFrame(frame) {
