@@ -84,8 +84,10 @@ import {
   populateTuningPanelSelects,
   renderEffectImagePreview,
   renderLayerSelectOptions,
+  syncEffectToolbarButtonStates,
   syncNumericFields,
   syncPanelToggleState,
+  syncPoseToolbarButtonStates,
 } from './tuningPanelDom.js';
 import { isMasterPart, partLabel } from './tuningLabels.js';
 import {
@@ -1692,11 +1694,23 @@ function buildTuningPanel() {
 
   function syncPoseToolbarButtons() {
     poseFrameSelectionActive = hasPoseFrameSelection();
-    poseCopyFrame.disabled = !hasPoseFrameSelection();
-    posePasteFrame.disabled = !copiedPoseFrame;
-    poseUndoFrame.disabled = undoStack.length <= 0;
-    poseFrameDown.disabled = getPoseFrameCount() <= POSE_MIN_FRAMES;
-    poseFrameUp.disabled = getPoseFrameCount() >= POSE_MAX_FRAMES;
+    syncPoseToolbarButtonStates(
+      {
+        copyButton: poseCopyFrame,
+        pasteButton: posePasteFrame,
+        undoButton: poseUndoFrame,
+        frameDownButton: poseFrameDown,
+        frameUpButton: poseFrameUp,
+      },
+      {
+        hasSelection: poseFrameSelectionActive,
+        hasCopiedFrame: Boolean(copiedPoseFrame),
+        undoCount: undoStack.length,
+        frameCount: getPoseFrameCount(),
+        minFrames: POSE_MIN_FRAMES,
+        maxFrames: POSE_MAX_FRAMES,
+      }
+    );
   }
 
   function hasPoseFrameSelection() {
@@ -2182,12 +2196,24 @@ function buildTuningPanel() {
   }
 
   function syncEffectToolbarButtons() {
-    if (!effectSection) return;
-    effectCopyFrame.disabled = !hasEffectFrameSelection();
-    effectPasteFrame.disabled = !copiedEffectFrame;
-    effectUndoFrame.disabled = undoStack.length <= 0;
-    effectFrameDown.disabled = getEffectFrameCount() <= POSE_MIN_FRAMES;
-    effectFrameUp.disabled = getEffectFrameCount() >= POSE_MAX_FRAMES;
+    syncEffectToolbarButtonStates(
+      {
+        section: effectSection,
+        copyButton: effectCopyFrame,
+        pasteButton: effectPasteFrame,
+        undoButton: effectUndoFrame,
+        frameDownButton: effectFrameDown,
+        frameUpButton: effectFrameUp,
+      },
+      {
+        hasSelection: hasEffectFrameSelection(),
+        hasCopiedFrame: Boolean(copiedEffectFrame),
+        undoCount: undoStack.length,
+        frameCount: getEffectFrameCount(),
+        minFrames: POSE_MIN_FRAMES,
+        maxFrames: POSE_MAX_FRAMES,
+      }
+    );
   }
 
   function hasEffectFrameSelection() {

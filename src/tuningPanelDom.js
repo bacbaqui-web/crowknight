@@ -68,6 +68,29 @@ export function syncPanelToggleState(panel, openButton) {
   openButton.setAttribute('aria-label', isOpen ? '설정 접기' : '설정 열기');
 }
 
+export function syncPoseToolbarButtonStates(
+  { copyButton, pasteButton, undoButton, frameDownButton, frameUpButton },
+  { hasSelection, hasCopiedFrame, undoCount, frameCount, minFrames, maxFrames }
+) {
+  copyButton.disabled = !hasSelection;
+  pasteButton.disabled = !hasCopiedFrame;
+  undoButton.disabled = undoCount <= 0;
+  frameDownButton.disabled = frameCount <= minFrames;
+  frameUpButton.disabled = frameCount >= maxFrames;
+}
+
+export function syncEffectToolbarButtonStates(
+  { section, copyButton, pasteButton, undoButton, frameDownButton, frameUpButton },
+  { hasSelection, hasCopiedFrame, undoCount, frameCount, minFrames, maxFrames }
+) {
+  if (!section) return;
+  copyButton.disabled = !hasSelection;
+  pasteButton.disabled = !hasCopiedFrame;
+  undoButton.disabled = undoCount <= 0;
+  frameDownButton.disabled = frameCount <= minFrames;
+  frameUpButton.disabled = frameCount >= maxFrames;
+}
+
 export function replaceSelectOptions(select, options) {
   select.innerHTML = '';
   options.forEach(({ value, label }) => {
