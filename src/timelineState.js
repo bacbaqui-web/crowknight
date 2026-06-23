@@ -33,6 +33,10 @@ export function isTimelineSlotSelectionActive({ selectedSlot, activeKeyframeId, 
   return selectedSlot === slot && !activeKeyframeId && !fixedFrame;
 }
 
+export function isTimelineFrameId(id, keyframes) {
+  return Boolean(id && keyframes.some((frame) => frame.id === id));
+}
+
 export function activeTimelineT({
   activeKeyframeId,
   selectedSlot,

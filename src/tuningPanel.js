@@ -100,6 +100,7 @@ import {
   activeTimelineT,
   fixedTimelineFrameSlot,
   isTimelineFrameSelectionActive,
+  isTimelineFrameId,
   isTimelineSlotSelectionActive,
   timelineFrameCountFor,
   timelineLastSlot,
@@ -1064,7 +1065,7 @@ export function createTuningPanel({
     }
 
     function isPoseTimelineFrameId(id) {
-      return Boolean(id && poseTimelineKeyframes().some((frame) => frame.id === id));
+      return isTimelineFrameId(id, poseTimelineKeyframes());
     }
 
     function renderPoseTimeline() {
@@ -1456,7 +1457,7 @@ export function createTuningPanel({
     }
 
     function isEffectTimelineFrameId(id) {
-      return Boolean(id && effectTimelineKeyframes().some((frame) => frame.id === id));
+      return isTimelineFrameId(id, effectTimelineKeyframes());
     }
 
     function renderEffectTimeline() {
