@@ -99,15 +99,13 @@ import {
   poseMotionGroups,
 } from './tuningParts.js';
 import {
-  appendTimelineKeyframes,
   bindTimelineKeyframeDrag,
   isEmptyEditableSlot,
-  renderTimelineSlots,
   selectedOrFirstEmptySlot,
-  syncTimelineToolbar,
   syncTimelinePlaybackControls,
   timelinePointerT as getTimelinePointerT,
 } from './tuningTimelineDom.js';
+import { renderKeyframeTimeline } from './timelineRenderer.js';
 import {
   activeTimelineT,
   timelineFrameCountFor,
@@ -2003,27 +2001,20 @@ function buildTuningPanel() {
   function renderPoseTimeline() {
     renderPoseSettings();
     const frameCount = getPoseFrameCount();
-    const keyframes = poseTimelineKeyframes();
-    renderTimelineSlots(poseTimelineTrack, frameCount, selectedPoseSlot, selectPoseSlot);
-    syncTimelineToolbar({
-      addButton: poseAddKeyframe,
-      deleteButton: poseDeleteKeyframe,
-      keyframes,
+    renderKeyframeTimeline({
+      track: poseTimelineTrack,
+      frameCount,
+      keyframes: poseTimelineKeyframes(),
       selectedSlot: selectedPoseSlot,
       activeKeyframeId: activePoseKeyframeId,
-      frameCount,
+      fixedFrame: poseFrame,
       lastSlot: getPoseLastSlot(),
       toSlot: tToSlot,
-    });
-    appendTimelineKeyframes(poseTimelineTrack, keyframes, {
-      frameCount,
-      toSlot: tToSlot,
       slotToLeft,
-      isActive: (frame, slot) =>
-        activePoseKeyframeId === frame.id ||
-        (!activePoseKeyframeId && poseFrame === frame.id) ||
-        selectedPoseSlot === slot,
+      selectSlot: selectPoseSlot,
       bindDrag: bindPoseKeyframeDrag,
+      addButton: poseAddKeyframe,
+      deleteButton: poseDeleteKeyframe,
     });
   }
 
@@ -2422,27 +2413,20 @@ function buildTuningPanel() {
   function renderEffectTimeline() {
     renderEffectSettings();
     const frameCount = getEffectFrameCount();
-    const keyframes = effectTimelineKeyframes();
-    renderTimelineSlots(effectTimelineTrack, frameCount, selectedEffectSlot, selectEffectSlot);
-    syncTimelineToolbar({
-      addButton: effectAddKeyframe,
-      deleteButton: effectDeleteKeyframe,
-      keyframes,
+    renderKeyframeTimeline({
+      track: effectTimelineTrack,
+      frameCount,
+      keyframes: effectTimelineKeyframes(),
       selectedSlot: selectedEffectSlot,
       activeKeyframeId: activeEffectKeyframeId,
-      frameCount,
+      fixedFrame: effectFrame,
       lastSlot: getEffectLastSlot(),
       toSlot: effectTToSlot,
-    });
-    appendTimelineKeyframes(effectTimelineTrack, keyframes, {
-      frameCount,
-      toSlot: effectTToSlot,
       slotToLeft: effectSlotToLeft,
-      isActive: (frame, slot) =>
-        activeEffectKeyframeId === frame.id ||
-        (!activeEffectKeyframeId && effectFrame === frame.id) ||
-        selectedEffectSlot === slot,
+      selectSlot: selectEffectSlot,
       bindDrag: bindEffectKeyframeDrag,
+      addButton: effectAddKeyframe,
+      deleteButton: effectDeleteKeyframe,
     });
   }
 
