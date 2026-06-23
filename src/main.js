@@ -70,6 +70,12 @@ import {
   posePropertyGroups,
 } from './tuningFieldGroups.js';
 import {
+  partSizeFromPercent,
+  partSizeToPercent,
+  poseSizeOffsetFromPercent,
+  poseSizeToPercent,
+} from './tuningFieldValues.js';
+import {
   bindPartPickerButtons,
   emptyPartMessage,
   getTuningPanelElements,
@@ -81,6 +87,7 @@ import {
 import { isMasterPart, partLabel } from './tuningLabels.js';
 import {
   controlGroupPartKeys,
+  effectFieldLimits,
   imagePartKeys,
   partFieldLimits,
   partPositionSources,
@@ -2289,13 +2296,6 @@ function buildTuningPanel() {
     return readEffectDisplayValue(prop);
   }
 
-  function effectFieldLimits(prop) {
-    if (prop === 'opacity') return { min: 0, max: 1 };
-    if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
-    if (prop === 'rot') return { min: -180, max: 180 };
-    return { min: -260, max: 260 };
-  }
-
   function currentEffectFrameValue() {
     ensureEffectOffset(selectedActor.tuning, effectSelect.value);
     const effect = selectedActor.tuning.effectOffsets[effectSelect.value];
@@ -2391,38 +2391,10 @@ function buildTuningPanel() {
   }
 
   function readPoseDisplayValue(partKey, offset, prop) {
-    if (isMasterPart(partKey) && (prop === 'w' || prop === 'h')) {
-      return (1 + Number(offset[prop] || 0)) * 100;
-    }
     if (prop === 'w' || prop === 'h') {
-      const base = partPositionSources(selectedActor.tuning.rig)[partKey] || {};
-      const baseSize = Math.max(0.001, Number(base[prop] ?? 1));
-      const currentSize = Math.max(0.001, baseSize + Number(offset[prop] || 0));
-      return (currentSize / baseSize) * 100;
+      return poseSizeToPercent(partKey, offset, prop, partPositionSources(selectedActor.tuning.rig)[partKey] || {});
     }
     return offset[prop];
-  }
-
-  function partSizeToPercent(partKey, part, prop) {
-    if (controlGroupPartKeys().includes(partKey)) return Number(part[prop] ?? 1) * 100;
-    const baseProp = prop === 'w' ? 'baseW' : 'baseH';
-    const baseSize = Math.max(1, Number(part[baseProp] || part[prop] || 1));
-    return (Number(part[prop] || baseSize) / baseSize) * 100;
-  }
-
-  function partSizeFromPercent(partKey, part, prop, percent) {
-    const ratio = Number(percent) / 100;
-    if (controlGroupPartKeys().includes(partKey)) return Math.max(0.05, ratio);
-    const baseProp = prop === 'w' ? 'baseW' : 'baseH';
-    const baseSize = Math.max(1, Number(part[baseProp] || part[prop] || 1));
-    return Math.max(1, baseSize * ratio);
-  }
-
-  function poseSizeOffsetFromPercent(partKey, prop, percent) {
-    if (isMasterPart(partKey)) return Number(percent) / 100 - 1;
-    const base = partPositionSources(selectedActor.tuning.rig)[partKey] || {};
-    const baseSize = Math.max(0.001, Number(base[prop] ?? 1));
-    return baseSize * (Number(percent) / 100 - 1);
   }
 
   function syncMotionRows() {
@@ -2504,7 +2476,15 @@ function buildTuningPanel() {
     const offset = currentPoseFrameValue(partKey);
     const limits = poseFieldLimits(prop, partKey);
     const nextValue = clamp(Number(value), limits.min, limits.max);
-    const writeValue = prop === 'w' || prop === 'h' ? poseSizeOffsetFromPercent(partKey, prop, nextValue) : nextValue;
+    const writeValue =
+      prop === 'w' || prop === 'h'
+        ? poseSizeOffsetFromPercent(
+            partKey,
+            prop,
+            nextValue,
+            partPositionSources(selectedActor.tuning.rig)[partKey] || {}
+          )
+        : nextValue;
     writePoseFrameValue(partKey, prop, writeValue);
     syncPosePreview();
     applySelected();

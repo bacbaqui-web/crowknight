@@ -51,6 +51,13 @@ export function poseFieldLimits(prop) {
   return { min: -180, max: 180 };
 }
 
+export function effectFieldLimits(prop) {
+  if (prop === 'opacity') return { min: 0, max: 1 };
+  if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
+  if (prop === 'rot') return { min: -180, max: 180 };
+  return { min: -260, max: 260 };
+}
+
 export function imagePartKeys() {
   return [
     'body',
