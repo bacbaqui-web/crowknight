@@ -21,6 +21,18 @@ export function timelineSlotLeft(slot, frameCount) {
   return timelineSlotToLeft(slot, frameCount, timelineLastSlot(frameCount));
 }
 
+export function fixedTimelineFrameSlot(frame, lastSlot) {
+  return frame === 'end' ? lastSlot : 0;
+}
+
+export function isTimelineFrameSelectionActive({ activeKeyframeId, fixedFrame, id }) {
+  return activeKeyframeId === id || (!activeKeyframeId && fixedFrame === id);
+}
+
+export function isTimelineSlotSelectionActive({ selectedSlot, activeKeyframeId, fixedFrame, slot }) {
+  return selectedSlot === slot && !activeKeyframeId && !fixedFrame;
+}
+
 export function activeTimelineT({
   activeKeyframeId,
   selectedSlot,
