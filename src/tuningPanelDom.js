@@ -68,6 +68,18 @@ export function syncPanelToggleState(panel, openButton) {
   openButton.setAttribute('aria-label', isOpen ? '설정 접기' : '설정 열기');
 }
 
+export function openTuningPanelShell(panel, backdrop) {
+  panel.classList.add('is-open');
+  panel.setAttribute('aria-hidden', 'false');
+  backdrop.hidden = false;
+}
+
+export function closeTuningPanelShell(panel, backdrop) {
+  panel.classList.remove('is-open');
+  panel.setAttribute('aria-hidden', 'true');
+  backdrop.hidden = true;
+}
+
 export function syncPoseToolbarButtonStates(
   { copyButton, pasteButton, undoButton, frameDownButton, frameUpButton },
   { hasSelection, hasCopiedFrame, undoCount, frameCount, minFrames, maxFrames }

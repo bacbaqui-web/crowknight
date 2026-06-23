@@ -39,6 +39,8 @@ import {
   emptyPartMessage,
   getTuningPanelElements,
   markPartPicker,
+  closeTuningPanelShell,
+  openTuningPanelShell,
   populateTuningPanelSelects,
   renderEffectImagePreview,
   renderLayerSelectOptions,
@@ -2046,9 +2048,7 @@ export function createTuningPanel({
 
     function openPanel() {
       syncPanel();
-      panel.classList.add('is-open');
-      panel.setAttribute('aria-hidden', 'false');
-      backdrop.hidden = false;
+      openTuningPanelShell(panel, backdrop);
       syncPanelToggle();
     }
 
@@ -2069,9 +2069,7 @@ export function createTuningPanel({
     }
 
     function closePanel() {
-      panel.classList.remove('is-open');
-      panel.setAttribute('aria-hidden', 'true');
-      backdrop.hidden = true;
+      closeTuningPanelShell(panel, backdrop);
       syncPanelToggle();
       clearPanelSelectionState();
       stopEffectPreview();
