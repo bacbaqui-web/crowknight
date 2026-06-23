@@ -13,6 +13,7 @@ import {
 } from './animationFrames.js';
 import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
 import { attackBoxOverlapsHitbox } from './combatGeometry.js';
+import { bindCollapsibleSections, bindTouchControls } from './inputControls.js';
 import {
   bindResultScreen as bindResultScreenControls,
   bindSettingsRankingToggle,
@@ -188,7 +189,7 @@ let effectEditHandle = null;
 window.addEventListener('resize', () => syncCanvasToLayout(true));
 lineUpActors();
 bindBattleControls();
-bindTouchControls();
+bindTouchControls(keys, pressed);
 bindCollapsibleSections();
 bindResultScreen();
 renderSettingsRankingList();
@@ -871,47 +872,6 @@ function placeEnemiesAhead() {
     actor.player.hurtTime = 0;
     resetPlayerActionState(actor.player);
     actor.player.updateState();
-  });
-}
-
-function bindTouchControls() {
-  document.querySelectorAll('[data-hold-code]').forEach((button) => {
-    const code = button.dataset.holdCode;
-    const release = () => {
-      keys.delete(code);
-      button.classList.remove('is-pressed');
-    };
-
-    button.addEventListener('pointerdown', (event) => {
-      event.preventDefault();
-      if (!keys.has(code)) pressed.add(code);
-      keys.add(code);
-      button.classList.add('is-pressed');
-      button.setPointerCapture(event.pointerId);
-    });
-    button.addEventListener('pointerup', release);
-    button.addEventListener('pointercancel', release);
-    button.addEventListener('lostpointercapture', release);
-  });
-
-  document.querySelectorAll('[data-tap-code]').forEach((button) => {
-    const code = button.dataset.tapCode;
-    button.addEventListener('pointerdown', (event) => {
-      event.preventDefault();
-      pressed.add(code);
-      button.classList.add('is-pressed');
-      setTimeout(() => button.classList.remove('is-pressed'), 120);
-    });
-  });
-}
-
-function bindCollapsibleSections() {
-  document.querySelectorAll('[data-collapsible]').forEach((section) => {
-    const button = section.querySelector('.section-toggle');
-    button.addEventListener('click', () => {
-      const isOpen = section.classList.toggle('is-open');
-      section.dispatchEvent(new CustomEvent('sectiontoggle', { detail: { isOpen } }));
-    });
   });
 }
 
