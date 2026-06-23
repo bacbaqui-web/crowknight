@@ -67,7 +67,7 @@ import {
   bindSelectionControls,
   isTextInput,
 } from './tuningPanelBindings.js';
-import { previewTimeoutMs, timelineDurationFromFrames, timelineFrameCount } from './tuningPlayback.js';
+import { previewTimeoutMs, timelineDurationFromFrames } from './tuningPlayback.js';
 import {
   effectPropertyGroups,
   groupPosePropertyGroups,
@@ -107,10 +107,15 @@ import {
   syncTimelineToolbar,
   syncTimelinePlaybackControls,
   timelinePointerT as getTimelinePointerT,
-  timelineSlotToLeft,
-  timelineSlotToT,
-  timelineTToSlot,
 } from './tuningTimelineDom.js';
+import {
+  activeTimelineT,
+  timelineFrameCountFor,
+  timelineLastSlot,
+  timelineSlotLeft,
+  timelineSlotToValue,
+  timelineValueToSlot,
+} from './timelineState.js';
 import { getCameraX, getViewTransform } from './cameraView.js';
 import {
   MOVE_HANDLE_RADIUS,
@@ -2134,15 +2139,17 @@ function buildTuningPanel() {
   }
 
   function getActivePoseT() {
-    if (activePoseKeyframeId) {
-      const frames = selectedActor.tuning.poseOffsets[poseSelect.value]?.[activePosePartKey || POSE_PART_KEYS[0]];
-      const keyframe = frames?.keyframes?.find((frame) => frame.id === activePoseKeyframeId);
-      if (!keyframe) return poseTimelineKeyframes().find((frame) => frame.id === activePoseKeyframeId)?.t || 0;
-      return Number.isFinite(keyframe?.t) ? keyframe.t : 0;
-    }
-    if (selectedPoseSlot !== null) return slotToT(selectedPoseSlot);
-    if (!poseFrame) return 0;
-    return poseFrame === 'end' ? 1 : 0;
+    const frames = activePoseKeyframeId
+      ? selectedActor.tuning.poseOffsets[poseSelect.value]?.[activePosePartKey || POSE_PART_KEYS[0]]
+      : null;
+    return activeTimelineT({
+      activeKeyframeId: activePoseKeyframeId,
+      selectedSlot: selectedPoseSlot,
+      fixedFrame: poseFrame,
+      keyframes: poseTimelineKeyframes(),
+      selectedKeyframe: frames?.keyframes?.find((frame) => frame.id === activePoseKeyframeId),
+      frameCount: getPoseFrameCount(),
+    });
   }
 
   function ensurePoseKeyframeForPart(frames, id) {
@@ -2166,25 +2173,24 @@ function buildTuningPanel() {
   }
 
   function tToSlot(t) {
-    return timelineTToSlot(t, getPoseLastSlot());
+    return timelineValueToSlot(t, getPoseFrameCount());
   }
 
   function slotToT(slot) {
-    return timelineSlotToT(slot, getPoseLastSlot());
+    return timelineSlotToValue(slot, getPoseFrameCount());
   }
 
   function slotToLeft(slot) {
-    return timelineSlotToLeft(slot, getPoseFrameCount(), getPoseLastSlot());
+    return timelineSlotLeft(slot, getPoseFrameCount());
   }
 
   function getPoseFrameCount() {
     ensurePoseSettings(selectedActor.tuning);
-    const settings = selectedActor.tuning.poseSettings[poseSelect.value] || {};
-    return timelineFrameCount(settings);
+    return timelineFrameCountFor(selectedActor.tuning.poseSettings, poseSelect.value);
   }
 
   function getPoseLastSlot() {
-    return getPoseFrameCount() - 1;
+    return timelineLastSlot(getPoseFrameCount());
   }
 
   function syncPosePreview() {
@@ -2600,38 +2606,37 @@ function buildTuningPanel() {
   }
 
   function getActiveEffectT() {
-    if (activeEffectKeyframeId) {
-      const keyframe = selectedActor.tuning.effectOffsets[effectSelect.value]?.keyframes?.find(
+    return activeTimelineT({
+      activeKeyframeId: activeEffectKeyframeId,
+      selectedSlot: selectedEffectSlot,
+      fixedFrame: effectFrame,
+      keyframes: effectTimelineKeyframes(),
+      selectedKeyframe: selectedActor.tuning.effectOffsets[effectSelect.value]?.keyframes?.find(
         (frame) => frame.id === activeEffectKeyframeId
-      );
-      if (!keyframe) return effectTimelineKeyframes().find((frame) => frame.id === activeEffectKeyframeId)?.t || 0;
-      return Number.isFinite(keyframe?.t) ? keyframe.t : 0;
-    }
-    if (selectedEffectSlot !== null) return effectSlotToT(selectedEffectSlot);
-    if (!effectFrame) return 0;
-    return effectFrame === 'end' ? 1 : 0;
+      ),
+      frameCount: getEffectFrameCount(),
+    });
   }
 
   function effectTToSlot(t) {
-    return timelineTToSlot(t, getEffectLastSlot());
+    return timelineValueToSlot(t, getEffectFrameCount());
   }
 
   function effectSlotToT(slot) {
-    return timelineSlotToT(slot, getEffectLastSlot());
+    return timelineSlotToValue(slot, getEffectFrameCount());
   }
 
   function effectSlotToLeft(slot) {
-    return timelineSlotToLeft(slot, getEffectFrameCount(), getEffectLastSlot());
+    return timelineSlotLeft(slot, getEffectFrameCount());
   }
 
   function getEffectFrameCount() {
     ensureEffectSettings(selectedActor.tuning);
-    const settings = selectedActor.tuning.effectSettings[effectSelect.value] || {};
-    return timelineFrameCount(settings);
+    return timelineFrameCountFor(selectedActor.tuning.effectSettings, effectSelect.value);
   }
 
   function getEffectLastSlot() {
-    return getEffectFrameCount() - 1;
+    return timelineLastSlot(getEffectFrameCount());
   }
 
   function syncEffectPreview() {
