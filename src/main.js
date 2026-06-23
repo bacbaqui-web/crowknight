@@ -98,13 +98,8 @@ import {
   poseFieldLimits,
   poseMotionGroups,
 } from './tuningParts.js';
-import {
-  bindTimelineKeyframeDrag,
-  isEmptyEditableSlot,
-  selectedOrFirstEmptySlot,
-  syncTimelinePlaybackControls,
-  timelinePointerT as getTimelinePointerT,
-} from './tuningTimelineDom.js';
+import { isEmptyEditableSlot, selectedOrFirstEmptySlot, syncTimelinePlaybackControls } from './tuningTimelineDom.js';
+import { bindKeyframeDrag, timelinePointerValue } from './timelineDragControls.js';
 import { renderKeyframeTimeline } from './timelineRenderer.js';
 import {
   activeTimelineT,
@@ -2067,22 +2062,21 @@ function buildTuningPanel() {
   }
 
   function bindPoseKeyframeDrag(button, id) {
-    bindTimelineKeyframeDrag(button, id, {
-      onSelectFixed: selectPoseKeyframe,
-      onStartDrag: (keyframeId) => {
-        selectPoseKeyframeForDrag(keyframeId);
-        beginUndoSnapshot();
-      },
-      onMoveDrag: (keyframeId, event) => movePoseKeyframe(keyframeId, timelinePointerT(event)),
-      onFinishDrag: () => {
-        commitUndoSnapshot();
+    bindKeyframeDrag(button, id, {
+      selectKeyframe: selectPoseKeyframe,
+      selectForDrag: selectPoseKeyframeForDrag,
+      beginUndo: beginUndoSnapshot,
+      moveKeyframe: movePoseKeyframe,
+      pointerT: timelinePointerT,
+      finishUndo: commitUndoSnapshot,
+      afterFinish: () => {
         if (activePosePartKey) renderPosePartFields();
       },
     });
   }
 
   function timelinePointerT(event) {
-    return getTimelinePointerT(event, poseTimelineTrack, getPoseFrameCount(), getPoseLastSlot());
+    return timelinePointerValue(event, poseTimelineTrack, getPoseFrameCount(), getPoseLastSlot());
   }
 
   function movePoseKeyframe(id, t) {
@@ -2510,22 +2504,19 @@ function buildTuningPanel() {
   }
 
   function bindEffectKeyframeDrag(button, id) {
-    bindTimelineKeyframeDrag(button, id, {
-      onSelectFixed: selectEffectKeyframe,
-      onStartDrag: (keyframeId) => {
-        selectEffectKeyframeForDrag(keyframeId);
-        beginUndoSnapshot();
-      },
-      onMoveDrag: (keyframeId, event) => moveEffectKeyframe(keyframeId, effectTimelinePointerT(event)),
-      onFinishDrag: () => {
-        commitUndoSnapshot();
-        renderEffectFields();
-      },
+    bindKeyframeDrag(button, id, {
+      selectKeyframe: selectEffectKeyframe,
+      selectForDrag: selectEffectKeyframeForDrag,
+      beginUndo: beginUndoSnapshot,
+      moveKeyframe: moveEffectKeyframe,
+      pointerT: effectTimelinePointerT,
+      finishUndo: commitUndoSnapshot,
+      afterFinish: renderEffectFields,
     });
   }
 
   function effectTimelinePointerT(event) {
-    return getTimelinePointerT(event, effectTimelineTrack, getEffectFrameCount(), getEffectLastSlot());
+    return timelinePointerValue(event, effectTimelineTrack, getEffectFrameCount(), getEffectLastSlot());
   }
 
   function moveEffectKeyframe(id, t) {
