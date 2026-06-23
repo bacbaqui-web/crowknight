@@ -1,5 +1,5 @@
 import { PuppetPlayer } from './puppetPlayer.js';
-import { drawAttackTrail } from './actorEffectsRenderer.js';
+import { drawAttackTrail, drawHitFlash, drawSelectedPartGlow } from './actorEffectsRenderer.js';
 import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { drawActorShadow, drawHealthMeter } from './actorHudRenderer.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
@@ -870,13 +870,15 @@ function drawActor(actor) {
   }
   const previousGlowPart = actor.player.glowPart;
   const previousGlowParts = actor.player.glowParts;
-  actor.player.glowPart = actor === selectedActor ? activeEditPartKey() : null;
-  actor.player.glowParts = actor === selectedActor ? activeEditPartKeys() : [];
+  const selectedGlowPart = actor === selectedActor ? activeEditPartKey() : null;
+  const selectedGlowParts = actor === selectedActor ? activeEditPartKeys() : [];
+  actor.player.glowPart = selectedGlowPart;
+  actor.player.glowParts = selectedGlowParts;
   actor.player.draw(ctx);
   actor.player.glowPart = previousGlowPart;
   actor.player.glowParts = previousGlowParts;
-  drawSelectedPartGlow(actor);
-  if (actor.hurtCooldown > 0) drawHitFlash(actor);
+  drawSelectedPartGlow(ctx, actor, selectedActor, selectedGlowParts);
+  if (actor.hurtCooldown > 0) drawHitFlash(ctx, actor);
   if (actor.hurtCooldown > 0) ctx.restore();
   if (flicker) ctx.restore();
 
@@ -890,55 +892,6 @@ function drawActor(actor) {
   ctx.textAlign = 'center';
   ctx.fillText(actor.name, x, y - 22);
   ctx.textAlign = 'left';
-}
-
-function drawSelectedPartGlow(actor) {
-  if (actor !== selectedActor) return;
-  const partKeys = activeEditPartKeys().filter(
-    (partKey) =>
-      partKey &&
-      !isMasterPart(partKey) &&
-      !imagePartKeys().includes(partKey) &&
-      !controlGroupPartKeys().includes(partKey)
-  );
-  if (!partKeys.length) return;
-
-  ctx.save();
-  ctx.lineWidth = 2.4;
-  ctx.strokeStyle = 'rgba(124, 195, 162, 0.98)';
-  ctx.shadowColor = 'rgba(124, 195, 162, 0.95)';
-  ctx.shadowBlur = 12;
-
-  partKeys.forEach((partKey) => {
-    const region = actor.player.hitRegions?.find((item) => item.key === partKey);
-    if (!region) return;
-
-    if (region.points?.length) {
-      ctx.beginPath();
-      region.points.forEach((point, index) => {
-        if (index === 0) ctx.moveTo(point.x, point.y);
-        else ctx.lineTo(point.x, point.y);
-      });
-      ctx.closePath();
-      ctx.stroke();
-    } else if (region.bounds) {
-      const b = region.bounds;
-      ctx.strokeRect(b.x, b.y, b.w, b.h);
-    }
-  });
-
-  ctx.restore();
-}
-
-function drawHitFlash(actor) {
-  const pulse = 0.42 + Math.sin(actor.hurtCooldown * 80) * 0.12;
-
-  ctx.save();
-  ctx.globalAlpha *= pulse;
-  ctx.filter =
-    'brightness(0) saturate(1) invert(18%) sepia(97%) saturate(7480%) hue-rotate(357deg) brightness(118%) contrast(118%)';
-  actor.player.draw(ctx);
-  ctx.restore();
 }
 
 function drawSettingsDebugBoxes() {

@@ -1,5 +1,7 @@
 import { defaultEffectSize } from './animationFrames.js';
+import { isMasterPart } from './tuningLabels.js';
 import { effectFrameAt } from './tuningNormalize.js';
+import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 import { clamp } from './utils.js';
 
 function activePlayerEffectAction(player) {
@@ -50,5 +52,54 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
     width,
     height
   );
+  ctx.restore();
+}
+
+export function drawSelectedPartGlow(ctx, actor, selectedActor, activePartKeys) {
+  if (actor !== selectedActor) return;
+  const partKeys = activePartKeys.filter(
+    (partKey) =>
+      partKey &&
+      !isMasterPart(partKey) &&
+      !imagePartKeys().includes(partKey) &&
+      !controlGroupPartKeys().includes(partKey)
+  );
+  if (!partKeys.length) return;
+
+  ctx.save();
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = 'rgba(124, 195, 162, 0.98)';
+  ctx.shadowColor = 'rgba(124, 195, 162, 0.95)';
+  ctx.shadowBlur = 12;
+
+  partKeys.forEach((partKey) => {
+    const region = actor.player.hitRegions?.find((item) => item.key === partKey);
+    if (!region) return;
+
+    if (region.points?.length) {
+      ctx.beginPath();
+      region.points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+    } else if (region.bounds) {
+      const b = region.bounds;
+      ctx.strokeRect(b.x, b.y, b.w, b.h);
+    }
+  });
+
+  ctx.restore();
+}
+
+export function drawHitFlash(ctx, actor) {
+  const pulse = 0.42 + Math.sin(actor.hurtCooldown * 80) * 0.12;
+
+  ctx.save();
+  ctx.globalAlpha *= pulse;
+  ctx.filter =
+    'brightness(0) saturate(1) invert(18%) sepia(97%) saturate(7480%) hue-rotate(357deg) brightness(118%) contrast(118%)';
+  actor.player.draw(ctx);
   ctx.restore();
 }
