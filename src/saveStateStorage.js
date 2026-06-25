@@ -20,10 +20,12 @@ export async function loadSavedState() {
     // Ignore broken browser storage and fall back to the project default.
   }
 
-  if (localState) {
-    if (!localState.savedAt) localState = stampSavedState(localState);
-    saveLocalState(localState);
-    return localState;
+  const remoteState = normalizeNullableSavedState(await loadRemoteProjectState());
+  const freshestSavedState = newestSavedState(localState, remoteState);
+  if (freshestSavedState) {
+    const state = freshestSavedState.savedAt ? freshestSavedState : stampSavedState(freshestSavedState);
+    saveLocalState(state);
+    return state;
   }
 
   try {
@@ -110,6 +112,10 @@ function normalizeSavedState(saved) {
 
 function normalizeNullableSavedState(saved) {
   return saved ? normalizeSavedState(saved) : null;
+}
+
+function newestSavedState(...states) {
+  return states.filter(Boolean).sort((a, b) => Number(b.savedAt || 0) - Number(a.savedAt || 0))[0];
 }
 
 function stampSavedState(state) {
