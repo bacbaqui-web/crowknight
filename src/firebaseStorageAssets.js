@@ -12,7 +12,7 @@ export async function uploadSceneClipAssetsToFirebase(background) {
     uploadTasks.push(
       uploadAsset(
         background.clipPreview.url,
-        objectPath(`clip/preview${extensionFromUrl(background.clipPreview.url)}`),
+        objectPath(`psd/preview${extensionFromUrl(background.clipPreview.url)}`),
         version
       ).then((url) => {
         background.clipPreview.url = url;
@@ -27,7 +27,7 @@ export async function uploadSceneClipAssetsToFirebase(background) {
       uploadTasks.push(
         uploadAsset(
           layer.imageSrc,
-          objectPath(`clip/layers/${sanitizePathPart(layer.id || layer.name)}${extension}`),
+          objectPath(`psd/layers/${sanitizePathPart(layer.id || layer.name)}${extension}`),
           version
         ).then((url) => {
           layer.imageSrc = url;

@@ -47,7 +47,7 @@ def export_psd_layers(psd, layer_output_dir, runtime_dir):
         layers.append(
             {
                 "id": layer_id,
-                "sourceId": getattr(layer, "layer_id", index) or index,
+                "sourceId": valid_layer_source_id(layer, index),
                 "rowId": index,
                 "name": layer.name or f"레이어 {index}",
                 "visible": bool(layer.visible),
@@ -74,15 +74,17 @@ def flatten_layers(group):
 
 
 def stable_layer_id(layer, index):
-    source_id = getattr(layer, "layer_id", None)
+    source_id = valid_layer_source_id(layer, None)
     if source_id:
         return f"psd_layer_{source_id}"
-    return f"psd_layer_{index:03d}_{sanitize_path_part(layer.name or 'layer')}"
+    return f"psd_layer_{index:03d}"
 
 
-def sanitize_path_part(value):
-    sanitized = "".join(char if char.isalnum() or char in "._-" else "_" for char in str(value).strip())
-    return sanitized.strip("_")[:80] or "layer"
+def valid_layer_source_id(layer, fallback):
+    source_id = getattr(layer, "layer_id", None)
+    if isinstance(source_id, int) and source_id > 0:
+        return source_id
+    return fallback
 
 
 def clamp_opacity(value):
