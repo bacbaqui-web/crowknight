@@ -1,0 +1,163 @@
+/* Shared side panel shells and toggle handles. */
+
+.settings-ranking-panel {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  width: min(330px, calc(100vw - 34px));
+  height: 100vh;
+  border: 1px solid rgba(57, 61, 75, 0.92);
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  background: rgba(12, 14, 20, 0.7);
+  box-shadow: 12px 0 34px rgba(0, 0, 0, 0.24);
+  overflow: visible;
+  transition: transform 180ms ease;
+  backdrop-filter: blur(8px);
+}
+
+.settings-ranking-panel.is-collapsed {
+  transform: translateX(calc(-100% - 2px));
+}
+
+.settings-ranking-panel h2 {
+  margin: 0;
+  border-bottom: 1px solid rgba(57, 61, 75, 0.86);
+  padding: 10px 12px;
+  color: #f4f7fb;
+  font-size: 16px;
+}
+
+.settings-ranking-head,
+.settings-ranking-list li {
+  display: grid;
+  grid-template-columns: 54px 58px 78px minmax(0, 1fr) 24px;
+  gap: 6px;
+  align-items: start;
+}
+
+.settings-ranking-head {
+  padding: 8px 10px;
+  color: #7cc3a2;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.settings-ranking-head span:nth-child(4) {
+  grid-column: 4 / 6;
+}
+
+.settings-ranking-list {
+  display: grid;
+  align-content: start;
+  gap: 0;
+  margin: 0;
+  min-height: 0;
+  padding: 0 8px 10px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.settings-ranking-list li {
+  min-height: 42px;
+  border-top: 1px solid rgba(57, 61, 75, 0.62);
+  padding: 8px 2px;
+  color: #d9deec;
+  font-size: 11px;
+}
+
+.settings-ranking-list b,
+.settings-ranking-list strong,
+.settings-ranking-list span,
+.settings-ranking-list small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-ranking-list b {
+  color: #7cc3a2;
+  font-weight: 850;
+}
+
+.settings-ranking-list strong {
+  color: #f4f7fb;
+  font-weight: 800;
+}
+
+.settings-ranking-list small {
+  color: #aeb6c7;
+  line-height: 1.25;
+}
+
+.settings-ranking-delete {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #444959;
+  border-radius: 4px;
+  background: #151820;
+  color: #d9deec;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.settings-ranking-delete:hover {
+  border-color: #ef767a;
+  color: #ef767a;
+}
+
+.settings-ranking-empty {
+  grid-template-columns: 1fr !important;
+  color: #aeb6c7;
+}
+
+.side-panel-toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 62px;
+  border: 1px solid rgba(76, 82, 101, 0.95);
+  background: rgba(24, 27, 36, 0.9);
+  color: #e9eef8;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+}
+
+.side-panel-toggle svg {
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.side-panel-toggle.is-flipped svg {
+  transform: rotate(180deg);
+}
+
+.side-panel-toggle:hover,
+.side-panel-toggle:focus-visible {
+  border-color: #7cc3a2;
+  color: #8bdab5;
+}
+
+.ranking-panel-toggle {
+  position: absolute;
+  top: 50%;
+  right: -28px;
+  transform: translateY(-50%);
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+}

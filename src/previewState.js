@@ -45,3 +45,10 @@ export function clearActorEditPreviews(actors) {
     actor.player.effectPreview = null;
   });
 }
+
+export function syncActorAnchorDebugPart(actors, selectedActor, partKey) {
+  actors.forEach((actor) => {
+    actor.player.anchorDebugPart = null;
+  });
+  selectedActor.player.anchorDebugPart = partKey;
+}

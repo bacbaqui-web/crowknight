@@ -8,7 +8,7 @@ import {
   validEffectImageKey,
 } from './animationFrames.js';
 import { EFFECT_KEYS, POSE_FRAME_KEYS, POSE_KEYS, POSE_PART_KEYS } from './gameConfig.js';
-import { DEFAULT_PLAYER_TUNING } from './puppetPlayer.js';
+import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 import { clamp, clone } from './utils.js';
 

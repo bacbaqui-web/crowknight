@@ -3,18 +3,53 @@ import { EFFECT_IMAGE_OPTIONS, EFFECT_KEYS, POSE_KEYS, POSE_PART_KEYS } from './
 import { getPath } from './utils.js';
 import { layerLabel, partLabel, poseLabel } from './tuningLabels.js';
 import { partPositionSources } from './tuningParts.js';
+import { populateMotionSettingRows } from './tuningMotionFieldRows.js';
+
+const PART_PICKER_KEYS = [
+  'head',
+  'cape',
+  'shoulderL',
+  'shoulderR',
+  'body',
+  'upperArmL',
+  'lowerArmL',
+  'upperArmR',
+  'lowerArmR',
+  'hipL',
+  'hipR',
+  'shield',
+  'weapon',
+  'upperLegL',
+  'lowerLegL',
+  'upperLegR',
+  'lowerLegR',
+];
+
+const PART_PICKER_CLASS_BY_KEY = {
+  cape: 'part-neck',
+};
 
 export function getTuningPanelElements(panel) {
+  populateMotionSettingRows(panel.querySelector('#motionSettingRows'));
+
   return {
+    panel,
     backdrop: document.querySelector('#panelBackdrop'),
     openButton: document.querySelector('#settingsToggle'),
     closeButton: document.querySelector('#closeTuning'),
     resetButton: document.querySelector('#resetTuning'),
+    firebaseUpload: document.querySelector('#firebaseUpload'),
+    firebaseDownload: document.querySelector('#firebaseDownload'),
     actorSelect: document.querySelector('#actorSelect'),
     actorName: document.querySelector('#actorName'),
     partSection: panel.querySelector('[data-section="part"]'),
     poseSection: panel.querySelector('[data-section="pose"]'),
     effectSection: panel.querySelector('[data-section="effect"]'),
+    sceneSection: panel.querySelector('[data-section="scene"]'),
+    backgroundClipUpload: document.querySelector('#backgroundClipUpload'),
+    backgroundClipFile: document.querySelector('#backgroundClipFile'),
+    backgroundRefresh: document.querySelector('#backgroundRefresh'),
+    backgroundLayerList: document.querySelector('#backgroundLayerList'),
     partPicker: panel.querySelector('[data-picker="part"]'),
     posePartPicker: panel.querySelector('[data-picker="pose"]'),
     partSelect: document.querySelector('#partSelect'),
@@ -177,6 +212,23 @@ export function bindPartPickerButtons(picker, onSelect) {
     button.title = button.textContent.trim();
     button.addEventListener('click', (event) => onSelect(button.dataset.part, event.shiftKey));
   });
+}
+
+export function populatePartPickerButtons(picker) {
+  if (!picker || picker.children.length) return;
+
+  PART_PICKER_KEYS.forEach((partKey) => {
+    const button = document.createElement('button');
+    button.className = `part-pick ${PART_PICKER_CLASS_BY_KEY[partKey] || partPickerClassName(partKey)}`;
+    button.type = 'button';
+    button.dataset.part = partKey;
+    button.textContent = partLabel(partKey);
+    picker.append(button);
+  });
+}
+
+function partPickerClassName(partKey) {
+  return `part-${partKey.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 }
 
 export function syncActorSelectLabels(actorSelect, actors) {

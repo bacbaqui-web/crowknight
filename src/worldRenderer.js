@@ -1,13 +1,15 @@
+import { drawSceneBackground } from './backgroundRenderer.js';
+import { usesClipGround } from './sceneSession.js';
+
 export function applyWorldView(ctx, world, view) {
   ctx.translate(world.viewW / 2, world.viewH / 2);
   ctx.scale(view.zoom, view.zoom);
   ctx.translate(-view.focusX, -view.focusY);
 }
 
-export function drawWorld(ctx, world, view) {
-  ctx.clearRect(0, 0, world.viewW, world.viewH);
-  ctx.fillStyle = '#171720';
-  ctx.fillRect(0, 0, world.viewW, world.viewH);
+export function drawWorld(ctx, world, view, sceneSession) {
+  drawSceneBackground(ctx, world, view, sceneSession?.background);
+  if (usesClipGround(sceneSession?.background)) return;
 
   const bounds = visibleWorldBounds(world, view);
   const startX = Math.floor(bounds.x / 80) * 80 - 80;

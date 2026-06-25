@@ -1,0 +1,144 @@
+/* Compact numeric scrub controls used by tuning property rows. */
+
+.ae-prop-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-height: 25px;
+  border: 1px solid #333846;
+  border-radius: 4px;
+  background: #151820;
+  padding: 3px 5px;
+}
+
+.ae-prop-label {
+  color: #aeb6c7;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.15;
+  word-break: keep-all;
+}
+
+.ae-prop-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  justify-content: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scrub-control {
+  display: inline-grid;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  align-items: stretch;
+  min-width: 92px;
+  max-width: 100%;
+}
+
+.scrub-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  min-width: 0;
+  min-height: 21px;
+  border: 1px solid #3a4050;
+  border-right: 0;
+  border-radius: 4px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  background: #0f1219;
+  color: #f5f7fb;
+  padding: 2px 6px;
+  cursor: ns-resize;
+  line-height: 1;
+  user-select: none;
+  overflow: hidden;
+}
+
+.scrub-value[data-scrub-prop='opacity'] {
+  cursor: pointer;
+}
+
+.scrub-value span {
+  color: #7cc3a2;
+  font-size: 9px;
+  font-weight: 800;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.scrub-value strong {
+  min-width: 38px;
+  color: #f5f7fb;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.scrub-value:hover,
+.scrub-value.is-scrubbing {
+  border-color: #7cc3a2;
+  background: #17211f;
+}
+
+.scrub-value.is-scrubbing {
+  box-shadow: 0 0 0 2px rgba(124, 195, 162, 0.18);
+}
+
+.scrub-value.is-off strong {
+  color: #8f97a8;
+}
+
+.scrub-value.is-editing {
+  min-width: 72px;
+  padding: 0;
+  cursor: text;
+}
+
+.scrub-stepper-buttons {
+  display: grid;
+  width: 16px;
+  min-height: 21px;
+  overflow: hidden;
+  border: 1px solid #3a4050;
+  border-left: 1px solid #353b49;
+  border-radius: 0 4px 4px 0;
+  background: #0f1219;
+}
+
+.scrub-stepper-buttons button {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: #cdd4e4;
+  font-size: 8px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.scrub-stepper-buttons button:hover {
+  color: #7cc3a2;
+}
+
+.scrub-input {
+  width: 72px;
+  height: 100%;
+  min-height: 25px;
+  border: 0;
+  background: #0f1219;
+  color: #f5f7fb;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  text-align: right;
+  outline: none;
+}

@@ -1,12 +1,14 @@
-import { PuppetPlayer } from './puppetPlayer.js';
 import { drawAttackTrail } from './actorEffectsRenderer.js';
 import { drawActor } from './actorRenderer.js';
-import { defaultTuningFor } from './actorTuning.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
-import { resetPlayerActionState, updatePostRollInvulnerability } from './actorState.js';
-import { loadCharacterAssets, loadEffectAssets } from './assetLoaders.js';
-import { attackBoxOverlapsHitbox } from './combatGeometry.js';
-import { bindBattleControls, bindCollapsibleSections, bindTouchControls } from './inputControls.js';
+import { loadEffectAssets } from './assetLoaders.js';
+import {
+  bindBattleControls,
+  bindCollapsibleSections,
+  bindKeyboardControls,
+  bindTouchControls,
+} from './inputControls.js';
+import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combatSystem.js';
 import {
   bindResultScreen as bindResultScreenControls,
   bindSettingsRankingToggle,
@@ -22,14 +24,24 @@ import { drawRankingHud } from './rankingCanvas.js';
 import { createParticleEffects } from './particleEffects.js';
 import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
 import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
-import { loadSavedState as loadStoredSavedState, saveActorState } from './saveStateStorage.js';
-import { mergeTuning } from './tuningNormalize.js';
+import {
+  downloadSavedStateFromFirebase,
+  loadSavedState as loadStoredSavedState,
+  saveGameState,
+  syncSceneWorldBeforeSave,
+  uploadSavedStateToFirebase,
+} from './saveStateStorage.js';
 import { applyWorldView, drawWorld } from './worldRenderer.js';
-import { getCameraX, getViewTransform } from './cameraView.js';
+import { getViewTransform } from './cameraView.js';
 import { isSettingsPanelOpen } from './settingsPanelState.js';
-import { isTextInput } from './tuningPanelBindings.js';
 import { createTuningPanel } from './tuningPanel.js';
-import { ACTOR_DEFS, DEATH_RESULT_DELAY, GAME_KEYS } from './gameConfig.js';
+import { createActors } from './actorFactory.js';
+import { syncCanvasToLayout } from './canvasLayout.js';
+import { DEATH_RESULT_DELAY } from './gameConfig.js';
+import { drawSceneForeground, preloadSceneBackground } from './backgroundRenderer.js';
+import { createWorldFromSceneSession } from './sceneSession.js';
+import { refreshClipBackground } from './clipBackgroundRuntime.js';
+import { uploadSceneClipAssetsToFirebase } from './firebaseStorageAssets.js';
 
 const canvas = document.querySelector('#game');
 const ctx = canvas.getContext('2d');
@@ -37,10 +49,14 @@ const isFullStage = document.body.classList.contains('full-stage');
 const keys = new Set();
 const pressed = new Set();
 
-const savedState = loadStoredSavedState();
-const world = { gravity: 1800, floorY: 430, minX: 80, maxX: Infinity, viewW: 960, viewH: 540 };
-syncCanvasToLayout();
-const actors = await createActors(savedState);
+const savedState = await loadStoredSavedState();
+const sceneSessions = savedState.sessions;
+let activeSceneSessionId = savedState.activeSessionId;
+let sceneSession = savedState.sceneSession;
+preloadSceneBackground(sceneSession.background);
+const world = createWorldFromSceneSession(sceneSession);
+syncCanvasToLayout({ canvas, world, isFullStage });
+const actors = await createActors(savedState, world);
 const effectAssets = await loadEffectAssets();
 const playerActor = actors[0];
 const particleEffects = createParticleEffects({ actors, world, ctx });
@@ -73,7 +89,7 @@ let runKills = 0;
 let lastRecordedScore = 0;
 let rankings = loadStoredRankings();
 
-window.addEventListener('resize', () => syncCanvasToLayout(true));
+window.addEventListener('resize', () => syncCanvasToLayout({ canvas, world, actors, isFullStage, adjustActors: true }));
 lineUpActorPositions(actors, world);
 bindBattleControls(
   { startBattleButton, homeStartButton, endBattleButton },
@@ -100,102 +116,18 @@ const tuningPanel = createTuningPanel({
   setSelectedActor: (actor) => {
     selectedActor = actor;
   },
+  getSceneSession: () => sceneSession,
   saveState,
+  uploadSettings: uploadSettingsToFirebase,
+  downloadSettings: downloadSettingsFromFirebase,
+  refreshClipSettings: refreshClipAndUploadSettings,
+});
+bindKeyboardControls({
+  keys,
+  pressed,
+  handleShortcut: (event) => tuningPanel.handleKeyboardShortcut(event),
 });
 requestAnimationFrame(loop);
-
-function syncCanvasToLayout(adjustActors = false) {
-  if (!isFullStage) {
-    world.viewW = canvas.width;
-    world.viewH = canvas.height;
-    return;
-  }
-
-  const rect = canvas.getBoundingClientRect();
-  const width = Math.max(320, Math.round(rect.width || window.innerWidth || world.viewW));
-  const height = Math.max(320, Math.round(rect.height || window.innerHeight || world.viewH));
-  const previousFloorY = world.floorY;
-  const nextFloorY = height - 110;
-
-  if (canvas.width !== width) canvas.width = width;
-  if (canvas.height !== height) canvas.height = height;
-  world.viewW = width;
-  world.viewH = height;
-  world.floorY = nextFloorY;
-
-  if (!adjustActors) return;
-
-  const floorDelta = nextFloorY - previousFloorY;
-  actors.forEach((actor) => {
-    if (actor.player.onGround || actor.player.y >= previousFloorY - 1) actor.player.y = nextFloorY;
-    else actor.player.y += floorDelta;
-  });
-}
-
-addEventListener(
-  'keydown',
-  (e) => {
-    if (tuningPanel.handleKeyboardShortcut(e)) return;
-    if (e.metaKey || e.ctrlKey) return;
-    if (!GAME_KEYS.has(e.code)) return;
-    if (isTextInput(e.target) && !isSettingsPanelTarget(e.target)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (!keys.has(e.code)) pressed.add(e.code);
-    keys.add(e.code);
-  },
-  true
-);
-
-addEventListener(
-  'keyup',
-  (e) => {
-    if (e.metaKey || e.ctrlKey) return;
-    if (!GAME_KEYS.has(e.code)) return;
-    if (isTextInput(e.target) && !isSettingsPanelTarget(e.target)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    keys.delete(e.code);
-  },
-  true
-);
-
-function isSettingsPanelTarget(target) {
-  return Boolean(target?.closest?.('#tuningPanel'));
-}
-
-async function createActors(saved) {
-  const created = [];
-
-  for (const def of ACTOR_DEFS) {
-    const assets = await loadCharacterAssets(def.folder);
-    const tuning = mergeTuning(defaultTuningFor(def), saved?.actors?.[def.id]?.tuning);
-    const actor = {
-      ...def,
-      hp: 100,
-      maxHpPips: tuning.maxHpPips,
-      hpPips: tuning.maxHpPips,
-      respawning: false,
-      respawnTargetX: def.x,
-      invulnTime: 0,
-      wasRolling: false,
-      hurtCooldown: 0,
-      hitStun: 0,
-      rollGhosts: [],
-      rollGhostTimer: 0,
-      lastHitSerials: {},
-      tuning,
-      player: new PuppetPlayer(def.x, world.floorY, assets),
-    };
-
-    actor.name = saved?.actors?.[def.id]?.name || def.name;
-    actor.player.applyTuning(actor.tuning);
-    actor.player.debugHitbox = false;
-    created.push(actor);
-  }
-
-  return created;
-}
 
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.033);
@@ -236,25 +168,27 @@ function update(dt) {
 
   runSurvivalTime += dt;
 
-  actors.forEach((actor) => {
-    actor.hurtCooldown = Math.max(0, actor.hurtCooldown - dt);
-    actor.hitStun = Math.max(0, actor.hitStun - dt);
-    actor.invulnTime = Math.max(0, actor.invulnTime - dt);
+  updateBattleActorMotion({
+    actors,
+    playerActor,
+    keys,
+    pressed,
+    world,
+    dt,
   });
 
-  if (playerActor.hitStun > 0) updateStunnedActor(playerActor, dt);
-  else playerActor.player.update(dt, keys, pressed, world);
-  updatePostRollInvulnerability(playerActor);
-
-  actors.slice(1).forEach((actor) => {
-    if (actor.respawning) updateRespawningEnemy(actor, dt);
-    else if (actor.hitStun > 0) updateStunnedActor(actor, dt);
-    else actor.player.updateNpc(dt, playerActor.player, world);
-    updatePostRollInvulnerability(actor);
+  resolveCombat({
+    actors,
+    playerActor,
+    world,
+    particleEffects,
+    onPlayerDeath: beginPlayerDeath,
+    onPlayerKill: () => {
+      runKills += 1;
+    },
   });
 
-  resolveCombat();
-  maintainEnemyFlow();
+  maintainEnemyFlow({ actors, playerActor, world, particleEffects });
   updateRollGhosts(actors, dt);
   particleEffects.emitDust(dt);
   particleEffects.update(dt);
@@ -264,169 +198,6 @@ function captureActorMotionStart() {
   actors.forEach((actor) => {
     actor.previousOnGround = actor.player.onGround;
     actor.previousVy = actor.player.vy;
-  });
-}
-
-function updateStunnedActor(actor, dt) {
-  const player = actor.player;
-  player.hurtTime = Math.max(player.hurtTime || 0, actor.hitStun);
-  player.animTime += dt;
-  player.vy += world.gravity * dt;
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
-  player.vx *= 0.88;
-  player.x = Math.max(world.minX, Math.min(world.maxX, player.x));
-
-  if (player.y >= world.floorY) {
-    player.y = world.floorY;
-    player.vy = 0;
-    player.onGround = true;
-  }
-
-  player.attackTime -= dt;
-  player.dashTime -= dt;
-  player.dashCooldown -= dt;
-  player.attackCooldown -= dt;
-  player.jumpHoldTime = 0;
-  player.glideActive = false;
-  player.updateState();
-}
-
-function updateRespawningEnemy(actor, dt) {
-  const player = actor.player;
-  const direction = Math.sign(actor.respawnTargetX - player.x) || 1;
-  player.animTime += dt;
-  player.facing = direction;
-  player.vx = direction * Math.max(95, player.speed * 0.72);
-  player.vy += world.gravity * dt;
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
-  player.attackTime = 0;
-  player.dashTime = 0;
-  player.attackCooldown = 0;
-  resetPlayerActionState(player);
-  player.dashCooldown = 0;
-
-  if (player.y >= world.floorY) {
-    player.y = world.floorY;
-    player.vy = 0;
-    player.onGround = true;
-  }
-
-  if ((direction > 0 && player.x >= actor.respawnTargetX) || (direction < 0 && player.x <= actor.respawnTargetX)) {
-    actor.respawning = false;
-    player.x = actor.respawnTargetX;
-    player.x = Math.max(world.minX, Math.min(world.maxX, player.x));
-    player.vx = 0;
-    player.facing = actor.respawnTargetX < playerActor.player.x ? 1 : -1;
-    player.aiTimer = 0.3;
-  }
-
-  player.updateState();
-}
-
-function resolveCombat() {
-  actors.forEach((attacker) => {
-    if (attacker.respawning) return;
-    const box = attacker.player.attackBox;
-    if (!box) return;
-
-    actors.forEach((target) => {
-      if (
-        target === attacker ||
-        target.respawning ||
-        target.hurtCooldown > 0 ||
-        target.invulnTime > 0 ||
-        target.player.isRolling
-      ) {
-        return;
-      }
-      if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
-      if (!attackBoxOverlapsHitbox(box, target.player.hitbox)) return;
-
-      const comboStep = attacker.player.comboStep || 1;
-      target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
-      if (target.player.isGuarding) {
-        const broken = target.player.registerGuardBlock();
-        particleEffects.triggerGuardImpact(attacker, target, broken);
-        return;
-      }
-      const removed = applyHitDamage(attacker, target, comboStep);
-      if (removed) return;
-
-      const attackKey = attacker.player.poseKey === 'jumpAttack' ? 'jumpAttack' : `attack${comboStep}`;
-      const reaction = attacker.tuning.attackBoxes[attackKey] || attacker.tuning.attackBoxes.attack1;
-      target.hurtCooldown = Math.max(0.18, reaction.stun);
-      target.hitStun = reaction.stun;
-      target.invulnTime = Math.max(target.invulnTime, target.tuning.invulnerability.hurt);
-      target.player.hurtTime = reaction.stun;
-      target.player.vx = attacker.player.facing * reaction.knockbackX;
-      target.player.vy = -reaction.knockbackY;
-      target.player.onGround = false;
-      particleEffects.triggerHitImpact(attacker, target, comboStep);
-    });
-  });
-}
-
-function applyHitDamage(attacker, target, comboStep) {
-  target.hpPips = Math.max(0, target.hpPips - 1);
-  if (target.hpPips > 0) return false;
-
-  if (target.id === 'player') {
-    beginPlayerDeath();
-    return true;
-  }
-
-  if (attacker.id === 'player') runKills += 1;
-  const attackKey = attacker.player.poseKey === 'jumpAttack' ? 'jumpAttack' : `attack${comboStep}`;
-  const reaction = attacker.tuning.attackBoxes[attackKey] || attacker.tuning.attackBoxes.attack1;
-  particleEffects.triggerHitImpact(attacker, target, comboStep, true);
-  queueEnemyRespawn(target, true, {
-    x: attacker.player.facing * Number(reaction.knockbackX || 0),
-    y: -Number(reaction.knockbackY || 0),
-    power: Number(reaction.deathBurst ?? 1),
-  });
-  return true;
-}
-
-function queueEnemyRespawn(actor, withDeathBurst = true, deathBurst = actor.player.facing) {
-  const fromLeft = false;
-  if (withDeathBurst) particleEffects.spawnEnemyDeathBurst(actor, deathBurst);
-  actor.hpPips = actor.maxHpPips;
-  actor.hurtCooldown = 0;
-  actor.hitStun = 0;
-  actor.respawning = true;
-  actor.invulnTime = 0;
-  actor.wasRolling = false;
-  const cameraX = getCameraX(playerActor, world);
-  actor.respawnTargetX = fromLeft
-    ? Math.max(world.minX + 40, cameraX + 120 + Math.random() * 150)
-    : cameraX + world.viewW - 220 + Math.random() * 220;
-  actor.lastHitSerials = {};
-  actor.rollGhosts = [];
-  actor.rollGhostTimer = 0;
-  actor.player.x = fromLeft ? cameraX - 90 : cameraX + world.viewW + 140;
-  actor.player.y = world.floorY;
-  actor.player.vx = 0;
-  actor.player.vy = 0;
-  actor.player.facing = fromLeft ? 1 : -1;
-  actor.player.attackTime = 0;
-  actor.player.dashTime = 0;
-  actor.player.dashCooldown = 0;
-  actor.player.attackCooldown = 0;
-  actor.player.attackCarrySpeed = 0;
-  actor.player.airFlapCooldownTime = 0;
-  actor.player.hurtTime = 0;
-  resetPlayerActionState(actor.player);
-  actor.player.onGround = true;
-  actor.player.updateState();
-}
-
-function maintainEnemyFlow() {
-  const cameraX = getCameraX(playerActor, world);
-  actors.slice(1).forEach((actor) => {
-    if (actor.respawning) return;
-    if (actor.player.x < cameraX - 360) queueEnemyRespawn(actor, false);
   });
 }
 
@@ -534,7 +305,7 @@ function draw() {
     isEditPanelOpen: isSettingsPanelOpen(),
     hasActiveEditPart: Boolean(tuningPanel.activeEditPartKey()),
   });
-  drawWorld(ctx, world, view);
+  drawWorld(ctx, world, view, sceneSession);
 
   ctx.save();
   applyWorldView(ctx, world, view);
@@ -553,6 +324,7 @@ function draw() {
 
   tuningPanel.drawSettingsDebugBoxes();
   ctx.restore();
+  drawSceneForeground(ctx, world, view, sceneSession.background);
 
   tuningPanel.renderEditHandles();
 
@@ -641,7 +413,39 @@ function deleteRankingAt(index) {
 bindSettingsRankingToggle(settingsRankingPanel, settingsRankingToggle);
 
 function saveState() {
-  saveActorState(actors);
+  syncSceneWorldBeforeSave(sceneSession, world);
+  sceneSessions[sceneSession.id] = sceneSession;
+  activeSceneSessionId = sceneSession.id;
+  saveGameState({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions });
+}
+
+async function uploadSettingsToFirebase() {
+  syncSceneWorldBeforeSave(sceneSession, world);
+  sceneSessions[sceneSession.id] = sceneSession;
+  activeSceneSessionId = sceneSession.id;
+  return uploadSavedStateToFirebase({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions });
+}
+
+async function downloadSettingsFromFirebase() {
+  const downloaded = await downloadSavedStateFromFirebase();
+  if (downloaded) window.location.reload();
+  return downloaded;
+}
+
+async function refreshClipAndUploadSettings({ clipFile = null } = {}) {
+  const refreshed = await refreshClipBackground({
+    getSceneSession: () => sceneSession,
+    onUpdate: preloadSceneBackground,
+    force: true,
+    clipFile,
+  });
+  if (!refreshed) return false;
+
+  const uploadedAssets = await uploadSceneClipAssetsToFirebase(sceneSession.background);
+  if (!uploadedAssets) return false;
+
+  preloadSceneBackground(sceneSession.background);
+  return uploadSettingsToFirebase();
 }
 
 function saveRankings() {

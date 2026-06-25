@@ -1,5 +1,18 @@
 import { defaultEffectSize } from './animationFrames.js';
+import { effectFieldLimits } from './tuningParts.js';
 import { clamp } from './utils.js';
+
+export function readEffectFrameDisplayValue(effectKey, frame, prop) {
+  if (prop === 'w' || prop === 'h') return effectSizePercent(effectKey, frame, prop);
+  return frame[prop];
+}
+
+export function effectFrameValueFromInput(effectKey, prop, value) {
+  if (prop === 'w' || prop === 'h') return effectSizeFromPercent(effectKey, prop, value);
+
+  const limits = effectFieldLimits(prop);
+  return clamp(Number(value), limits.min, limits.max);
+}
 
 export function effectSizeBase(effectKey, prop) {
   const base = defaultEffectSize(effectKey);

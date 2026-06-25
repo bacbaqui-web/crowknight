@@ -1,6 +1,83 @@
 import { POSE_PART_KEYS } from './gameConfig.js';
 import { ensurePoseOffset, poseKeyframesFor } from './tuningNormalize.js';
 import { effectFrameValue, frameValue } from './animationFrames.js';
+import { pasteEffectTimelineFrame, pastePoseTimelineFramePart } from './timelineKeyframeMutations.js';
+
+export function copyActivePoseTimelineFrame({
+  isOpen,
+  activeKeyframeId,
+  fixedFrame,
+  keyframes,
+  tuning,
+  poseKey,
+  selectedPosePartKeys,
+  activePosePartKey,
+}) {
+  if (!isOpen) return null;
+  const id = activeKeyframeId || fixedFrame;
+  if (!id) return null;
+
+  const reference = keyframes.find((frame) => frame.id === id);
+  if (!reference) return null;
+
+  const selectedParts = selectedPoseFrameCopyParts(selectedPosePartKeys, activePosePartKey);
+  return createPoseFrameCopy({
+    tuning,
+    poseKey,
+    id,
+    reference,
+    selectedParts,
+    mode: selectedPoseFrameCopyMode(selectedPosePartKeys, activePosePartKey),
+    activePosePartKey,
+  });
+}
+
+export function pastePoseTimelineFrameCopy({
+  copiedPoseFrame,
+  id,
+  tuning,
+  poseKey,
+  selectedPosePartKeys,
+  activePosePartKey,
+  ensureKeyframe,
+}) {
+  if (!copiedPoseFrame || !id) return false;
+  const pasteParts = poseFramePasteParts(copiedPoseFrame, selectedPosePartKeys, activePosePartKey);
+
+  pasteParts.forEach(({ from, to }) => {
+    if (!from || !to || !copiedPoseFrame.parts[from]) return;
+
+    ensurePoseOffset(tuning, poseKey, to);
+    const frames = tuning.poseOffsets[poseKey][to];
+    pastePoseTimelineFramePart({
+      frames,
+      id,
+      sourceFrame: copiedPoseFrame.parts[from],
+      ensureKeyframe,
+    });
+  });
+
+  return true;
+}
+
+export function copyActiveEffectTimelineFrame({ isOpen, effectKey, id, keyframes, fallbackFrame }) {
+  if (!isOpen) return null;
+  const source = id ? keyframes.find((frame) => frame.id === id) : fallbackFrame;
+  if (!source) return null;
+  return createEffectFrameCopy(effectKey, source);
+}
+
+export function pasteEffectTimelineFrameCopy({ copiedEffectFrame, effect, effectKey, id, ensureKeyframe }) {
+  if (!copiedEffectFrame || !id) return false;
+  pasteEffectTimelineFrame({
+    effect,
+    effectKey,
+    id,
+    sourceFrame: copiedEffectFrame.frame,
+    ensureKeyframe,
+  });
+  return true;
+}
 
 export function selectedPoseFrameCopyParts(selectedPosePartKeys, activePosePartKey) {
   if (selectedPosePartKeys.size > 1) return [...selectedPosePartKeys];

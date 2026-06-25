@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "python3 tools/dev_server.py",
+    "dev:5500": "python3 tools/dev_server.py --port 5500",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "check": "npm run lint && prettier --check ."
+    "check": "npm run lint && prettier --check .",
+    "clip:preview": "python3 tools/clip_preview_watcher.py --once",
+    "clip:watch": "python3 tools/clip_preview_watcher.py"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -37,6 +37,82 @@ export function isTimelineFrameId(id, keyframes) {
   return Boolean(id && keyframes.some((frame) => frame.id === id));
 }
 
+export function createTimelineSelectionState(initialSelection = clearedTimelineSelection()) {
+  return assignTimelineSelection({}, initialSelection);
+}
+
+export function assignTimelineSelection(target, selection) {
+  target.activeKeyframeId = selection.activeKeyframeId;
+  target.fixedFrame = selection.fixedFrame;
+  target.selectedSlot = selection.selectedSlot;
+  return target;
+}
+
+export function hasTimelineSelection(selection, { includeSelectedSlot = true } = {}) {
+  return Boolean(
+    selection.activeKeyframeId || selection.fixedFrame || (includeSelectedSlot && selection.selectedSlot !== null)
+  );
+}
+
+export function selectedTimelineFrameSelection({ id, activeKeyframeId, fixedFrame, keyframes, toSlot, lastSlot }) {
+  if (isTimelineFrameSelectionActive({ activeKeyframeId, fixedFrame, id })) {
+    return { kind: 'clear', selection: clearedTimelineSelection() };
+  }
+
+  if (id === 'start' || id === 'end') {
+    return { kind: 'fixed', selection: fixedTimelineFrameSelection(id, lastSlot) };
+  }
+
+  const keyframe = keyframes.find((frame) => frame.id === id);
+  return {
+    kind: 'keyframe',
+    selection: {
+      activeKeyframeId: id,
+      fixedFrame: null,
+      selectedSlot: toSlot(keyframe?.t ?? 0),
+    },
+  };
+}
+
+export function selectedTimelineSlotSelection({
+  slot,
+  selectedSlot,
+  activeKeyframeId,
+  fixedFrame,
+  keyframes,
+  toSlot,
+  lastSlot,
+}) {
+  const frame = keyframes.find((item) => toSlot(item.t) === slot);
+  if (frame) {
+    return selectedTimelineFrameSelection({
+      id: frame.id,
+      activeKeyframeId,
+      fixedFrame,
+      keyframes,
+      toSlot,
+      lastSlot,
+    });
+  }
+
+  if (isTimelineSlotSelectionActive({ selectedSlot, activeKeyframeId, fixedFrame, slot })) {
+    return { kind: 'clear', selection: clearedTimelineSelection() };
+  }
+
+  return { kind: 'empty', selection: emptyTimelineSlotSelection(slot) };
+}
+
+export function movedTimelineKeyframeTarget({ id, t, keyframes, toSlot, slotToValue }) {
+  const nextSlot = toSlot(t);
+  const occupied = keyframes.some((frame) => frame.id !== id && toSlot(frame.t) === nextSlot);
+  if (occupied) return null;
+
+  return {
+    slot: nextSlot,
+    t: slotToValue(nextSlot),
+  };
+}
+
 export function fixedTimelineFrameSelection(frame, lastSlot) {
   return {
     activeKeyframeId: null,

@@ -1,5 +1,23 @@
 import { isMasterPart } from './tuningLabels.js';
-import { controlGroupPartKeys } from './tuningParts.js';
+import { controlGroupPartKeys, poseFieldLimits } from './tuningParts.js';
+import { clamp } from './utils.js';
+
+export function readPartFieldDisplayValue(partKey, part, prop) {
+  if (prop === 'w' || prop === 'h') return partSizeToPercent(partKey, part, prop);
+  return part[prop];
+}
+
+export function readPoseFrameDisplayValue(partKey, offset, prop, basePart) {
+  if (prop === 'w' || prop === 'h') return poseSizeToPercent(partKey, offset, prop, basePart);
+  return offset[prop];
+}
+
+export function poseFrameValueFromInput(partKey, prop, value, basePart) {
+  const limits = poseFieldLimits(prop, partKey);
+  const nextValue = clamp(Number(value), limits.min, limits.max);
+  if (prop === 'w' || prop === 'h') return poseSizeOffsetFromPercent(partKey, prop, nextValue, basePart);
+  return nextValue;
+}
 
 export function partSizeToPercent(partKey, part, prop) {
   if (controlGroupPartKeys().includes(partKey)) return Number(part[prop] ?? 1) * 100;

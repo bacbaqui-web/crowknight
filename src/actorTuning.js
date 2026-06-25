@@ -1,5 +1,5 @@
 import { ACTOR_DEFS } from './gameConfig.js';
-import { DEFAULT_PLAYER_TUNING } from './puppetPlayer.js';
+import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
 import { clamp, clone } from './utils.js';
 
 export function defaultTuningFor(def) {

@@ -1,3 +1,36 @@
+import { GAME_KEYS } from './gameConfig.js';
+import { isTextInput } from './tuningPanelBindings.js';
+
+export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
+  addEventListener(
+    'keydown',
+    (event) => {
+      if (handleShortcut(event)) return;
+      if (event.metaKey || event.ctrlKey) return;
+      if (!GAME_KEYS.has(event.code)) return;
+      if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!keys.has(event.code)) pressed.add(event.code);
+      keys.add(event.code);
+    },
+    true
+  );
+
+  addEventListener(
+    'keyup',
+    (event) => {
+      if (event.metaKey || event.ctrlKey) return;
+      if (!GAME_KEYS.has(event.code)) return;
+      if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      keys.delete(event.code);
+    },
+    true
+  );
+}
+
 export function bindTouchControls(keys, pressed) {
   document.querySelectorAll('[data-hold-code]').forEach((button) => {
     const code = button.dataset.holdCode;
@@ -27,6 +60,10 @@ export function bindTouchControls(keys, pressed) {
       setTimeout(() => button.classList.remove('is-pressed'), 120);
     });
   });
+}
+
+function isSettingsPanelTarget(target) {
+  return Boolean(target?.closest?.('#tuningPanel'));
 }
 
 export function bindBattleControls({ startBattleButton, homeStartButton, endBattleButton }, actions) {

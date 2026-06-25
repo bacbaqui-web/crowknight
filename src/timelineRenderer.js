@@ -35,3 +35,35 @@ export function renderKeyframeTimeline({
     bindDrag,
   });
 }
+
+export function renderSelectedKeyframeTimeline({
+  renderSettings,
+  track,
+  frameCount,
+  keyframes,
+  selection,
+  lastSlot,
+  toSlot,
+  slotToLeft,
+  selectSlot,
+  bindDrag,
+  addButton,
+  deleteButton,
+}) {
+  renderSettings();
+  renderKeyframeTimeline({
+    track,
+    frameCount,
+    keyframes,
+    selectedSlot: selection.selectedSlot,
+    activeKeyframeId: selection.activeKeyframeId,
+    fixedFrame: selection.fixedFrame,
+    lastSlot,
+    toSlot,
+    slotToLeft,
+    selectSlot,
+    bindDrag,
+    addButton,
+    deleteButton,
+  });
+}

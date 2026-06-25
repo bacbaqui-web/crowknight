@@ -1,0 +1,373 @@
+/* Ranking, start, and result screens. */
+
+.start-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 26px;
+  padding: 28px;
+  background: linear-gradient(180deg, rgba(16, 16, 20, 0.4), rgba(16, 16, 20, 0.88)), rgba(14, 15, 20, 0.62);
+  text-align: center;
+  transition:
+    opacity 160ms ease,
+    visibility 160ms ease;
+}
+
+.start-screen.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.start-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #93d5ac;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.start-copy h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 68px;
+  line-height: 0.95;
+}
+
+.primary-start {
+  min-width: 160px;
+  min-height: 48px;
+  border: 1px solid rgba(147, 213, 172, 0.8);
+  border-radius: 6px;
+  background: #93d5ac;
+  color: #11141a;
+  padding: 0 22px;
+  font-size: 18px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.primary-start:hover,
+.primary-start:focus-visible {
+  background: #a7e9c0;
+}
+
+.primary-start:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.run-hud {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.run-hud-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 92px;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(12, 14, 20, 0.52);
+  color: #f7fbff;
+  padding: 0 10px;
+  font-size: 17px;
+  font-weight: 850;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(5px);
+}
+
+.run-hud-item svg {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  stroke: #93d5ac;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.run-hud-item svg .skull-eye {
+  fill: #93d5ac;
+}
+
+.result-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(250px, 0.95fr) minmax(280px, 1.15fr) 86px;
+  gap: 12px;
+  align-items: stretch;
+  width: min(860px, calc(100vw - 36px));
+  max-height: calc(100vh - 36px);
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  background: rgba(10, 11, 16, 0.88);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
+  color: #f8fbff;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
+
+.ranking-board,
+.score-register,
+.result-actions {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(18, 20, 28, 0.86);
+}
+
+.ranking-board {
+  overflow: hidden;
+}
+
+.ranking-board,
+.score-register {
+  padding: 12px;
+}
+
+.ranking-board h2,
+.score-register h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.ranking-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style-position: inside;
+  font-size: 12px;
+}
+
+.ranking-list li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 2px;
+  min-height: 34px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ranking-list b {
+  grid-row: 1 / 4;
+  color: #93d5ac;
+  font-size: 13px;
+}
+
+.ranking-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ranking-list strong,
+.ranking-list span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-list p,
+.ranking-list small {
+  margin: 0;
+  color: #aeb6c7;
+  font-size: 10px;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-empty {
+  display: block;
+  color: #aeb6c7;
+}
+
+.score-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.score-details div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.score-details dt {
+  color: #aeb6c7;
+  font-size: 12px;
+}
+
+.score-details dd {
+  margin: 0;
+  color: #93d5ac;
+  font-size: 20px;
+  font-weight: 850;
+}
+
+.ranking-form {
+  display: grid;
+  gap: 10px;
+}
+
+.ranking-form label {
+  display: grid;
+  gap: 5px;
+  color: #cfd5e3;
+  font-size: 13px;
+}
+
+.ranking-form input,
+.ranking-form textarea {
+  width: 100%;
+  border: 1px solid #3b4050;
+  border-radius: 5px;
+  background: #11131a;
+  color: #f8fbff;
+  padding: 9px 10px;
+  resize: none;
+}
+
+.ranking-form button {
+  min-height: 40px;
+  border: 1px solid rgba(147, 213, 172, 0.8);
+  border-radius: 6px;
+  background: #93d5ac;
+  color: #10141a;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.ranking-form button:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.result-actions {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: 12px;
+}
+
+.icon-action {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.icon-action svg {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-action img {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.icon-action[href$='instagram.com/govy9807'] img,
+.icon-action[href$='x.com/govy9807'] img {
+  color: #fff;
+  border-radius: 0;
+}
+
+.icon-action span {
+  font-weight: 900;
+}
+
+.lezhin-action {
+  padding: 0;
+}
+
+@media (max-width: 560px) {
+  .start-screen {
+    gap: 18px;
+    padding: 22px;
+  }
+
+  .start-copy h1 {
+    font-size: 42px;
+  }
+
+  .primary-start {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .result-screen {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+    overflow: auto;
+  }
+
+  .ranking-board,
+  .score-register {
+    padding: 12px;
+  }
+
+  .ranking-list {
+    font-size: 12px;
+  }
+
+  .score-details {
+    grid-template-columns: 1fr;
+  }
+
+  .result-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 8px;
+  }
+
+  .icon-action {
+    min-height: 54px;
+  }
+}
