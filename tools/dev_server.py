@@ -60,10 +60,14 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
                 return
 
             filename = self.headers.get("X-Clip-Filename", "uploaded.psd")
-            clip_path = self.uploaded_clip_dir / sanitize_clip_filename(filename)
-            self.uploaded_clip_dir.mkdir(parents=True, exist_ok=True)
-            clip_path.write_bytes(self.rfile.read(content_length))
-            self.handle_clip_refresh(clip_path)
+            uploaded_name = sanitize_clip_filename(filename)
+            target_path = self.clip_path if Path(uploaded_name).suffix.lower() == self.clip_path.suffix.lower() else None
+            if target_path is None:
+                target_path = self.uploaded_clip_dir / uploaded_name
+
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_bytes(self.rfile.read(content_length))
+            self.handle_clip_refresh(target_path)
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
@@ -135,7 +139,7 @@ def main():
     parser.add_argument("--port", type=int, default=4173)
     parser.add_argument("--port-retries", type=int, default=20)
     parser.add_argument("--root", default=".")
-    parser.add_argument("--clip", default="assets/clip_file/배경.clip")
+    parser.add_argument("--clip", default="assets/backgrounds/background_01.psd")
     parser.add_argument("--output", default="runtime/background-preview.webp")
     parser.add_argument("--manifest", default="runtime/background-preview.json")
     parser.add_argument("--layer-output-dir", default="runtime/background-layers")

@@ -8,6 +8,7 @@ export function poseMotionGroups(key) {
   if (key === 'guard') return ['guard'];
   if (key === 'guardBreak') return ['guardBreak'];
   if (key === 'hurt') return ['hurt'];
+  if (key === 'death') return ['death'];
   if (key === 'jumpAttack') return ['attack', 'jumpAttack'];
   if (key.startsWith('attack')) return ['attack', key];
   return [];

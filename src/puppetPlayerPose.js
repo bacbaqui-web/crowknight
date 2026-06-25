@@ -8,7 +8,7 @@ export function createPuppetPose(player) {
   const idle = Math.sin(t * 3) * 3;
   const previewPose = player.posePreview?.pose;
   const state = previewPose?.startsWith('attack') ? 'attack' : previewPose || player.state;
-  const intensityKey = previewPose || state;
+  const intensityKey = previewPose || player.poseKey;
   const p = createBasePose();
 
   if (state === 'idle') {
