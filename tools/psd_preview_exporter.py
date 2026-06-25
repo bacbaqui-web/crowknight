@@ -41,7 +41,7 @@ def export_psd_layers(psd, layer_output_dir, runtime_dir):
             continue
 
         canvas = transparent_canvas(psd.width, psd.height)
-        canvas.alpha_composite(image.convert("RGBA"), (max(0, layer.left), max(0, layer.top)))
+        composite_layer_image(canvas, image.convert("RGBA"), layer.left, layer.top)
         save_webp(canvas, output_path)
 
         layers.append(
@@ -96,6 +96,22 @@ def clamp_opacity(value):
 
 def transparent_canvas(width, height):
     return pillow_image().new("RGBA", (width, height), (0, 0, 0, 0))
+
+
+def composite_layer_image(canvas, image, left, top):
+    dest_x = int(left or 0)
+    dest_y = int(top or 0)
+    source_x = max(0, -dest_x)
+    source_y = max(0, -dest_y)
+    dest_x = max(0, dest_x)
+    dest_y = max(0, dest_y)
+    width = min(image.width - source_x, canvas.width - dest_x)
+    height = min(image.height - source_y, canvas.height - dest_y)
+    if width <= 0 or height <= 0:
+        return
+
+    visible = image.crop((source_x, source_y, source_x + width, source_y + height))
+    canvas.alpha_composite(visible, (dest_x, dest_y))
 
 
 def save_webp(image, path):

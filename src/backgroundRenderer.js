@@ -3,7 +3,6 @@ import { clamp } from './utils.js';
 
 const imageCache = new Map();
 const metricsCache = new WeakMap();
-const REPEAT_OVERLAP = 1;
 
 export function preloadSceneBackground(background) {
   const normalized = normalizeSceneBackground(background);
@@ -21,16 +20,19 @@ export function preloadSceneBackground(background) {
 
 export function drawSceneBackground(ctx, world, view, background) {
   const normalized = normalizeSceneBackground(background);
+  const hasClipBackground = hasActiveClipBackground(normalized);
 
   ctx.save();
   ctx.clearRect(0, 0, world.viewW, world.viewH);
   drawBaseColor(ctx, world, normalized.color);
   drawClipBackgroundRoleLayers(ctx, world, view, normalized, ['back', 'ground']);
 
-  if (normalized.type === 'preset') drawPresetBackground(ctx, world, view, normalized);
-  if (normalized.type === 'image') drawImageBackground(ctx, world, normalized);
-  if (normalized.type === 'layers') drawLayeredBackground(ctx, world, view, normalized);
-  if (normalized.type === 'color') drawBaseColor(ctx, world, normalized.color);
+  if (!hasClipBackground) {
+    if (normalized.type === 'preset') drawPresetBackground(ctx, world, view, normalized);
+    if (normalized.type === 'image') drawImageBackground(ctx, world, normalized);
+    if (normalized.type === 'layers') drawLayeredBackground(ctx, world, view, normalized);
+    if (normalized.type === 'color') drawBaseColor(ctx, world, normalized.color);
+  }
 
   ctx.restore();
 }
@@ -49,6 +51,11 @@ function drawClipBackgroundRoleLayers(ctx, world, view, background, roles) {
 
   const roleLayers = layersWithImages.filter((layer) => roles.includes(layer.role));
   [...roleLayers].reverse().forEach((layer) => drawClipLayerImage(ctx, world, view, background, layer));
+}
+
+function hasActiveClipBackground(background) {
+  const hasLayer = background.clipLayers.some((layer) => layer.enabled && layer.imageSrc.trim());
+  return hasLayer || Boolean(background.clipPreview.enabled && background.clipPreview.url.trim());
 }
 
 function drawClipPreviewBackground(ctx, world, background) {
@@ -87,22 +94,14 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   const naturalY =
     baseLayout.y + metrics.y * imageScaleY + layer.offsetY + getClipLayerVerticalDeltaY(world, view, layer);
   const startX = naturalX - scrollOffset - width;
-  const step = Math.max(1, width - REPEAT_OVERLAP);
 
   ctx.save();
   ctx.globalAlpha = clamp(layer.opacity, 0, 1);
-  for (let x = startX; x < world.viewW + width; x += step) {
-    ctx.drawImage(
-      imageState.image,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      sourceHeight,
-      x,
-      naturalY,
-      width + REPEAT_OVERLAP,
-      height
-    );
+  for (let x = startX; x < world.viewW + width; x += width) {
+    const left = Math.round(x);
+    const right = Math.round(x + width);
+    const drawWidth = Math.max(1, right - left);
+    ctx.drawImage(imageState.image, sourceX, sourceY, sourceWidth, sourceHeight, left, naturalY, drawWidth, height);
   }
   ctx.restore();
 }

@@ -207,8 +207,9 @@ export function normalizeClipBackgroundLayers(savedLayers) {
 
 export function getActiveClipGroundLayer(background) {
   const normalized = normalizeSceneBackground(background);
-  if (!normalized.clipPreview.enabled || !normalized.clipPreview.url.trim()) return null;
-  return normalized.clipLayers.find((layer) => layer.enabled && layer.role === 'ground') || null;
+  return (
+    normalized.clipLayers.find((layer) => layer.enabled && layer.role === 'ground' && layer.imageSrc.trim()) || null
+  );
 }
 
 export function usesClipGround(background) {
@@ -218,7 +219,7 @@ export function usesClipGround(background) {
 export function mergeClipBackgroundLayers(savedLayers, manifestLayers) {
   const savedLayersNormalized = normalizeClipBackgroundLayers(savedLayers);
   const savedById = new Map(savedLayersNormalized.map((layer) => [layer.id, layer]));
-  const savedByName = new Map(savedLayersNormalized.map((layer) => [layer.name, layer]));
+  const savedByName = uniqueLayerNameMap(savedLayersNormalized);
   const manifestList = Array.isArray(manifestLayers) ? manifestLayers : [];
   const merged = manifestList
     .map((manifestLayer, index) => {
@@ -246,6 +247,15 @@ export function mergeClipBackgroundLayers(savedLayers, manifestLayers) {
     .filter(Boolean);
 
   return merged.sort((a, b) => a.order - b.order);
+}
+
+function uniqueLayerNameMap(layers) {
+  const counts = new Map();
+  layers.forEach((layer) => {
+    counts.set(layer.name, (counts.get(layer.name) || 0) + 1);
+  });
+
+  return new Map(layers.filter((layer) => counts.get(layer.name) === 1).map((layer) => [layer.name, layer]));
 }
 
 function normalizeClipBackgroundLayer(layer, fallbackOrder) {
