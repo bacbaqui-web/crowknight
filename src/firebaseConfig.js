@@ -6,4 +6,5 @@ export const FIREBASE_PROJECT_STATE_CONFIG = {
   storagePath: 'crow-knight/backgrounds',
   collection: 'projectSettings',
   documentId: 'crowKnight',
+  rankingCollection: 'rankingEntries',
 };

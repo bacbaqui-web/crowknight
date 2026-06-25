@@ -418,14 +418,16 @@ export function createTuningPanel({
       syncActorAnchorDebugPart(actors, selectedActor, selectedPosePartKeysGlobal.size > 1 ? null : editFocusPartKey);
     }
 
+    function activeTimelineController() {
+      return currentOpenEditContext() === 'effect' ? effectTimeline : poseTimeline;
+    }
+
     function copyCurrentFrame() {
-      if (effectSection.classList.contains('is-open')) effectTimeline.copyFrame();
-      else poseTimeline.copyFrame();
+      activeTimelineController().copyFrame();
     }
 
     function pasteCurrentFrame() {
-      if (effectSection.classList.contains('is-open')) effectTimeline.pasteFrame();
-      else poseTimeline.pasteFrame();
+      activeTimelineController().pasteFrame();
     }
 
     function renderLayerOrder(selectedValue = layerOrder.value) {

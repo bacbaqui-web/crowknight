@@ -166,6 +166,7 @@ export function createEffectTimelineController({
     if (slot === null) return null;
     const t = slotToValue(slot);
     const id = addEffectTimelineKeyframe(actor().tuning, effectSelect.value, t);
+    effectSelection.activeKeyframeId = id;
     effectSelection.fixedFrame = null;
     effectSelection.selectedSlot = slot;
     return id;

@@ -18,35 +18,45 @@ export function saveRankings(rankings) {
 export function recordRankingEntry(rankings, score, survivalTime = 0, kills = 0, name = '주인공', message = '') {
   if (score < 0) return rankings;
 
-  const nextRankings = [
-    ...rankings,
-    {
-      name,
-      message,
-      score,
-      survivalTime,
-      kills,
-      date: new Date().toISOString(),
-    },
-  ].sort((a, b) => b.score - a.score);
+  const nextRankings = sortRankingEntries([...rankings, createRankingEntry(score, survivalTime, kills, name, message)]);
 
   saveRankings(nextRankings);
   return nextRankings;
 }
 
+export function createRankingEntry(score, survivalTime = 0, kills = 0, name = '주인공', message = '') {
+  return {
+    name,
+    message,
+    score,
+    survivalTime,
+    kills,
+    date: new Date().toISOString(),
+    createdAt: Date.now(),
+  };
+}
+
+export function sortRankingEntries(rankings) {
+  return [...rankings].sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
+}
+
 export function bindResultScreen({ retryRunButton, rankingForm, rankingName, rankingMessage }, actions) {
   retryRunButton?.addEventListener('click', actions.startRun);
-  rankingForm?.addEventListener('submit', (event) => {
+  rankingForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const name = rankingName.value.trim();
     const message = rankingMessage.value.trim();
+    const submit = rankingForm.querySelector('button[type="submit"]');
     if (!name) {
       rankingName.focus();
       return;
     }
 
-    actions.recordRanking(name, message);
-    rankingForm.querySelector('button[type="submit"]').disabled = true;
+    submit.disabled = true;
+    const record = actions.recordRanking(name, message);
+    actions.renderRankingList();
+    actions.renderSettingsRankingList();
+    await record;
     actions.renderRankingList();
     actions.renderSettingsRankingList();
   });
