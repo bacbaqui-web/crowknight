@@ -7,6 +7,7 @@ import tempfile
 import time
 import zlib
 from collections import Counter
+from io import BytesIO
 from pathlib import Path
 
 
@@ -38,7 +39,7 @@ def detect_image_type(data):
     return None, None
 
 
-def extract_clip_data(clip_path, layer_output_dir=None, runtime_dir=None):
+def extract_clip_data(clip_path, layer_output_dir=None, runtime_dir=None, layer_extension=".png"):
     clip_bytes = clip_path.read_bytes()
     sqlite_offset = find_sqlite_offset(clip_bytes, clip_path)
     sqlite_payload = clip_bytes[sqlite_offset:]
@@ -69,6 +70,7 @@ def extract_clip_data(clip_path, layer_output_dir=None, runtime_dir=None):
                 preview_height=row[2],
                 layer_output_dir=layer_output_dir,
                 runtime_dir=runtime_dir,
+                layer_extension=layer_extension,
             )
         finally:
             con.close()
@@ -96,6 +98,7 @@ def extract_layers(
     preview_height=None,
     layer_output_dir=None,
     runtime_dir=None,
+    layer_extension=".png",
 ):
     rows = con.execute(
         """
@@ -142,11 +145,12 @@ def extract_layers(
             preview_height,
             preview,
             occluded_by_later.get(layer["id"]),
+            layer_extension,
         )
         normalized = {
             **layer,
         }
-        layer_image = find_layer_image(normalized["id"], layer_output_dir, runtime_dir)
+        layer_image = find_layer_image(normalized["id"], layer_output_dir, runtime_dir, layer_extension)
         if layer_image:
             normalized["image"] = layer_image
         layers.append(normalized)
@@ -331,11 +335,7 @@ def luminance(color):
     return red * 0.2126 + green * 0.7152 + blue * 0.0722
 
 
-def color_distance(first, second):
-    return sum((a - b) ** 2 for a, b in zip(first, second)) ** 0.5
-
-
-def export_layer_png(layer, alpha, color, layer_output_dir, width, height, preview=None, occlusion=None):
+def export_layer_png(layer, alpha, color, layer_output_dir, width, height, preview=None, occlusion=None, extension=".png"):
     if not layer_output_dir or not alpha or not color:
         return
     if width <= 0 or height <= 0:
@@ -355,16 +355,13 @@ def export_layer_png(layer, alpha, color, layer_output_dir, width, height, previ
             red, green, blue = fallback_red, fallback_green, fallback_blue
             if preview_row and (not occlusion or occlusion[index] < 128):
                 preview_pixel = x * 4
-                preview_red, preview_green, preview_blue = preview_row[preview_pixel : preview_pixel + 3]
-                preview_color = (preview_red, preview_green, preview_blue)
-                if color_distance(preview_color, color) <= 80:
-                    red, green, blue = preview_color
+                red, green, blue = preview_row[preview_pixel : preview_pixel + 3]
 
             pixel = index * 4
             rgba[pixel : pixel + 4] = bytes((red, green, blue, alpha_value))
 
     layer_output_dir.mkdir(parents=True, exist_ok=True)
-    write_rgba_png(layer_output_dir / f"{layer['id']}.png", width, height, rgba)
+    write_rgba_image(layer_output_dir / f"{layer['id']}{extension}", width, height, rgba)
 
 
 def read_clip_u16(data, offset):
@@ -442,6 +439,18 @@ def paeth_predictor(left, up, up_left):
     return up_left
 
 
+def write_rgba_image(path, width, height, rgba):
+    if path.suffix.lower() == ".webp":
+        write_rgba_webp(path, width, height, rgba)
+        return
+    write_rgba_png(path, width, height, rgba)
+
+
+def write_rgba_webp(path, width, height, rgba):
+    image = pillow_image().frombytes("RGBA", (width, height), bytes(rgba))
+    save_webp(image, path)
+
+
 def write_rgba_png(path, width, height, rgba):
     def chunk(chunk_type, chunk_data):
         checksum = zlib.crc32(chunk_type + chunk_data) & 0xFFFFFFFF
@@ -456,10 +465,33 @@ def write_rgba_png(path, width, height, rgba):
     )
 
 
-def find_layer_image(layer_id, layer_output_dir, runtime_dir):
+def write_preview_image(path, image_bytes):
+    if path.suffix.lower() != ".webp":
+        path.write_bytes(image_bytes)
+        return
+
+    image = pillow_image().open(BytesIO(image_bytes)).convert("RGBA")
+    save_webp(image, path)
+
+
+def save_webp(image, path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(path, "WEBP", lossless=True, quality=100, method=6)
+
+
+def pillow_image():
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise RuntimeError("Pillow is required to export WebP images. Run `python3 -m pip install Pillow`.") from exc
+
+    return Image
+
+
+def find_layer_image(layer_id, layer_output_dir, runtime_dir, extension=".png"):
     if not layer_output_dir or not runtime_dir:
         return None
-    image_path = layer_output_dir / f"{layer_id}.png"
+    image_path = layer_output_dir / f"{layer_id}{extension}"
     if not image_path.exists():
         return None
     try:
@@ -469,16 +501,22 @@ def find_layer_image(layer_id, layer_output_dir, runtime_dir):
 
 
 def export_preview(clip_path, output_path, manifest_path, layer_output_dir=None):
-    preview = extract_clip_data(clip_path, layer_output_dir=layer_output_dir, runtime_dir=manifest_path.parent)
+    layer_extension = ".webp" if output_path.suffix.lower() == ".webp" else ".png"
+    preview = extract_clip_data(
+        clip_path,
+        layer_output_dir=layer_output_dir,
+        runtime_dir=manifest_path.parent,
+        layer_extension=layer_extension,
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_bytes(preview["bytes"])
+    write_preview_image(output_path, preview["bytes"])
 
     updated_at = int(time.time() * 1000)
     manifest = {
         "source": str(clip_path),
         "preview": output_path.name,
-        "mimeType": preview["mimeType"],
+        "mimeType": "image/webp" if output_path.suffix.lower() == ".webp" else preview["mimeType"],
         "width": preview["width"],
         "height": preview["height"],
         "layers": preview["layers"],
@@ -519,7 +557,7 @@ def watch(args):
 def main():
     parser = argparse.ArgumentParser(description="Export a live CanvasPreview image from a CLIP file.")
     parser.add_argument("--clip", default="assets/clip_file/배경.clip")
-    parser.add_argument("--output", default="runtime/background-preview.png")
+    parser.add_argument("--output", default="runtime/background-preview.webp")
     parser.add_argument("--manifest", default="runtime/background-preview.json")
     parser.add_argument("--layer-output-dir", default="runtime/background-layers")
     parser.add_argument("--interval", type=float, default=1.0)

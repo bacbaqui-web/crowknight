@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from clip_preview_watcher import export_preview
+from psd_preview_exporter import export_psd_preview
 
 
 class CrowKnightHandler(SimpleHTTPRequestHandler):
@@ -41,11 +42,11 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
 
     def handle_clip_refresh(self, clip_path=None):
         try:
-            manifest = export_preview(
+            manifest = export_background_preview(
                 clip_path or self.clip_path,
                 self.output_path,
                 self.manifest_path,
-                layer_output_dir=self.layer_output_dir,
+                self.layer_output_dir,
             )
             self.send_json(200, manifest)
         except Exception as exc:
@@ -58,7 +59,7 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
                 self.send_json(400, {"error": "Empty clip file"})
                 return
 
-            filename = self.headers.get("X-Clip-Filename", "uploaded.clip")
+            filename = self.headers.get("X-Clip-Filename", "uploaded.psd")
             clip_path = self.uploaded_clip_dir / sanitize_clip_filename(filename)
             self.uploaded_clip_dir.mkdir(parents=True, exist_ok=True)
             clip_path.write_bytes(self.rfile.read(content_length))
@@ -114,11 +115,18 @@ def create_server(args):
 
 
 def sanitize_clip_filename(filename):
-    name = Path(unquote(filename)).name.strip() or "uploaded.clip"
+    name = Path(unquote(filename)).name.strip() or "uploaded.psd"
     safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in name)
-    if not safe.lower().endswith(".clip"):
-        safe = f"{safe}.clip"
-    return safe or "uploaded.clip"
+    if not safe.lower().endswith((".clip", ".psd")):
+        safe = f"{safe}.psd"
+    return safe or "uploaded.psd"
+
+
+def export_background_preview(source_path, output_path, manifest_path, layer_output_dir):
+    suffix = source_path.suffix.lower()
+    if suffix == ".psd":
+        return export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
+    return export_preview(source_path, output_path, manifest_path, layer_output_dir=layer_output_dir)
 
 
 def main():
@@ -128,7 +136,7 @@ def main():
     parser.add_argument("--port-retries", type=int, default=20)
     parser.add_argument("--root", default=".")
     parser.add_argument("--clip", default="assets/clip_file/배경.clip")
-    parser.add_argument("--output", default="runtime/background-preview.png")
+    parser.add_argument("--output", default="runtime/background-preview.webp")
     parser.add_argument("--manifest", default="runtime/background-preview.json")
     parser.add_argument("--layer-output-dir", default="runtime/background-layers")
     parser.add_argument("--default-state", default="runtime/project-default-state.json")

@@ -50,7 +50,7 @@ async function uploadClipFileForRefresh(file) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/octet-stream',
-      'X-Clip-Filename': encodeURIComponent(file.name || 'background.clip'),
+      'X-Clip-Filename': encodeURIComponent(file.name || 'background.psd'),
     },
     body: file,
   });

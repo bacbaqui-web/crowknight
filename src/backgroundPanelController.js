@@ -34,14 +34,14 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     if (!clipFile) return;
     await runClipRefresh({
       button: backgroundClipUpload,
-      label: '로컬 clip 파일 선택 및 업로드',
+      label: '로컬 PSD 파일 선택 및 업로드',
       clipFile,
     });
   });
   backgroundRefresh?.addEventListener('click', async () => {
     await runClipRefresh({
       button: backgroundRefresh,
-      label: 'clip 배경 새로고침 및 업로드',
+      label: '기본 배경 파일 새로고침 및 업로드',
     });
   });
   backgroundLayerList.addEventListener('input', handleInput);
