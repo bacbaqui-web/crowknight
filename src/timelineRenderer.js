@@ -31,7 +31,9 @@ export function renderKeyframeTimeline({
     toSlot,
     slotToLeft,
     isActive: (frame, slot) =>
-      activeKeyframeId === frame.id || (!activeKeyframeId && fixedFrame === frame.id) || selectedSlot === slot,
+      activeKeyframeId === frame.id ||
+      (!activeKeyframeId && fixedFrame === frame.id) ||
+      (!activeKeyframeId && !fixedFrame && selectedSlot === slot),
     bindDrag,
   });
 }

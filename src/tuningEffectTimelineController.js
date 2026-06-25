@@ -196,7 +196,7 @@ export function createEffectTimelineController({
   function playPreview() {
     ensureEffectSettings(actor().tuning);
     effectPreviewPlaying = true;
-    effectSelection.activeKeyframeId = null;
+    resetSelectionState();
     syncPreview();
 
     const settings = actor().tuning.effectSettings[effectSelect.value];
@@ -224,6 +224,7 @@ export function createEffectTimelineController({
     const t = slotToValue(slot);
     const id = addEffectTimelineKeyframe(actor().tuning, effectSelect.value, t);
     effectSelection.activeKeyframeId = id;
+    effectSelection.fixedFrame = null;
     effectSelection.selectedSlot = slot;
     stopPreview();
     finishTimelineMutation();
@@ -397,6 +398,8 @@ export function createEffectTimelineController({
 
   function selectKeyframeForDrag(id) {
     effectSelection.activeKeyframeId = id;
+    effectSelection.fixedFrame = null;
+    effectSelection.selectedSlot = toSlot(keyframesForTimeline().find((frame) => frame.id === id)?.t ?? 0);
     stopPreview();
     const t = getActiveT();
     setEffectTimelineDragPreview(actor(), effectSelect.value, t);

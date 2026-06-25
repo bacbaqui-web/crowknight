@@ -188,7 +188,7 @@ export function createPoseTimelineController({
   function playPreview() {
     ensurePoseSettings(actor().tuning);
     posePreviewPlaying = true;
-    poseSelection.activeKeyframeId = null;
+    resetSelectionState();
     resetActorPosePreviewClock(actor());
     syncPreview();
 
@@ -217,6 +217,7 @@ export function createPoseTimelineController({
     const t = slotToValue(slot);
     const id = addPoseTimelineKeyframe(actor().tuning, poseSelect.value, t);
     poseSelection.activeKeyframeId = id;
+    poseSelection.fixedFrame = null;
     poseSelection.selectedSlot = slot;
     stopPreview();
     finishTimelineMutation({ resetGroup: true });
@@ -381,6 +382,8 @@ export function createPoseTimelineController({
 
   function selectKeyframeForDrag(id) {
     poseSelection.activeKeyframeId = id;
+    poseSelection.fixedFrame = null;
+    poseSelection.selectedSlot = toSlot(keyframesForTimeline().find((frame) => frame.id === id)?.t ?? 0);
     stopPreview();
     const t = getActiveT();
     setPoseTimelineDragPreview(actor(), poseSelect.value, t);

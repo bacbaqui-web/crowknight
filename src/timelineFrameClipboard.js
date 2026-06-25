@@ -3,16 +3,7 @@ import { ensurePoseOffset, poseKeyframesFor } from './tuningNormalize.js';
 import { effectFrameValue, frameValue } from './animationFrames.js';
 import { pasteEffectTimelineFrame, pastePoseTimelineFramePart } from './timelineKeyframeMutations.js';
 
-export function copyActivePoseTimelineFrame({
-  isOpen,
-  activeKeyframeId,
-  fixedFrame,
-  keyframes,
-  tuning,
-  poseKey,
-  selectedPosePartKeys,
-  activePosePartKey,
-}) {
+export function copyActivePoseTimelineFrame({ isOpen, activeKeyframeId, fixedFrame, keyframes, tuning, poseKey }) {
   if (!isOpen) return null;
   const id = activeKeyframeId || fixedFrame;
   if (!id) return null;
@@ -20,29 +11,20 @@ export function copyActivePoseTimelineFrame({
   const reference = keyframes.find((frame) => frame.id === id);
   if (!reference) return null;
 
-  const selectedParts = selectedPoseFrameCopyParts(selectedPosePartKeys, activePosePartKey);
   return createPoseFrameCopy({
     tuning,
     poseKey,
     id,
     reference,
-    selectedParts,
-    mode: selectedPoseFrameCopyMode(selectedPosePartKeys, activePosePartKey),
-    activePosePartKey,
+    selectedParts: POSE_PART_KEYS,
+    mode: 'frame',
+    activePosePartKey: null,
   });
 }
 
-export function pastePoseTimelineFrameCopy({
-  copiedPoseFrame,
-  id,
-  tuning,
-  poseKey,
-  selectedPosePartKeys,
-  activePosePartKey,
-  ensureKeyframe,
-}) {
+export function pastePoseTimelineFrameCopy({ copiedPoseFrame, id, tuning, poseKey, ensureKeyframe }) {
   if (!copiedPoseFrame || !id) return false;
-  const pasteParts = poseFramePasteParts(copiedPoseFrame, selectedPosePartKeys, activePosePartKey);
+  const pasteParts = POSE_PART_KEYS.map((part) => ({ from: part, to: part }));
 
   pasteParts.forEach(({ from, to }) => {
     if (!from || !to || !copiedPoseFrame.parts[from]) return;
