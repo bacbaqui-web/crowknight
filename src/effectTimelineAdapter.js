@@ -9,6 +9,7 @@ import {
 } from './timelineKeyframeMutations.js';
 import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
 import { createEffectPreview } from './previewState.js';
+import { defineTimelineAdapter } from './timelineAdapterContract.js';
 
 export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   const key = () => effectSelect.value;
@@ -95,23 +96,28 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     getActor().player.effectPreview = createPreview({ playing: false, t });
   }
 
-  return {
-    addKeyframe,
-    createPreview,
-    deleteKeyframe,
-    ensureOffset,
-    ensureKeyframe,
-    ensureSettings,
-    key,
-    keyframes,
-    moveKeyframe,
-    offset,
-    resetAnimation,
-    selectedKeyframe,
-    setDragPreview,
-    settings,
-    settingsByKey,
-    writeFrameValue,
-    writeSetting,
-  };
+  return defineTimelineAdapter(
+    'effect',
+    {
+      addKeyframe,
+      createPreview,
+      deleteKeyframe,
+      ensureKeyframe,
+      ensureSettings,
+      key,
+      keyframes,
+      moveKeyframe,
+      resetAnimation,
+      setDragPreview,
+      settings,
+      settingsByKey,
+      writeFrameValue,
+      writeSetting,
+    },
+    {
+      ensureOffset,
+      offset,
+      selectedKeyframe,
+    }
+  );
 }
