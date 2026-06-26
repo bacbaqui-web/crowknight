@@ -567,11 +567,13 @@
 - 렌더/드래그 바인딩: `timelineControllerView.js`
 - 툴바 상태 동기화: `tuningTimelinePanelSync.js`
 - 재생 설정 동기화: `tuningTimelinePanelSync.js`, `tuningTimelineDom.js`
+- 시각 효과 데이터 접근 adapter 초안: `effectTimelineAdapter.js`
 
 아직 분리되어 있는 부분:
 
 - 필드 렌더링
-- 데이터 읽기/쓰기 adapter
+- 파츠 애니메이션 데이터 읽기/쓰기 adapter
+- 시각 효과 mutation/preview adapter
 - 미리보기 동기화
 - 패널별 선택 상태 처리
 
@@ -820,6 +822,15 @@ src/
 - 시각 효과 데이터 접근은 `effectTimelineAdapter`로 이동한다.
 - 기존 UI와 저장 구조는 유지한다.
 
+현재 시작된 것:
+
+- `src/effectTimelineAdapter.js`가 시각 효과 키, 설정, offset, 키프레임 접근을 맡기 시작했다.
+
+남은 것:
+
+- 시각 효과 mutation 호출을 adapter 경계로 더 옮긴다.
+- 시각 효과 preview 생성 입력을 adapter 형태로 정리한다.
+
 ### 8.3 3단계: 파츠 애니메이션 타임라인을 adapter로 이전
 
 파츠 애니메이션은 다중 파츠/그룹 편집 때문에 더 복잡하다.
@@ -887,7 +898,7 @@ createTimelineController({
 3. 캐릭터 정의에 사용 동작/스킬 목록 추가
 4. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
 5. 패널별 선택 상태 차이 정리
-6. 시각 효과 타임라인 adapter 도입
+6. 시각 효과 타임라인 adapter 확장
 7. 파츠 애니메이션 타임라인 adapter 도입
 8. 단일 `createTimelineController` 도입
 9. 히트박스 타임라인화 검토
