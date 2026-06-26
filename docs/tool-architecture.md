@@ -812,6 +812,8 @@ src/
 - 공통 재생 설정 동기화
 - 공통 미리보기 동기화 흐름
 - 공통 active time adapter 계약
+- 1차 `createTimelineControllerCore()` 도입
+- 공통 컨트롤러 반환 메서드 조립
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
 - 공통 adapter 계약: `timelineAdapterContract.js`
@@ -819,7 +821,7 @@ src/
 다음 작업:
 
 - 패널별 선택 상태 차이 정리
-- `createTimelineControllerCore()` 설계
+- `createTimelineControllerCore()` 적용 범위 확장
 
 ### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
 
