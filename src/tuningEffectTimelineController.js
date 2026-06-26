@@ -2,7 +2,7 @@ import { createEffectTimelineAdapter } from './effectTimelineAdapter.js';
 import { effectPropertyGroups } from './tuningFieldGroups.js';
 import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
-import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
+import { markActiveKeyframeButton } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
   addTimelineKeyframeAction,
@@ -10,7 +10,7 @@ import {
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   finishTimelineMutationAction,
-  moveTimelineKeyframeAction,
+  moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
@@ -378,18 +378,17 @@ export function createEffectTimelineController({
   }
 
   function moveKeyframe(id, t) {
-    moveTimelineKeyframeAction({
+    moveTimelineKeyframeWithPreviewAction({
       id,
       t,
       keyframes: keyframesForTimeline(),
       toSlot,
       slotToValue,
       moveKeyframe: (nextT) => effectTimeline.moveKeyframe(id, nextT),
-      afterMove: (next) => {
-        applySelected();
-        effectTimeline.setDragPreview(next.t);
-        moveKeyframeButtons(effectTimelineTrack, id, next.slot, slotToLeft(next.slot));
-      },
+      applySelected,
+      setDragPreview: effectTimeline.setDragPreview,
+      track: effectTimelineTrack,
+      slotToLeft,
     });
   }
 

@@ -1,6 +1,6 @@
 import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
-import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
+import { markActiveKeyframeButton } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
   addTimelineKeyframeAction,
@@ -8,7 +8,7 @@ import {
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   finishTimelineMutationAction,
-  moveTimelineKeyframeAction,
+  moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
@@ -357,18 +357,17 @@ export function createPoseTimelineController({
   }
 
   function moveKeyframe(id, t) {
-    moveTimelineKeyframeAction({
+    moveTimelineKeyframeWithPreviewAction({
       id,
       t,
       keyframes: keyframesForTimeline(),
       toSlot,
       slotToValue,
       moveKeyframe: (nextT) => poseTimeline.moveKeyframe(id, nextT),
-      afterMove: (next) => {
-        applySelected();
-        poseTimeline.setDragPreview(next.t);
-        moveKeyframeButtons(poseTimelineTrack, id, next.slot, slotToLeft(next.slot));
-      },
+      applySelected,
+      setDragPreview: poseTimeline.setDragPreview,
+      track: poseTimelineTrack,
+      slotToLeft,
     });
   }
 

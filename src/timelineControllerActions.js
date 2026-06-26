@@ -1,4 +1,5 @@
 import { selectedOrFirstEmptySlot } from './tuningTimelineDom.js';
+import { moveKeyframeButtons } from './timelineDragControls.js';
 import {
   assignTimelineSelection,
   clearedTimelineSelection,
@@ -220,4 +221,31 @@ export function moveTimelineKeyframeAction({ id, t, keyframes, toSlot, slotToVal
   if (!moveKeyframe(next.t)) return false;
   afterMove(next);
   return true;
+}
+
+export function moveTimelineKeyframeWithPreviewAction({
+  id,
+  t,
+  keyframes,
+  toSlot,
+  slotToValue,
+  moveKeyframe,
+  applySelected,
+  setDragPreview,
+  track,
+  slotToLeft,
+}) {
+  return moveTimelineKeyframeAction({
+    id,
+    t,
+    keyframes,
+    toSlot,
+    slotToValue,
+    moveKeyframe,
+    afterMove: (next) => {
+      applySelected();
+      setDragPreview(next.t);
+      moveKeyframeButtons(track, id, next.slot, slotToLeft(next.slot));
+    },
+  });
 }
