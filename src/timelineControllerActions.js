@@ -64,6 +64,22 @@ export function applyTimelineSelectionAction({ targetSelection, nextSelection, b
   refresh();
 }
 
+export function updateTimelineSettingAction({
+  prop,
+  value,
+  beginUndo,
+  ensureSettings,
+  writeSetting,
+  applySelected,
+  syncPreview,
+}) {
+  beginUndo();
+  ensureSettings();
+  writeSetting(prop, value);
+  applySelected();
+  syncPreview();
+}
+
 export function resetTimelineAnimationAction({
   beginUndo,
   resetAnimation,

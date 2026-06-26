@@ -20,6 +20,7 @@ import {
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
   setFixedTimelineFrameSelectionAction,
+  updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
@@ -179,11 +180,15 @@ export function createEffectTimelineController({
   const hasFrameSelection = () => effectSection.classList.contains('is-open') && hasTimelineSelection(effectSelection);
 
   function updateSetting(prop, value) {
-    beginUndoSnapshot();
-    effectTimeline.ensureSettings();
-    effectTimeline.writeSetting(prop, value);
-    applySelected();
-    syncPreview();
+    updateTimelineSettingAction({
+      prop,
+      value,
+      beginUndo: beginUndoSnapshot,
+      ensureSettings: effectTimeline.ensureSettings,
+      writeSetting: effectTimeline.writeSetting,
+      applySelected,
+      syncPreview,
+    });
   }
 
   function playPreview() {

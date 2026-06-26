@@ -17,6 +17,7 @@ import {
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
+  updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import {
@@ -129,11 +130,15 @@ export function createPoseTimelineController({
   }
 
   function updateSetting(prop, value) {
-    beginUndoSnapshot();
-    poseTimeline.ensureSettings();
-    poseTimeline.writeSetting(prop, value);
-    applySelected();
-    syncPreview();
+    updateTimelineSettingAction({
+      prop,
+      value,
+      beginUndo: beginUndoSnapshot,
+      ensureSettings: poseTimeline.ensureSettings,
+      writeSetting: poseTimeline.writeSetting,
+      applySelected,
+      syncPreview,
+    });
   }
 
   function readDisplayValue(partKey, offset, prop) {
