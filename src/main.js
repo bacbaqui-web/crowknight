@@ -1,4 +1,5 @@
 import { drawAttackTrail } from './actorEffectsRenderer.js';
+import { captureActorMotionStart, updatePausedActors } from './actorFrameState.js';
 import { drawActor } from './actorRenderer.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { loadEffectAssets } from './assetLoaders.js';
@@ -153,7 +154,7 @@ function loop(now) {
 }
 
 function update(dt) {
-  captureActorMotionStart();
+  captureActorMotionStart(actors);
 
   if (playerDeathPending) {
     updatePlayerDeathSequence(dt);
@@ -167,13 +168,7 @@ function update(dt) {
 
   if (!battleActive) {
     playerActor.player.update(dt, keys, pressed, world);
-    actors.slice(1).forEach((actor) => {
-      actor.player.animTime += dt;
-      actor.player.vx = 0;
-      actor.player.vy = 0;
-      actor.player.attackTime = Math.min(actor.player.attackTime, 0);
-      actor.player.updateState();
-    });
+    updatePausedActors(actors.slice(1), dt, { clearAttackTime: true });
     updateRollGhosts(actors, dt);
     particleEffects.emitDust(dt);
     particleEffects.update(dt);
@@ -206,13 +201,6 @@ function update(dt) {
   updateRollGhosts(actors, dt);
   particleEffects.emitDust(dt);
   particleEffects.update(dt);
-}
-
-function captureActorMotionStart() {
-  actors.forEach((actor) => {
-    actor.previousOnGround = actor.player.onGround;
-    actor.previousVy = actor.player.vy;
-  });
 }
 
 function beginPlayerDeath() {
@@ -255,13 +243,7 @@ function updatePlayerDeathSequence(dt) {
   player.vy = 0;
   player.updateState();
 
-  actors.slice(1).forEach((actor) => {
-    actor.player.animTime += dt;
-    actor.player.vx = 0;
-    actor.player.vy = 0;
-    actor.player.attackTime = Math.min(actor.player.attackTime, 0);
-    actor.player.updateState();
-  });
+  updatePausedActors(actors.slice(1), dt, { clearAttackTime: true });
 
   updateRollGhosts(actors, dt);
   particleEffects.update(dt);
@@ -282,12 +264,7 @@ function updateResultScene(dt) {
   player.y = world.floorY;
   player.updateState();
 
-  actors.slice(1).forEach((actor) => {
-    actor.player.animTime += dt;
-    actor.player.vx = 0;
-    actor.player.vy = 0;
-    actor.player.updateState();
-  });
+  updatePausedActors(actors.slice(1), dt);
 
   particleEffects.update(dt);
 }
