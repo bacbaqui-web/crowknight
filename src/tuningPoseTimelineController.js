@@ -18,7 +18,7 @@ import {
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
 } from './timelineControllerActions.js';
-import { activeTimelineT, createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
+import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
@@ -28,7 +28,7 @@ import {
 import { isMasterPart } from './tuningLabels.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
-import { MASTER_PART_KEY, POSE_PART_KEYS } from './gameConfig.js';
+import { MASTER_PART_KEY } from './gameConfig.js';
 import { defineTimelineController } from './timelineControllerContract.js';
 
 export function createPoseTimelineController({
@@ -398,15 +398,10 @@ export function createPoseTimelineController({
   }
 
   function getActiveT() {
-    const activePosePartKey = getActivePosePartKey();
-    const frames = poseSelection.activeKeyframeId ? poseTimeline.offset(activePosePartKey || POSE_PART_KEYS[0]) : null;
-    return activeTimelineT({
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      selectedSlot: poseSelection.selectedSlot,
-      fixedFrame: poseSelection.fixedFrame,
-      keyframes: keyframesForTimeline(),
-      selectedKeyframe: frames?.keyframes?.find((frame) => frame.id === poseSelection.activeKeyframeId),
+    return poseTimeline.activeT({
+      selection: poseSelection,
       frameCount: getFrameCount(),
+      activePosePartKey: getActivePosePartKey(),
     });
   }
 

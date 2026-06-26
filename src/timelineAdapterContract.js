@@ -1,4 +1,5 @@
 export const COMMON_TIMELINE_ADAPTER_METHODS = [
+  'activeT',
   'addKeyframe',
   'copyFrame',
   'createPreview',

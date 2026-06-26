@@ -10,6 +10,7 @@ import {
 import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
 import { createEffectPreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
+import { activeTimelineT } from './timelineState.js';
 import {
   copyActiveEffectTimelineFrame,
   pasteEffectTimelineFrameCopy,
@@ -48,6 +49,17 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   function selectedKeyframe(id) {
     ensureOffset();
     return offset()?.keyframes?.find((frame) => frame.id === id);
+  }
+
+  function activeT({ selection, frameCount }) {
+    return activeTimelineT({
+      activeKeyframeId: selection.activeKeyframeId,
+      selectedSlot: selection.selectedSlot,
+      fixedFrame: selection.fixedFrame,
+      keyframes: keyframes(),
+      selectedKeyframe: selectedKeyframe(selection.activeKeyframeId),
+      frameCount,
+    });
   }
 
   function addKeyframe(t) {
@@ -134,6 +146,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   return defineTimelineAdapter(
     'effect',
     {
+      activeT,
       addKeyframe,
       copyFrame,
       createPreview,

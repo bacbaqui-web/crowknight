@@ -13,6 +13,7 @@ import { POSE_PART_KEYS } from './gameConfig.js';
 import { isMasterPart } from './tuningLabels.js';
 import { createPosePreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
+import { activeTimelineT } from './timelineState.js';
 import {
   copyActivePoseTimelineFrame,
   pastePoseTimelineFrameCopy,
@@ -54,6 +55,18 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
 
   function selectedKeyframe(part, id) {
     return offset(part)?.keyframes?.find((frame) => frame.id === id);
+  }
+
+  function activeT({ selection, frameCount, activePosePartKey = null }) {
+    const part = activePosePartKey || POSE_PART_KEYS[0];
+    return activeTimelineT({
+      activeKeyframeId: selection.activeKeyframeId,
+      selectedSlot: selection.selectedSlot,
+      fixedFrame: selection.fixedFrame,
+      keyframes: keyframes(),
+      selectedKeyframe: selection.activeKeyframeId ? selectedKeyframe(part, selection.activeKeyframeId) : null,
+      frameCount,
+    });
   }
 
   function addKeyframe(t) {
@@ -150,6 +163,7 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
   return defineTimelineAdapter(
     'pose',
     {
+      activeT,
       addKeyframe,
       copyFrame,
       createPreview,

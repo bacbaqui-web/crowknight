@@ -21,7 +21,7 @@ import {
   selectTimelineSlotAction,
   setFixedTimelineFrameSelectionAction,
 } from './timelineControllerActions.js';
-import { activeTimelineT, createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
+import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
@@ -422,12 +422,8 @@ export function createEffectTimelineController({
   }
 
   function getActiveT() {
-    return activeTimelineT({
-      activeKeyframeId: effectSelection.activeKeyframeId,
-      selectedSlot: effectSelection.selectedSlot,
-      fixedFrame: effectSelection.fixedFrame,
-      keyframes: keyframesForTimeline(),
-      selectedKeyframe: effectTimeline.selectedKeyframe(effectSelection.activeKeyframeId),
+    return effectTimeline.activeT({
+      selection: effectSelection,
       frameCount: getFrameCount(),
     });
   }
