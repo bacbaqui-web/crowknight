@@ -277,8 +277,35 @@
 - `src/timelineKeyframeMutations.js`
 - `src/timelineRenderer.js`
 - `src/timelineState.js`
+- `src/timelineControllerContract.js`
 - `src/tuningTimelineAccessors.js`
 - `src/tuningTimelinePreview.js`
+
+공통 타임라인 컨트롤러 계약:
+
+동작 타임라인과 시각 효과 타임라인은 최소한 아래 메서드를 공통으로 제공해야 한다.
+
+- `addKeyframe`
+- `deleteKeyframe`
+- `copyFrame`
+- `pasteFrame`
+- `resetAnimation`
+- `resetSelectionState`
+- `currentFrameValue`
+- `writeFrameValue`
+- `hasFrameSelection`
+- `stepDuration`
+- `togglePlayback`
+- `togglePlaybackMode`
+- `updatePlaybackRate`
+- `updateSetting`
+- `stopPreview`
+- `syncPreview`
+
+각 타임라인은 이 공통 계약 위에 세션별 확장 메서드를 추가할 수 있다.
+
+- 동작 타임라인: 파츠 필드 렌더링, 그룹 편집, 포즈 툴바 동기화
+- 시각 효과 타임라인: 효과 필드 렌더링, 효과 이미지 미리보기, 효과 선택 초기화
 
 ### 3.5 동작/스킬 애니메이션 편집
 
@@ -533,6 +560,7 @@
 
 최근 일부 공통화가 진행된 상태:
 
+- 공통 컨트롤러 계약: `timelineControllerContract.js`
 - 키프레임 추가/삭제: `timelineControllerActions.js`
 - 선택/드래그 선택/드래그 이동: `timelineControllerActions.js`
 - 복사/붙여넣기 코어: `timelineFrameClipboard.js`
@@ -548,9 +576,9 @@
 
 ### 4.2 `tuningPanel.js`가 너무 많은 책임을 가짐
 
-`tuningPanel.js`는 패널 생성, 상태 연결, 선택 상태, undo, 컨트롤러 생성, 파일 업로드 버튼까지 많은 책임을 가진다.
+`tuningPanel.js`는 패널 생성, 상태 연결, 선택 상태, undo, 컨트롤러 생성까지 여러 책임을 가진다.
 
-현재 600줄 이상이며, 앞으로 더 커지면 유지보수가 어려워진다.
+현재는 일부 분리가 진행되어 500줄 안팎이지만, 앞으로 다시 커지면 유지보수가 어려워진다.
 
 분리 후보:
 
