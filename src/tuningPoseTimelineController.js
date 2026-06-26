@@ -1,17 +1,8 @@
-import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './tuningNormalize.js';
+import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
-import { partPositionSources } from './tuningParts.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
-import {
-  addPoseTimelineKeyframe,
-  deletePoseTimelineKeyframe,
-  ensurePoseTimelineKeyframe,
-  movePoseTimelineKeyframe,
-  resetPoseTimelineAnimation,
-  writePoseTimelineFrameValue,
-} from './timelineKeyframeMutations.js';
 import {
   copyActivePoseTimelineFrame,
   pastePoseTimelineFrameCopy,
@@ -32,7 +23,6 @@ import {
   createTimelineSelectionState,
   hasTimelineSelection,
 } from './timelineState.js';
-import { writePoseTimelineSetting } from './tuningTimelineSettings.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
@@ -76,6 +66,7 @@ export function createPoseTimelineController({
   let posePreviewPlaying = false;
   let posePreviewTimer = null;
   let copiedPoseFrame = null;
+  const poseTimeline = createPoseTimelineAdapter({ getActor: actor, poseSelect });
 
   const {
     frameCount: getFrameCount,
@@ -84,9 +75,9 @@ export function createPoseTimelineController({
     slotToValue,
     slotToLeft,
   } = createTimelineAccessors({
-    ensureSettings: () => ensurePoseSettings(actor().tuning),
-    settingsByKey: () => actor().tuning.poseSettings,
-    key: () => poseSelect.value,
+    ensureSettings: poseTimeline.ensureSettings,
+    settingsByKey: poseTimeline.settingsByKey,
+    key: poseTimeline.key,
   });
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount,
@@ -98,7 +89,7 @@ export function createPoseTimelineController({
     stopPreview,
     syncPreview,
     playPreview,
-    settings: () => actor().tuning.poseSettings[poseSelect.value],
+    settings: poseTimeline.settings,
   });
   const renderTimeline = createControllerTimelineRenderer({
     renderSettings,
@@ -120,8 +111,8 @@ export function createPoseTimelineController({
   }
 
   function renderSettings() {
-    ensurePoseSettings(actor().tuning);
-    const settings = actor().tuning.poseSettings[poseSelect.value];
+    poseTimeline.ensureSettings();
+    const settings = poseTimeline.settings();
     setFrameSelectionActive(
       renderPoseTimelineSettingsView(elements, {
         settings,
@@ -156,14 +147,14 @@ export function createPoseTimelineController({
 
   function updateSetting(prop, value) {
     beginUndoSnapshot();
-    ensurePoseSettings(actor().tuning);
-    writePoseTimelineSetting(actor().tuning.poseSettings, poseSelect.value, prop, value);
+    poseTimeline.ensureSettings();
+    poseTimeline.writeSetting(prop, value);
     applySelected();
     syncPreview();
   }
 
   function readDisplayValue(partKey, offset, prop) {
-    return readPoseFrameDisplayValue(partKey, offset, prop, partPositionSources(actor().tuning.rig)[partKey] || {});
+    return readPoseFrameDisplayValue(partKey, offset, prop, poseTimeline.source(partKey));
   }
 
   function updateOffset(prop, value) {
@@ -171,12 +162,7 @@ export function createPoseTimelineController({
     stopPreview();
     const partKey = getActivePosePartKey() || MASTER_PART_KEY;
     const offset = currentFrameValue(partKey);
-    const writeValue = poseFrameValueFromInput(
-      partKey,
-      prop,
-      value,
-      partPositionSources(actor().tuning.rig)[partKey] || {}
-    );
+    const writeValue = poseFrameValueFromInput(partKey, prop, value, poseTimeline.source(partKey));
     writeFrameValue(partKey, prop, writeValue);
     syncPreview();
     applySelected();
@@ -185,37 +171,34 @@ export function createPoseTimelineController({
 
   function currentFrameValue(part) {
     return currentPoseTimelineFrame({
-      tuning: actor().tuning,
-      poseKey: poseSelect.value,
+      tuning: poseTimeline.tuning(),
+      poseKey: poseTimeline.key(),
       part,
       activeKeyframeId: poseSelection.activeKeyframeId,
       fixedFrame: poseSelection.fixedFrame,
       isMasterPart: isMasterPart(part),
-      ensureKeyframe: ensureKeyframeForPart,
+      ensureKeyframe: poseTimeline.ensureKeyframe,
     });
   }
 
   function writeFrameValue(part, prop, value) {
-    const frames = actor().tuning.poseOffsets[poseSelect.value][part];
-    writePoseTimelineFrameValue({
-      frames,
+    poseTimeline.writeFrameValue({
+      part,
       prop,
       value,
       activeKeyframeId: poseSelection.activeKeyframeId,
       fixedFrame: poseSelection.fixedFrame,
-      allowRootAnchorWrite: isMasterPart(part),
-      ensureKeyframe: ensureKeyframeForPart,
     });
   }
 
   function playPreview() {
-    ensurePoseSettings(actor().tuning);
+    poseTimeline.ensureSettings();
     posePreviewPlaying = true;
     resetSelectionState();
     resetActorPosePreviewClock(actor());
     syncPreview();
 
-    const settings = actor().tuning.poseSettings[poseSelect.value];
+    const settings = poseTimeline.settings();
     posePreviewTimer = restartTimelinePreviewTimer({
       timer: posePreviewTimer,
       settings,
@@ -240,7 +223,7 @@ export function createPoseTimelineController({
       lastSlot: getLastSlot(),
       toSlot,
       slotToValue,
-      addKeyframe: (t) => addPoseTimelineKeyframe(actor().tuning, poseSelect.value, t),
+      addKeyframe: poseTimeline.addKeyframe,
       beginUndo: beginUndoSnapshot,
       stopPreview,
       finish: () => finishTimelineMutation({ resetGroup: true }),
@@ -250,7 +233,7 @@ export function createPoseTimelineController({
   function deleteKeyframe() {
     deleteTimelineKeyframeAction({
       selection: poseSelection,
-      deleteKeyframe: (id) => deletePoseTimelineKeyframe(actor().tuning, poseSelect.value, id),
+      deleteKeyframe: poseTimeline.deleteKeyframe,
       beginUndo: beginUndoSnapshot,
       resetSelection: resetSelectionState,
       stopPreview,
@@ -260,7 +243,7 @@ export function createPoseTimelineController({
 
   function resetAnimation() {
     beginUndoSnapshot();
-    resetPoseTimelineAnimation(actor().tuning, poseSelect.value);
+    poseTimeline.resetAnimation();
     resetSelectionState();
     copiedPoseFrame = null;
     stopPreview();
@@ -273,8 +256,8 @@ export function createPoseTimelineController({
       activeKeyframeId: poseSelection.activeKeyframeId,
       fixedFrame: poseSelection.fixedFrame,
       keyframes: keyframesForTimeline(),
-      tuning: actor().tuning,
-      poseKey: poseSelect.value,
+      tuning: poseTimeline.tuning(),
+      poseKey: poseTimeline.key(),
       selectedPosePartKeys,
       activePosePartKey: getActivePosePartKey(),
     });
@@ -295,11 +278,11 @@ export function createPoseTimelineController({
     pastePoseTimelineFrameCopy({
       copiedPoseFrame,
       id,
-      tuning: actor().tuning,
-      poseKey: poseSelect.value,
+      tuning: poseTimeline.tuning(),
+      poseKey: poseTimeline.key(),
       selectedPosePartKeys,
       activePosePartKey: getActivePosePartKey(),
-      ensureKeyframe: ensureKeyframeForPart,
+      ensureKeyframe: poseTimeline.ensureKeyframe,
     });
 
     finishTimelineMutation({ resetGroup: true, syncToolbar: true });
@@ -310,7 +293,7 @@ export function createPoseTimelineController({
       selection: poseSelection,
       keyframes: keyframesForTimeline(),
       slotToValue,
-      addKeyframe: (t) => addPoseTimelineKeyframe(actor().tuning, poseSelect.value, t),
+      addKeyframe: poseTimeline.addKeyframe,
     });
   }
 
@@ -390,10 +373,10 @@ export function createPoseTimelineController({
       keyframes: keyframesForTimeline(),
       toSlot,
       slotToValue,
-      moveKeyframe: (nextT) => movePoseTimelineKeyframe(actor().tuning, poseSelect.value, id, nextT),
+      moveKeyframe: (nextT) => poseTimeline.moveKeyframe(id, nextT),
       afterMove: (next) => {
         applySelected();
-        setPoseTimelineDragPreview(actor(), poseSelect.value, next.t);
+        setPoseTimelineDragPreview(actor(), poseTimeline.key(), next.t);
         moveKeyframeButtons(poseTimelineTrack, id, next.slot, slotToLeft(next.slot));
       },
     });
@@ -407,7 +390,7 @@ export function createPoseTimelineController({
       toSlot,
       stopPreview,
       getActiveT,
-      setDragPreview: (t) => setPoseTimelineDragPreview(actor(), poseSelect.value, t),
+      setDragPreview: (t) => setPoseTimelineDragPreview(actor(), poseTimeline.key(), t),
       setDeleteDisabled: (disabled) => {
         poseDeleteKeyframe.disabled = disabled;
       },
@@ -417,9 +400,7 @@ export function createPoseTimelineController({
 
   function getActiveT() {
     const activePosePartKey = getActivePosePartKey();
-    const frames = poseSelection.activeKeyframeId
-      ? actor().tuning.poseOffsets[poseSelect.value]?.[activePosePartKey || POSE_PART_KEYS[0]]
-      : null;
+    const frames = poseSelection.activeKeyframeId ? poseTimeline.offset(activePosePartKey || POSE_PART_KEYS[0]) : null;
     return activeTimelineT({
       activeKeyframeId: poseSelection.activeKeyframeId,
       selectedSlot: poseSelection.selectedSlot,
@@ -430,14 +411,8 @@ export function createPoseTimelineController({
     });
   }
 
-  function ensureKeyframeForPart(frames, id) {
-    return ensurePoseTimelineKeyframe(frames, id, keyframesForTimeline());
-  }
-
   function keyframesForTimeline() {
-    ensurePoseOffset(actor().tuning, poseSelect.value, POSE_PART_KEYS[0]);
-    const frames = actor().tuning.poseOffsets[poseSelect.value][POSE_PART_KEYS[0]];
-    return poseKeyframesFor(frames);
+    return poseTimeline.keyframes();
   }
 
   function syncPreview() {
@@ -451,8 +426,8 @@ export function createPoseTimelineController({
       activeKeyframeId: poseSelection.activeKeyframeId,
       fixedFrame: poseSelection.fixedFrame,
       selectedSlot: poseSelection.selectedSlot,
-      poseKey: poseSelect.value,
-      settings: actor().tuning.poseSettings[poseSelect.value] || {},
+      poseKey: poseTimeline.key(),
+      settings: poseTimeline.settings() || {},
       getActiveT,
     });
   }

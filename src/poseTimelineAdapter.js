@@ -1,0 +1,107 @@
+import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './tuningNormalize.js';
+import { partPositionSources } from './tuningParts.js';
+import {
+  addPoseTimelineKeyframe,
+  deletePoseTimelineKeyframe,
+  ensurePoseTimelineKeyframe,
+  movePoseTimelineKeyframe,
+  resetPoseTimelineAnimation,
+  writePoseTimelineFrameValue,
+} from './timelineKeyframeMutations.js';
+import { writePoseTimelineSetting } from './tuningTimelineSettings.js';
+import { POSE_PART_KEYS } from './gameConfig.js';
+import { isMasterPart } from './tuningLabels.js';
+
+export function createPoseTimelineAdapter({ getActor, poseSelect }) {
+  const key = () => poseSelect.value;
+  const tuning = () => getActor().tuning;
+
+  function ensureSettings() {
+    ensurePoseSettings(tuning());
+  }
+
+  function settingsByKey() {
+    return tuning().poseSettings;
+  }
+
+  function settings() {
+    return tuning().poseSettings[key()];
+  }
+
+  function ensureOffset(part) {
+    ensurePoseOffset(tuning(), key(), part);
+  }
+
+  function offset(part) {
+    return tuning().poseOffsets[key()]?.[part];
+  }
+
+  function source(part) {
+    return partPositionSources(tuning().rig)[part] || {};
+  }
+
+  function keyframes() {
+    ensureOffset(POSE_PART_KEYS[0]);
+    return poseKeyframesFor(offset(POSE_PART_KEYS[0]));
+  }
+
+  function selectedKeyframe(part, id) {
+    return offset(part)?.keyframes?.find((frame) => frame.id === id);
+  }
+
+  function addKeyframe(t) {
+    return addPoseTimelineKeyframe(tuning(), key(), t);
+  }
+
+  function deleteKeyframe(id) {
+    deletePoseTimelineKeyframe(tuning(), key(), id);
+  }
+
+  function moveKeyframe(id, t) {
+    return movePoseTimelineKeyframe(tuning(), key(), id, t);
+  }
+
+  function resetAnimation() {
+    resetPoseTimelineAnimation(tuning(), key());
+  }
+
+  function ensureKeyframe(frames, id) {
+    return ensurePoseTimelineKeyframe(frames, id, keyframes());
+  }
+
+  function writeFrameValue({ part, prop, value, activeKeyframeId, fixedFrame }) {
+    return writePoseTimelineFrameValue({
+      frames: offset(part),
+      prop,
+      value,
+      activeKeyframeId,
+      fixedFrame,
+      allowRootAnchorWrite: isMasterPart(part),
+      ensureKeyframe,
+    });
+  }
+
+  function writeSetting(prop, value) {
+    writePoseTimelineSetting(settingsByKey(), key(), prop, value);
+  }
+
+  return {
+    addKeyframe,
+    deleteKeyframe,
+    ensureKeyframe,
+    ensureOffset,
+    ensureSettings,
+    key,
+    keyframes,
+    moveKeyframe,
+    offset,
+    resetAnimation,
+    selectedKeyframe,
+    settings,
+    settingsByKey,
+    source,
+    tuning,
+    writeFrameValue,
+    writeSetting,
+  };
+}
