@@ -2,7 +2,7 @@ import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './tuning
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { partPositionSources } from './tuningParts.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
-import { bindControllerKeyframeDrag, renderControllerTimeline } from './timelineControllerView.js';
+import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addPoseTimelineKeyframe,
@@ -99,6 +99,20 @@ export function createPoseTimelineController({
     syncPreview,
     playPreview,
     settings: () => actor().tuning.poseSettings[poseSelect.value],
+  });
+  const renderTimeline = createControllerTimelineRenderer({
+    renderSettings,
+    track: poseTimelineTrack,
+    frameCount: getFrameCount,
+    keyframes: keyframesForTimeline,
+    selection: poseSelection,
+    lastSlot: getLastSlot,
+    toSlot,
+    slotToLeft,
+    selectSlot,
+    bindDrag: bindKeyframeDragHandler,
+    addButton: poseAddKeyframe,
+    deleteButton: poseDeleteKeyframe,
   });
 
   function actor() {
@@ -307,23 +321,6 @@ export function createPoseTimelineController({
     applySelected();
     commitUndoSnapshot();
     if (syncToolbar) syncToolbarButtons();
-  }
-
-  function renderTimeline() {
-    renderControllerTimeline({
-      renderSettings,
-      track: poseTimelineTrack,
-      frameCount: getFrameCount(),
-      keyframes: keyframesForTimeline(),
-      selection: poseSelection,
-      lastSlot: getLastSlot(),
-      toSlot,
-      slotToLeft,
-      selectSlot,
-      bindDrag: bindKeyframeDragHandler,
-      addButton: poseAddKeyframe,
-      deleteButton: poseDeleteKeyframe,
-    });
   }
 
   function selectKeyframe(id) {

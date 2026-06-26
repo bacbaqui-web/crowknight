@@ -3,7 +3,7 @@ import { effectPropertyGroups } from './tuningFieldGroups.js';
 import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
-import { bindControllerKeyframeDrag, renderControllerTimeline } from './timelineControllerView.js';
+import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   addEffectTimelineKeyframe,
@@ -100,6 +100,20 @@ export function createEffectTimelineController({
     syncPreview,
     playPreview,
     settings: () => actor().tuning.effectSettings[effectSelect.value],
+  });
+  const renderTimeline = createControllerTimelineRenderer({
+    renderSettings,
+    track: effectTimelineTrack,
+    frameCount: getFrameCount,
+    keyframes: keyframesForTimeline,
+    selection: effectSelection,
+    lastSlot: getLastSlot,
+    toSlot,
+    slotToLeft,
+    selectSlot,
+    bindDrag: bindKeyframeDragHandler,
+    addButton: effectAddKeyframe,
+    deleteButton: effectDeleteKeyframe,
   });
 
   function actor() {
@@ -305,23 +319,6 @@ export function createEffectTimelineController({
     syncPreview();
     applySelected();
     commitUndoSnapshot();
-  }
-
-  function renderTimeline() {
-    renderControllerTimeline({
-      renderSettings,
-      track: effectTimelineTrack,
-      frameCount: getFrameCount(),
-      keyframes: keyframesForTimeline(),
-      selection: effectSelection,
-      lastSlot: getLastSlot(),
-      toSlot,
-      slotToLeft,
-      selectSlot,
-      bindDrag: bindKeyframeDragHandler,
-      addButton: effectAddKeyframe,
-      deleteButton: effectDeleteKeyframe,
-    });
   }
 
   function selectKeyframe(id) {
