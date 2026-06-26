@@ -21,8 +21,6 @@ import {
 } from './tuningEditHandleGeometry.js';
 import { initializeTuningPanelControls } from './tuningPanelControlSetup.js';
 import { createTuningPanelUndoState } from './tuningPanelUndoState.js';
-import { createEffectTimelineController } from './tuningEffectTimelineController.js';
-import { createPoseTimelineController } from './tuningPoseTimelineController.js';
 import { createTuningPanelCanvasController } from './tuningPanelCanvasController.js';
 import { createTuningPanelPartController } from './tuningPanelPartController.js';
 import { createTuningPanelLifecycleController } from './tuningPanelLifecycleController.js';
@@ -32,6 +30,7 @@ import { handlePanelKeyboardShortcut } from './tuningPanelShortcuts.js';
 import { TUNING_FIELDS } from './gameConfig.js';
 import { createBackgroundPanelController } from './backgroundPanelController.js';
 import { bindTuningPanelAssetActions } from './tuningPanelAssetActions.js';
+import { createTuningPanelTimelines } from './tuningPanelTimelines.js';
 
 export function createTuningPanel({
   canvas,
@@ -184,10 +183,12 @@ export function createTuningPanel({
         beginChange: beginUndoSnapshot,
         commitChange: commitUndoSnapshot,
       });
-    poseTimeline = createPoseTimelineController({
+    ({ poseTimeline, effectTimeline } = createTuningPanelTimelines({
       actors,
+      effectAssets,
       elements: panelElements,
       undoState,
+      scrubCallbacks,
       selectedPosePartKeys: selectedPosePartKeysGlobal,
       getSelectedActor: () => selectedActor,
       getActivePosePartKey: () => activePosePartKey,
@@ -202,21 +203,7 @@ export function createTuningPanel({
       beginUndoSnapshot,
       commitUndoSnapshot,
       applySelected,
-    });
-    effectTimeline = createEffectTimelineController({
-      actors,
-      effectAssets,
-      elements: panelElements,
-      undoState,
-      scrubCallbacks,
-      getSelectedActor: () => selectedActor,
-      setEditContext: (value) => {
-        editContext = value;
-      },
-      beginUndoSnapshot,
-      commitUndoSnapshot,
-      applySelected,
-    });
+    }));
     bindTuningPanelAssetActions({
       elements: panelElements,
       effectAssets,
