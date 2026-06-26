@@ -13,7 +13,11 @@ import { POSE_PART_KEYS } from './gameConfig.js';
 import { isMasterPart } from './tuningLabels.js';
 import { createPosePreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
-import { copyActivePoseTimelineFrame, pastePoseTimelineFrameCopy } from './timelineFrameClipboard.js';
+import {
+  copyActivePoseTimelineFrame,
+  pastePoseTimelineFrameCopy,
+  timelinePasteTargetFrameId,
+} from './timelineFrameClipboard.js';
 
 export function createPoseTimelineAdapter({ getActor, poseSelect }) {
   const key = () => poseSelect.value;
@@ -134,6 +138,15 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     });
   }
 
+  function pasteTargetFrameId({ selection, slotToValue }) {
+    return timelinePasteTargetFrameId({
+      selection,
+      keyframes: keyframes(),
+      slotToValue,
+      addKeyframe,
+    });
+  }
+
   return defineTimelineAdapter(
     'pose',
     {
@@ -151,6 +164,7 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
       settings,
       settingsByKey,
       pasteFrameCopy,
+      pasteTargetFrameId,
       writeFrameValue,
       writeSetting,
     },

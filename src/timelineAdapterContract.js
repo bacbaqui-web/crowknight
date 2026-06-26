@@ -13,6 +13,7 @@ export const COMMON_TIMELINE_ADAPTER_METHODS = [
   'settings',
   'settingsByKey',
   'pasteFrameCopy',
+  'pasteTargetFrameId',
   'writeFrameValue',
   'writeSetting',
 ];

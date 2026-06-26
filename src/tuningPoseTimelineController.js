@@ -3,7 +3,6 @@ import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFiel
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
-import { timelinePasteTargetFrameId } from './timelineFrameClipboard.js';
 import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
@@ -277,11 +276,9 @@ export function createPoseTimelineController({
   }
 
   function pasteTargetFrameId() {
-    return timelinePasteTargetFrameId({
+    return poseTimeline.pasteTargetFrameId({
       selection: poseSelection,
-      keyframes: keyframesForTimeline(),
       slotToValue,
-      addKeyframe: poseTimeline.addKeyframe,
     });
   }
 

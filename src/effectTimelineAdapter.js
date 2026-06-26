@@ -10,7 +10,11 @@ import {
 import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
 import { createEffectPreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
-import { copyActiveEffectTimelineFrame, pasteEffectTimelineFrameCopy } from './timelineFrameClipboard.js';
+import {
+  copyActiveEffectTimelineFrame,
+  pasteEffectTimelineFrameCopy,
+  timelinePasteTargetFrameId,
+} from './timelineFrameClipboard.js';
 
 export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   const key = () => effectSelect.value;
@@ -117,6 +121,16 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     });
   }
 
+  function pasteTargetFrameId({ selection, slotToValue }) {
+    return timelinePasteTargetFrameId({
+      selection,
+      keyframes: keyframes(),
+      slotToValue,
+      addKeyframe,
+      defaultFrameId: 'start',
+    });
+  }
+
   return defineTimelineAdapter(
     'effect',
     {
@@ -134,6 +148,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
       settings,
       settingsByKey,
       pasteFrameCopy,
+      pasteTargetFrameId,
       writeFrameValue,
       writeSetting,
     },

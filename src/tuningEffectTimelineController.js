@@ -5,7 +5,6 @@ import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
-import { timelinePasteTargetFrameId } from './timelineFrameClipboard.js';
 import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
@@ -283,12 +282,9 @@ export function createEffectTimelineController({
   }
 
   function pasteTargetFrameId() {
-    return timelinePasteTargetFrameId({
+    return effectTimeline.pasteTargetFrameId({
       selection: effectSelection,
-      keyframes: keyframesForTimeline(),
       slotToValue,
-      addKeyframe: effectTimeline.addKeyframe,
-      defaultFrameId: 'start',
     });
   }
 
