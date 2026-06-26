@@ -1,36 +1,6 @@
 import { bindKeyframeDrag, timelinePointerValue } from './timelineDragControls.js';
 import { renderSelectedKeyframeTimeline } from './timelineRenderer.js';
 
-export function renderControllerTimeline({
-  renderSettings,
-  track,
-  frameCount,
-  keyframes,
-  selection,
-  lastSlot,
-  toSlot,
-  slotToLeft,
-  selectSlot,
-  bindDrag,
-  addButton,
-  deleteButton,
-}) {
-  renderSelectedKeyframeTimeline({
-    renderSettings,
-    track,
-    frameCount,
-    keyframes,
-    selection,
-    lastSlot,
-    toSlot,
-    slotToLeft,
-    selectSlot,
-    bindDrag,
-    addButton,
-    deleteButton,
-  });
-}
-
 export function createControllerTimelineRenderer({
   renderSettings,
   track,
@@ -46,7 +16,7 @@ export function createControllerTimelineRenderer({
   deleteButton,
 }) {
   return () =>
-    renderControllerTimeline({
+    renderSelectedKeyframeTimeline({
       renderSettings,
       track,
       frameCount: frameCount(),
