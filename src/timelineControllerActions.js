@@ -89,6 +89,12 @@ export function finishTimelineMutationAction({
   afterCommit?.();
 }
 
+export function refreshTimelineFrameSelectionAction({ stopPreview, renderFields, syncPreview }) {
+  stopPreview();
+  renderFields();
+  syncPreview();
+}
+
 export function pasteTimelineFrameAction({
   copiedFrame,
   isOpen,

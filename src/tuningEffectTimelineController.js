@@ -12,6 +12,7 @@ import {
   finishTimelineMutationAction,
   moveTimelineKeyframeAction,
   pasteTimelineFrameAction,
+  refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
@@ -360,9 +361,11 @@ export function createEffectTimelineController({
   }
 
   function refreshFrameSelection() {
-    stopPreview();
-    renderFields();
-    syncPreview();
+    refreshTimelineFrameSelectionAction({
+      stopPreview,
+      renderFields,
+      syncPreview,
+    });
   }
 
   function bindKeyframeDragHandler(button, id) {

@@ -10,6 +10,7 @@ import {
   finishTimelineMutationAction,
   moveTimelineKeyframeAction,
   pasteTimelineFrameAction,
+  refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
@@ -340,9 +341,11 @@ export function createPoseTimelineController({
   }
 
   function refreshFrameSelection() {
-    stopPreview();
-    renderPosePartFields();
-    syncPreview();
+    refreshTimelineFrameSelectionAction({
+      stopPreview,
+      renderFields: renderPosePartFields,
+      syncPreview,
+    });
   }
 
   function bindKeyframeDragHandler(button, id) {
