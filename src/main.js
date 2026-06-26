@@ -9,19 +9,8 @@ import {
   bindTouchControls,
 } from './inputControls.js';
 import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combatSystem.js';
-import {
-  bindResultScreen as bindResultScreenControls,
-  bindSettingsRankingToggle,
-  createRankingEntry,
-  hideResultScreen as hideResultScreenView,
-  loadRankings as loadStoredRankings,
-  renderRankingList as renderRankingListView,
-  renderSettingsRankingList as renderSettingsRankingListView,
-  saveRankings as saveStoredRankings,
-  showResultScreen as showResultScreenView,
-  sortRankingEntries,
-} from './rankingUi.js';
 import { drawRankingHud } from './rankingCanvas.js';
+import { createRankingController } from './rankingController.js';
 import { createParticleEffects } from './particleEffects.js';
 import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
 import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
@@ -43,7 +32,6 @@ import { drawSceneForeground, preloadSceneBackground } from './backgroundRendere
 import { createWorldFromSceneSession } from './sceneSession.js';
 import { refreshClipBackground } from './clipBackgroundRuntime.js';
 import { uploadSceneClipAssetsToFirebase } from './firebaseStorageAssets.js';
-import { addRemoteRankingEntry, deleteRemoteRankingEntry, loadRemoteRankings } from './firebaseRankings.js';
 
 const canvas = document.querySelector('#game');
 const ctx = canvas.getContext('2d');
@@ -89,7 +77,6 @@ let last = performance.now();
 let runSurvivalTime = 0;
 let runKills = 0;
 let lastRecordedScore = 0;
-let rankings = loadStoredRankings();
 
 window.addEventListener('resize', () => syncCanvasToLayout({ canvas, world, actors, isFullStage, adjustActors: true }));
 lineUpActorPositions(actors, world);
@@ -106,9 +93,29 @@ bindBattleControls(
 );
 bindTouchControls(keys, pressed);
 bindCollapsibleSections();
-bindResultScreen();
-renderSettingsRankingList();
-syncRankingsFromFirebase();
+const rankingController = createRankingController({
+  elements: {
+    rankingList,
+    settingsRankingList,
+    settingsRankingPanel,
+    settingsRankingToggle,
+    rankingForm,
+    rankingName,
+    rankingMessage,
+    resultScreen,
+    resultScore,
+    resultSurvival,
+    resultKills,
+    retryRunButton,
+  },
+  startRun,
+  getRunResult,
+  getPlayerName: () => playerActor.name || '주인공',
+  hideStartScreen,
+  showStartScreen,
+});
+rankingController.renderSettingsRankingList();
+rankingController.syncFromFirebase();
 const tuningPanel = createTuningPanel({
   canvas,
   ctx,
@@ -332,11 +339,21 @@ function draw() {
   tuningPanel.renderEditHandles();
 
   syncRunHud();
-  if (!settingsRankingList && !isFullStage) drawRankingHud(ctx, { rankings, battleActive, lastRecordedScore });
+  if (!settingsRankingList && !isFullStage) {
+    drawRankingHud(ctx, { rankings: rankingController.getRankings(), battleActive, lastRecordedScore });
+  }
 }
 
 function getRunScore() {
   return calculateRunScore(runSurvivalTime, runKills);
+}
+
+function getRunResult() {
+  return {
+    score: lastRecordedScore,
+    survivalTime: runSurvivalTime,
+    kills: runKills,
+  };
 }
 
 function syncRunHud() {
@@ -374,52 +391,13 @@ function showStartScreen() {
   startScreen.classList.remove('is-hidden');
 }
 
-function bindResultScreen() {
-  bindResultScreenControls(
-    { retryRunButton, rankingForm, rankingName, rankingMessage },
-    {
-      startRun,
-      recordRanking: (name, message) => recordRanking(lastRecordedScore, runSurvivalTime, runKills, name, message),
-      renderRankingList,
-      renderSettingsRankingList,
-    }
-  );
-}
-
 function showResultScreen() {
-  resultOpen = showResultScreenView(
-    { resultScreen, resultScore, resultSurvival, resultKills, rankingName, rankingMessage, rankingForm, rankingList },
-    { score: lastRecordedScore, survivalTime: runSurvivalTime, kills: runKills, rankings },
-    { hideStartScreen, showStartScreen }
-  );
+  resultOpen = rankingController.showResultScreen();
 }
 
 function hideResultScreen() {
-  resultOpen = hideResultScreenView(resultScreen);
+  resultOpen = rankingController.hideResultScreen();
 }
-
-function renderRankingList() {
-  renderRankingListView(rankingList, rankings);
-}
-
-function renderSettingsRankingList() {
-  renderSettingsRankingListView(settingsRankingList, rankings, deleteRankingAt);
-}
-
-async function deleteRankingAt(index) {
-  const [removed] = rankings.splice(index, 1);
-  saveRankings();
-  renderSettingsRankingList();
-  renderRankingList();
-  if (!removed?.remotePath) return;
-
-  const deleted = await deleteRemoteRankingEntry(removed);
-  if (!deleted) return;
-
-  syncRankingsFromFirebase();
-}
-
-bindSettingsRankingToggle(settingsRankingPanel, settingsRankingToggle);
 
 function saveState() {
   syncSceneWorldBeforeSave(sceneSession, world);
@@ -455,36 +433,4 @@ async function refreshClipAndUploadSettings({ clipFile = null } = {}) {
 
   preloadSceneBackground(sceneSession.background);
   return uploadSettingsToFirebase();
-}
-
-function saveRankings() {
-  saveStoredRankings(rankings);
-}
-
-async function syncRankingsFromFirebase() {
-  const remoteRankings = await loadRemoteRankings();
-  if (!remoteRankings) return false;
-
-  rankings = remoteRankings;
-  saveRankings();
-  renderRankingList();
-  renderSettingsRankingList();
-  return true;
-}
-
-async function recordRanking(score, survivalTime = 0, kills = 0, name = playerActor.name || '주인공', message = '') {
-  if (score < 0) return;
-
-  const entry = createRankingEntry(score, survivalTime, kills, name, message);
-  rankings = sortRankingEntries([...rankings, entry]);
-  saveRankings();
-
-  const remoteEntry = await addRemoteRankingEntry(entry);
-  if (!remoteEntry) return;
-
-  const synced = await syncRankingsFromFirebase();
-  if (synced) return;
-
-  rankings = sortRankingEntries(rankings.map((item) => (item === entry ? remoteEntry : item)));
-  saveRankings();
 }
