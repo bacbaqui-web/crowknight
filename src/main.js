@@ -14,13 +14,7 @@ import { createRankingController } from './rankingController.js';
 import { createParticleEffects } from './particleEffects.js';
 import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
 import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
-import {
-  downloadSavedStateFromFirebase,
-  loadSavedState as loadStoredSavedState,
-  saveGameState,
-  syncSceneWorldBeforeSave,
-  uploadSavedStateToFirebase,
-} from './saveStateStorage.js';
+import { loadSavedState as loadStoredSavedState } from './saveStateStorage.js';
 import { applyWorldView, drawWorld } from './worldRenderer.js';
 import { getViewTransform } from './cameraView.js';
 import { isSettingsPanelOpen } from './settingsPanelState.js';
@@ -30,8 +24,7 @@ import { syncCanvasToLayout } from './canvasLayout.js';
 import { DEATH_RESULT_DELAY } from './gameConfig.js';
 import { drawSceneForeground, preloadSceneBackground } from './backgroundRenderer.js';
 import { createWorldFromSceneSession } from './sceneSession.js';
-import { refreshClipBackground } from './clipBackgroundRuntime.js';
-import { uploadSceneClipAssetsToFirebase } from './firebaseStorageAssets.js';
+import { createProjectStateController } from './projectStateController.js';
 
 const canvas = document.querySelector('#game');
 const ctx = canvas.getContext('2d');
@@ -41,7 +34,6 @@ const pressed = new Set();
 
 const savedState = await loadStoredSavedState();
 const sceneSessions = savedState.sessions;
-let activeSceneSessionId = savedState.activeSessionId;
 let sceneSession = savedState.sceneSession;
 preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
@@ -50,6 +42,15 @@ const actors = await createActors(savedState, world);
 const effectAssets = await loadEffectAssets();
 const playerActor = actors[0];
 const particleEffects = createParticleEffects({ actors, world, ctx });
+const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshClipAndUploadSettings } =
+  createProjectStateController({
+    actors,
+    world,
+    sceneSessions,
+    activeSessionId: savedState.activeSessionId,
+    getSceneSession: () => sceneSession,
+    onSceneBackgroundUpdate: preloadSceneBackground,
+  });
 const startBattleButton = document.querySelector('#startBattle');
 const endBattleButton = document.querySelector('#endBattle');
 const homeStartButton = document.querySelector('#homeStart');
@@ -397,40 +398,4 @@ function showResultScreen() {
 
 function hideResultScreen() {
   resultOpen = rankingController.hideResultScreen();
-}
-
-function saveState() {
-  syncSceneWorldBeforeSave(sceneSession, world);
-  sceneSessions[sceneSession.id] = sceneSession;
-  activeSceneSessionId = sceneSession.id;
-  saveGameState({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions });
-}
-
-async function uploadSettingsToFirebase() {
-  syncSceneWorldBeforeSave(sceneSession, world);
-  sceneSessions[sceneSession.id] = sceneSession;
-  activeSceneSessionId = sceneSession.id;
-  return uploadSavedStateToFirebase({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions });
-}
-
-async function downloadSettingsFromFirebase() {
-  const downloaded = await downloadSavedStateFromFirebase();
-  if (downloaded) window.location.reload();
-  return downloaded;
-}
-
-async function refreshClipAndUploadSettings({ clipFile = null } = {}) {
-  const refreshed = await refreshClipBackground({
-    getSceneSession: () => sceneSession,
-    onUpdate: preloadSceneBackground,
-    force: true,
-    clipFile,
-  });
-  if (!refreshed) return false;
-
-  const uploadedAssets = await uploadSceneClipAssetsToFirebase(sceneSession.background);
-  if (!uploadedAssets) return false;
-
-  preloadSceneBackground(sceneSession.background);
-  return uploadSettingsToFirebase();
 }
