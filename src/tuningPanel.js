@@ -27,6 +27,7 @@ import { createBackgroundPanelController } from './backgroundPanelController.js'
 import { bindTuningPanelAssetActions } from './tuningPanelAssetActions.js';
 import { createTuningPanelTimelines } from './tuningPanelTimelines.js';
 import { moveSelectedTuningLayer, renderTuningLayerOrder } from './tuningPanelLayerOrder.js';
+import { createTuningPanelTimelineFrameActions } from './tuningPanelTimelineFrameActions.js';
 
 export function createTuningPanel({
   canvas,
@@ -146,6 +147,7 @@ export function createTuningPanel({
     let backgroundController = null;
     let canvasController = null;
     let lifecycleController = null;
+    let timelineFrameActions;
     const undoState = createTuningPanelUndoState({
       actors,
       getSelectedActor: () => selectedActor,
@@ -164,8 +166,6 @@ export function createTuningPanel({
     });
     const { beginUndoSnapshot, commitUndoSnapshot, pushUndoSnapshot, undoTuningChange } = undoState;
     undoTuningChangeGlobal = undoTuningChange;
-    poseFrameCopyGlobal = copyCurrentFrame;
-    poseFramePasteGlobal = pasteCurrentFrame;
 
     const syncPanelToggle = () => syncPanelToggleState(panel, openButton);
 
@@ -200,6 +200,14 @@ export function createTuningPanel({
       commitUndoSnapshot,
       applySelected,
     }));
+    timelineFrameActions = createTuningPanelTimelineFrameActions({
+      getOpenEditContext: currentOpenEditContext,
+      getPoseTimeline: () => poseTimeline,
+      getEffectTimeline: () => effectTimeline,
+    });
+    poseFrameCopyGlobal = timelineFrameActions.copyCurrentFrame;
+    poseFramePasteGlobal = timelineFrameActions.pasteCurrentFrame;
+    frameSelectionCheckGlobal = timelineFrameActions.hasCurrentFrameSelection;
     bindTuningPanelAssetActions({
       elements: panelElements,
       effectAssets,
@@ -391,9 +399,9 @@ export function createTuningPanel({
         moveSelectedLayer,
         openPanel: lifecycleController.openPanel,
         closePanel: lifecycleController.closePanel,
-        copyCurrentFrame,
-        pasteCurrentFrame,
-        hasFrameSelection: hasCurrentFrameSelection,
+        copyCurrentFrame: timelineFrameActions.copyCurrentFrame,
+        pasteCurrentFrame: timelineFrameActions.pasteCurrentFrame,
+        hasFrameSelection: timelineFrameActions.hasCurrentFrameSelection,
         resetSelectedActorTuning: lifecycleController.resetSelectedActorTuning,
         onCanvasPointerDown: canvasController.onPointerDown,
         onCanvasPointerMove: canvasController.onPointerMove,
@@ -410,23 +418,6 @@ export function createTuningPanel({
     function syncAnchorDebugPart() {
       syncActorAnchorDebugPart(actors, selectedActor, selectedPosePartKeysGlobal.size > 1 ? null : editFocusPartKey);
     }
-
-    function activeTimelineController() {
-      return currentOpenEditContext() === 'effect' ? effectTimeline : poseTimeline;
-    }
-
-    function copyCurrentFrame() {
-      activeTimelineController().copyFrame();
-    }
-
-    function pasteCurrentFrame() {
-      activeTimelineController().pasteFrame();
-    }
-
-    function hasCurrentFrameSelection() {
-      return Boolean(activeTimelineController().hasFrameSelection?.());
-    }
-    frameSelectionCheckGlobal = hasCurrentFrameSelection;
 
     function renderLayerOrder(selectedValue = layerOrder.value) {
       renderTuningLayerOrder(layerOrder, selectedActor, selectedValue);
