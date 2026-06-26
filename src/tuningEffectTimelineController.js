@@ -439,7 +439,6 @@ export function createEffectTimelineController({
       activeKeyframeId: effectSelection.activeKeyframeId,
       fixedFrame: effectSelection.fixedFrame,
       selectedSlot: effectSelection.selectedSlot,
-      effectKey: effectTimeline.key(),
       createPreview: effectTimeline.createPreview,
       getActiveT,
     });

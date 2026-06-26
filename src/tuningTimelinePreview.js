@@ -1,8 +1,6 @@
 import {
   clearActorEffectPreviews,
   clearActorPosePreviews,
-  createEffectPreview,
-  createPosePreview,
   shouldPreviewEffect,
   shouldPreviewPose,
 } from './previewState.js';
@@ -19,7 +17,6 @@ export function syncPoseTimelinePreview({
   activeKeyframeId,
   fixedFrame,
   selectedSlot,
-  poseKey,
   settings,
   createPreview,
   getActiveT,
@@ -36,21 +33,12 @@ export function syncPoseTimelinePreview({
     clearPreviews: clearActorPosePreviews,
     shouldPreview: shouldPreviewPose,
     assignPreview: () => {
-      actor.player.posePreview = createPreview
-        ? createPreview({
-            fixedFrame: activeKeyframeId ? null : fixedFrame,
-            playing,
-            loop: settings.playback !== 'once',
-            t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
-          })
-        : createPosePreview({
-            pose: poseKey,
-            fixedFrame: activeKeyframeId ? null : fixedFrame,
-            playing,
-            loop: settings.playback !== 'once',
-            t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
-            now: performance.now(),
-          });
+      actor.player.posePreview = createPreview({
+        fixedFrame: activeKeyframeId ? null : fixedFrame,
+        playing,
+        loop: settings.playback !== 'once',
+        t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
+      });
     },
   });
 }
@@ -65,7 +53,6 @@ export function syncEffectTimelinePreview({
   activeKeyframeId,
   fixedFrame,
   selectedSlot,
-  effectKey,
   createPreview,
   getActiveT,
 }) {
@@ -81,14 +68,7 @@ export function syncEffectTimelinePreview({
     clearPreviews: clearActorEffectPreviews,
     shouldPreview: shouldPreviewEffect,
     assignPreview: () => {
-      actor.player.effectPreview = createPreview
-        ? createPreview({ playing, t: playing ? null : getActiveT() })
-        : createEffectPreview({
-            key: effectKey,
-            playing,
-            t: playing ? null : getActiveT(),
-            now: performance.now(),
-          });
+      actor.player.effectPreview = createPreview({ playing, t: playing ? null : getActiveT() });
     },
   });
 }

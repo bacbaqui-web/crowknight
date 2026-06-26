@@ -424,7 +424,6 @@ export function createPoseTimelineController({
       activeKeyframeId: poseSelection.activeKeyframeId,
       fixedFrame: poseSelection.fixedFrame,
       selectedSlot: poseSelection.selectedSlot,
-      poseKey: poseTimeline.key(),
       settings: poseTimeline.settings() || {},
       createPreview: poseTimeline.createPreview,
       getActiveT,
