@@ -1,4 +1,4 @@
-import { effectKeyframesFor, ensureEffectOffset, ensureEffectSettings } from './tuningNormalize.js';
+import { createEffectTimelineAdapter } from './effectTimelineAdapter.js';
 import { effectPropertyGroups } from './tuningFieldGroups.js';
 import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
@@ -77,6 +77,7 @@ export function createEffectTimelineController({
   let effectPreviewPlaying = false;
   let effectPreviewTimer = null;
   let copiedEffectFrame = null;
+  const effectTimeline = createEffectTimelineAdapter({ getActor: actor, effectSelect });
 
   const {
     frameCount: getFrameCount,
@@ -85,9 +86,9 @@ export function createEffectTimelineController({
     slotToValue,
     slotToLeft,
   } = createTimelineAccessors({
-    ensureSettings: () => ensureEffectSettings(actor().tuning),
-    settingsByKey: () => actor().tuning.effectSettings,
-    key: () => effectSelect.value,
+    ensureSettings: effectTimeline.ensureSettings,
+    settingsByKey: effectTimeline.settingsByKey,
+    key: effectTimeline.key,
   });
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount,
@@ -99,7 +100,7 @@ export function createEffectTimelineController({
     stopPreview,
     syncPreview,
     playPreview,
-    settings: () => actor().tuning.effectSettings[effectSelect.value],
+    settings: effectTimeline.settings,
   });
   const renderTimeline = createControllerTimelineRenderer({
     renderSettings,
@@ -123,25 +124,25 @@ export function createEffectTimelineController({
   function renderFields() {
     ensureActiveFrame();
     renderTimeline();
-    ensureEffectOffset(actor().tuning, effectSelect.value);
-    renderEffectImagePreview(effectImagePreview, effectSelect.value, effectAssets);
+    effectTimeline.ensureOffset();
+    renderEffectImagePreview(effectImagePreview, effectTimeline.key(), effectAssets);
     effectFields.innerHTML = '';
     renderScrubGroups(effectFields, effectPropertyGroups(), readDisplayValue, updateOffset, scrubCallbacks);
   }
 
   function readDisplayValue(prop) {
     const frame = currentFrameValue();
-    return readEffectFrameDisplayValue(effectSelect.value, frame, prop);
+    return readEffectFrameDisplayValue(effectTimeline.key(), frame, prop);
   }
 
   function updateOffset(prop, value) {
     beginUndoSnapshot();
     stopPreview();
-    ensureEffectOffset(actor().tuning, effectSelect.value);
+    effectTimeline.ensureOffset();
     const frame = currentFrameValue();
     if (!frame) return readDisplayValue(prop);
 
-    writeFrameValue(prop, effectFrameValueFromInput(effectSelect.value, prop, value));
+    writeFrameValue(prop, effectFrameValueFromInput(effectTimeline.key(), prop, value));
     syncPreview();
     applySelected();
     return readDisplayValue(prop);
@@ -150,7 +151,7 @@ export function createEffectTimelineController({
   function currentFrameValue() {
     return currentEffectTimelineFrame({
       tuning: actor().tuning,
-      effectKey: effectSelect.value,
+      effectKey: effectTimeline.key(),
       activeKeyframeId: effectSelection.activeKeyframeId,
       fixedFrame: effectSelection.fixedFrame,
       selectedSlot: effectSelection.selectedSlot,
@@ -161,13 +162,13 @@ export function createEffectTimelineController({
   }
 
   function writeFrameValue(prop, value) {
-    const effect = actor().tuning.effectOffsets[effectSelect.value];
+    const effect = effectTimeline.offset();
     if (!effectSelection.activeKeyframeId && !effectSelection.fixedFrame && effectSelection.selectedSlot !== null) {
       effectSelection.activeKeyframeId = createKeyframeAtSelectedSlot();
     }
     writeEffectTimelineFrameValue({
       effect,
-      effectKey: effectSelect.value,
+      effectKey: effectTimeline.key(),
       prop,
       value,
       activeKeyframeId: effectSelection.activeKeyframeId,
@@ -183,7 +184,7 @@ export function createEffectTimelineController({
       : null;
     if (slot === null) return null;
     const t = slotToValue(slot);
-    const id = addEffectTimelineKeyframe(actor().tuning, effectSelect.value, t);
+    const id = addEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), t);
     effectSelection.activeKeyframeId = id;
     effectSelection.fixedFrame = null;
     effectSelection.selectedSlot = slot;
@@ -191,9 +192,9 @@ export function createEffectTimelineController({
   }
 
   function renderSettings() {
-    ensureEffectSettings(actor().tuning);
-    ensureEffectOffset(actor().tuning, effectSelect.value);
-    const settings = actor().tuning.effectSettings[effectSelect.value];
+    effectTimeline.ensureSettings();
+    effectTimeline.ensureOffset();
+    const settings = effectTimeline.settings();
     renderEffectTimelineSettingsView(elements, {
       settings,
       frameCount: getFrameCount(),
@@ -208,19 +209,19 @@ export function createEffectTimelineController({
 
   function updateSetting(prop, value) {
     beginUndoSnapshot();
-    ensureEffectSettings(actor().tuning);
-    writeEffectTimelineSetting(actor().tuning.effectSettings, effectSelect.value, prop, value);
+    effectTimeline.ensureSettings();
+    writeEffectTimelineSetting(effectTimeline.settingsByKey(), effectTimeline.key(), prop, value);
     applySelected();
     syncPreview();
   }
 
   function playPreview() {
-    ensureEffectSettings(actor().tuning);
+    effectTimeline.ensureSettings();
     effectPreviewPlaying = true;
     resetSelectionState();
     syncPreview();
 
-    const settings = actor().tuning.effectSettings[effectSelect.value];
+    const settings = effectTimeline.settings();
     effectPreviewTimer = restartTimelinePreviewTimer({
       timer: effectPreviewTimer,
       settings,
@@ -245,7 +246,7 @@ export function createEffectTimelineController({
       lastSlot: getLastSlot(),
       toSlot,
       slotToValue,
-      addKeyframe: (t) => addEffectTimelineKeyframe(actor().tuning, effectSelect.value, t),
+      addKeyframe: (t) => addEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), t),
       beginUndo: beginUndoSnapshot,
       stopPreview,
       finish: finishTimelineMutation,
@@ -255,7 +256,7 @@ export function createEffectTimelineController({
   function deleteKeyframe() {
     deleteTimelineKeyframeAction({
       selection: effectSelection,
-      deleteKeyframe: (id) => deleteEffectTimelineKeyframe(actor().tuning, effectSelect.value, id),
+      deleteKeyframe: (id) => deleteEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), id),
       beginUndo: beginUndoSnapshot,
       resetSelection: resetSelectionState,
       stopPreview,
@@ -265,7 +266,7 @@ export function createEffectTimelineController({
 
   function resetAnimation() {
     beginUndoSnapshot();
-    resetEffectTimelineAnimation(actor().tuning, effectSelect.value);
+    resetEffectTimelineAnimation(actor().tuning, effectTimeline.key());
     resetSelectionState();
     copiedEffectFrame = null;
     stopPreview();
@@ -275,7 +276,7 @@ export function createEffectTimelineController({
   function copyFrame() {
     const copy = copyActiveEffectTimelineFrame({
       isOpen: effectSection.classList.contains('is-open'),
-      effectKey: effectSelect.value,
+      effectKey: effectTimeline.key(),
       id: effectSelection.activeKeyframeId || effectSelection.fixedFrame,
       keyframes: keyframesForTimeline(),
       fallbackFrame: currentFrameValue(),
@@ -296,8 +297,8 @@ export function createEffectTimelineController({
 
     pasteEffectTimelineFrameCopy({
       copiedEffectFrame,
-      effect: actor().tuning.effectOffsets[effectSelect.value],
-      effectKey: effectSelect.value,
+      effect: effectTimeline.offset(),
+      effectKey: effectTimeline.key(),
       id,
       ensureKeyframe,
     });
@@ -309,7 +310,7 @@ export function createEffectTimelineController({
       selection: effectSelection,
       keyframes: keyframesForTimeline(),
       slotToValue,
-      addKeyframe: (t) => addEffectTimelineKeyframe(actor().tuning, effectSelect.value, t),
+      addKeyframe: (t) => addEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), t),
       defaultFrameId: 'start',
     });
   }
@@ -350,7 +351,7 @@ export function createEffectTimelineController({
   }
 
   function ensureActiveFrame() {
-    ensureEffectOffset(actor().tuning, effectSelect.value);
+    effectTimeline.ensureOffset();
     if (!hasTimelineSelection(effectSelection)) setFrameSilently('start');
   }
 
@@ -401,10 +402,10 @@ export function createEffectTimelineController({
       keyframes: keyframesForTimeline(),
       toSlot,
       slotToValue,
-      moveKeyframe: (nextT) => moveEffectTimelineKeyframe(actor().tuning, effectSelect.value, id, nextT),
+      moveKeyframe: (nextT) => moveEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), id, nextT),
       afterMove: (next) => {
         applySelected();
-        setEffectTimelineDragPreview(actor(), effectSelect.value, next.t);
+        setEffectTimelineDragPreview(actor(), effectTimeline.key(), next.t);
         moveKeyframeButtons(effectTimelineTrack, id, next.slot, slotToLeft(next.slot));
       },
     });
@@ -418,7 +419,7 @@ export function createEffectTimelineController({
       toSlot,
       stopPreview,
       getActiveT,
-      setDragPreview: (t) => setEffectTimelineDragPreview(actor(), effectSelect.value, t),
+      setDragPreview: (t) => setEffectTimelineDragPreview(actor(), effectTimeline.key(), t),
       setDeleteDisabled: (disabled) => {
         effectDeleteKeyframe.disabled = disabled;
       },
@@ -427,13 +428,12 @@ export function createEffectTimelineController({
   }
 
   function ensureKeyframe(effect, id) {
-    ensureEffectOffset(actor().tuning, effectSelect.value);
-    return ensureEffectTimelineKeyframe(effect, effectSelect.value, id, keyframesForTimeline());
+    effectTimeline.ensureOffset();
+    return ensureEffectTimelineKeyframe(effect, effectTimeline.key(), id, keyframesForTimeline());
   }
 
   function keyframesForTimeline() {
-    ensureEffectOffset(actor().tuning, effectSelect.value);
-    return effectKeyframesFor(actor().tuning.effectOffsets[effectSelect.value], effectSelect.value);
+    return effectTimeline.keyframes();
   }
 
   function getActiveT() {
@@ -442,9 +442,9 @@ export function createEffectTimelineController({
       selectedSlot: effectSelection.selectedSlot,
       fixedFrame: effectSelection.fixedFrame,
       keyframes: keyframesForTimeline(),
-      selectedKeyframe: actor().tuning.effectOffsets[effectSelect.value]?.keyframes?.find(
-        (frame) => frame.id === effectSelection.activeKeyframeId
-      ),
+      selectedKeyframe: effectTimeline
+        .offset()
+        ?.keyframes?.find((frame) => frame.id === effectSelection.activeKeyframeId),
       frameCount: getFrameCount(),
     });
   }
@@ -460,7 +460,7 @@ export function createEffectTimelineController({
       activeKeyframeId: effectSelection.activeKeyframeId,
       fixedFrame: effectSelection.fixedFrame,
       selectedSlot: effectSelection.selectedSlot,
-      effectKey: effectSelect.value,
+      effectKey: effectTimeline.key(),
       getActiveT,
     });
   }
