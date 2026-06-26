@@ -1,5 +1,10 @@
 import { clamp, lerp } from './utils.js';
 
+const JUMP_HOLD_MAX = 0.22;
+const JUMP_HELD_GRAVITY = 0.42;
+const JUMP_RELEASE_GRAVITY = 2.2;
+const DEFAULT_RUN_ACCELERATION = 0.16;
+
 export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   player.animTime += dt;
   player.stateTime += dt;
@@ -13,6 +18,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   const guardHeld = keys.has('KeyE');
 
   updatePuppetGuardInput(player, guardHeld);
+  const runAcceleration = clamp(Number(player.runAcceleration ?? DEFAULT_RUN_ACCELERATION), 0.02, 0.4);
 
   if (player.isRolling) {
     player.vx = player.rollDirection * player.rollSpeed;
@@ -23,10 +29,10 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   } else if (player.isGuarding || player.guardBreakTime > 0) {
     player.vx = lerp(player.vx, 0, 0.32);
   } else if (l) {
-    player.vx = -player.speed;
+    player.vx = lerp(player.vx, -player.speed, runAcceleration);
     player.facing = -1;
   } else if (r) {
-    player.vx = player.speed;
+    player.vx = lerp(player.vx, player.speed, runAcceleration);
     player.facing = 1;
   } else {
     player.vx = lerp(player.vx, 0, 0.18);
@@ -34,42 +40,41 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   }
 
   if (pressed.has('Space') && player.onGround) {
-    player.vy = -player.jumpPower;
+    player.vy = -jumpVelocityForHeight(player.jumpPower, world.gravity);
     player.jumpStartVy = player.vy;
+    player.jumpStartY = player.y;
     player.onGround = false;
-    player.jumpHoldTime = player.jumpHoldMax;
+    player.jumpHoldTime = JUMP_HOLD_MAX;
     player.glideTime = player.glideTimeMax;
     player.airFlapCooldownTime = player.airFlapCooldown;
   } else if (pressed.has('Space') && canPuppetAirFlap(player)) {
+    const jumpVelocity = jumpVelocityForHeight(player.jumpPower, world.gravity);
     player.vy = Math.min(player.vy - player.airFlapPower, -player.airFlapPower);
-    player.vy = Math.max(player.vy, -player.jumpPower * 0.78);
+    player.vy = Math.max(player.vy, -jumpVelocity * 0.78);
     player.jumpStartVy = Math.min(player.jumpStartVy || player.vy, player.vy);
-    player.jumpHoldTime = 0;
+    player.jumpStartY = player.y;
+    player.jumpHoldTime = JUMP_HOLD_MAX * 0.55;
     player.glideTime = player.glideTimeMax;
     player.airFlapCooldownTime = player.airFlapCooldown;
   }
 
-  if (pressed.has('KeyW') && player.dashCooldown <= 0 && !player.isGuarding && player.guardBreakTime <= 0) {
+  if (
+    pressed.has('KeyW') &&
+    player.onGround &&
+    player.dashCooldown <= 0 &&
+    !player.isGuarding &&
+    player.guardBreakTime <= 0
+  ) {
     player.rollDirection = player.facing;
-    player.dashTime = player.dashDuration;
+    player.rollDuration = player.getPoseActionDuration('roll', 0.28);
+    player.dashTime = player.rollDuration;
     player.dashCooldown = player.dashCooldownMax;
+    player.attackSerial += 1;
     player.vx = player.rollDirection * player.rollSpeed;
     player.vy = 0;
   }
 
   if (pressed.has('KeyQ')) tryPuppetAttack(player);
-  const jumpRiseProgress = getPuppetJumpRiseProgress(player);
-  if (jumpHeld && player.jumpHoldTime > 0 && player.vy < 0 && !player.isRolling) {
-    const holdFade = Math.pow(1 - jumpRiseProgress, 2);
-    player.vy -= player.jumpHoldForce * holdFade * dt;
-    player.jumpHoldTime -= dt;
-  } else {
-    player.jumpHoldTime = 0;
-  }
-
-  if (!jumpHeld && player.vy < -120 && !player.onGround) {
-    player.vy = Math.max(player.vy * 0.55, -player.jumpPower * 0.5);
-  }
 
   if (player.dashTime > 0) {
     player.glideActive = false;
@@ -79,8 +84,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
     player.vy += world.gravity * 0.18 * dt;
     player.vy = Math.min(player.vy, player.glideFallSpeed);
   } else {
-    const riseGravity = player.vy < 0 ? getPuppetRiseGravity(player, jumpRiseProgress) : 1;
-    player.vy += world.gravity * riseGravity * dt;
+    player.vy += world.gravity * jumpGravityScale(player, jumpHeld, dt) * dt;
   }
 
   player.dashCooldown -= dt;
@@ -91,6 +95,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   player.comboTimer -= dt;
   player.x += player.vx * dt;
   player.y += player.vy * dt;
+  clampJumpToConfiguredHeight(player);
   player.x = clamp(player.x, world.minX ?? 80, world.maxX ?? 880);
 
   if (player.y >= world.floorY) {
@@ -99,6 +104,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
     player.onGround = true;
     player.jumpHoldTime = 0;
     player.jumpStartVy = 0;
+    player.jumpStartY = player.y;
     player.airFlapCooldownTime = 0;
     player.glideTime = player.glideTimeMax;
     player.glideActive = false;
@@ -140,10 +146,12 @@ export function updatePuppetNpc(player, dt, target, world, bounds = null) {
 
   if (absDistance < 88) tryPuppetAttack(player);
 
-  if (player.dashCooldown <= 0 && absDistance > 130 && absDistance < 260 && Math.random() < 0.012) {
+  if (player.onGround && player.dashCooldown <= 0 && absDistance > 130 && absDistance < 260 && Math.random() < 0.012) {
     player.rollDirection = player.facing;
-    player.dashTime = player.dashDuration;
+    player.rollDuration = player.getPoseActionDuration('roll', 0.28);
+    player.dashTime = player.rollDuration;
     player.dashCooldown = player.dashCooldownMax;
+    player.attackSerial += 1;
     player.vx = player.rollDirection * player.rollSpeed * 0.75;
     player.vy = 0;
   }
@@ -205,8 +213,27 @@ export function updatePuppetPlayerState(player) {
 
 export function getPuppetJumpRiseProgress(player) {
   if (player.vy >= 0) return 1;
-  const startSpeed = Math.max(1, Math.abs(player.jumpStartVy || player.jumpPower));
+  const startSpeed = Math.max(1, Math.abs(player.jumpStartVy || jumpVelocityForHeight(player.jumpPower, 1800)));
   return clamp(1 - Math.abs(player.vy) / startSpeed, 0, 1);
+}
+
+function jumpGravityScale(player, jumpHeld, dt) {
+  if (player.vy >= 0) return 1;
+  if (jumpHeld && player.jumpHoldTime > 0) {
+    player.jumpHoldTime = Math.max(0, player.jumpHoldTime - dt);
+    return JUMP_HELD_GRAVITY;
+  }
+  player.jumpHoldTime = 0;
+  return JUMP_RELEASE_GRAVITY;
+}
+
+function clampJumpToConfiguredHeight(player) {
+  if (player.vy >= 0 || !Number.isFinite(player.jumpStartY)) return;
+  const topY = player.jumpStartY - player.jumpPower;
+  if (player.y > topY) return;
+  player.y = topY;
+  player.vy = Math.max(0, player.vy);
+  player.jumpHoldTime = 0;
 }
 
 export function canPuppetAirFlap(player) {
@@ -219,15 +246,13 @@ export function canPuppetAirFlap(player) {
   );
 }
 
-export function getPuppetRiseGravity(player, progress) {
-  const easePower = Math.max(0.3, player.motion.jumpRiseEase || 2.2);
-  const eased = 1 - Math.pow(1 - progress, easePower);
-  return lerp(0.42, Math.max(0.42, player.motion.jumpRiseGravity || 1), eased);
-}
-
 export function isPuppetGliding(player, jumpHeld) {
   player.glideActive = !player.onGround && player.vy > 0 && jumpHeld && player.glideTime > 0 && !player.isRolling;
   return player.glideActive;
+}
+
+function jumpVelocityForHeight(height, gravity) {
+  return Math.sqrt(Math.max(1, 2 * Math.max(1, gravity) * Math.max(0, Number(height || 0))));
 }
 
 export function tryPuppetAttack(player) {
@@ -245,6 +270,7 @@ export function tryPuppetAttack(player) {
     return true;
   }
   const rollCarrySpeed = player.isRolling ? Math.abs(player.vx || player.rollSpeed) : 0;
+  const runCarrySpeed = player.onGround ? Math.max(0, Number(player.vx || 0) * player.facing) : 0;
 
   if (player.comboTimer <= 0) player.comboStep = 0;
   player.comboStep = (player.comboStep % 3) + 1;
@@ -255,7 +281,7 @@ export function tryPuppetAttack(player) {
   player.attackTime = player.attackDuration;
   player.attackCooldown = player.comboStep === 3 ? player.attackCooldownMax + 0.16 : player.attackCooldownMax;
   player.comboTimer = player.comboResetTime;
-  player.attackCarrySpeed = rollCarrySpeed;
+  player.attackCarrySpeed = Math.max(rollCarrySpeed, runCarrySpeed);
   player.dashTime = 0;
   player.attackSerial += 1;
   return true;

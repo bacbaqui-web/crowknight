@@ -1,6 +1,6 @@
 import { preloadSceneBackground } from './backgroundRenderer.js';
 import { refreshClipBackground } from './clipBackgroundRuntime.js';
-import { normalizeSceneBackground } from './sceneSession.js';
+import { createDefaultBackground, normalizeSceneBackground } from './sceneSession.js';
 
 const ROLE_ORDER = ['back', 'ground', 'front'];
 const ROLE_LABELS = {
@@ -16,7 +16,8 @@ const ROLE_TITLES = {
 const NUMBER_DRAG_PIXELS_PER_STEP = 8;
 
 export function createBackgroundPanelController({ elements, getSceneSession, saveState, refreshClipSettings }) {
-  const { backgroundClipUpload, backgroundClipFile, backgroundRefresh, backgroundLayerList } = elements;
+  const { backgroundClipUpload, backgroundClipFile, backgroundRefresh, backgroundReset, backgroundLayerList } =
+    elements;
   if (!backgroundLayerList) return { sync: () => {} };
 
   let draggedLayerId = null;
@@ -43,6 +44,14 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
       button: backgroundRefresh,
       label: '기본 배경 파일 새로고침 및 업로드',
     });
+  });
+  backgroundReset?.addEventListener('click', () => {
+    if (!window.confirm('배경 설정을 초기화할까요?')) return;
+    const session = getSceneSession();
+    session.background = createDefaultBackground();
+    preloadSceneBackground(session.background);
+    saveState();
+    sync({ force: true });
   });
   backgroundLayerList.addEventListener('input', handleInput);
   backgroundLayerList.addEventListener('click', handleClick);

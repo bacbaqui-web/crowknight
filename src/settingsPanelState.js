@@ -6,7 +6,7 @@ export function activeAttackSettingsKey() {
   if (!isSettingsSectionOpen('pose')) return null;
 
   const key = document.querySelector('#poseSelect')?.value || '';
-  return /^attack[123]$/.test(key) || key === 'jumpAttack' ? key : null;
+  return /^attack[123]$/.test(key) || key === 'jumpAttack' || key === 'roll' ? key : null;
 }
 
 export function activeEffectSettingsKey() {

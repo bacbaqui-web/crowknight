@@ -88,11 +88,27 @@
   flex: 0 0 auto;
 }
 
+.section-action-row {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.effect-asset-actions {
+  margin-top: 6px;
+  justify-content: center;
+}
+
+.part-asset-actions {
+  justify-content: center;
+}
+
 .hidden-file-input {
   display: none;
 }
 
-.panel-actions button {
+.panel-actions button,
+.section-action-row button {
   flex: 0 0 auto;
   border: 1px solid #525767;
   background: #292c37;
@@ -102,28 +118,34 @@
   cursor: pointer;
 }
 
-.panel-actions .icon-button {
+.panel-actions .icon-button,
+.section-action-row .icon-button {
   width: 32px;
   height: 32px;
   padding: 0;
 }
 
-.panel-actions .icon-button svg {
+.panel-actions .icon-button svg,
+.section-action-row .icon-button svg {
   width: 16px;
   height: 16px;
 }
 
 .panel-actions .icon-button.is-working svg,
-.panel-actions .icon-button.is-refreshing svg {
+.panel-actions .icon-button.is-refreshing svg,
+.section-action-row .icon-button.is-working svg,
+.section-action-row .icon-button.is-refreshing svg {
   animation: background-refresh-spin 520ms linear infinite;
 }
 
-.panel-actions .icon-button.is-success {
+.panel-actions .icon-button.is-success,
+.section-action-row .icon-button.is-success {
   border-color: #7cc3a2;
   color: #7cc3a2;
 }
 
-.panel-actions .icon-button.is-error {
+.panel-actions .icon-button.is-error,
+.section-action-row .icon-button.is-error {
   border-color: #ef767a;
   color: #ef767a;
 }
@@ -187,6 +209,39 @@
 
 .setting-row.compact {
   grid-template-columns: 34px minmax(100px, 1fr) 88px;
+}
+
+.motion-link-row {
+  min-height: 28px;
+}
+
+.motion-link-guide {
+  min-width: 0;
+  height: 1px;
+  background: #343947;
+}
+
+.motion-link-toggle {
+  justify-self: end;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #525767;
+  border-radius: 6px;
+  background: #292c37;
+  color: #9ca4b8;
+  cursor: pointer;
+}
+
+.motion-link-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.motion-link-toggle.is-active {
+  border-color: #7cc3a2;
+  background: rgba(124, 195, 162, 0.18);
+  color: #7cc3a2;
 }
 
 .field-grid {
@@ -569,6 +624,25 @@ select {
 .part-fields {
   display: grid;
   gap: 6px;
+}
+
+.part-position-layout {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 144px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.part-position-assets {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  min-width: 0;
+}
+
+.part-position-fields {
+  min-width: 0;
 }
 
 .pose-part-header {

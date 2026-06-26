@@ -66,35 +66,6 @@
       <aside id="tuningPanel" class="tuning-panel" aria-label="캐릭터 설정" aria-hidden="true">
         <header class="panel-header">
           <div class="panel-actions">
-            <input id="backgroundClipFile" class="hidden-file-input" type="file" accept=".psd,.clip" />
-            <button
-              id="backgroundClipUpload"
-              class="icon-button"
-              type="button"
-              aria-label="로컬 PSD 파일 선택 및 업로드"
-              title="로컬 PSD 파일 선택 및 업로드"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <path d="M12 18v-7"></path>
-                <path d="M8 15l4-4 4 4"></path>
-              </svg>
-            </button>
-            <button
-              id="backgroundRefresh"
-              class="icon-button"
-              type="button"
-              aria-label="기본 배경 파일 새로고침 및 업로드"
-              title="기본 배경 파일 새로고침 및 업로드"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
-                <path d="M18 3v5h-5"></path>
-                <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
-                <path d="M6 21v-5h5"></path>
-              </svg>
-            </button>
             <button
               id="firebaseUpload"
               class="icon-button"
@@ -361,6 +332,51 @@
             </div>
             <div class="effect-picker">
               <div id="effectImagePreview" class="effect-image-preview" aria-hidden="true"></div>
+              <div class="section-action-row effect-asset-actions" aria-label="효과 이미지 작업">
+                <input id="effectAssetFile" class="hidden-file-input" type="file" accept=".psd,.png,.webp" />
+                <button
+                  id="effectAssetUpload"
+                  class="icon-button"
+                  type="button"
+                  aria-label="효과 이미지 파일 선택 및 업로드"
+                  title="효과 이미지 파일 선택 및 업로드"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                    <path d="M12 18v-7"></path>
+                    <path d="M8 15l4-4 4 4"></path>
+                  </svg>
+                </button>
+                <button
+                  id="effectAssetRefresh"
+                  class="icon-button"
+                  type="button"
+                  aria-label="효과 이미지 새로고침"
+                  title="효과 이미지 새로고침"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
+                    <path d="M18 3v5h-5"></path>
+                    <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
+                    <path d="M6 21v-5h5"></path>
+                  </svg>
+                </button>
+                <button
+                  id="effectAssetReset"
+                  class="icon-button"
+                  type="button"
+                  aria-label="현재 효과 초기화"
+                  title="현재 효과 초기화"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                    <path d="M4 5v5h5"></path>
+                    <path d="M12 8v8"></path>
+                    <path d="M8 12h8"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div id="effectFields" class="part-fields"></div>
           </div>
@@ -369,6 +385,51 @@
         <section class="setting-section" data-collapsible data-section="scene">
           <button class="section-toggle" type="button">배경</button>
           <div class="section-content">
+            <div class="section-action-row" aria-label="배경 PSD 작업">
+              <input id="backgroundClipFile" class="hidden-file-input" type="file" accept=".psd,.clip" />
+              <button
+                id="backgroundClipUpload"
+                class="icon-button"
+                type="button"
+                aria-label="로컬 PSD 파일 선택 및 업로드"
+                title="로컬 PSD 파일 선택 및 업로드"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <path d="M14 2v6h6"></path>
+                  <path d="M12 18v-7"></path>
+                  <path d="M8 15l4-4 4 4"></path>
+                </svg>
+              </button>
+              <button
+                id="backgroundRefresh"
+                class="icon-button"
+                type="button"
+                aria-label="기본 배경 파일 새로고침 및 업로드"
+                title="기본 배경 파일 새로고침 및 업로드"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
+                  <path d="M18 3v5h-5"></path>
+                  <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
+                  <path d="M6 21v-5h5"></path>
+                </svg>
+              </button>
+              <button
+                id="backgroundReset"
+                class="icon-button"
+                type="button"
+                aria-label="배경 초기화"
+                title="배경 초기화"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                  <path d="M4 5v5h5"></path>
+                  <path d="M12 8v8"></path>
+                  <path d="M8 12h8"></path>
+                </svg>
+              </button>
+            </div>
             <div id="backgroundLayerList" class="background-layer-list"></div>
           </div>
         </section>
@@ -376,12 +437,61 @@
         <section class="setting-section" data-collapsible data-section="part">
           <button class="section-toggle" type="button">파츠 위치</button>
           <div class="section-content">
-            <div class="part-picker" data-picker="part" aria-label="파츠 위치 조절 부위 선택"></div>
-            <label class="select-row native-part-select">
-              <span>조절할 부위</span>
-              <select id="partSelect"></select>
-            </label>
-            <div id="partFields" class="part-fields"></div>
+            <div class="part-position-layout">
+              <div class="part-position-assets">
+                <div class="part-picker" data-picker="part" aria-label="파츠 위치 조절 부위 선택"></div>
+                <div class="section-action-row part-asset-actions" aria-label="캐릭터 PSD 작업">
+                  <input id="characterPsdFile" class="hidden-file-input" type="file" accept=".psd" />
+                  <button
+                    id="characterPsdUpload"
+                    class="icon-button"
+                    type="button"
+                    aria-label="선택 캐릭터 PSD 파일 선택 및 업로드"
+                    title="선택 캐릭터 PSD 파일 선택 및 업로드"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <path d="M14 2v6h6"></path>
+                      <path d="M12 18v-7"></path>
+                      <path d="M8 15l4-4 4 4"></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="characterPsdRefresh"
+                    class="icon-button"
+                    type="button"
+                    aria-label="선택 캐릭터 PSD 새로고침"
+                    title="선택 캐릭터 PSD 새로고침"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
+                      <path d="M18 3v5h-5"></path>
+                      <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
+                      <path d="M6 21v-5h5"></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="characterPartReset"
+                    class="icon-button"
+                    type="button"
+                    aria-label="파츠 위치 초기화"
+                    title="파츠 위치 초기화"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                      <path d="M4 5v5h5"></path>
+                      <path d="M12 8v8"></path>
+                      <path d="M8 12h8"></path>
+                    </svg>
+                  </button>
+                </div>
+                <label class="select-row native-part-select">
+                  <span>조절할 부위</span>
+                  <select id="partSelect"></select>
+                </label>
+              </div>
+              <div id="partFields" class="part-fields part-position-fields"></div>
+            </div>
           </div>
         </section>
 

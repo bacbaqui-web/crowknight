@@ -1,14 +1,8 @@
 import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './tuningNormalize.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { partPositionSources } from './tuningParts.js';
-import { selectedOrFirstEmptySlot } from './tuningTimelineDom.js';
-import {
-  bindKeyframeDrag,
-  markActiveKeyframeButton,
-  moveKeyframeButtons,
-  timelinePointerValue,
-} from './timelineDragControls.js';
-import { renderSelectedKeyframeTimeline } from './timelineRenderer.js';
+import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
+import { bindControllerKeyframeDrag, renderControllerTimeline } from './timelineControllerView.js';
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addPoseTimelineKeyframe,
@@ -18,17 +12,25 @@ import {
   resetPoseTimelineAnimation,
   writePoseTimelineFrameValue,
 } from './timelineKeyframeMutations.js';
-import { copyActivePoseTimelineFrame, pastePoseTimelineFrameCopy } from './timelineFrameClipboard.js';
+import {
+  copyActivePoseTimelineFrame,
+  pastePoseTimelineFrameCopy,
+  timelinePasteTargetFrameId,
+} from './timelineFrameClipboard.js';
+import {
+  addTimelineKeyframeAction,
+  deleteTimelineKeyframeAction,
+  moveTimelineKeyframeAction,
+  selectTimelineKeyframeAction,
+  selectTimelineKeyframeForDragAction,
+  selectTimelineSlotAction,
+} from './timelineControllerActions.js';
 import {
   activeTimelineT,
   assignTimelineSelection,
   clearedTimelineSelection,
   createTimelineSelectionState,
   hasTimelineSelection,
-  isTimelineFrameId,
-  movedTimelineKeyframeTarget,
-  selectedTimelineFrameSelection,
-  selectedTimelineSlotSelection,
 } from './timelineState.js';
 import { writePoseTimelineSetting } from './tuningTimelineSettings.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
@@ -51,7 +53,6 @@ export function createPoseTimelineController({
   selectedPosePartKeys,
   getSelectedActor,
   getActivePosePartKey,
-  getFrameSelectionActive,
   setFrameSelectionActive,
   setEditContext,
   resetGroupEditValues,
@@ -111,7 +112,7 @@ export function createPoseTimelineController({
         settings,
         frameCount: getFrameCount(),
         playing: posePreviewPlaying,
-        hasSelection: getFrameSelectionActive(),
+        hasSelection: hasFrameSelection(),
         hasCopiedFrame: Boolean(copiedPoseFrame),
         undoCount: undoState.undoCount,
       })
@@ -121,7 +122,7 @@ export function createPoseTimelineController({
   function syncToolbarButtons() {
     setFrameSelectionActive(
       syncPoseTimelineToolbarView(elements, {
-        hasSelection: getFrameSelectionActive(),
+        hasSelection: hasFrameSelection(),
         hasCopiedFrame: Boolean(copiedPoseFrame),
         undoCount: undoState.undoCount,
         frameCount: getFrameCount(),
@@ -130,6 +131,13 @@ export function createPoseTimelineController({
   }
 
   const hasFrameSelection = () => hasTimelineSelection(poseSelection, { includeSelectedSlot: false });
+
+  function frameLabel() {
+    if (poseSelection.fixedFrame === 'start') return '첫프레임';
+    if (poseSelection.fixedFrame === 'end') return '끝프레임';
+    if (poseSelection.activeKeyframeId) return '키프레임';
+    return '기본';
+  }
 
   function updateSetting(prop, value) {
     beginUndoSnapshot();
@@ -211,25 +219,28 @@ export function createPoseTimelineController({
   }
 
   function addKeyframe() {
-    const slot = selectedOrFirstEmptySlot(poseSelection.selectedSlot, keyframesForTimeline(), getLastSlot(), toSlot);
-    if (!slot) return;
-    beginUndoSnapshot();
-    const t = slotToValue(slot);
-    const id = addPoseTimelineKeyframe(actor().tuning, poseSelect.value, t);
-    poseSelection.activeKeyframeId = id;
-    poseSelection.fixedFrame = null;
-    poseSelection.selectedSlot = slot;
-    stopPreview();
-    finishTimelineMutation({ resetGroup: true });
+    addTimelineKeyframeAction({
+      selection: poseSelection,
+      keyframes: keyframesForTimeline(),
+      lastSlot: getLastSlot(),
+      toSlot,
+      slotToValue,
+      addKeyframe: (t) => addPoseTimelineKeyframe(actor().tuning, poseSelect.value, t),
+      beginUndo: beginUndoSnapshot,
+      stopPreview,
+      finish: () => finishTimelineMutation({ resetGroup: true }),
+    });
   }
 
   function deleteKeyframe() {
-    if (!poseSelection.activeKeyframeId) return;
-    beginUndoSnapshot();
-    deletePoseTimelineKeyframe(actor().tuning, poseSelect.value, poseSelection.activeKeyframeId);
-    resetSelectionState();
-    stopPreview();
-    finishTimelineMutation({ resetGroup: true });
+    deleteTimelineKeyframeAction({
+      selection: poseSelection,
+      deleteKeyframe: (id) => deletePoseTimelineKeyframe(actor().tuning, poseSelect.value, id),
+      beginUndo: beginUndoSnapshot,
+      resetSelection: resetSelectionState,
+      stopPreview,
+      finish: () => finishTimelineMutation({ resetGroup: true }),
+    });
   }
 
   function resetAnimation() {
@@ -259,10 +270,13 @@ export function createPoseTimelineController({
 
   function pasteFrame() {
     if (!copiedPoseFrame || !poseSection.classList.contains('is-open')) return;
-    const id = poseSelection.activeKeyframeId || poseSelection.fixedFrame;
-    if (!isTimelineFrameId(id, keyframesForTimeline())) return;
-
     beginUndoSnapshot();
+    const id = pasteTargetFrameId();
+    if (!id) {
+      commitUndoSnapshot();
+      return;
+    }
+
     pastePoseTimelineFrameCopy({
       copiedPoseFrame,
       id,
@@ -276,6 +290,15 @@ export function createPoseTimelineController({
     finishTimelineMutation({ resetGroup: true, syncToolbar: true });
   }
 
+  function pasteTargetFrameId() {
+    return timelinePasteTargetFrameId({
+      selection: poseSelection,
+      keyframes: keyframesForTimeline(),
+      slotToValue,
+      addKeyframe: (t) => addPoseTimelineKeyframe(actor().tuning, poseSelect.value, t),
+    });
+  }
+
   function finishTimelineMutation({ resetGroup = false, syncToolbar = false } = {}) {
     if (resetGroup) resetGroupEditValues();
     renderPosePartFields();
@@ -286,7 +309,7 @@ export function createPoseTimelineController({
   }
 
   function renderTimeline() {
-    renderSelectedKeyframeTimeline({
+    renderControllerTimeline({
       renderSettings,
       track: poseTimelineTrack,
       frameCount: getFrameCount(),
@@ -303,31 +326,30 @@ export function createPoseTimelineController({
   }
 
   function selectKeyframe(id) {
-    setEditContext('pose');
-    const nextSelection = selectedTimelineFrameSelection({
+    selectTimelineKeyframeAction({
       id,
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      fixedFrame: poseSelection.fixedFrame,
+      selection: poseSelection,
       keyframes: keyframesForTimeline(),
       toSlot,
       lastSlot: getLastSlot(),
+      setContext: () => setEditContext('pose'),
+      applySelection: (nextSelection) =>
+        applyTimelineSelection(nextSelection, { resetGroup: nextSelection.kind === 'fixed' }),
     });
-    applyTimelineSelection(nextSelection, { resetGroup: nextSelection.kind === 'fixed' });
   }
 
   function selectSlot(slot) {
-    setEditContext('pose');
-    const nextSelection = selectedTimelineSlotSelection({
+    selectTimelineSlotAction({
       slot,
-      selectedSlot: poseSelection.selectedSlot,
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      fixedFrame: poseSelection.fixedFrame,
+      selection: poseSelection,
       keyframes: keyframesForTimeline(),
       toSlot,
       lastSlot: getLastSlot(),
-    });
-    applyTimelineSelection(nextSelection, {
-      resetGroup: nextSelection.kind === 'empty' || nextSelection.kind === 'fixed',
+      setContext: () => setEditContext('pose'),
+      applySelection: (nextSelection) =>
+        applyTimelineSelection(nextSelection, {
+          resetGroup: nextSelection.kind === 'empty' || nextSelection.kind === 'fixed',
+        }),
     });
   }
 
@@ -348,47 +370,51 @@ export function createPoseTimelineController({
   }
 
   function bindKeyframeDragHandler(button, id) {
-    bindKeyframeDrag(button, id, {
+    bindControllerKeyframeDrag(button, id, {
       selectKeyframe,
       selectForDrag: selectKeyframeForDrag,
       beginUndo: beginUndoSnapshot,
       moveKeyframe,
-      pointerT: timelinePointerT,
       finishUndo: commitUndoSnapshot,
+      track: poseTimelineTrack,
+      frameCount: getFrameCount,
+      lastSlot: getLastSlot,
       afterFinish: () => {
         if (getActivePosePartKey()) renderPosePartFields();
       },
     });
   }
 
-  function timelinePointerT(event) {
-    return timelinePointerValue(event, poseTimelineTrack, getFrameCount(), getLastSlot());
-  }
-
   function moveKeyframe(id, t) {
-    const next = movedTimelineKeyframeTarget({
+    moveTimelineKeyframeAction({
       id,
       t,
       keyframes: keyframesForTimeline(),
       toSlot,
       slotToValue,
+      moveKeyframe: (nextT) => movePoseTimelineKeyframe(actor().tuning, poseSelect.value, id, nextT),
+      afterMove: (next) => {
+        applySelected();
+        setPoseTimelineDragPreview(actor(), poseSelect.value, next.t);
+        moveKeyframeButtons(poseTimelineTrack, id, next.slot, slotToLeft(next.slot));
+      },
     });
-    if (!next) return;
-    if (!movePoseTimelineKeyframe(actor().tuning, poseSelect.value, id, next.t)) return;
-    applySelected();
-    setPoseTimelineDragPreview(actor(), poseSelect.value, next.t);
-    moveKeyframeButtons(poseTimelineTrack, id, next.slot, slotToLeft(next.slot));
   }
 
   function selectKeyframeForDrag(id) {
-    poseSelection.activeKeyframeId = id;
-    poseSelection.fixedFrame = null;
-    poseSelection.selectedSlot = toSlot(keyframesForTimeline().find((frame) => frame.id === id)?.t ?? 0);
-    stopPreview();
-    const t = getActiveT();
-    setPoseTimelineDragPreview(actor(), poseSelect.value, t);
-    poseDeleteKeyframe.disabled = false;
-    markActiveKeyframeButton(poseTimelineTrack, id);
+    selectTimelineKeyframeForDragAction({
+      selection: poseSelection,
+      id,
+      keyframes: keyframesForTimeline(),
+      toSlot,
+      stopPreview,
+      getActiveT,
+      setDragPreview: (t) => setPoseTimelineDragPreview(actor(), poseSelect.value, t),
+      setDeleteDisabled: (disabled) => {
+        poseDeleteKeyframe.disabled = disabled;
+      },
+      markActive: (keyframeId) => markActiveKeyframeButton(poseTimelineTrack, keyframeId),
+    });
   }
 
   function getActiveT() {
@@ -439,6 +465,7 @@ export function createPoseTimelineController({
     currentFrameValue,
     deleteKeyframe,
     hasFrameSelection,
+    frameLabel,
     pasteFrame,
     readDisplayValue,
     renderSettings,

@@ -23,9 +23,10 @@ export function drawPuppetPlayer(player, ctx) {
   ctx.rotate(p.root);
   ctx.translate(master.anchorX || 0, master.anchorY || 0);
   ctx.translate(master.x || 0, master.y || 0);
+  const masterPlacementMatrix = ctx.getTransform();
   ctx.rotate(deg(master.rot || 0));
   ctx.scale(Math.max(0.05, 1 + Number(master.w || 0)), Math.max(0.05, 1 + Number(master.h || 0)));
-  recordPuppetEditHandle(player, ctx, 'master');
+  recordPuppetEditHandle(player, ctx, 'master', masterPlacementMatrix);
   ctx.translate(-(master.anchorX || 0), -(master.anchorY || 0));
   ctx.globalAlpha *= clamp(master.opacity ?? 1, 0, 1);
   player.layerOrder.forEach((layer) => drawPuppetLayer(player, ctx, layer, p, r));
@@ -138,7 +139,7 @@ export function drawPuppetLayer(player, ctx, layer, pose, rig) {
         pose.lowerArmR,
         'R',
         pose.weapon,
-        !player.isRolling,
+        !player.isRolling || player.canRollUseWeapon,
         group
       );
     },

@@ -2,9 +2,6 @@ import { deg } from './utils.js';
 
 export function createPuppetPose(player) {
   const t = player.animTime;
-  const m = player.motion;
-  const w = Math.sin(t * m.walkSpeed);
-  const w2 = Math.sin(t * m.walkSpeed + Math.PI);
   const idle = Math.sin(t * 3) * 3;
   const previewPose = player.posePreview?.pose;
   const state = previewPose?.startsWith('attack') ? 'attack' : previewPose || player.state;
@@ -20,17 +17,14 @@ export function createPuppetPose(player) {
   }
 
   if (state === 'run') {
-    p.bobY = Math.abs(w) * m.walkBob;
-    p.body = deg(w * m.walkBody);
-    p.head = deg(-w * 2);
-    p.upperArmL = deg(w * m.walkArmSwing);
-    p.lowerArmL = deg(18 + Math.max(0, w) * 20);
-    p.upperArmR = deg(w2 * m.walkArmSwing);
-    p.lowerArmR = deg(18 + Math.max(0, w2) * 20);
-    p.upperLegL = deg(w2 * m.walkLegSwing);
-    p.lowerLegL = deg(16 + Math.max(0, w) * 34);
-    p.upperLegR = deg(w * m.walkLegSwing);
-    p.lowerLegR = deg(16 + Math.max(0, w2) * 34);
+    p.upperArmL = 0;
+    p.lowerArmL = deg(18);
+    p.upperArmR = 0;
+    p.lowerArmR = deg(18);
+    p.upperLegL = 0;
+    p.lowerLegL = deg(5);
+    p.upperLegR = 0;
+    p.lowerLegR = deg(5);
   }
 
   if (state === 'jump') {
@@ -66,20 +60,27 @@ export function createPuppetPose(player) {
     p.lowerLegR = deg(22);
   }
 
-  if (state === 'roll') {
-    const q = 1 - Math.max(0, player.dashTime) / Math.max(0.01, player.dashDuration);
-    p.bobY = -Math.sin(q * Math.PI) * (m.rollLift || 0);
-    p.root = deg(q * m.rollSpin);
-    p.body = deg(m.dashLean);
-    p.head = deg(-18);
-    p.upperArmL = deg(-m.rollTuck);
-    p.lowerArmL = deg(m.rollTuck * 0.7);
-    p.upperArmR = deg(m.rollTuck);
-    p.lowerArmR = deg(m.rollTuck * 0.5);
-    p.upperLegL = deg(m.rollTuck * 0.45);
-    p.lowerLegL = deg(m.rollTuck);
-    p.upperLegR = deg(-m.rollTuck * 0.45);
-    p.lowerLegR = deg(m.rollTuck);
+  if (state === 'attack') {
+    const attackKey = intensityKey?.startsWith('attack') ? intensityKey : `attack${player.comboStep || 1}`;
+    applyAttackPose(p, attackKey, player.getPoseFrameProgress());
+  }
+
+  if (state === 'jumpAttack') {
+    const q = player.getPoseFrameProgress();
+    const slash = Math.sin(Math.min(1, q) * Math.PI);
+    p.bobY = -slash * 8;
+    p.root = deg(-10 + slash * 18);
+    p.body = deg(-18 + slash * 16);
+    p.head = deg(12 - slash * 8);
+    p.upperArmL = deg(-58 + slash * 20);
+    p.lowerArmL = deg(26);
+    p.upperArmR = deg(70 - slash * 24);
+    p.lowerArmR = deg(-12);
+    p.upperLegL = deg(-34);
+    p.lowerLegL = deg(56);
+    p.upperLegR = deg(24);
+    p.lowerLegR = deg(42);
+    p.weapon = deg(72 - slash * 116);
   }
 
   if (state === 'guard') {
@@ -149,6 +150,58 @@ export function createPuppetPose(player) {
   }
 
   return applyAnimationIntensity(p, intensityKey, player.motion.animationIntensity);
+}
+
+function applyAttackPose(p, key, t) {
+  const q = Math.min(1, Math.max(0, Number(t || 0)));
+  const swing = Math.sin(q * Math.PI);
+  const recover = 1 - Math.pow(1 - q, 2);
+
+  if (key === 'attack2') {
+    p.root = deg(-6 + swing * 12);
+    p.body = deg(-10 + recover * 18);
+    p.head = deg(8 - swing * 6);
+    p.upperArmL = deg(72 - swing * 132);
+    p.lowerArmL = deg(18 - swing * 44);
+    p.upperArmR = deg(-42 + swing * 34);
+    p.lowerArmR = deg(-12);
+    p.upperLegL = deg(-14);
+    p.lowerLegL = deg(26);
+    p.upperLegR = deg(18);
+    p.lowerLegR = deg(18);
+    p.weapon = deg(-84 + swing * 158);
+    return;
+  }
+
+  if (key === 'attack3') {
+    p.bobY = -swing * 5;
+    p.root = deg(8 + swing * 28);
+    p.body = deg(18 + swing * 20);
+    p.head = deg(-14);
+    p.upperArmL = deg(-84 + swing * 42);
+    p.lowerArmL = deg(30);
+    p.upperArmR = deg(78 - swing * 118);
+    p.lowerArmR = deg(-24);
+    p.upperLegL = deg(22);
+    p.lowerLegL = deg(34);
+    p.upperLegR = deg(-28);
+    p.lowerLegR = deg(42);
+    p.weapon = deg(112 - swing * 186);
+    return;
+  }
+
+  p.root = deg(4 + swing * 10);
+  p.body = deg(10 + swing * 12);
+  p.head = deg(-6 + swing * 4);
+  p.upperArmL = deg(-68 + swing * 104);
+  p.lowerArmL = deg(20 + swing * 18);
+  p.upperArmR = deg(42 - swing * 26);
+  p.lowerArmR = deg(-18);
+  p.upperLegL = deg(12);
+  p.lowerLegL = deg(20);
+  p.upperLegR = deg(-10);
+  p.lowerLegR = deg(24);
+  p.weapon = deg(82 - swing * 148);
 }
 
 function applyAnimationIntensity(p, key, intensityConfig) {

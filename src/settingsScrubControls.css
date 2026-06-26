@@ -36,6 +36,10 @@
   max-width: 100%;
 }
 
+.scrub-control.is-rotation {
+  min-width: 112px;
+}
+
 .scrub-value {
   display: inline-flex;
   align-items: center;
@@ -77,6 +81,10 @@
   font-weight: 750;
   text-align: right;
   white-space: nowrap;
+}
+
+.scrub-value[data-scrub-prop='rot'] strong {
+  min-width: 58px;
 }
 
 .scrub-value:hover,

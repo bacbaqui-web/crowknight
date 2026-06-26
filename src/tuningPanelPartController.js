@@ -195,9 +195,10 @@ export function createTuningPanelPartController({
 
   function renderPosePartFields() {
     poseTimeline.renderTimeline();
+    const frameLabel = poseTimeline.frameLabel();
     if (selectedPosePartKeys.size > 1) {
       posePartFields.innerHTML = '';
-      renderPosePartHeader(posePartFields, 'group', selectedPosePartKeys.size);
+      renderPosePartHeader(posePartFields, 'group', selectedPosePartKeys.size, frameLabel);
       if (!poseTimeline.hasFrameSelection()) {
         posePartFields.insertAdjacentHTML('beforeend', emptyPartMessage('그룹을 편집할 프레임을 선택하세요.'));
         return;
@@ -222,7 +223,7 @@ export function createTuningPanelPartController({
     ensurePoseOffset(getSelectedActor().tuning, poseSelect.value, partKey);
     const offset = poseTimeline.currentFrameValue(partKey);
     posePartFields.innerHTML = '';
-    renderPosePartHeader(posePartFields, partKey, selectedPosePartKeys.size);
+    renderPosePartHeader(posePartFields, partKey, selectedPosePartKeys.size, frameLabel);
 
     renderScrubGroups(
       posePartFields,

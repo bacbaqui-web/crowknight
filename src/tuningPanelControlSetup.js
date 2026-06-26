@@ -1,4 +1,5 @@
 import { enhanceNumberInputs } from './tuningNumberInputs.js';
+import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
 import {
   bindCanvasDragControls,
   bindEffectTimelineControls,
@@ -10,7 +11,13 @@ import {
   bindSelectionControls,
 } from './tuningPanelBindings.js';
 import { bindPartPickerButtons, populatePartPickerButtons, populateTuningPanelSelects } from './tuningPanelDom.js';
+import { displayTuningControlValue, storedTuningControlValue } from './tuningControlValueTransforms.js';
 import { setPath } from './utils.js';
+
+const RUN_LINK_FIELDS = ['walkBob'];
+const RUN_LINK_POWER = {
+  walkBob: 0.5,
+};
 
 export function initializeTuningPanelControls({
   panel,
@@ -72,6 +79,20 @@ export function initializeTuningPanelControls({
   populatePartPickerButtons(partPicker);
   populatePartPickerButtons(posePartPicker);
 
+  let runMotionLinked = false;
+  const runMotionLinkToggle = panel.querySelector('[data-action="toggle-run-motion-link"]');
+  runMotionLinkToggle?.addEventListener('click', () => {
+    runMotionLinked = !runMotionLinked;
+    syncRunMotionLinkToggle(runMotionLinkToggle, runMotionLinked);
+    if (runMotionLinked) {
+      callbacks.beginUndoSnapshot();
+      applyRunMotionLink(callbacks.getTuning(), callbacks.getTuning().speed);
+      callbacks.applySelected();
+      callbacks.commitUndoSnapshot();
+    }
+  });
+  syncRunMotionLinkToggle(runMotionLinkToggle, runMotionLinked);
+
   fields.forEach(([id, path]) =>
     bindTuningNumericControl({
       id,
@@ -81,6 +102,10 @@ export function initializeTuningPanelControls({
       commitUndoSnapshot: callbacks.commitUndoSnapshot,
       getTuning: callbacks.getTuning,
       applySelected: callbacks.applySelected,
+      afterUpdate: (fieldId, value) => {
+        if (!runMotionLinked || fieldId !== 'speed') return;
+        applyRunMotionLink(callbacks.getTuning(), value);
+      },
     })
   );
   bindSelectionControls(
@@ -176,9 +201,12 @@ export function initializeTuningPanelControls({
     undoTuningChange: callbacks.undoTuningChange,
     copyCurrentFrame: callbacks.copyCurrentFrame,
     pasteCurrentFrame: callbacks.pasteCurrentFrame,
-    hasPoseFrameSelection: callbacks.hasPoseFrameSelection,
+    hasFrameSelection: callbacks.hasFrameSelection,
   });
-  resetButton.addEventListener('click', callbacks.resetSelectedActorTuning);
+  resetButton.addEventListener('click', () => {
+    if (!window.confirm('선택 캐릭터 설정을 모두 초기화할까요?')) return;
+    callbacks.resetSelectedActorTuning();
+  });
   bindCanvasDragControls(canvas, {
     onPointerDown: callbacks.onCanvasPointerDown,
     onPointerMove: callbacks.onCanvasPointerMove,
@@ -195,23 +223,67 @@ function bindTuningNumericControl({
   commitUndoSnapshot,
   getTuning,
   applySelected,
+  afterUpdate,
 }) {
   const group = document.querySelector(`[data-field="${id}"]`);
   if (!group) return;
   const range = group.querySelector('input[type="range"]');
   const number = group.querySelector('input[type="number"]');
 
-  range.addEventListener('input', () => update(range.value, number));
-  number.addEventListener('input', () => update(number.value, range));
+  range.addEventListener('input', () => update(range.value, number, range));
+  number.addEventListener('input', () => update(number.value, range, number));
   bindNumberDrag(number, range, update);
   range.addEventListener('change', commitUndoSnapshot);
   number.addEventListener('change', commitUndoSnapshot);
   number.addEventListener('blur', commitUndoSnapshot);
 
-  function update(value, peer) {
+  function update(value, peer, source = null) {
+    const storedValue = storedTuningControlValue(id, value);
+    const displayValue = displayTuningControlValue(id, storedValue);
     beginUndoSnapshot();
-    setPath(getTuning(), path, Number(value));
-    peer.value = value;
+    setPath(getTuning(), path, storedValue);
+    peer.value = displayValue;
+    if (source) source.value = displayValue;
+    afterUpdate?.(id, storedValue);
     applySelected();
   }
+}
+
+function syncRunMotionLinkToggle(button, linked) {
+  if (!button) return;
+  button.classList.toggle('is-active', linked);
+  button.setAttribute('aria-pressed', linked ? 'true' : 'false');
+}
+
+function applyRunMotionLink(tuning, speed) {
+  const ratio = Math.max(0.1, Number(speed || DEFAULT_PLAYER_TUNING.speed) / DEFAULT_PLAYER_TUNING.speed);
+
+  RUN_LINK_FIELDS.forEach((field) => {
+    const baseValue = DEFAULT_PLAYER_TUNING.motion[field];
+    const power = RUN_LINK_POWER[field] || 1;
+    syncLinkedField(tuning, field, baseValue * Math.pow(ratio, power));
+  });
+}
+
+function syncLinkedField(tuning, field, rawValue) {
+  const group = document.querySelector(`[data-field="${field}"]`);
+  const range = group?.querySelector('input[type="range"]');
+  const number = group?.querySelector('input[type="number"]');
+  const nextValue = normalizeLinkedControlValue(rawValue, range || number);
+
+  setPath(tuning, ['motion', field], nextValue);
+  if (range) range.value = nextValue;
+  if (number) number.value = nextValue;
+}
+
+function normalizeLinkedControlValue(value, input) {
+  const min = Number(input?.min);
+  const max = Number(input?.max);
+  const step = Number(input?.step || 1);
+  const clamped = Math.min(
+    Number.isFinite(max) ? max : Infinity,
+    Math.max(Number.isFinite(min) ? min : -Infinity, value)
+  );
+  const stepped = Number.isFinite(step) && step > 0 ? Math.round(clamped / step) * step : clamped;
+  return Number(stepped.toFixed(step < 1 ? 3 : 0));
 }

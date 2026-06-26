@@ -1,3 +1,5 @@
+import { poseLabel } from './tuningLabels.js';
+
 function row(field, group, label, min, max, step, number = null) {
   return {
     type: 'row',
@@ -11,6 +13,14 @@ function row(field, group, label, min, max, step, number = null) {
 
 function divider(group) {
   return { type: 'divider', group };
+}
+
+function linkToggle(group, label) {
+  return { type: 'linkToggle', group, label };
+}
+
+function animationIntensityRow(key, group = key) {
+  return row(`${key}AnimationIntensity`, group, `${poseLabel(key)} 애니메이션 강도`, '0', '2.5', '0.05');
 }
 
 function attackRows(prefix, group, label, { x, y, w, h }) {
@@ -29,64 +39,64 @@ function attackRows(prefix, group, label, { x, y, w, h }) {
 }
 
 const MOTION_FIELD_ROWS = [
-  row('idleAnimationIntensity', 'idle', '대기 애니메이션 강도', '0', '2.5', '0.05'),
-  row('runAnimationIntensity', 'run', '이동 애니메이션 강도', '0', '2.5', '0.05'),
-  row('speed', 'run', '이동 속도', '80', '620', '5'),
-  row('walkSpeed', 'run', '이동 속도감', '4', '24', '1'),
+  animationIntensityRow('idle'),
+  animationIntensityRow('run'),
+  linkToggle('run', '이동 연동'),
+  row('speed', 'run', '이동 속도', '1', '10', '0.1'),
+  row('runAcceleration', 'run', '이동 가속도', '0.02', '0.4', '0.01'),
   row('walkBob', 'run', '이동 상하', '0', '18', '1'),
-  row('walkBody', 'run', '이동 몸통', '0', '24', '1'),
-  row('walkArmSwing', 'run', '이동 팔', '0', '90', '1'),
-  row('walkLegSwing', 'run', '이동 다리', '0', '90', '1'),
-  row('jumpAnimationIntensity', 'jump', '점프 애니메이션 강도', '0', '2.5', '0.05'),
-  row('jumpPower', 'jump', '점프 힘', '300', '1200', '10'),
-  row('airFlapPower', 'jump', '공중 점프 힘', '0', '420', '5'),
-  row('airFlapCooldown', 'jump', '공중 점프 간격', '0', '0.35', '0.01'),
-  row('jumpHoldMax', 'jump', '점프 유지', '0', '0.35', '0.01'),
-  row('jumpHoldForce', 'jump', '추가 상승', '0', '1400', '10'),
-  row('jumpRiseGravity', 'jump', '상승 감속', '0.42', '2.4', '0.01'),
-  row('jumpRiseEase', 'jump', '상승 이징', '0.4', '5', '0.1'),
-  row('fallAnimationIntensity', 'fall', '낙하 애니메이션 강도', '0', '2.5', '0.05'),
-  row('glideAnimationIntensity', 'glide', '활강 애니메이션 강도', '0', '2.5', '0.05'),
+  animationIntensityRow('jump'),
+  row('jumpPower', 'jump', '점프 높이', '40', '720', '5'),
+  row('airFlapPower', 'jump', '날개짓 힘', '0', '420', '5'),
+  row('airFlapCooldown', 'jump', '날개짓 간격', '0', '0.35', '0.01'),
+  animationIntensityRow('fall'),
+  animationIntensityRow('glide'),
   row('glideTimeMax', 'glide', '활강 시간', '0', '3', '0.05'),
   row('glideFallSpeed', 'glide', '활강 낙하', '60', '900', '10'),
-  row('rollAnimationIntensity', 'roll', '구르기 애니메이션 강도', '0', '2.5', '0.05'),
-  row('rollDistance', 'roll', '구르기 거리', '60', '520', '10'),
-  row('dashDuration', 'roll', '구르기 시간', '0.04', '0.6', '0.01'),
+  animationIntensityRow('roll'),
+  row('rollIntensity', 'roll', '구르기 강도', '0', '4', '0.1'),
+  row('rollWeapon', 'roll', '구르기 무기', '0', '1', '1'),
   row('dashCooldownMax', 'roll', '구르기 쿨타임', '0', '1.8', '0.01'),
   row('rollEndInvuln', 'roll', '구른 뒤 무적', '0', '1.2', '0.01'),
-  row('dashLean', 'roll', '구르기 기울기', '-45', '55', '1'),
-  row('rollSpin', 'roll', '구르기 회전', '0', '900', '10'),
-  row('rollTuck', 'roll', '구르기 접힘', '0', '110', '1'),
-  row('rollLift', 'roll', '구르기 높이', '0', '80', '1'),
-  row('guardAnimationIntensity', 'guard', '방어 애니메이션 강도', '0', '2.5', '0.05'),
-  row('guardBreakAnimationIntensity', 'guardBreak', '방어 풀림 강도', '0', '2.5', '0.05'),
-  row('hurtAnimationIntensity', 'hurt', '피격 애니메이션 강도', '0', '2.5', '0.05'),
+  row('rollGhostCount', 'roll', '구르기 잔상 수', '0', '8', '1'),
+  row('rollGhostInterval', 'roll', '구르기 잔상 간격', '0.01', '0.16', '0.005'),
+  row('rollGhostLife', 'roll', '구르기 잔상 지속', '0.04', '0.6', '0.01'),
+  row('rollGhostOpacity', 'roll', '구르기 잔상 진하기', '0', '2', '0.05'),
+  ...attackRows('roll', 'roll', '구르기', {
+    x: ['-160', '180'],
+    y: ['-120', '120'],
+    w: ['6', '240'],
+    h: ['6', '180'],
+  }),
+  animationIntensityRow('guard'),
+  animationIntensityRow('guardBreak'),
+  animationIntensityRow('hurt'),
   row('hurtInvuln', 'hurt', '피격 무적', '0', '2', '0.01'),
-  row('deathAnimationIntensity', 'death', '사망 애니메이션 강도', '0', '2.5', '0.05'),
+  animationIntensityRow('death'),
   row('attackCooldownMax', 'attack', '공격 쿨타임', '0', '1.5', '0.01'),
   row('comboResetTime', 'attack', '콤보 유지', '0.2', '2', '0.01'),
-  row('jumpAttackAnimationIntensity', 'jumpAttack', '점공 애니메이션 강도', '0', '2.5', '0.05'),
+  animationIntensityRow('jumpAttack'),
   ...attackRows('jumpAttack', 'jumpAttack', '점공', {
     x: ['-160', '180'],
     y: ['-120', '120'],
     w: ['6', '240'],
     h: ['6', '180'],
   }),
-  row('attack1AnimationIntensity', 'attack1', '1타 애니메이션 강도', '0', '2.5', '0.05'),
+  animationIntensityRow('attack1'),
   ...attackRows('attack1', 'attack1', '1타', {
     x: ['-160', '180'],
     y: ['-120', '120'],
     w: ['6', '240'],
     h: ['6', '180'],
   }),
-  row('attack2AnimationIntensity', 'attack2', '2타 애니메이션 강도', '0', '2.5', '0.05'),
+  animationIntensityRow('attack2'),
   ...attackRows('attack2', 'attack2', '2타', {
     x: ['-160', '180'],
     y: ['-120', '120'],
     w: ['6', '240'],
     h: ['6', '180'],
   }),
-  row('attack3AnimationIntensity', 'attack3', '3타 애니메이션 강도', '0', '2.5', '0.05'),
+  animationIntensityRow('attack3'),
   ...attackRows('attack3', 'attack3', '3타', {
     x: ['-180', '220'],
     y: ['-140', '140'],
@@ -98,8 +108,14 @@ const MOTION_FIELD_ROWS = [
 export function populateMotionSettingRows(container) {
   if (!container || container.children.length) return;
   MOTION_FIELD_ROWS.forEach((item) => {
-    container.append(item.type === 'divider' ? createDivider(item) : createFieldRow(item));
+    container.append(createMotionSettingElement(item));
   });
+}
+
+function createMotionSettingElement(item) {
+  if (item.type === 'divider') return createDivider(item);
+  if (item.type === 'linkToggle') return createLinkToggle(item);
+  return createFieldRow(item);
 }
 
 function createDivider({ group }) {
@@ -107,6 +123,35 @@ function createDivider({ group }) {
   element.className = 'setting-divider';
   element.dataset.motionGroup = group;
   return element;
+}
+
+function createLinkToggle({ group, label }) {
+  const rowElement = document.createElement('div');
+  rowElement.className = 'setting-row motion-link-row';
+  rowElement.dataset.motionGroup = group;
+
+  const labelElement = document.createElement('span');
+  labelElement.textContent = label;
+
+  const guide = document.createElement('span');
+  guide.className = 'motion-link-guide';
+
+  const button = document.createElement('button');
+  button.className = 'icon-button motion-link-toggle';
+  button.type = 'button';
+  button.dataset.action = 'toggle-run-motion-link';
+  button.setAttribute('aria-label', '이동 속도와 이동 애니메이션 값 연동');
+  button.setAttribute('aria-pressed', 'false');
+  button.title = '이동 속도와 이동 애니메이션 값 연동';
+  button.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path>
+      <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path>
+    </svg>
+  `;
+
+  rowElement.append(labelElement, guide, button);
+  return rowElement;
 }
 
 function createFieldRow({ field, group, label, range, number }) {

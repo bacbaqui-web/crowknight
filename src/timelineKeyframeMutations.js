@@ -140,7 +140,7 @@ export function pastePoseTimelineFramePart({ frames, id, sourceFrame, ensureKeyf
 }
 
 export function pasteEffectTimelineFrame({ effect, effectKey, id, sourceFrame, ensureKeyframe }) {
-  const target = ensureKeyframe(id);
+  const target = ensureKeyframe(effect, id);
   const keep = { id: target.id, t: target.t };
   Object.assign(target, effectFrameValue(sourceFrame, effectKey), keep);
   if (id === 'start') effect.start = effectFrameValue(target, effectKey);

@@ -22,6 +22,7 @@ export function renderScrubGroups(container, groups, readValue, writeValue, call
 function renderScrubValue(label, prop, value, writeValue, container, readValue, callbacks) {
   const control = document.createElement('span');
   control.className = 'scrub-control';
+  control.classList.toggle('is-rotation', prop === 'rot');
   const button = document.createElement('button');
   button.className = 'scrub-value';
   button.type = 'button';
@@ -137,7 +138,7 @@ function startInlineScrubEdit(button, prop, writeValue, container, readValue, ca
   const currentValue = readValue(prop);
   const input = document.createElement('input');
   input.className = 'scrub-input';
-  input.type = 'number';
+  input.type = prop === 'rot' ? 'text' : 'number';
   input.step = prop === 'w' || prop === 'h' ? '1' : '0.1';
   input.value = scrubInputValue(currentValue, prop);
   button.classList.add('is-editing');
@@ -149,7 +150,7 @@ function startInlineScrubEdit(button, prop, writeValue, container, readValue, ca
   const finish = (apply) => {
     if (!button.classList.contains('is-editing')) return;
     if (apply) {
-      const next = parseScrubNumber(input.value);
+      const next = parseScrubInput(input.value, prop);
       if (Number.isFinite(next)) {
         callbacks.beginChange();
         const nextValue = writeValue(prop, next);
@@ -208,6 +209,7 @@ function propLabelForScrub(prop) {
 }
 
 function scrubInputValue(value, prop) {
+  if (prop === 'rot') return formatRotationValue(value);
   if (prop === 'w' || prop === 'h' || prop === 'scale') return parseScrubNumber(formatPartValue(value, prop));
   const number = Number(value ?? 0);
   return Number.isInteger(number) ? String(number) : number.toFixed(1);
@@ -223,9 +225,15 @@ function parseScrubNumber(value) {
   return Number(String(value).replace('%', '').trim());
 }
 
+function parseScrubInput(value, prop) {
+  if (prop === 'rot') return parseRotationValue(value);
+  return parseScrubNumber(value);
+}
+
 function formatPartValue(value, prop) {
   const fallback = prop === 'opacity' ? 1 : 0;
   const number = Number(value ?? fallback);
+  if (prop === 'rot') return formatRotationValue(number);
   if (prop === 'w' || prop === 'h' || prop === 'scale') {
     const text = Number.isInteger(number) ? String(number) : number.toFixed(1);
     return `${text}%`;
@@ -234,4 +242,33 @@ function formatPartValue(value, prop) {
     return number > 0 ? '보임' : '숨김';
   }
   return Number.isInteger(number) ? String(number) : number.toFixed(1);
+}
+
+function formatRotationValue(value) {
+  const total = Number(value || 0);
+  if (!Number.isFinite(total)) return '0x +0°';
+  const turns = total < 0 ? Math.ceil(total / 360) : Math.floor(total / 360);
+  const degrees = total - turns * 360;
+  const degreeText = formatDegreeRemainder(degrees);
+  return `${turns}x ${degrees >= 0 ? '+' : ''}${degreeText}°`;
+}
+
+function formatDegreeRemainder(value) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function parseRotationValue(value) {
+  const text = String(value ?? '')
+    .trim()
+    .replace(/°/g, '');
+  if (!text) return NaN;
+
+  const aeMatch = text.match(/^([+-]?\d+)\s*x\s*([+-]?\d+(?:\.\d+)?)?$/i);
+  if (aeMatch) {
+    const turns = Number(aeMatch[1]);
+    const degrees = Number(aeMatch[2] ?? 0);
+    return turns * 360 + degrees;
+  }
+
+  return parseScrubNumber(text);
 }

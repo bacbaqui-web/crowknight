@@ -2,6 +2,7 @@ import { defaultEffectImageKey } from './animationFrames.js';
 import { EFFECT_IMAGE_OPTIONS, EFFECT_KEYS, POSE_KEYS, POSE_PART_KEYS } from './gameConfig.js';
 import { getPath } from './utils.js';
 import { layerLabel, partLabel, poseLabel } from './tuningLabels.js';
+import { displayTuningControlValue } from './tuningControlValueTransforms.js';
 import { partPositionSources } from './tuningParts.js';
 import { populateMotionSettingRows } from './tuningMotionFieldRows.js';
 
@@ -49,7 +50,12 @@ export function getTuningPanelElements(panel) {
     backgroundClipUpload: document.querySelector('#backgroundClipUpload'),
     backgroundClipFile: document.querySelector('#backgroundClipFile'),
     backgroundRefresh: document.querySelector('#backgroundRefresh'),
+    backgroundReset: document.querySelector('#backgroundReset'),
     backgroundLayerList: document.querySelector('#backgroundLayerList'),
+    characterPsdUpload: document.querySelector('#characterPsdUpload'),
+    characterPsdFile: document.querySelector('#characterPsdFile'),
+    characterPsdRefresh: document.querySelector('#characterPsdRefresh'),
+    characterPartReset: document.querySelector('#characterPartReset'),
     partPicker: panel.querySelector('[data-picker="part"]'),
     posePartPicker: panel.querySelector('[data-picker="pose"]'),
     partSelect: document.querySelector('#partSelect'),
@@ -73,6 +79,10 @@ export function getTuningPanelElements(panel) {
     poseResetAnimation: document.querySelector('#poseResetAnimation'),
     effectSelect: document.querySelector('#effectSelect'),
     effectImagePreview: document.querySelector('#effectImagePreview'),
+    effectAssetUpload: document.querySelector('#effectAssetUpload'),
+    effectAssetFile: document.querySelector('#effectAssetFile'),
+    effectAssetRefresh: document.querySelector('#effectAssetRefresh'),
+    effectAssetReset: document.querySelector('#effectAssetReset'),
     effectFields: document.querySelector('#effectFields'),
     effectDuration: document.querySelector('#effectDuration'),
     effectPlaybackRateRange: document.querySelector('#effectPlaybackRateRange'),
@@ -152,7 +162,7 @@ export function syncNumericFields(fields, tuning) {
   fields.forEach(([id, path]) => {
     const group = document.querySelector(`[data-field="${id}"]`);
     if (!group) return;
-    const value = getPath(tuning, path);
+    const value = displayTuningControlValue(id, getPath(tuning, path));
     group.querySelector('input[type="range"]').value = value;
     group.querySelector('input[type="number"]').value = value;
   });
@@ -200,10 +210,16 @@ export function renderInactivePreviewTimeline(playbackButton, renderTimeline) {
   renderTimeline();
 }
 
-export function renderPosePartHeader(container, partKey, selectedCount) {
+export function renderPosePartHeader(container, partKey, selectedCount, frameLabel = '') {
   const header = document.createElement('div');
   header.className = 'pose-part-header';
-  header.textContent = partKey === 'group' ? `선택 그룹 ${selectedCount}` : partLabel(partKey);
+  if (partKey === 'group') {
+    header.textContent = frameLabel ? `${frameLabel} · 선택 그룹 ${selectedCount}` : `선택 그룹 ${selectedCount}`;
+  } else if (partKey === 'master') {
+    header.textContent = frameLabel || '기본';
+  } else {
+    header.textContent = frameLabel ? `${frameLabel} · ${partLabel(partKey)}` : partLabel(partKey);
+  }
   container.append(header);
 }
 

@@ -2,7 +2,7 @@ import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvas
 import { isMasterPart } from './tuningLabels.js';
 import { canvasGroupDragItems } from './tuningCanvasEditState.js';
 
-export function createCanvasGroupDrag({ pointerId, point, handle, mode, parts }) {
+export function createCanvasGroupDrag({ pointerId, point, handle, mode, parts, writePoseFrameValue }) {
   return {
     pointerId,
     group: true,
@@ -14,10 +14,20 @@ export function createCanvasGroupDrag({ pointerId, point, handle, mode, parts })
     startDistance: Math.max(1, Math.hypot(point.x - handle.anchor.x, point.y - handle.anchor.y)),
     mode,
     context: 'pose',
+    writePoseFrameValue,
   };
 }
 
-export function createCanvasPartDrag({ pointerId, point, part, context, editState, handle, mode }) {
+export function createCanvasPartDrag({
+  pointerId,
+  point,
+  part,
+  context,
+  editState,
+  handle,
+  mode,
+  writePoseFrameValue,
+}) {
   return {
     pointerId,
     part,
@@ -31,6 +41,7 @@ export function createCanvasPartDrag({ pointerId, point, part, context, editStat
     startAngle: Math.atan2(point.y - handle.anchor.y, point.x - handle.anchor.x),
     mode,
     context,
+    writePoseFrameValue,
   };
 }
 
@@ -52,8 +63,8 @@ export function createCanvasGroupDragItems(parts, { editStateForPart, editHandle
   return canvasGroupDragItems(parts, { editStateForPart, editHandles });
 }
 
-export function createCurrentCanvasGroupDrag({ geometry, parts, mode }) {
-  if (!geometry) return { group: true, parts: [], handle: null, mode };
+export function createCurrentCanvasGroupDrag({ geometry, parts, mode, writePoseFrameValue }) {
+  if (!geometry) return { group: true, parts: [], handle: null, mode, writePoseFrameValue };
   return {
     group: true,
     parts,
@@ -64,6 +75,7 @@ export function createCurrentCanvasGroupDrag({ geometry, parts, mode }) {
     startDistance: 100,
     mode,
     context: 'pose',
+    writePoseFrameValue,
   };
 }
 

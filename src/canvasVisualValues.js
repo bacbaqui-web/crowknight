@@ -15,6 +15,10 @@ export function setCanvasVisualValue(drag, prop, value) {
   if (drag.context === 'pose') {
     const baseValue = Number(drag.base?.[prop] || 0);
     const offset = value - baseValue;
+    if (typeof drag.writePoseFrameValue === 'function') {
+      drag.writePoseFrameValue(drag.part, prop, offset);
+      return;
+    }
     drag.target[prop] = offset;
     return;
   }

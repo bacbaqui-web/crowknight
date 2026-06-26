@@ -12,7 +12,6 @@ import {
 import {
   canPuppetAirFlap,
   getPuppetJumpRiseProgress,
-  getPuppetRiseGravity,
   isPuppetGliding,
   registerPuppetGuardBlock,
   tryPuppetAttack,
@@ -33,6 +32,7 @@ import {
   translationMatrix,
 } from './puppetPlayerGeometry.js';
 import { createPuppetPose } from './puppetPlayerPose.js';
+import { runPartOffset } from './runSpeedMotion.js';
 
 export class PuppetPlayer {
   constructor(x, y, assets) {
@@ -49,8 +49,10 @@ export class PuppetPlayer {
     this.dashTime = 0;
     this.dashCooldown = 0;
     this.rollDirection = 1;
+    this.rollDuration = 0.28;
     this.jumpHoldTime = 0;
     this.jumpStartVy = 0;
+    this.jumpStartY = y;
     this.airFlapCooldownTime = 0;
     this.glideTime = 0;
     this.glideActive = false;
@@ -79,15 +81,12 @@ export class PuppetPlayer {
   applyTuning(tuning) {
     const next = clone(tuning);
     this.speed = next.speed;
-    this.jumpPower = next.jumpPower;
+    this.runAcceleration = clamp(Number(next.runAcceleration ?? DEFAULT_PLAYER_TUNING.runAcceleration), 0.02, 0.4);
+    this.jumpPower = clamp(Number(next.jumpPower ?? DEFAULT_PLAYER_TUNING.jumpPower), 40, 720);
     this.airFlapPower = next.airFlapPower;
     this.airFlapCooldown = next.airFlapCooldown;
-    this.jumpHoldMax = next.jumpHoldMax;
-    this.jumpHoldForce = next.jumpHoldForce;
     this.glideTimeMax = next.glideTimeMax;
     this.glideFallSpeed = next.glideFallSpeed;
-    this.dashDuration = next.dashDuration;
-    this.rollDistance = next.rollDistance;
     this.dashCooldownMax = next.dashCooldownMax;
     this.attackCooldownMax = next.attackCooldownMax;
     this.comboResetTime = next.comboResetTime;
@@ -115,6 +114,11 @@ export class PuppetPlayer {
       const a = this.attackBoxesConfig?.jumpAttack || this.attackBoxConfig;
       return this.weaponAttackBox(a);
     }
+    if (this.isRolling && this.canRollUseWeapon) {
+      return this.weaponAttackBox(
+        this.attackBoxesConfig?.roll || this.attackBoxesConfig?.attack1 || this.attackBoxConfig
+      );
+    }
     if (this.attackTime <= 0 || this.isRolling) return null;
     if (!this.isAttackStrikeActive()) return null;
 
@@ -125,6 +129,10 @@ export class PuppetPlayer {
 
   get isRolling() {
     return this.dashTime > 0;
+  }
+
+  get canRollUseWeapon() {
+    return Number(this.motion?.rollWeapon || 0) >= 0.5;
   }
 
   get isAttacking() {
@@ -237,11 +245,11 @@ export class PuppetPlayer {
   }
 
   get rollSpeed() {
-    return this.rollDistance / Math.max(0.01, this.dashDuration);
+    return this.speed * Math.max(0, Number(this.motion?.rollIntensity ?? 1));
   }
 
   get attackLungeSpeed() {
-    const carry = this.attackCarrySpeed * Math.max(0, 1 - this.attackProgress * 1.15);
+    const carry = this.attackCarrySpeed * Math.max(0, 1 - this.attackProgress * 0.65);
     return carry;
   }
 
@@ -255,10 +263,6 @@ export class PuppetPlayer {
 
   canAirFlap() {
     return canPuppetAirFlap(this);
-  }
-
-  getRiseGravity(progress) {
-    return getPuppetRiseGravity(this, progress);
   }
 
   updateNpc(dt, target, world, bounds = null) {
@@ -304,7 +308,7 @@ export class PuppetPlayer {
 
   getPartOffset(key) {
     const value = this.poseOffsets?.[this.poseKey]?.[key];
-    return this.resolvePoseOffset(value);
+    return mergePartOffsets(this.resolvePoseOffset(value), runPartOffset(this, key));
   }
 
   resolvePoseOffset(value) {
@@ -353,8 +357,7 @@ export class PuppetPlayer {
     if (this.posePreview?.frame) return this.posePreview.frame === 'end' ? 1 : 0;
     if (this.state === 'attack') return clamp(this.attackProgress, 0, 1);
     if (this.state === 'jumpAttack') return clamp(this.jumpAttackProgress, 0, 1);
-    if (this.state === 'roll')
-      return this.scalePoseProgress(1 - Math.max(0, this.dashTime) / Math.max(0.01, this.dashDuration), 'roll');
+    if (this.state === 'roll') return clamp(1 - Math.max(0, this.dashTime) / Math.max(0.01, this.rollDuration), 0, 1);
     if (this.state === 'jump') return Math.max(this.getJumpRiseProgress(), this.getTimelineProgress('jump', false));
     if (this.state === 'hurt') return this.getTimelineProgress('hurt', false);
     if (this.state === 'death') return this.getTimelineProgress('death', false);
@@ -381,10 +384,6 @@ export class PuppetPlayer {
     const settings = this.poseSettings?.[key] || {};
     const duration = Math.max(0.05, Number(settings.duration || fallback));
     return duration / this.getPosePlaybackRate(key);
-  }
-
-  scalePoseProgress(progress, key) {
-    return clamp(Number(progress || 0) * this.getPosePlaybackRate(key), 0, 1);
   }
 
   getPose() {
@@ -418,4 +417,14 @@ export class PuppetPlayer {
   drawImageGlow(ctx, image, x, y, w, h) {
     drawPuppetImageGlow(ctx, image, x, y, w, h);
   }
+}
+
+function mergePartOffsets(base, additive) {
+  if (!additive) return base;
+  return {
+    ...base,
+    x: base.x + Number(additive.x || 0),
+    y: base.y + Number(additive.y || 0),
+    rot: base.rot + Number(additive.rot || 0),
+  };
 }

@@ -133,7 +133,7 @@ export function bindEffectTimelineControls(elements, actions) {
 }
 
 export function bindPanelKeyboardShortcuts(panel, actions) {
-  const { undoTuningChange, copyCurrentFrame, pasteCurrentFrame, hasPoseFrameSelection } = actions;
+  const { undoTuningChange, copyCurrentFrame, pasteCurrentFrame, hasFrameSelection } = actions;
 
   panel.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ') {
@@ -148,13 +148,25 @@ export function bindPanelKeyboardShortcuts(panel, actions) {
       copyCurrentFrame();
       return;
     }
+    if ((e.metaKey || e.ctrlKey) && e.code === 'KeyC' && hasFrameSelection()) {
+      e.preventDefault();
+      e.stopPropagation();
+      copyCurrentFrame();
+      return;
+    }
     if ((e.metaKey || e.ctrlKey) && e.code === 'KeyV' && !isTextInput(e.target)) {
       e.preventDefault();
       e.stopPropagation();
       pasteCurrentFrame();
       return;
     }
-    if (GAME_KEYS.has(e.code) && !hasPoseFrameSelection()) return;
+    if ((e.metaKey || e.ctrlKey) && e.code === 'KeyV' && hasFrameSelection()) {
+      e.preventDefault();
+      e.stopPropagation();
+      pasteCurrentFrame();
+      return;
+    }
+    if (GAME_KEYS.has(e.code) && !hasFrameSelection()) return;
     if (GAME_KEYS.has(e.code)) return;
     e.stopPropagation();
   });

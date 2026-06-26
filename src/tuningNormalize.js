@@ -9,6 +9,7 @@ import {
 } from './animationFrames.js';
 import { EFFECT_KEYS, POSE_FRAME_KEYS, POSE_KEYS, POSE_PART_KEYS } from './gameConfig.js';
 import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
+import { SPEED_VALUE_MAX, SPEED_VALUE_MIN } from './tuningControlValueTransforms.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 import { clamp, clone } from './utils.js';
 
@@ -22,6 +23,7 @@ export function mergeTuning(base, saved) {
     normalizeControlGroups(fresh.rig);
     normalizeRigImageAnchors(fresh.rig);
     normalizeRigRotations(fresh.rig, base.rig);
+    normalizeMovementScalars(fresh);
     return fresh;
   }
   const merged = clone(base);
@@ -45,7 +47,14 @@ export function mergeTuning(base, saved) {
   normalizeRigImageAnchors(merged.rig, saved.rig);
   normalizeRigRotations(merged.rig, base.rig);
   normalizeMotionSettings(merged.motion, base.motion);
+  normalizeMovementScalars(merged);
   return merged;
+}
+
+function normalizeMovementScalars(tuning) {
+  tuning.speed = clamp(Number(tuning.speed ?? DEFAULT_PLAYER_TUNING.speed), SPEED_VALUE_MIN, SPEED_VALUE_MAX);
+  tuning.runAcceleration = clamp(Number(tuning.runAcceleration ?? DEFAULT_PLAYER_TUNING.runAcceleration), 0.02, 0.4);
+  tuning.jumpPower = clamp(Number(tuning.jumpPower ?? DEFAULT_PLAYER_TUNING.jumpPower), 40, 720);
 }
 
 function normalizeMotionSettings(motion, fallback) {
@@ -58,6 +67,12 @@ function normalizeMotionSettings(motion, fallback) {
   POSE_KEYS.forEach((key) => {
     motion.animationIntensity[key] = Number(source[key] ?? shared ?? fallbackIntensity[key] ?? 1);
   });
+  motion.rollIntensity = clamp(Number(motion.rollIntensity ?? fallback.rollIntensity ?? 1), 0, 4);
+  motion.rollWeapon = Number(motion.rollWeapon ?? fallback.rollWeapon ?? 0) >= 0.5 ? 1 : 0;
+  motion.rollGhostCount = Math.round(clamp(Number(motion.rollGhostCount ?? fallback.rollGhostCount ?? 5), 0, 8));
+  motion.rollGhostInterval = clamp(Number(motion.rollGhostInterval ?? fallback.rollGhostInterval ?? 0.035), 0.01, 0.16);
+  motion.rollGhostLife = clamp(Number(motion.rollGhostLife ?? fallback.rollGhostLife ?? 0.18), 0.04, 0.6);
+  motion.rollGhostOpacity = clamp(Number(motion.rollGhostOpacity ?? fallback.rollGhostOpacity ?? 1), 0, 2);
 }
 
 function normalizePoseSettings(current = {}, fallback = {}) {
@@ -314,7 +329,7 @@ function normalizeLayerOrder(current, fallback) {
 function normalizeAttackBoxes(current, fallback, legacyReaction) {
   const normalized = {};
   const common = current && 'frontX' in current ? current : null;
-  ['attack1', 'attack2', 'attack3', 'jumpAttack'].forEach((key) => {
+  ['attack1', 'attack2', 'attack3', 'jumpAttack', 'roll'].forEach((key) => {
     const legacyHit = legacyReaction
       ? {
           stun: legacyReaction.stun,

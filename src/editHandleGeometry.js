@@ -103,11 +103,14 @@ export function createEffectEditHandleGeometry(info) {
   };
 }
 
-export function createEffectEditHandleInfo(ctx, frame, key) {
+export function createEffectEditHandleInfo(ctx, frame, key, placementMatrix = null) {
   const matrix = ctx.getTransform();
   const anchor = transformCanvasPoint(matrix, 0, 0);
+  const placement = placementMatrix || matrix;
   const xInfo = axisFromCanvasMatrix(matrix, anchor, 1, 0);
   const yInfo = axisFromCanvasMatrix(matrix, anchor, 0, 1);
+  const moveXInfo = axisFromCanvasMatrix(placement, anchor, 1, 0);
+  const moveYInfo = axisFromCanvasMatrix(placement, anchor, 0, 1);
   return {
     key,
     frame,
@@ -116,10 +119,10 @@ export function createEffectEditHandleInfo(ctx, frame, key) {
     yAxis: yInfo.axis,
     xUnit: xInfo.unit,
     yUnit: yInfo.unit,
-    moveXAxis: xInfo.axis,
-    moveYAxis: yInfo.axis,
-    moveXUnit: xInfo.unit,
-    moveYUnit: yInfo.unit,
+    moveXAxis: moveXInfo.axis,
+    moveYAxis: moveYInfo.axis,
+    moveXUnit: moveXInfo.unit,
+    moveYUnit: moveYInfo.unit,
   };
 }
 

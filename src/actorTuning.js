@@ -6,9 +6,8 @@ export function defaultTuningFor(def) {
   const tuning = clone(DEFAULT_PLAYER_TUNING);
   if (def.id !== 'player') {
     tuning.speed = 150 + ACTOR_DEFS.findIndex((item) => item.id === def.id) * 18;
-    tuning.jumpPower = 580;
+    tuning.jumpPower = 104;
     tuning.glideTimeMax = 0.75;
-    tuning.rollDistance = 190;
     tuning.dashCooldownMax = 0.75;
   }
   return tuning;

@@ -186,6 +186,9 @@ function applyHitReaction(attacker, target, comboStep, particleEffects) {
 }
 
 function attackReaction(attacker, comboStep) {
+  if (attacker.player.poseKey === 'roll' && attacker.player.canRollUseWeapon) {
+    return attacker.tuning.attackBoxes.roll || attacker.tuning.attackBoxes.attack1;
+  }
   const attackKey = attacker.player.poseKey === 'jumpAttack' ? 'jumpAttack' : `attack${comboStep}`;
   return attacker.tuning.attackBoxes[attackKey] || attacker.tuning.attackBoxes.attack1;
 }

@@ -31,6 +31,7 @@ export function handleCanvasPointerDown(
     renderPartFields,
     createGroupDragItems,
     canvasEditState,
+    writePoseFrameValue,
     pushUndoSnapshot,
     beginUndoSnapshot,
     resetGroupTransformValues,
@@ -77,6 +78,7 @@ export function handleCanvasPointerDown(
         parts: createGroupDragItems(handleHit.geometry.parts),
         beginUndoSnapshot,
         resetGroupTransformValues,
+        writePoseFrameValue,
       })
     );
     return;
@@ -112,6 +114,7 @@ export function handleCanvasPointerDown(
       editState,
       handle: handleHit.geometry,
       mode: handleMode,
+      writePoseFrameValue,
       beginUndoSnapshot,
     })
   );
@@ -178,6 +181,7 @@ export function beginCanvasGroupPointerDrag({
   parts,
   beginUndoSnapshot,
   resetGroupTransformValues,
+  writePoseFrameValue,
 }) {
   beginUndoSnapshot();
   resetGroupTransformValues();
@@ -189,6 +193,7 @@ export function beginCanvasGroupPointerDrag({
     handle,
     mode,
     parts,
+    writePoseFrameValue,
   });
 }
 
@@ -201,6 +206,7 @@ export function beginCanvasPartPointerDrag({
   editState,
   handle,
   mode,
+  writePoseFrameValue,
   beginUndoSnapshot,
 }) {
   beginUndoSnapshot();
@@ -214,6 +220,7 @@ export function beginCanvasPartPointerDrag({
     editState,
     handle,
     mode,
+    writePoseFrameValue,
   });
 }
 

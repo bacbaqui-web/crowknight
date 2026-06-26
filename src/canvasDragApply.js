@@ -127,6 +127,7 @@ export function applyCanvasGroupDrag(drag, dx, dy, groupEditValues) {
         part: item.part,
         target: item.target,
         base: item.base,
+        writePoseFrameValue: drag.writePoseFrameValue,
       },
       'x',
       item.startVisual.x + moveLocalX
@@ -137,6 +138,7 @@ export function applyCanvasGroupDrag(drag, dx, dy, groupEditValues) {
         part: item.part,
         target: item.target,
         base: item.base,
+        writePoseFrameValue: drag.writePoseFrameValue,
       },
       'y',
       item.startVisual.y + moveLocalY
@@ -210,6 +212,7 @@ function applyCanvasGroupTransform(drag, transformPoint, rotationDelta, scale) {
       part: item.part,
       target: item.target,
       base: item.base,
+      writePoseFrameValue: drag.writePoseFrameValue,
     };
     setCanvasVisualValue(itemDrag, 'x', item.startVisual.x + moveLocalX);
     setCanvasVisualValue(itemDrag, 'y', item.startVisual.y + moveLocalY);
@@ -236,6 +239,7 @@ function applyCanvasGroupAxisScale(drag, scaleX, scaleY) {
       part: item.part,
       target: item.target,
       base: item.base,
+      writePoseFrameValue: drag.writePoseFrameValue,
     };
     setCanvasVisualValue(itemDrag, 'x', item.startVisual.x + moveLocalX);
     setCanvasVisualValue(itemDrag, 'y', item.startVisual.y + moveLocalY);

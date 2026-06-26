@@ -33,6 +33,12 @@ VSCode에서 Live Server로 `index.html` 실행.
 
 `setting.html`에서 주인공/적1/적2/적3/적4를 선택해서 이름, 이동 능력치, 히트박스, 파츠 위치를 조절할 수 있습니다.
 
+## 제작툴 아키텍처
+
+`setting.html`은 장기적으로 횡스크롤 액션 게임 제작툴로 확장합니다.
+
+- 설계 기준: [docs/tool-architecture.md](docs/tool-architecture.md)
+
 ## 공격 이펙트
 
 공격 궤적은 `assets/effects/attack` 폴더의 `slash_1.png`, `slash_2.png`, `slash_3.png`를 교체해서 바꿀 수 있습니다.

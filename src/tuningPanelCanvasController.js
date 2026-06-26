@@ -20,6 +20,7 @@ import {
   applyTuningCanvasDrag,
 } from './canvasDragApply.js';
 import { currentCanvasSettingsEditContext } from './settingsPanelState.js';
+import { MASTER_PART_KEY } from './gameConfig.js';
 
 export function createTuningPanelCanvasController({
   canvas,
@@ -59,7 +60,7 @@ export function createTuningPanelCanvasController({
       canvas,
       currentCanvasEditContext,
       handleEffectPointerDown: onEffectPointerDown,
-      activePart: getEditFocusPartKey(),
+      activePart: currentCanvasActivePart(),
       getEditHandleAt,
       groupEditValues: getGroupEditValues(),
       applyCurrentGroupOpacity,
@@ -68,6 +69,7 @@ export function createTuningPanelCanvasController({
       renderPartFields,
       createGroupDragItems,
       canvasEditState,
+      writePoseFrameValue: poseTimeline.writeFrameValue,
       pushUndoSnapshot,
       beginUndoSnapshot,
       resetGroupTransformValues,
@@ -89,6 +91,12 @@ export function createTuningPanelCanvasController({
       editContext: getEditContext(),
       activePartKey: getActivePartKey(),
     });
+  }
+
+  function currentCanvasActivePart() {
+    const context = currentCanvasEditContext();
+    if (context === 'pose') return getEditFocusPartKey() || MASTER_PART_KEY;
+    return getEditFocusPartKey();
   }
 
   function onEffectPointerDown(event) {
@@ -152,7 +160,7 @@ export function createTuningPanelCanvasController({
     const hover = canvasHandleHoverMode({
       hit,
       currentContext: currentCanvasEditContext(),
-      editFocusPartKey: getEditFocusPartKey(),
+      editFocusPartKey: currentCanvasActivePart(),
     });
     setEditHandleHover(hover);
     canvas.style.cursor = handleCursor(hover);
@@ -180,12 +188,32 @@ export function createTuningPanelCanvasController({
   }
 
   function createCurrentGroupDrag(mode) {
-    const geometry = getGroupEditHandleGeometry();
+    const geometry = currentGroupEditGeometry();
     return createCurrentCanvasGroupDrag({
       geometry,
       parts: geometry ? createGroupDragItems(geometry.parts) : [],
       mode,
+      writePoseFrameValue: poseTimeline.writeFrameValue,
     });
+  }
+
+  function currentGroupEditGeometry() {
+    const geometry = getGroupEditHandleGeometry();
+    if (!geometry) return null;
+
+    const values = getGroupEditValues();
+    if (!Number.isFinite(values.anchorX) || !Number.isFinite(values.anchorY)) {
+      values.anchorX = geometry.anchor.x;
+      values.anchorY = geometry.anchor.y;
+    }
+
+    return {
+      ...geometry,
+      anchor: {
+        x: values.anchorX,
+        y: values.anchorY,
+      },
+    };
   }
 
   function applyCurrentGroupMove(dx, dy) {

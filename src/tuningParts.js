@@ -41,21 +41,21 @@ export function partFieldLimits(prop) {
   if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
   if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
   if (prop === 'ax' || prop === 'ay') return { min: -180, max: 180 };
-  if (prop === 'rot') return { min: -180, max: 180 };
+  if (prop === 'rot') return { min: -36000, max: 36000 };
   return { min: -180, max: 180 };
 }
 
 export function poseFieldLimits(prop) {
   if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
   if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
-  if (prop === 'rot') return { min: -180, max: 180 };
+  if (prop === 'rot') return { min: -36000, max: 36000 };
   return { min: -180, max: 180 };
 }
 
 export function effectFieldLimits(prop) {
   if (prop === 'opacity') return { min: 0, max: 1 };
   if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
-  if (prop === 'rot') return { min: -180, max: 180 };
+  if (prop === 'rot') return { min: -36000, max: 36000 };
   return { min: -260, max: 260 };
 }
 

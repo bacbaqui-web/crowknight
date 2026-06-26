@@ -2,6 +2,25 @@ import { POSE_PART_KEYS } from './gameConfig.js';
 import { ensurePoseOffset, poseKeyframesFor } from './tuningNormalize.js';
 import { effectFrameValue, frameValue } from './animationFrames.js';
 import { pasteEffectTimelineFrame, pastePoseTimelineFramePart } from './timelineKeyframeMutations.js';
+import { isTimelineFrameId } from './timelineState.js';
+
+export function copyTimelineFrame({ isOpen, id, keyframes, fallbackFrame = null, createCopy }) {
+  if (!isOpen) return null;
+  const source = (id ? keyframes.find((frame) => frame.id === id) : null) || fallbackFrame;
+  if (!source) return null;
+  return createCopy(source, id);
+}
+
+export function timelinePasteTargetFrameId({ selection, keyframes, slotToValue, addKeyframe, defaultFrameId = null }) {
+  const id = selection.activeKeyframeId || selection.fixedFrame;
+  if (isTimelineFrameId(id, keyframes)) return id;
+  if (selection.selectedSlot === null) return defaultFrameId;
+
+  const createdId = addKeyframe(slotToValue(selection.selectedSlot));
+  selection.activeKeyframeId = createdId;
+  selection.fixedFrame = null;
+  return createdId;
+}
 
 export function copyActivePoseTimelineFrame({
   isOpen,
@@ -13,21 +32,21 @@ export function copyActivePoseTimelineFrame({
   selectedPosePartKeys,
   activePosePartKey,
 }) {
-  if (!isOpen) return null;
   const id = activeKeyframeId || fixedFrame;
-  if (!id) return null;
-
-  const reference = keyframes.find((frame) => frame.id === id);
-  if (!reference) return null;
-
-  return createPoseFrameCopy({
-    tuning,
-    poseKey,
+  return copyTimelineFrame({
+    isOpen,
     id,
-    reference,
-    selectedParts: selectedPoseFrameCopyParts(selectedPosePartKeys, activePosePartKey),
-    mode: selectedPoseFrameCopyMode(selectedPosePartKeys, activePosePartKey),
-    activePosePartKey,
+    keyframes,
+    createCopy: (reference) =>
+      createPoseFrameCopy({
+        tuning,
+        poseKey,
+        id,
+        reference,
+        selectedParts: selectedPoseFrameCopyParts(selectedPosePartKeys, activePosePartKey),
+        mode: selectedPoseFrameCopyMode(selectedPosePartKeys, activePosePartKey),
+        activePosePartKey,
+      }),
   });
 }
 
@@ -60,10 +79,13 @@ export function pastePoseTimelineFrameCopy({
 }
 
 export function copyActiveEffectTimelineFrame({ isOpen, effectKey, id, keyframes, fallbackFrame }) {
-  if (!isOpen) return null;
-  const source = id ? keyframes.find((frame) => frame.id === id) : fallbackFrame;
-  if (!source) return null;
-  return createEffectFrameCopy(effectKey, source);
+  return copyTimelineFrame({
+    isOpen,
+    id,
+    keyframes,
+    fallbackFrame,
+    createCopy: (source) => createEffectFrameCopy(effectKey, source),
+  });
 }
 
 export function pasteEffectTimelineFrameCopy({ copiedEffectFrame, effect, effectKey, id, ensureKeyframe }) {

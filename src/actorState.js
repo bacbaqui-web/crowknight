@@ -1,6 +1,9 @@
 export function resetPlayerActionState(player) {
   player.attackTime = 0;
   player.jumpAttackTime = 0;
+  player.jumpHoldTime = 0;
+  player.jumpStartVy = 0;
+  player.jumpStartY = player.y;
   player.dashTime = 0;
   player.attackCooldown = 0;
   player.attackCarrySpeed = 0;

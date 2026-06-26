@@ -1,4 +1,4 @@
-import { syncActorHealthCapacity } from './actorTuning.js';
+import { defaultTuningFor, syncActorHealthCapacity } from './actorTuning.js';
 import { bindNumberDragInput } from './tuningNumberInputs.js';
 import {
   getTuningPanelElements,
@@ -31,6 +31,9 @@ import { drawTuningPanelDebugBoxes } from './tuningPanelDebugView.js';
 import { handlePanelKeyboardShortcut } from './tuningPanelShortcuts.js';
 import { TUNING_FIELDS } from './gameConfig.js';
 import { createBackgroundPanelController } from './backgroundPanelController.js';
+import { refreshCharacterPsdAssets } from './characterPsdRuntime.js';
+import { refreshEffectAsset } from './effectAssetRuntime.js';
+import { clone } from './utils.js';
 
 export function createTuningPanel({
   canvas,
@@ -64,6 +67,7 @@ export function createTuningPanel({
   let poseFrameCopyGlobal = null;
   let poseFramePasteGlobal = null;
   let poseFrameSelectionActive = false;
+  let frameSelectionCheckGlobal = () => poseFrameSelectionActive;
   let effectEditHandle = null;
 
   function activeEditPartKey() {
@@ -141,6 +145,14 @@ export function createTuningPanel({
       layerOrder,
       firebaseUpload,
       firebaseDownload,
+      characterPsdUpload,
+      characterPsdFile,
+      characterPsdRefresh,
+      characterPartReset,
+      effectAssetUpload,
+      effectAssetFile,
+      effectAssetRefresh,
+      effectAssetReset,
     } = panelElements;
     let editContext = 'part';
     let activePartKey = null;
@@ -173,6 +185,8 @@ export function createTuningPanel({
 
     const syncPanelToggle = () => syncPanelToggleState(panel, openButton);
     bindFirebaseButtons();
+    bindCharacterPsdButtons();
+    bindEffectAssetButtons();
 
     const fields = TUNING_FIELDS;
     const scrubCallbacks = {
@@ -191,7 +205,6 @@ export function createTuningPanel({
       selectedPosePartKeys: selectedPosePartKeysGlobal,
       getSelectedActor: () => selectedActor,
       getActivePosePartKey: () => activePosePartKey,
-      getFrameSelectionActive: () => poseFrameSelectionActive,
       setFrameSelectionActive: (value) => {
         poseFrameSelectionActive = value;
       },
@@ -400,7 +413,7 @@ export function createTuningPanel({
         closePanel: lifecycleController.closePanel,
         copyCurrentFrame,
         pasteCurrentFrame,
-        hasPoseFrameSelection: poseTimeline.hasFrameSelection,
+        hasFrameSelection: hasCurrentFrameSelection,
         resetSelectedActorTuning: lifecycleController.resetSelectedActorTuning,
         onCanvasPointerDown: canvasController.onPointerDown,
         onCanvasPointerMove: canvasController.onPointerMove,
@@ -429,6 +442,11 @@ export function createTuningPanel({
     function pasteCurrentFrame() {
       activeTimelineController().pasteFrame();
     }
+
+    function hasCurrentFrameSelection() {
+      return Boolean(activeTimelineController().hasFrameSelection?.());
+    }
+    frameSelectionCheckGlobal = hasCurrentFrameSelection;
 
     function renderLayerOrder(selectedValue = layerOrder.value) {
       renderLayerSelectOptions(layerOrder, selectedActor.tuning.layerOrder, selectedValue);
@@ -478,14 +496,75 @@ export function createTuningPanel({
 
     function bindFirebaseButtons() {
       firebaseUpload?.addEventListener('click', async () => {
-        await runFirebaseButtonAction(firebaseUpload, '업로드', uploadSettings);
+        await runPanelButtonAction(firebaseUpload, '업로드', uploadSettings);
       });
       firebaseDownload?.addEventListener('click', async () => {
-        await runFirebaseButtonAction(firebaseDownload, '다운로드', downloadSettings);
+        await runPanelButtonAction(firebaseDownload, '다운로드', downloadSettings);
       });
     }
 
-    async function runFirebaseButtonAction(button, label, action) {
+    function bindCharacterPsdButtons() {
+      characterPsdUpload?.addEventListener('click', () => {
+        if (characterPsdUpload.disabled) return;
+        characterPsdFile.value = '';
+        characterPsdFile.click();
+      });
+      characterPsdFile?.addEventListener('change', async () => {
+        const psdFile = characterPsdFile.files?.[0];
+        if (!psdFile) return;
+        await runPanelButtonAction(characterPsdUpload, 'PSD 업로드', async () => {
+          const ok = await refreshCharacterPsdAssets({ actor: selectedActor, psdFile });
+          if (ok) selectedActor.player.applyTuning(selectedActor.tuning);
+          return ok;
+        });
+      });
+      characterPsdRefresh?.addEventListener('click', async () => {
+        await runPanelButtonAction(characterPsdRefresh, 'PSD 새로고침', async () => {
+          const ok = await refreshCharacterPsdAssets({ actor: selectedActor });
+          if (ok) selectedActor.player.applyTuning(selectedActor.tuning);
+          return ok;
+        });
+      });
+      characterPartReset?.addEventListener('click', () => {
+        if (!window.confirm('선택 캐릭터의 파츠 위치를 초기화할까요?')) return;
+        pushUndoSnapshot();
+        selectedActor.tuning.rig = clone(defaultTuningFor(selectedActor).rig);
+        selectedActor.player.applyTuning(selectedActor.tuning);
+        saveState();
+        syncPanel();
+      });
+    }
+
+    function bindEffectAssetButtons() {
+      effectAssetUpload?.addEventListener('click', () => {
+        if (effectAssetUpload.disabled) return;
+        effectAssetFile.value = '';
+        effectAssetFile.click();
+      });
+      effectAssetFile?.addEventListener('change', async () => {
+        const effectFile = effectAssetFile.files?.[0];
+        if (!effectFile) return;
+        await runPanelButtonAction(effectAssetUpload, '효과 업로드', async () => refreshCurrentEffectAsset(effectFile));
+      });
+      effectAssetRefresh?.addEventListener('click', async () => {
+        await runPanelButtonAction(effectAssetRefresh, '효과 새로고침', () => refreshCurrentEffectAsset());
+      });
+      effectAssetReset?.addEventListener('click', () => {
+        if (!window.confirm('현재 효과를 초기화할까요?')) return;
+        effectTimeline.resetAnimation();
+      });
+    }
+
+    async function refreshCurrentEffectAsset(file = null) {
+      const ok = await refreshEffectAsset({ effectAssets, effectKey: effectSelect.value, file });
+      if (!ok) return false;
+
+      effectTimeline.renderFields();
+      effectTimeline.syncPreview();
+      return true;
+    }
+
+    async function runPanelButtonAction(button, label, action) {
       if (!button || !action || button.disabled) return;
       button.disabled = true;
       button.classList.add('is-working');
@@ -517,6 +596,7 @@ export function createTuningPanel({
       undo: undoTuningChangeGlobal,
       copyFrame: poseFrameCopyGlobal,
       pasteFrame: poseFramePasteGlobal,
+      canUseFrameShortcut: () => frameSelectionCheckGlobal(),
     });
   }
 
