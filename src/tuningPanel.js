@@ -1,11 +1,6 @@
 import { syncActorHealthCapacity } from './actorTuning.js';
 import { bindNumberDragInput } from './tuningNumberInputs.js';
-import {
-  getTuningPanelElements,
-  renderLayerSelectOptions,
-  syncNumericFields,
-  syncPanelToggleState,
-} from './tuningPanelDom.js';
+import { getTuningPanelElements, syncNumericFields, syncPanelToggleState } from './tuningPanelDom.js';
 import {
   activeEditPartKeyForContext,
   activeEditPartKeysForContext,
@@ -31,6 +26,7 @@ import { TUNING_FIELDS } from './gameConfig.js';
 import { createBackgroundPanelController } from './backgroundPanelController.js';
 import { bindTuningPanelAssetActions } from './tuningPanelAssetActions.js';
 import { createTuningPanelTimelines } from './tuningPanelTimelines.js';
+import { moveSelectedTuningLayer, renderTuningLayerOrder } from './tuningPanelLayerOrder.js';
 
 export function createTuningPanel({
   canvas,
@@ -433,21 +429,18 @@ export function createTuningPanel({
     frameSelectionCheckGlobal = hasCurrentFrameSelection;
 
     function renderLayerOrder(selectedValue = layerOrder.value) {
-      renderLayerSelectOptions(layerOrder, selectedActor.tuning.layerOrder, selectedValue);
+      renderTuningLayerOrder(layerOrder, selectedActor, selectedValue);
     }
 
     function moveSelectedLayer(direction) {
-      const order = selectedActor.tuning.layerOrder;
-      const currentIndex = order.indexOf(layerOrder.value);
-      const nextIndex = currentIndex + direction;
-
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= order.length) return;
-
-      pushUndoSnapshot();
-      [order[currentIndex], order[nextIndex]] = [order[nextIndex], order[currentIndex]];
-      selectedActor.player.applyTuning(selectedActor.tuning);
-      saveState();
-      renderLayerOrder(order[nextIndex]);
+      moveSelectedTuningLayer({
+        layerOrder,
+        actor: selectedActor,
+        direction,
+        pushUndoSnapshot,
+        applyActorTuning: (actor) => actor.player.applyTuning(actor.tuning),
+        saveState,
+      });
     }
 
     function applySelected() {
