@@ -6,14 +6,6 @@ import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragCon
 import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
-  addEffectTimelineKeyframe,
-  deleteEffectTimelineKeyframe,
-  ensureEffectTimelineKeyframe,
-  moveEffectTimelineKeyframe,
-  resetEffectTimelineAnimation,
-  writeEffectTimelineFrameValue,
-} from './timelineKeyframeMutations.js';
-import {
   copyActiveEffectTimelineFrame,
   pasteEffectTimelineFrameCopy,
   timelinePasteTargetFrameId,
@@ -37,7 +29,6 @@ import {
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
-import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
@@ -156,24 +147,20 @@ export function createEffectTimelineController({
       fixedFrame: effectSelection.fixedFrame,
       selectedSlot: effectSelection.selectedSlot,
       activeT: getActiveT(),
-      ensureKeyframe,
+      ensureKeyframe: effectTimeline.ensureKeyframe,
       setFixedFrame: setFrameSilently,
     });
   }
 
   function writeFrameValue(prop, value) {
-    const effect = effectTimeline.offset();
     if (!effectSelection.activeKeyframeId && !effectSelection.fixedFrame && effectSelection.selectedSlot !== null) {
       effectSelection.activeKeyframeId = createKeyframeAtSelectedSlot();
     }
-    writeEffectTimelineFrameValue({
-      effect,
-      effectKey: effectTimeline.key(),
+    effectTimeline.writeFrameValue({
       prop,
       value,
       activeKeyframeId: effectSelection.activeKeyframeId,
       fixedFrame: effectSelection.fixedFrame,
-      ensureKeyframe,
     });
   }
 
@@ -184,7 +171,7 @@ export function createEffectTimelineController({
       : null;
     if (slot === null) return null;
     const t = slotToValue(slot);
-    const id = addEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), t);
+    const id = effectTimeline.addKeyframe(t);
     effectSelection.activeKeyframeId = id;
     effectSelection.fixedFrame = null;
     effectSelection.selectedSlot = slot;
@@ -210,7 +197,7 @@ export function createEffectTimelineController({
   function updateSetting(prop, value) {
     beginUndoSnapshot();
     effectTimeline.ensureSettings();
-    writeEffectTimelineSetting(effectTimeline.settingsByKey(), effectTimeline.key(), prop, value);
+    effectTimeline.writeSetting(prop, value);
     applySelected();
     syncPreview();
   }
@@ -246,7 +233,7 @@ export function createEffectTimelineController({
       lastSlot: getLastSlot(),
       toSlot,
       slotToValue,
-      addKeyframe: (t) => addEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), t),
+      addKeyframe: effectTimeline.addKeyframe,
       beginUndo: beginUndoSnapshot,
       stopPreview,
       finish: finishTimelineMutation,
@@ -256,7 +243,7 @@ export function createEffectTimelineController({
   function deleteKeyframe() {
     deleteTimelineKeyframeAction({
       selection: effectSelection,
-      deleteKeyframe: (id) => deleteEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), id),
+      deleteKeyframe: effectTimeline.deleteKeyframe,
       beginUndo: beginUndoSnapshot,
       resetSelection: resetSelectionState,
       stopPreview,
@@ -266,7 +253,7 @@ export function createEffectTimelineController({
 
   function resetAnimation() {
     beginUndoSnapshot();
-    resetEffectTimelineAnimation(actor().tuning, effectTimeline.key());
+    effectTimeline.resetAnimation();
     resetSelectionState();
     copiedEffectFrame = null;
     stopPreview();
@@ -300,7 +287,7 @@ export function createEffectTimelineController({
       effect: effectTimeline.offset(),
       effectKey: effectTimeline.key(),
       id,
-      ensureKeyframe,
+      ensureKeyframe: effectTimeline.ensureKeyframe,
     });
     finishTimelineMutation();
   }
@@ -310,7 +297,7 @@ export function createEffectTimelineController({
       selection: effectSelection,
       keyframes: keyframesForTimeline(),
       slotToValue,
-      addKeyframe: (t) => addEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), t),
+      addKeyframe: effectTimeline.addKeyframe,
       defaultFrameId: 'start',
     });
   }
@@ -402,7 +389,7 @@ export function createEffectTimelineController({
       keyframes: keyframesForTimeline(),
       toSlot,
       slotToValue,
-      moveKeyframe: (nextT) => moveEffectTimelineKeyframe(actor().tuning, effectTimeline.key(), id, nextT),
+      moveKeyframe: (nextT) => effectTimeline.moveKeyframe(id, nextT),
       afterMove: (next) => {
         applySelected();
         setEffectTimelineDragPreview(actor(), effectTimeline.key(), next.t);
@@ -427,11 +414,6 @@ export function createEffectTimelineController({
     });
   }
 
-  function ensureKeyframe(effect, id) {
-    effectTimeline.ensureOffset();
-    return ensureEffectTimelineKeyframe(effect, effectTimeline.key(), id, keyframesForTimeline());
-  }
-
   function keyframesForTimeline() {
     return effectTimeline.keyframes();
   }
@@ -442,9 +424,7 @@ export function createEffectTimelineController({
       selectedSlot: effectSelection.selectedSlot,
       fixedFrame: effectSelection.fixedFrame,
       keyframes: keyframesForTimeline(),
-      selectedKeyframe: effectTimeline
-        .offset()
-        ?.keyframes?.find((frame) => frame.id === effectSelection.activeKeyframeId),
+      selectedKeyframe: effectTimeline.selectedKeyframe(effectSelection.activeKeyframeId),
       frameCount: getFrameCount(),
     });
   }
