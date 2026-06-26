@@ -63,6 +63,7 @@ export function createEffectTimelineController({
   const {
     activeT: timelineActiveT,
     frameCount: getFrameCount,
+    hasFrameSelection: hasTimelineFrameSelection,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
     toSlot,
@@ -73,6 +74,7 @@ export function createEffectTimelineController({
   } = createTimelineControllerCore({
     timeline: effectTimeline,
     selection: effectSelection,
+    section: effectSection,
     durationInput: effectDuration,
     track: effectTimelineTrack,
     addButton: effectAddKeyframe,
@@ -168,7 +170,7 @@ export function createEffectTimelineController({
     });
   }
 
-  const hasFrameSelection = () => effectSection.classList.contains('is-open') && hasTimelineSelection(effectSelection);
+  const hasFrameSelection = () => hasTimelineFrameSelection({ requireOpenSection: true });
 
   function updateSetting(prop, value) {
     updateTimelineSettingAction({

@@ -18,7 +18,7 @@ import {
   selectTimelineSlotAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
-import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
+import { createTimelineSelectionState } from './timelineState.js';
 import { startTimelinePreview, stopTimelinePreview, syncPoseTimelinePreview } from './tuningTimelinePreview.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
@@ -59,6 +59,7 @@ export function createPoseTimelineController({
   const {
     activeT: timelineActiveT,
     frameCount: getFrameCount,
+    hasFrameSelection: hasTimelineFrameSelection,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
     toSlot,
@@ -69,6 +70,7 @@ export function createPoseTimelineController({
   } = createTimelineControllerCore({
     timeline: poseTimeline,
     selection: poseSelection,
+    section: poseSection,
     durationInput: poseDuration,
     track: poseTimelineTrack,
     addButton: poseAddKeyframe,
@@ -115,7 +117,7 @@ export function createPoseTimelineController({
     );
   }
 
-  const hasFrameSelection = () => hasTimelineSelection(poseSelection, { includeSelectedSlot: false });
+  const hasFrameSelection = () => hasTimelineFrameSelection({ includeSelectedSlot: false });
 
   function frameLabel() {
     if (poseSelection.fixedFrame === 'start') return '첫프레임';
