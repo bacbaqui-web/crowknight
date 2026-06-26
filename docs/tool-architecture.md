@@ -565,13 +565,14 @@
 - 선택/드래그 선택/드래그 이동: `timelineControllerActions.js`
 - 복사/붙여넣기 코어: `timelineFrameClipboard.js`
 - 렌더/드래그 바인딩: `timelineControllerView.js`
+- 툴바 상태 동기화: `tuningTimelinePanelSync.js`
+- 재생 설정 동기화: `tuningTimelinePanelSync.js`, `tuningTimelineDom.js`
 
 아직 분리되어 있는 부분:
 
 - 필드 렌더링
 - 데이터 읽기/쓰기 adapter
 - 미리보기 동기화
-- 툴바 상태 동기화
 - 패널별 선택 상태 처리
 
 ### 4.2 `tuningPanel.js`가 너무 많은 책임을 가짐
@@ -801,11 +802,12 @@ src/
 - 공통 복사/붙여넣기 코어
 - 공통 트랙 렌더 생성기
 - 공통 드래그 바인더
+- 공통 툴바 상태 동기화
+- 공통 재생 설정 동기화
 
 다음 작업:
 
-- 툴바 상태 동기화 공통화
-- 재생 설정 동기화 공통화 강화
+- 패널별 선택 상태 차이 정리
 - `createTimelineControllerCore()` 설계
 
 ### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
@@ -884,14 +886,13 @@ createTimelineController({
 2. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
 3. 캐릭터 정의에 사용 동작/스킬 목록 추가
 4. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
-5. 타임라인 툴바 상태 공통화
-6. 타임라인 재생 설정 공통화
-7. 시각 효과 타임라인 adapter 도입
-8. 파츠 애니메이션 타임라인 adapter 도입
-9. 단일 `createTimelineController` 도입
-10. 히트박스 타임라인화 검토
-11. `tuningPanel.js` 부트스트랩/조립 책임 분리
-12. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
+5. 패널별 선택 상태 차이 정리
+6. 시각 효과 타임라인 adapter 도입
+7. 파츠 애니메이션 타임라인 adapter 도입
+8. 단일 `createTimelineController` 도입
+9. 히트박스 타임라인화 검토
+10. `tuningPanel.js` 부트스트랩/조립 책임 분리
+11. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
 
 ## 11. 유지보수 경고
 
