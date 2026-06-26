@@ -794,10 +794,13 @@ src/
 
 완료된 것:
 
+- 공통 타임라인 컨트롤러 계약
+- 공통 타임라인 컨트롤러 반환 형태 정리
 - 공통 키프레임 추가/삭제 액션
 - 공통 선택/드래그 액션
 - 공통 복사/붙여넣기 코어
-- 공통 렌더/드래그 바인더
+- 공통 트랙 렌더 생성기
+- 공통 드래그 바인더
 
 다음 작업:
 
@@ -894,14 +897,17 @@ createTimelineController({
 
 현재 파일 크기 기준으로 주의할 파일:
 
-- `src/settingsPanel.css`: 700줄 이상
-- `src/tuningPanel.js`: 600줄 이상
+- `docs/tool-architecture.md`: 900줄 이상
 - `setting.html`: 500줄 이상
+- `src/tuningEffectTimelineController.js`: 500줄 안팎
+- `src/tuningPanel.js`: 500줄 안팎
+- `src/tuningPoseTimelineController.js`: 500줄 안팎
 
 이 파일들은 계속 기능이 추가되면 AI 작업에서도 많은 컨텍스트를 요구한다.
 
 권장:
 
+- 문서는 개요, 워크플로우, 타임라인 설계, 리팩토링 계획으로 분리한다.
 - CSS는 패널 영역별로 분리한다.
 - `tuningPanel.js`는 조립/상태/버튼 액션을 분리한다.
 - `setting.html`은 구조만 유지하고 반복 UI는 JS 렌더링 또는 템플릿화한다.
