@@ -813,6 +813,7 @@ src/
 - 공통 미리보기 동기화 흐름
 - 공통 미리보기 재생 시작/정지 헬퍼
 - 공통 active time adapter 계약
+- 공통 current frame adapter 계약
 - 1차 `createTimelineControllerCore()` 도입
 - 공통 컨트롤러 반환 메서드 조립
 - 시각 효과 타임라인 adapter
@@ -840,6 +841,7 @@ src/
 - 시각 효과 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter 경계를 지난다.
 - 시각 효과 preview 생성 입력이 adapter로 이동했다.
 - 시각 효과 active time 계산이 adapter로 이동했다.
+- 시각 효과 current frame 계산이 adapter로 이동했다.
 - 시각 효과 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
 
 남은 것:
@@ -863,6 +865,7 @@ src/
 - 포즈 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter 경계를 지난다.
 - 포즈 preview 생성 입력과 드래그 preview가 adapter로 이동했다.
 - 포즈 active time 계산이 adapter로 이동했다.
+- 포즈 current frame 계산이 adapter로 이동했다.
 - 포즈 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
 
 남은 것:
