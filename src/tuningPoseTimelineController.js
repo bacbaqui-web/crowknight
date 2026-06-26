@@ -1,7 +1,7 @@
 import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
-import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
+import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
@@ -19,7 +19,6 @@ import {
   selectTimelineSlotAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
-import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
   restartTimelinePreviewTimer,
@@ -27,9 +26,9 @@ import {
 } from './tuningTimelinePreview.js';
 import { isMasterPart } from './tuningLabels.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
-import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
 import { defineTimelineController } from './timelineControllerContract.js';
+import { createTimelineControllerCore } from './timelineControllerCore.js';
 
 export function createPoseTimelineController({
   actors,
@@ -68,14 +67,15 @@ export function createPoseTimelineController({
     toSlot,
     slotToValue,
     slotToLeft,
-  } = createTimelineAccessors({
-    ensureSettings: poseTimeline.ensureSettings,
-    settingsByKey: poseTimeline.settingsByKey,
-    key: poseTimeline.key,
-  });
-  const playbackControls = createTimelinePlaybackControls({
-    getFrameCount,
+    playbackControls,
+    renderTimeline,
+  } = createTimelineControllerCore({
+    timeline: poseTimeline,
+    selection: poseSelection,
     durationInput: poseDuration,
+    track: poseTimelineTrack,
+    addButton: poseAddKeyframe,
+    deleteButton: poseDeleteKeyframe,
     beginUndo: beginUndoSnapshot,
     commitUndo: commitUndoSnapshot,
     updateSetting,
@@ -83,21 +83,10 @@ export function createPoseTimelineController({
     stopPreview,
     syncPreview,
     playPreview,
-    settings: poseTimeline.settings,
-  });
-  const renderTimeline = createControllerTimelineRenderer({
     renderSettings,
-    track: poseTimelineTrack,
-    frameCount: getFrameCount,
     keyframes: keyframesForTimeline,
-    selection: poseSelection,
-    lastSlot: getLastSlot,
-    toSlot,
-    slotToLeft,
     selectSlot,
     bindDrag: bindKeyframeDragHandler,
-    addButton: poseAddKeyframe,
-    deleteButton: poseDeleteKeyframe,
   });
 
   function actor() {

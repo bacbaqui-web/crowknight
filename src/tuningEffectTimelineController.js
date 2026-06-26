@@ -3,7 +3,7 @@ import { effectPropertyGroups } from './tuningFieldGroups.js';
 import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
-import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
+import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
@@ -25,15 +25,14 @@ import { createTimelineSelectionState, hasTimelineSelection } from './timelineSt
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
-import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
   restartTimelinePreviewTimer,
   syncEffectTimelinePreview,
 } from './tuningTimelinePreview.js';
 import { renderEffectTimelineSettingsView } from './tuningEffectTimelinePanelView.js';
-import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { defineTimelineController } from './timelineControllerContract.js';
+import { createTimelineControllerCore } from './timelineControllerCore.js';
 
 export function createEffectTimelineController({
   actors,
@@ -71,14 +70,15 @@ export function createEffectTimelineController({
     toSlot,
     slotToValue,
     slotToLeft,
-  } = createTimelineAccessors({
-    ensureSettings: effectTimeline.ensureSettings,
-    settingsByKey: effectTimeline.settingsByKey,
-    key: effectTimeline.key,
-  });
-  const playbackControls = createTimelinePlaybackControls({
-    getFrameCount,
+    playbackControls,
+    renderTimeline,
+  } = createTimelineControllerCore({
+    timeline: effectTimeline,
+    selection: effectSelection,
     durationInput: effectDuration,
+    track: effectTimelineTrack,
+    addButton: effectAddKeyframe,
+    deleteButton: effectDeleteKeyframe,
     beginUndo: beginUndoSnapshot,
     commitUndo: commitUndoSnapshot,
     updateSetting,
@@ -86,21 +86,10 @@ export function createEffectTimelineController({
     stopPreview,
     syncPreview,
     playPreview,
-    settings: effectTimeline.settings,
-  });
-  const renderTimeline = createControllerTimelineRenderer({
     renderSettings,
-    track: effectTimelineTrack,
-    frameCount: getFrameCount,
     keyframes: keyframesForTimeline,
-    selection: effectSelection,
-    lastSlot: getLastSlot,
-    toSlot,
-    slotToLeft,
     selectSlot,
     bindDrag: bindKeyframeDragHandler,
-    addButton: effectAddKeyframe,
-    deleteButton: effectDeleteKeyframe,
   });
 
   function actor() {
