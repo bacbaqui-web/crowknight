@@ -815,6 +815,7 @@ src/
 - 공통 미리보기 재생 시작/정지 헬퍼
 - 공통 active time adapter 계약
 - 공통 current frame adapter 계약
+- selection 기반 frame write adapter 경계
 - 1차 `createTimelineControllerCore()` 도입
 - 공통 컨트롤러 반환 메서드 조립
 - core 기반 keyframes/active time 헬퍼
