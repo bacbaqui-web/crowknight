@@ -1,5 +1,8 @@
 import { selectedOrFirstEmptySlot } from './tuningTimelineDom.js';
 import {
+  assignTimelineSelection,
+  clearedTimelineSelection,
+  fixedTimelineFrameSelection,
   movedTimelineKeyframeTarget,
   selectedTimelineFrameSelection,
   selectedTimelineSlotSelection,
@@ -45,6 +48,20 @@ export function deleteTimelineKeyframeAction({
   stopPreview();
   finish();
   return true;
+}
+
+export function resetTimelineSelectionAction(targetSelection) {
+  assignTimelineSelection(targetSelection, clearedTimelineSelection());
+}
+
+export function setFixedTimelineFrameSelectionAction({ targetSelection, frame, lastSlot }) {
+  assignTimelineSelection(targetSelection, fixedTimelineFrameSelection(frame, lastSlot));
+}
+
+export function applyTimelineSelectionAction({ targetSelection, nextSelection, beforeRefresh = null, refresh }) {
+  assignTimelineSelection(targetSelection, nextSelection.selection);
+  beforeRefresh?.(nextSelection);
+  refresh();
 }
 
 export function resetTimelineAnimationAction({

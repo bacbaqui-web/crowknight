@@ -7,6 +7,7 @@ import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
+  applyTimelineSelectionAction,
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   finishTimelineMutationAction,
@@ -14,18 +15,13 @@ import {
   pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
+  resetTimelineSelectionAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
+  setFixedTimelineFrameSelectionAction,
 } from './timelineControllerActions.js';
-import {
-  activeTimelineT,
-  assignTimelineSelection,
-  clearedTimelineSelection,
-  createTimelineSelectionState,
-  fixedTimelineFrameSelection,
-  hasTimelineSelection,
-} from './timelineState.js';
+import { activeTimelineT, createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
@@ -332,7 +328,11 @@ export function createEffectTimelineController({
   }
 
   function setFrameSilently(frame) {
-    assignTimelineSelection(effectSelection, fixedTimelineFrameSelection(frame, getLastSlot()));
+    setFixedTimelineFrameSelectionAction({
+      targetSelection: effectSelection,
+      frame,
+      lastSlot: getLastSlot(),
+    });
   }
 
   function ensureActiveFrame() {
@@ -348,16 +348,19 @@ export function createEffectTimelineController({
   }
 
   function resetSelectionState() {
-    assignTimelineSelection(effectSelection, clearedTimelineSelection());
+    resetTimelineSelectionAction(effectSelection);
   }
 
   function clearCopiedFrame() {
     copiedEffectFrame = null;
   }
 
-  function applyTimelineSelection({ selection }) {
-    assignTimelineSelection(effectSelection, selection);
-    refreshFrameSelection();
+  function applyTimelineSelection(nextSelection) {
+    applyTimelineSelectionAction({
+      targetSelection: effectSelection,
+      nextSelection,
+      refresh: refreshFrameSelection,
+    });
   }
 
   function refreshFrameSelection() {

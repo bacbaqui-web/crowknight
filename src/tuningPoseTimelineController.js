@@ -5,6 +5,7 @@ import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
+  applyTimelineSelectionAction,
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   finishTimelineMutationAction,
@@ -12,17 +13,12 @@ import {
   pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
+  resetTimelineSelectionAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
 } from './timelineControllerActions.js';
-import {
-  activeTimelineT,
-  assignTimelineSelection,
-  clearedTimelineSelection,
-  createTimelineSelectionState,
-  hasTimelineSelection,
-} from './timelineState.js';
+import { activeTimelineT, createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
@@ -331,13 +327,18 @@ export function createPoseTimelineController({
   }
 
   function resetSelectionState() {
-    assignTimelineSelection(poseSelection, clearedTimelineSelection());
+    resetTimelineSelectionAction(poseSelection);
   }
 
-  function applyTimelineSelection({ selection, kind }, { resetGroup = false } = {}) {
-    assignTimelineSelection(poseSelection, selection);
-    if (resetGroup || kind === 'fixed') resetGroupEditValues();
-    refreshFrameSelection();
+  function applyTimelineSelection(nextSelection, { resetGroup = false } = {}) {
+    applyTimelineSelectionAction({
+      targetSelection: poseSelection,
+      nextSelection,
+      beforeRefresh: ({ kind }) => {
+        if (resetGroup || kind === 'fixed') resetGroupEditValues();
+      },
+      refresh: refreshFrameSelection,
+    });
   }
 
   function refreshFrameSelection() {
