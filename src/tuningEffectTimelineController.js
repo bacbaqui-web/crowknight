@@ -9,6 +9,7 @@ import {
   addTimelineKeyframeAction,
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
+  finishTimelineMutationAction,
   moveTimelineKeyframeAction,
   pasteTimelineFrameAction,
   resetTimelineAnimationAction,
@@ -297,10 +298,12 @@ export function createEffectTimelineController({
   }
 
   function finishTimelineMutation() {
-    renderFields();
-    syncPreview();
-    applySelected();
-    commitUndoSnapshot();
+    finishTimelineMutationAction({
+      renderFields,
+      syncPreview,
+      applySelected,
+      commitUndo: commitUndoSnapshot,
+    });
   }
 
   function selectKeyframe(id) {

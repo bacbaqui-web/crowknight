@@ -73,6 +73,22 @@ export function copyTimelineFrameAction({ copyFrame, setCopiedFrame, afterCopy }
   return true;
 }
 
+export function finishTimelineMutationAction({
+  beforeRender = null,
+  renderFields,
+  syncPreview,
+  applySelected,
+  commitUndo,
+  afterCommit = null,
+}) {
+  beforeRender?.();
+  renderFields();
+  syncPreview();
+  applySelected();
+  commitUndo();
+  afterCommit?.();
+}
+
 export function pasteTimelineFrameAction({
   copiedFrame,
   isOpen,

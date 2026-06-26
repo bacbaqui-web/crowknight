@@ -7,6 +7,7 @@ import {
   addTimelineKeyframeAction,
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
+  finishTimelineMutationAction,
   moveTimelineKeyframeAction,
   pasteTimelineFrameAction,
   resetTimelineAnimationAction,
@@ -290,12 +291,14 @@ export function createPoseTimelineController({
   }
 
   function finishTimelineMutation({ resetGroup = false, syncToolbar = false } = {}) {
-    if (resetGroup) resetGroupEditValues();
-    renderPosePartFields();
-    syncPreview();
-    applySelected();
-    commitUndoSnapshot();
-    if (syncToolbar) syncToolbarButtons();
+    finishTimelineMutationAction({
+      beforeRender: resetGroup ? resetGroupEditValues : null,
+      renderFields: renderPosePartFields,
+      syncPreview,
+      applySelected,
+      commitUndo: commitUndoSnapshot,
+      afterCommit: syncToolbar ? syncToolbarButtons : null,
+    });
   }
 
   function selectKeyframe(id) {
