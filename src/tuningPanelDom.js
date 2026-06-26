@@ -5,6 +5,7 @@ import { layerLabel, partLabel, poseLabel } from './tuningLabels.js';
 import { displayTuningControlValue } from './tuningControlValueTransforms.js';
 import { partPositionSources } from './tuningParts.js';
 import { populateMotionSettingRows } from './tuningMotionFieldRows.js';
+import { getTuningPanelWorkflowSections } from './tuningPanelWorkflow.js';
 
 const PART_PICKER_KEYS = [
   'head',
@@ -32,6 +33,7 @@ const PART_PICKER_CLASS_BY_KEY = {
 
 export function getTuningPanelElements(panel) {
   populateMotionSettingRows(panel.querySelector('#motionSettingRows'));
+  const workflowSections = getTuningPanelWorkflowSections(panel);
 
   return {
     panel,
@@ -43,10 +45,7 @@ export function getTuningPanelElements(panel) {
     firebaseDownload: document.querySelector('#firebaseDownload'),
     actorSelect: document.querySelector('#actorSelect'),
     actorName: document.querySelector('#actorName'),
-    partSection: panel.querySelector('[data-section="part"]'),
-    poseSection: panel.querySelector('[data-section="pose"]'),
-    effectSection: panel.querySelector('[data-section="effect"]'),
-    sceneSection: panel.querySelector('[data-section="scene"]'),
+    ...workflowSections,
     backgroundClipUpload: document.querySelector('#backgroundClipUpload'),
     backgroundClipFile: document.querySelector('#backgroundClipFile'),
     backgroundRefresh: document.querySelector('#backgroundRefresh'),
