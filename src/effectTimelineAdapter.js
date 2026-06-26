@@ -98,14 +98,14 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     return ensureEffectTimelineKeyframe(effect, key(), id, keyframes());
   }
 
-  function writeFrameValue({ prop, value, activeKeyframeId, fixedFrame }) {
+  function writeFrameValue({ prop, value, selection }) {
     return writeEffectTimelineFrameValue({
       effect: offset(),
       effectKey: key(),
       prop,
       value,
-      activeKeyframeId,
-      fixedFrame,
+      activeKeyframeId: selection.activeKeyframeId,
+      fixedFrame: selection.fixedFrame,
       ensureKeyframe,
     });
   }

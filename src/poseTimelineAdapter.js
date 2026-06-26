@@ -102,13 +102,13 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     return ensurePoseTimelineKeyframe(frames, id, keyframes());
   }
 
-  function writeFrameValue({ part, prop, value, activeKeyframeId, fixedFrame }) {
+  function writeFrameValue({ part, prop, value, selection }) {
     return writePoseTimelineFrameValue({
       frames: offset(part),
       prop,
       value,
-      activeKeyframeId,
-      fixedFrame,
+      activeKeyframeId: selection.activeKeyframeId,
+      fixedFrame: selection.fixedFrame,
       allowRootAnchorWrite: isMasterPart(part),
       ensureKeyframe,
     });

@@ -166,8 +166,7 @@ export function createPoseTimelineController({
       part,
       prop,
       value,
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      fixedFrame: poseSelection.fixedFrame,
+      selection: poseSelection,
     });
   }
 

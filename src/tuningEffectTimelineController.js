@@ -137,8 +137,7 @@ export function createEffectTimelineController({
     effectTimeline.writeFrameValue({
       prop,
       value,
-      activeKeyframeId: effectSelection.activeKeyframeId,
-      fixedFrame: effectSelection.fixedFrame,
+      selection: effectSelection,
     });
   }
 
