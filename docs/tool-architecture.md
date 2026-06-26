@@ -811,6 +811,7 @@ src/
 - 공통 툴바 상태 동기화
 - 공통 재생 설정 동기화
 - 공통 미리보기 동기화 흐름
+- 공통 미리보기 재생 시작/정지 헬퍼
 - 공통 active time adapter 계약
 - 1차 `createTimelineControllerCore()` 도입
 - 공통 컨트롤러 반환 메서드 조립
