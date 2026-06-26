@@ -10,6 +10,7 @@ import {
 import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
 import { createEffectPreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
+import { copyActiveEffectTimelineFrame, pasteEffectTimelineFrameCopy } from './timelineFrameClipboard.js';
 
 export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   const key = () => effectSelect.value;
@@ -96,10 +97,31 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     getActor().player.effectPreview = createPreview({ playing: false, t });
   }
 
+  function copyFrame({ isOpen, id, fallbackFrame }) {
+    return copyActiveEffectTimelineFrame({
+      isOpen,
+      effectKey: key(),
+      id,
+      keyframes: keyframes(),
+      fallbackFrame,
+    });
+  }
+
+  function pasteFrameCopy({ copiedFrame, id }) {
+    return pasteEffectTimelineFrameCopy({
+      copiedEffectFrame: copiedFrame,
+      effect: offset(),
+      effectKey: key(),
+      id,
+      ensureKeyframe,
+    });
+  }
+
   return defineTimelineAdapter(
     'effect',
     {
       addKeyframe,
+      copyFrame,
       createPreview,
       deleteKeyframe,
       ensureKeyframe,
@@ -111,6 +133,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
       setDragPreview,
       settings,
       settingsByKey,
+      pasteFrameCopy,
       writeFrameValue,
       writeSetting,
     },

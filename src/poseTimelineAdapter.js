@@ -13,6 +13,7 @@ import { POSE_PART_KEYS } from './gameConfig.js';
 import { isMasterPart } from './tuningLabels.js';
 import { createPosePreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
+import { copyActivePoseTimelineFrame, pastePoseTimelineFrameCopy } from './timelineFrameClipboard.js';
 
 export function createPoseTimelineAdapter({ getActor, poseSelect }) {
   const key = () => poseSelect.value;
@@ -108,10 +109,36 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     actor.player.animTime = 0;
   }
 
+  function copyFrame({ isOpen, activeKeyframeId, fixedFrame, selectedPosePartKeys, activePosePartKey }) {
+    return copyActivePoseTimelineFrame({
+      isOpen,
+      activeKeyframeId,
+      fixedFrame,
+      keyframes: keyframes(),
+      tuning: tuning(),
+      poseKey: key(),
+      selectedPosePartKeys,
+      activePosePartKey,
+    });
+  }
+
+  function pasteFrameCopy({ copiedFrame, id, selectedPosePartKeys, activePosePartKey }) {
+    return pastePoseTimelineFrameCopy({
+      copiedPoseFrame: copiedFrame,
+      id,
+      tuning: tuning(),
+      poseKey: key(),
+      selectedPosePartKeys,
+      activePosePartKey,
+      ensureKeyframe,
+    });
+  }
+
   return defineTimelineAdapter(
     'pose',
     {
       addKeyframe,
+      copyFrame,
       createPreview,
       deleteKeyframe,
       ensureKeyframe,
@@ -123,6 +150,7 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
       setDragPreview,
       settings,
       settingsByKey,
+      pasteFrameCopy,
       writeFrameValue,
       writeSetting,
     },

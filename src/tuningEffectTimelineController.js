@@ -5,11 +5,7 @@ import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
-import {
-  copyActiveEffectTimelineFrame,
-  pasteEffectTimelineFrameCopy,
-  timelinePasteTargetFrameId,
-} from './timelineFrameClipboard.js';
+import { timelinePasteTargetFrameId } from './timelineFrameClipboard.js';
 import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
@@ -260,11 +256,9 @@ export function createEffectTimelineController({
   }
 
   function copyFrame() {
-    const copy = copyActiveEffectTimelineFrame({
+    const copy = effectTimeline.copyFrame({
       isOpen: effectSection.classList.contains('is-open'),
-      effectKey: effectTimeline.key(),
       id: effectSelection.activeKeyframeId || effectSelection.fixedFrame,
-      keyframes: keyframesForTimeline(),
       fallbackFrame: currentFrameValue(),
     });
     if (!copy) return;
@@ -281,12 +275,9 @@ export function createEffectTimelineController({
       return;
     }
 
-    pasteEffectTimelineFrameCopy({
-      copiedEffectFrame,
-      effect: effectTimeline.offset(),
-      effectKey: effectTimeline.key(),
+    effectTimeline.pasteFrameCopy({
+      copiedFrame: copiedEffectFrame,
       id,
-      ensureKeyframe: effectTimeline.ensureKeyframe,
     });
     finishTimelineMutation();
   }

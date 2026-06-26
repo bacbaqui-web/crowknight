@@ -1,5 +1,6 @@
 export const COMMON_TIMELINE_ADAPTER_METHODS = [
   'addKeyframe',
+  'copyFrame',
   'createPreview',
   'deleteKeyframe',
   'ensureKeyframe',
@@ -11,6 +12,7 @@ export const COMMON_TIMELINE_ADAPTER_METHODS = [
   'setDragPreview',
   'settings',
   'settingsByKey',
+  'pasteFrameCopy',
   'writeFrameValue',
   'writeSetting',
 ];

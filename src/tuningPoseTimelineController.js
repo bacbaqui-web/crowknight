@@ -3,11 +3,7 @@ import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFiel
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './timelineControllerView.js';
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
-import {
-  copyActivePoseTimelineFrame,
-  pastePoseTimelineFrameCopy,
-  timelinePasteTargetFrameId,
-} from './timelineFrameClipboard.js';
+import { timelinePasteTargetFrameId } from './timelineFrameClipboard.js';
 import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
@@ -249,13 +245,10 @@ export function createPoseTimelineController({
   }
 
   function copyFrame() {
-    const copy = copyActivePoseTimelineFrame({
+    const copy = poseTimeline.copyFrame({
       isOpen: poseSection.classList.contains('is-open'),
       activeKeyframeId: poseSelection.activeKeyframeId,
       fixedFrame: poseSelection.fixedFrame,
-      keyframes: keyframesForTimeline(),
-      tuning: poseTimeline.tuning(),
-      poseKey: poseTimeline.key(),
       selectedPosePartKeys,
       activePosePartKey: getActivePosePartKey(),
     });
@@ -273,14 +266,11 @@ export function createPoseTimelineController({
       return;
     }
 
-    pastePoseTimelineFrameCopy({
-      copiedPoseFrame,
+    poseTimeline.pasteFrameCopy({
+      copiedFrame: copiedPoseFrame,
       id,
-      tuning: poseTimeline.tuning(),
-      poseKey: poseTimeline.key(),
       selectedPosePartKeys,
       activePosePartKey: getActivePosePartKey(),
-      ensureKeyframe: poseTimeline.ensureKeyframe,
     });
 
     finishTimelineMutation({ resetGroup: true, syncToolbar: true });
