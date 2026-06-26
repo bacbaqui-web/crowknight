@@ -817,6 +817,7 @@ src/
 - 1차 `createTimelineControllerCore()` 도입
 - 공통 컨트롤러 반환 메서드 조립
 - core 기반 keyframes/active time 헬퍼
+- core 기반 frame selection 검사 헬퍼
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
 - 공통 adapter 계약: `timelineAdapterContract.js`
