@@ -25,10 +25,31 @@ import { DEATH_RESULT_DELAY } from './gameConfig.js';
 import { drawSceneForeground, preloadSceneBackground } from './backgroundRenderer.js';
 import { createWorldFromSceneSession } from './sceneSession.js';
 import { createProjectStateController } from './projectStateController.js';
+import { getMainDomElements } from './mainDomElements.js';
 
-const canvas = document.querySelector('#game');
-const ctx = canvas.getContext('2d');
-const isFullStage = document.body.classList.contains('full-stage');
+const {
+  canvas,
+  ctx,
+  isFullStage,
+  startBattleButton,
+  endBattleButton,
+  homeStartButton,
+  startScreen,
+  resultScreen,
+  rankingList,
+  settingsRankingList,
+  settingsRankingPanel,
+  settingsRankingToggle,
+  rankingForm,
+  rankingName,
+  rankingMessage,
+  resultScore,
+  resultSurvival,
+  resultKills,
+  hudSurvivalTime,
+  hudKills,
+  retryRunButton,
+} = getMainDomElements();
 const keys = new Set();
 const pressed = new Set();
 
@@ -51,24 +72,6 @@ const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refre
     getSceneSession: () => sceneSession,
     onSceneBackgroundUpdate: preloadSceneBackground,
   });
-const startBattleButton = document.querySelector('#startBattle');
-const endBattleButton = document.querySelector('#endBattle');
-const homeStartButton = document.querySelector('#homeStart');
-const startScreen = document.querySelector('#startScreen');
-const resultScreen = document.querySelector('#resultScreen');
-const rankingList = document.querySelector('#rankingList');
-const settingsRankingList = document.querySelector('#settingsRankingList');
-const settingsRankingPanel = document.querySelector('.settings-ranking-panel');
-const settingsRankingToggle = document.querySelector('#rankingToggle');
-const rankingForm = document.querySelector('#rankingForm');
-const rankingName = document.querySelector('#rankingName');
-const rankingMessage = document.querySelector('#rankingMessage');
-const resultScore = document.querySelector('#resultScore');
-const resultSurvival = document.querySelector('#resultSurvival');
-const resultKills = document.querySelector('#resultKills');
-const hudSurvivalTime = document.querySelector('#hudSurvivalTime');
-const hudKills = document.querySelector('#hudKills');
-const retryRunButton = document.querySelector('#retryRun');
 let selectedActor = playerActor;
 let battleActive = false;
 let playerDeathPending = false;
