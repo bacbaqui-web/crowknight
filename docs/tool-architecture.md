@@ -811,6 +811,7 @@ src/
 - 공통 툴바 상태 동기화
 - 공통 재생 설정 동기화
 - 공통 미리보기 동기화 흐름
+- 공통 active time adapter 계약
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
 - 공통 adapter 계약: `timelineAdapterContract.js`
@@ -835,6 +836,7 @@ src/
 - `src/effectTimelineAdapter.js`가 시각 효과 키, 설정, offset, 키프레임 접근을 맡는다.
 - 시각 효과 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter 경계를 지난다.
 - 시각 효과 preview 생성 입력이 adapter로 이동했다.
+- 시각 효과 active time 계산이 adapter로 이동했다.
 - 시각 효과 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
 
 남은 것:
@@ -857,6 +859,7 @@ src/
 - `src/poseTimelineAdapter.js`가 포즈 키, 설정, offset, 키프레임, 파츠 source 접근을 맡는다.
 - 포즈 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter 경계를 지난다.
 - 포즈 preview 생성 입력과 드래그 preview가 adapter로 이동했다.
+- 포즈 active time 계산이 adapter로 이동했다.
 - 포즈 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
 
 남은 것:
