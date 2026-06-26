@@ -5,9 +5,11 @@ import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './
 import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
+  copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   moveTimelineKeyframeAction,
   pasteTimelineFrameAction,
+  resetTimelineAnimationAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -236,25 +238,33 @@ export function createPoseTimelineController({
   }
 
   function resetAnimation() {
-    beginUndoSnapshot();
-    poseTimeline.resetAnimation();
-    resetSelectionState();
-    copiedPoseFrame = null;
-    stopPreview();
-    finishTimelineMutation({ syncToolbar: true });
+    resetTimelineAnimationAction({
+      beginUndo: beginUndoSnapshot,
+      resetAnimation: poseTimeline.resetAnimation,
+      resetSelection: resetSelectionState,
+      clearCopiedFrame: () => {
+        copiedPoseFrame = null;
+      },
+      stopPreview,
+      finish: () => finishTimelineMutation({ syncToolbar: true }),
+    });
   }
 
   function copyFrame() {
-    const copy = poseTimeline.copyFrame({
-      isOpen: poseSection.classList.contains('is-open'),
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      fixedFrame: poseSelection.fixedFrame,
-      selectedPosePartKeys,
-      activePosePartKey: getActivePosePartKey(),
+    copyTimelineFrameAction({
+      copyFrame: () =>
+        poseTimeline.copyFrame({
+          isOpen: poseSection.classList.contains('is-open'),
+          activeKeyframeId: poseSelection.activeKeyframeId,
+          fixedFrame: poseSelection.fixedFrame,
+          selectedPosePartKeys,
+          activePosePartKey: getActivePosePartKey(),
+        }),
+      setCopiedFrame: (copy) => {
+        copiedPoseFrame = copy;
+      },
+      afterCopy: syncToolbarButtons,
     });
-    if (!copy) return;
-    copiedPoseFrame = copy;
-    syncToolbarButtons();
   }
 
   function pasteFrame() {

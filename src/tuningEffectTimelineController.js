@@ -7,9 +7,11 @@ import { bindControllerKeyframeDrag, createControllerTimelineRenderer } from './
 import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
+  copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   moveTimelineKeyframeAction,
   pasteTimelineFrameAction,
+  resetTimelineAnimationAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -247,23 +249,31 @@ export function createEffectTimelineController({
   }
 
   function resetAnimation() {
-    beginUndoSnapshot();
-    effectTimeline.resetAnimation();
-    resetSelectionState();
-    copiedEffectFrame = null;
-    stopPreview();
-    finishTimelineMutation();
+    resetTimelineAnimationAction({
+      beginUndo: beginUndoSnapshot,
+      resetAnimation: effectTimeline.resetAnimation,
+      resetSelection: resetSelectionState,
+      clearCopiedFrame: () => {
+        copiedEffectFrame = null;
+      },
+      stopPreview,
+      finish: finishTimelineMutation,
+    });
   }
 
   function copyFrame() {
-    const copy = effectTimeline.copyFrame({
-      isOpen: effectSection.classList.contains('is-open'),
-      id: effectSelection.activeKeyframeId || effectSelection.fixedFrame,
-      fallbackFrame: currentFrameValue(),
+    copyTimelineFrameAction({
+      copyFrame: () =>
+        effectTimeline.copyFrame({
+          isOpen: effectSection.classList.contains('is-open'),
+          id: effectSelection.activeKeyframeId || effectSelection.fixedFrame,
+          fallbackFrame: currentFrameValue(),
+        }),
+      setCopiedFrame: (copy) => {
+        copiedEffectFrame = copy;
+      },
+      afterCopy: renderSettings,
     });
-    if (!copy) return;
-    copiedEffectFrame = copy;
-    renderSettings();
   }
 
   function pasteFrame() {

@@ -47,6 +47,32 @@ export function deleteTimelineKeyframeAction({
   return true;
 }
 
+export function resetTimelineAnimationAction({
+  beginUndo,
+  resetAnimation,
+  resetSelection,
+  clearCopiedFrame,
+  stopPreview,
+  finish,
+}) {
+  beginUndo();
+  resetAnimation();
+  resetSelection();
+  clearCopiedFrame();
+  stopPreview();
+  finish();
+  return true;
+}
+
+export function copyTimelineFrameAction({ copyFrame, setCopiedFrame, afterCopy }) {
+  const copy = copyFrame();
+  if (!copy) return false;
+
+  setCopiedFrame(copy);
+  afterCopy();
+  return true;
+}
+
 export function pasteTimelineFrameAction({
   copiedFrame,
   isOpen,
