@@ -8,6 +8,7 @@ import {
   writeEffectTimelineFrameValue,
 } from './timelineKeyframeMutations.js';
 import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
+import { createEffectPreview } from './previewState.js';
 
 export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   const key = () => effectSelect.value;
@@ -81,8 +82,22 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     writeEffectTimelineSetting(settingsByKey(), key(), prop, value);
   }
 
+  function createPreview({ playing = false, t = null } = {}) {
+    return createEffectPreview({
+      key: key(),
+      playing,
+      t,
+      now: performance.now(),
+    });
+  }
+
+  function setDragPreview(t) {
+    getActor().player.effectPreview = createPreview({ playing: false, t });
+  }
+
   return {
     addKeyframe,
+    createPreview,
     deleteKeyframe,
     ensureOffset,
     ensureKeyframe,
@@ -93,6 +108,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     offset,
     resetAnimation,
     selectedKeyframe,
+    setDragPreview,
     settings,
     settingsByKey,
     writeFrameValue,

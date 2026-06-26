@@ -33,7 +33,6 @@ import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
   restartTimelinePreviewTimer,
-  setEffectTimelineDragPreview,
   syncEffectTimelinePreview,
 } from './tuningTimelinePreview.js';
 import { renderEffectTimelineSettingsView } from './tuningEffectTimelinePanelView.js';
@@ -392,7 +391,7 @@ export function createEffectTimelineController({
       moveKeyframe: (nextT) => effectTimeline.moveKeyframe(id, nextT),
       afterMove: (next) => {
         applySelected();
-        setEffectTimelineDragPreview(actor(), effectTimeline.key(), next.t);
+        effectTimeline.setDragPreview(next.t);
         moveKeyframeButtons(effectTimelineTrack, id, next.slot, slotToLeft(next.slot));
       },
     });
@@ -406,7 +405,7 @@ export function createEffectTimelineController({
       toSlot,
       stopPreview,
       getActiveT,
-      setDragPreview: (t) => setEffectTimelineDragPreview(actor(), effectTimeline.key(), t),
+      setDragPreview: effectTimeline.setDragPreview,
       setDeleteDisabled: (disabled) => {
         effectDeleteKeyframe.disabled = disabled;
       },
@@ -441,6 +440,7 @@ export function createEffectTimelineController({
       fixedFrame: effectSelection.fixedFrame,
       selectedSlot: effectSelection.selectedSlot,
       effectKey: effectTimeline.key(),
+      createPreview: effectTimeline.createPreview,
       getActiveT,
     });
   }

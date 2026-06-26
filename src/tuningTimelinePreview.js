@@ -62,6 +62,7 @@ export function syncEffectTimelinePreview({
   fixedFrame,
   selectedSlot,
   effectKey,
+  createPreview,
   getActiveT,
 }) {
   clearActorEffectPreviews(actors);
@@ -81,27 +82,20 @@ export function syncEffectTimelinePreview({
     return;
   }
 
-  actor.player.effectPreview = createEffectPreview({
-    key: effectKey,
-    playing,
-    t: playing ? null : getActiveT(),
-    now: performance.now(),
-  });
+  actor.player.effectPreview = createPreview
+    ? createPreview({ playing, t: playing ? null : getActiveT() })
+    : createEffectPreview({
+        key: effectKey,
+        playing,
+        t: playing ? null : getActiveT(),
+        now: performance.now(),
+      });
   renderTimeline();
 }
 
 export function setPoseTimelineDragPreview(actor, poseKey, t) {
   actor.player.posePreview = createPosePreview({
     pose: poseKey,
-    playing: false,
-    t,
-    now: performance.now(),
-  });
-}
-
-export function setEffectTimelineDragPreview(actor, effectKey, t) {
-  actor.player.effectPreview = createEffectPreview({
-    key: effectKey,
     playing: false,
     t,
     now: performance.now(),
