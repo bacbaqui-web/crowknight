@@ -20,11 +20,7 @@ import {
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
-import {
-  clearTimelinePreviewTimer,
-  restartTimelinePreviewTimer,
-  syncPoseTimelinePreview,
-} from './tuningTimelinePreview.js';
+import { startTimelinePreview, stopTimelinePreview, syncPoseTimelinePreview } from './tuningTimelinePreview.js';
 import { isMasterPart } from './tuningLabels.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
@@ -180,28 +176,33 @@ export function createPoseTimelineController({
   }
 
   function playPreview() {
-    poseTimeline.ensureSettings();
-    posePreviewPlaying = true;
-    resetSelectionState();
-    poseTimeline.resetPreviewClock();
-    syncPreview();
-
-    const settings = poseTimeline.settings();
-    posePreviewTimer = restartTimelinePreviewTimer({
+    startTimelinePreview({
       timer: posePreviewTimer,
-      settings,
-      shouldAutoStop: settings.playback === 'once',
-      onStop: () => {
-        posePreviewPlaying = false;
-        posePreviewTimer = null;
-        syncPreview();
+      setTimer: (timer) => {
+        posePreviewTimer = timer;
       },
+      setPlaying: (playing) => {
+        posePreviewPlaying = playing;
+      },
+      ensureSettings: poseTimeline.ensureSettings,
+      resetSelection: resetSelectionState,
+      beforeSync: poseTimeline.resetPreviewClock,
+      syncPreview,
+      settings: poseTimeline.settings,
+      shouldAutoStop: (settings) => settings.playback === 'once',
     });
   }
 
   function stopPreview() {
-    posePreviewTimer = clearTimelinePreviewTimer(posePreviewTimer);
-    posePreviewPlaying = false;
+    stopTimelinePreview({
+      timer: posePreviewTimer,
+      setTimer: (timer) => {
+        posePreviewTimer = timer;
+      },
+      setPlaying: (playing) => {
+        posePreviewPlaying = playing;
+      },
+    });
   }
 
   function addKeyframe() {

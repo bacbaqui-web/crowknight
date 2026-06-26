@@ -26,11 +26,7 @@ import { createTimelineSelectionState, hasTimelineSelection } from './timelineSt
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
-import {
-  clearTimelinePreviewTimer,
-  restartTimelinePreviewTimer,
-  syncEffectTimelinePreview,
-} from './tuningTimelinePreview.js';
+import { startTimelinePreview, stopTimelinePreview, syncEffectTimelinePreview } from './tuningTimelinePreview.js';
 import { renderEffectTimelineSettingsView } from './tuningEffectTimelinePanelView.js';
 import { defineTimelineController } from './timelineControllerContract.js';
 import { createTimelineControllerCommonMethods, createTimelineControllerCore } from './timelineControllerCore.js';
@@ -192,27 +188,32 @@ export function createEffectTimelineController({
   }
 
   function playPreview() {
-    effectTimeline.ensureSettings();
-    effectPreviewPlaying = true;
-    resetSelectionState();
-    syncPreview();
-
-    const settings = effectTimeline.settings();
-    effectPreviewTimer = restartTimelinePreviewTimer({
+    startTimelinePreview({
       timer: effectPreviewTimer,
-      settings,
-      shouldAutoStop: settings.playback !== 'loop',
-      onStop: () => {
-        effectPreviewPlaying = false;
-        effectPreviewTimer = null;
-        syncPreview();
+      setTimer: (timer) => {
+        effectPreviewTimer = timer;
       },
+      setPlaying: (playing) => {
+        effectPreviewPlaying = playing;
+      },
+      ensureSettings: effectTimeline.ensureSettings,
+      resetSelection: resetSelectionState,
+      syncPreview,
+      settings: effectTimeline.settings,
+      shouldAutoStop: (settings) => settings.playback !== 'loop',
     });
   }
 
   function stopPreview() {
-    effectPreviewTimer = clearTimelinePreviewTimer(effectPreviewTimer);
-    effectPreviewPlaying = false;
+    stopTimelinePreview({
+      timer: effectPreviewTimer,
+      setTimer: (timer) => {
+        effectPreviewTimer = timer;
+      },
+      setPlaying: (playing) => {
+        effectPreviewPlaying = playing;
+      },
+    });
   }
 
   function addKeyframe() {

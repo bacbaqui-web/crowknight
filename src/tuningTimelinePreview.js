@@ -115,3 +115,40 @@ export function restartTimelinePreviewTimer({ timer, settings, shouldAutoStop, o
 export function clearTimelinePreviewTimer(timer) {
   return stopPreviewTimer(timer);
 }
+
+export function startTimelinePreview({
+  timer,
+  setTimer,
+  setPlaying,
+  ensureSettings,
+  resetSelection,
+  beforeSync = null,
+  syncPreview,
+  settings,
+  shouldAutoStop,
+}) {
+  ensureSettings();
+  setPlaying(true);
+  resetSelection();
+  beforeSync?.();
+  syncPreview();
+
+  const currentSettings = settings();
+  setTimer(
+    restartTimelinePreviewTimer({
+      timer,
+      settings: currentSettings,
+      shouldAutoStop: shouldAutoStop(currentSettings),
+      onStop: () => {
+        setPlaying(false);
+        setTimer(null);
+        syncPreview();
+      },
+    })
+  );
+}
+
+export function stopTimelinePreview({ timer, setTimer, setPlaying }) {
+  setTimer(clearTimelinePreviewTimer(timer));
+  setPlaying(false);
+}
