@@ -28,7 +28,7 @@ import { isMasterPart } from './tuningLabels.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
 import { defineTimelineController } from './timelineControllerContract.js';
-import { createTimelineControllerCore } from './timelineControllerCore.js';
+import { createTimelineControllerCommonMethods, createTimelineControllerCore } from './timelineControllerCore.js';
 
 export function createPoseTimelineController({
   actors,
@@ -417,7 +417,8 @@ export function createPoseTimelineController({
 
   return defineTimelineController(
     'pose',
-    {
+    createTimelineControllerCommonMethods({
+      playbackControls,
       addKeyframe,
       copyFrame,
       currentFrameValue,
@@ -426,15 +427,11 @@ export function createPoseTimelineController({
       pasteFrame,
       resetAnimation,
       resetSelectionState,
-      stepDuration: playbackControls.stepDuration,
       stopPreview,
       syncPreview,
-      togglePlayback: playbackControls.togglePlayback,
-      togglePlaybackMode: playbackControls.togglePlaybackMode,
-      updatePlaybackRate: playbackControls.updatePlaybackRate,
       updateSetting,
       writeFrameValue,
-    },
+    }),
     {
       frameLabel,
       readDisplayValue,

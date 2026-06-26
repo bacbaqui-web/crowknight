@@ -61,3 +61,38 @@ export function createTimelineControllerCore({
     renderTimeline,
   };
 }
+
+export function createTimelineControllerCommonMethods({
+  playbackControls,
+  addKeyframe,
+  copyFrame,
+  currentFrameValue,
+  deleteKeyframe,
+  hasFrameSelection,
+  pasteFrame,
+  resetAnimation,
+  resetSelectionState,
+  stopPreview,
+  syncPreview,
+  updateSetting,
+  writeFrameValue,
+}) {
+  return {
+    addKeyframe,
+    copyFrame,
+    currentFrameValue,
+    deleteKeyframe,
+    hasFrameSelection,
+    pasteFrame,
+    resetAnimation,
+    resetSelectionState,
+    stepDuration: playbackControls.stepDuration,
+    stopPreview,
+    syncPreview,
+    togglePlayback: playbackControls.togglePlayback,
+    togglePlaybackMode: playbackControls.togglePlaybackMode,
+    updatePlaybackRate: playbackControls.updatePlaybackRate,
+    updateSetting,
+    writeFrameValue,
+  };
+}
