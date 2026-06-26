@@ -21,6 +21,7 @@ export function syncPoseTimelinePreview({
   selectedSlot,
   poseKey,
   settings,
+  createPreview,
   getActiveT,
 }) {
   clearActorPosePreviews(actors);
@@ -40,14 +41,21 @@ export function syncPoseTimelinePreview({
     return;
   }
 
-  actor.player.posePreview = createPosePreview({
-    pose: poseKey,
-    fixedFrame: activeKeyframeId ? null : fixedFrame,
-    playing,
-    loop: settings.playback !== 'once',
-    t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
-    now: performance.now(),
-  });
+  actor.player.posePreview = createPreview
+    ? createPreview({
+        fixedFrame: activeKeyframeId ? null : fixedFrame,
+        playing,
+        loop: settings.playback !== 'once',
+        t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
+      })
+    : createPosePreview({
+        pose: poseKey,
+        fixedFrame: activeKeyframeId ? null : fixedFrame,
+        playing,
+        loop: settings.playback !== 'once',
+        t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
+        now: performance.now(),
+      });
   renderTimeline();
 }
 
@@ -91,20 +99,6 @@ export function syncEffectTimelinePreview({
         now: performance.now(),
       });
   renderTimeline();
-}
-
-export function setPoseTimelineDragPreview(actor, poseKey, t) {
-  actor.player.posePreview = createPosePreview({
-    pose: poseKey,
-    playing: false,
-    t,
-    now: performance.now(),
-  });
-}
-
-export function resetActorPosePreviewClock(actor) {
-  actor.player.stateTime = 0;
-  actor.player.animTime = 0;
 }
 
 export function restartTimelinePreviewTimer({ timer, settings, shouldAutoStop, onStop }) {

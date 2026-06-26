@@ -26,9 +26,7 @@ import {
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import {
   clearTimelinePreviewTimer,
-  resetActorPosePreviewClock,
   restartTimelinePreviewTimer,
-  setPoseTimelineDragPreview,
   syncPoseTimelinePreview,
 } from './tuningTimelinePreview.js';
 import { isMasterPart } from './tuningLabels.js';
@@ -195,7 +193,7 @@ export function createPoseTimelineController({
     poseTimeline.ensureSettings();
     posePreviewPlaying = true;
     resetSelectionState();
-    resetActorPosePreviewClock(actor());
+    poseTimeline.resetPreviewClock();
     syncPreview();
 
     const settings = poseTimeline.settings();
@@ -376,7 +374,7 @@ export function createPoseTimelineController({
       moveKeyframe: (nextT) => poseTimeline.moveKeyframe(id, nextT),
       afterMove: (next) => {
         applySelected();
-        setPoseTimelineDragPreview(actor(), poseTimeline.key(), next.t);
+        poseTimeline.setDragPreview(next.t);
         moveKeyframeButtons(poseTimelineTrack, id, next.slot, slotToLeft(next.slot));
       },
     });
@@ -390,7 +388,7 @@ export function createPoseTimelineController({
       toSlot,
       stopPreview,
       getActiveT,
-      setDragPreview: (t) => setPoseTimelineDragPreview(actor(), poseTimeline.key(), t),
+      setDragPreview: poseTimeline.setDragPreview,
       setDeleteDisabled: (disabled) => {
         poseDeleteKeyframe.disabled = disabled;
       },
@@ -428,6 +426,7 @@ export function createPoseTimelineController({
       selectedSlot: poseSelection.selectedSlot,
       poseKey: poseTimeline.key(),
       settings: poseTimeline.settings() || {},
+      createPreview: poseTimeline.createPreview,
       getActiveT,
     });
   }

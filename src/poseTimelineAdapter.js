@@ -11,6 +11,7 @@ import {
 import { writePoseTimelineSetting } from './tuningTimelineSettings.js';
 import { POSE_PART_KEYS } from './gameConfig.js';
 import { isMasterPart } from './tuningLabels.js';
+import { createPosePreview } from './previewState.js';
 
 export function createPoseTimelineAdapter({ getActor, poseSelect }) {
   const key = () => poseSelect.value;
@@ -85,8 +86,30 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     writePoseTimelineSetting(settingsByKey(), key(), prop, value);
   }
 
+  function createPreview({ fixedFrame = null, playing = false, loop = false, t = null } = {}) {
+    return createPosePreview({
+      pose: key(),
+      fixedFrame,
+      playing,
+      loop,
+      t,
+      now: performance.now(),
+    });
+  }
+
+  function setDragPreview(t) {
+    getActor().player.posePreview = createPreview({ playing: false, t });
+  }
+
+  function resetPreviewClock() {
+    const actor = getActor();
+    actor.player.stateTime = 0;
+    actor.player.animTime = 0;
+  }
+
   return {
     addKeyframe,
+    createPreview,
     deleteKeyframe,
     ensureKeyframe,
     ensureOffset,
@@ -96,7 +119,9 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     moveKeyframe,
     offset,
     resetAnimation,
+    resetPreviewClock,
     selectedKeyframe,
+    setDragPreview,
     settings,
     settingsByKey,
     source,
