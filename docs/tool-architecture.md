@@ -809,11 +809,11 @@ src/
 - 공통 미리보기 동기화 흐름
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
+- 공통 adapter 계약: `timelineAdapterContract.js`
 
 다음 작업:
 
 - 패널별 선택 상태 차이 정리
-- adapter 계약 명시
 - `createTimelineControllerCore()` 설계
 
 ### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
@@ -835,7 +835,7 @@ src/
 남은 것:
 
 - 시각 효과 복사/붙여넣기 확장 동작을 adapter 경계로 더 정리한다.
-- adapter 계약을 코드로 명시한다.
+- 단일 컨트롤러가 요구할 세부 adapter 메서드를 더 좁힌다.
 
 ### 8.3 3단계: 파츠 애니메이션 타임라인을 adapter로 이전
 
@@ -856,7 +856,7 @@ src/
 남은 것:
 
 - 그룹 편집/복사/붙여넣기에서 adapter 경계를 더 분명하게 만든다.
-- 효과 adapter와 포즈 adapter의 공통 계약을 코드로 명시한다.
+- 단일 컨트롤러가 요구할 세부 adapter 메서드를 더 좁힌다.
 
 ### 8.4 4단계: 단일 Timeline Controller 도입
 
@@ -914,12 +914,11 @@ createTimelineController({
 2. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
 3. 캐릭터 정의에 사용 동작/스킬 목록 추가
 4. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
-5. adapter 공통 계약 명시
-6. 패널별 선택 상태 차이 정리
-7. 단일 `createTimelineController` 도입 준비
-8. 히트박스 타임라인화 검토
-9. `tuningPanel.js` 부트스트랩/조립 책임 분리
-10. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
+5. 패널별 선택 상태 차이 정리
+6. 단일 `createTimelineController` 도입 준비
+7. 히트박스 타임라인화 검토
+8. `tuningPanel.js` 부트스트랩/조립 책임 분리
+9. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
 
 ## 11. 유지보수 경고
 
