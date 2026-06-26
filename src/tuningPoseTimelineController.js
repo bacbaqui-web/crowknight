@@ -45,6 +45,7 @@ import { isMasterPart } from './tuningLabels.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { MASTER_PART_KEY, POSE_PART_KEYS } from './gameConfig.js';
+import { defineTimelineController } from './timelineControllerContract.js';
 
 export function createPoseTimelineController({
   actors,
@@ -459,28 +460,33 @@ export function createPoseTimelineController({
     });
   }
 
-  return {
-    addKeyframe,
-    copyFrame,
-    currentFrameValue,
-    deleteKeyframe,
-    hasFrameSelection,
-    frameLabel,
-    pasteFrame,
-    readDisplayValue,
-    renderSettings,
-    renderTimeline,
-    resetAnimation,
-    resetSelectionState,
-    stepDuration: playbackControls.stepDuration,
-    stopPreview,
-    syncPreview,
-    syncToolbarButtons,
-    togglePlayback: playbackControls.togglePlayback,
-    togglePlaybackMode: playbackControls.togglePlaybackMode,
-    updateOffset,
-    updatePlaybackRate: playbackControls.updatePlaybackRate,
-    updateSetting,
-    writeFrameValue,
-  };
+  return defineTimelineController(
+    'pose',
+    {
+      addKeyframe,
+      copyFrame,
+      currentFrameValue,
+      deleteKeyframe,
+      hasFrameSelection,
+      pasteFrame,
+      resetAnimation,
+      resetSelectionState,
+      stepDuration: playbackControls.stepDuration,
+      stopPreview,
+      syncPreview,
+      togglePlayback: playbackControls.togglePlayback,
+      togglePlaybackMode: playbackControls.togglePlaybackMode,
+      updatePlaybackRate: playbackControls.updatePlaybackRate,
+      updateSetting,
+      writeFrameValue,
+    },
+    {
+      frameLabel,
+      readDisplayValue,
+      renderSettings,
+      renderTimeline,
+      syncToolbarButtons,
+      updateOffset,
+    }
+  );
 }

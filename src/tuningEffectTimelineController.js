@@ -47,6 +47,7 @@ import {
 } from './tuningTimelinePreview.js';
 import { renderEffectTimelineSettingsView } from './tuningEffectTimelinePanelView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
+import { defineTimelineController } from './timelineControllerContract.js';
 
 export function createEffectTimelineController({
   actors,
@@ -467,26 +468,31 @@ export function createEffectTimelineController({
     });
   }
 
-  return {
-    addKeyframe,
-    clearCopiedFrame,
-    clearSelection,
-    copyFrame,
-    currentFrameValue,
-    deleteKeyframe,
-    ensureActiveFrame,
-    hasFrameSelection,
-    pasteFrame,
-    renderFields,
-    resetAnimation,
-    resetSelectionState,
-    stepDuration: playbackControls.stepDuration,
-    stopPreview,
-    syncPreview,
-    togglePlayback: playbackControls.togglePlayback,
-    togglePlaybackMode: playbackControls.togglePlaybackMode,
-    updatePlaybackRate: playbackControls.updatePlaybackRate,
-    updateSetting,
-    writeFrameValue,
-  };
+  return defineTimelineController(
+    'effect',
+    {
+      addKeyframe,
+      copyFrame,
+      currentFrameValue,
+      deleteKeyframe,
+      hasFrameSelection,
+      pasteFrame,
+      resetAnimation,
+      resetSelectionState,
+      stepDuration: playbackControls.stepDuration,
+      stopPreview,
+      syncPreview,
+      togglePlayback: playbackControls.togglePlayback,
+      togglePlaybackMode: playbackControls.togglePlaybackMode,
+      updatePlaybackRate: playbackControls.updatePlaybackRate,
+      updateSetting,
+      writeFrameValue,
+    },
+    {
+      clearCopiedFrame,
+      clearSelection,
+      ensureActiveFrame,
+      renderFields,
+    }
+  );
 }

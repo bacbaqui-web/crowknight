@@ -23,3 +23,10 @@ export function assertTimelineControllerContract(name, controller) {
 
   throw new Error(`${name} timeline controller is missing methods: ${missing.join(', ')}`);
 }
+
+export function defineTimelineController(name, commonMethods, extensionMethods = {}) {
+  return assertTimelineControllerContract(name, {
+    ...commonMethods,
+    ...extensionMethods,
+  });
+}
