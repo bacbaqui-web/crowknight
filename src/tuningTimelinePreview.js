@@ -24,39 +24,35 @@ export function syncPoseTimelinePreview({
   createPreview,
   getActiveT,
 }) {
-  clearActorPosePreviews(actors);
-  if (!section.classList.contains('is-open')) {
-    renderInactivePreviewTimeline(playbackButton, renderTimeline);
-    return;
-  }
-
-  const hasPreview = shouldPreviewPose({
+  syncTimelinePreview({
+    actors,
+    section,
+    playbackButton,
+    renderTimeline,
     playing,
     activeKeyframeId,
     fixedFrame,
     selectedSlot,
+    clearPreviews: clearActorPosePreviews,
+    shouldPreview: shouldPreviewPose,
+    assignPreview: () => {
+      actor.player.posePreview = createPreview
+        ? createPreview({
+            fixedFrame: activeKeyframeId ? null : fixedFrame,
+            playing,
+            loop: settings.playback !== 'once',
+            t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
+          })
+        : createPosePreview({
+            pose: poseKey,
+            fixedFrame: activeKeyframeId ? null : fixedFrame,
+            playing,
+            loop: settings.playback !== 'once',
+            t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
+            now: performance.now(),
+          });
+    },
   });
-  if (!hasPreview) {
-    renderInactivePreviewTimeline(playbackButton, renderTimeline);
-    return;
-  }
-
-  actor.player.posePreview = createPreview
-    ? createPreview({
-        fixedFrame: activeKeyframeId ? null : fixedFrame,
-        playing,
-        loop: settings.playback !== 'once',
-        t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
-      })
-    : createPosePreview({
-        pose: poseKey,
-        fixedFrame: activeKeyframeId ? null : fixedFrame,
-        playing,
-        loop: settings.playback !== 'once',
-        t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
-        now: performance.now(),
-      });
-  renderTimeline();
 }
 
 export function syncEffectTimelinePreview({
@@ -73,13 +69,50 @@ export function syncEffectTimelinePreview({
   createPreview,
   getActiveT,
 }) {
-  clearActorEffectPreviews(actors);
+  syncTimelinePreview({
+    actors,
+    section,
+    playbackButton,
+    renderTimeline,
+    playing,
+    activeKeyframeId,
+    fixedFrame,
+    selectedSlot,
+    clearPreviews: clearActorEffectPreviews,
+    shouldPreview: shouldPreviewEffect,
+    assignPreview: () => {
+      actor.player.effectPreview = createPreview
+        ? createPreview({ playing, t: playing ? null : getActiveT() })
+        : createEffectPreview({
+            key: effectKey,
+            playing,
+            t: playing ? null : getActiveT(),
+            now: performance.now(),
+          });
+    },
+  });
+}
+
+function syncTimelinePreview({
+  actors,
+  section,
+  playbackButton,
+  renderTimeline,
+  playing,
+  activeKeyframeId,
+  fixedFrame,
+  selectedSlot,
+  clearPreviews,
+  shouldPreview,
+  assignPreview,
+}) {
+  clearPreviews(actors);
   if (!section.classList.contains('is-open')) {
     renderInactivePreviewTimeline(playbackButton, renderTimeline);
     return;
   }
 
-  const hasPreview = shouldPreviewEffect({
+  const hasPreview = shouldPreview({
     playing,
     activeKeyframeId,
     fixedFrame,
@@ -90,14 +123,7 @@ export function syncEffectTimelinePreview({
     return;
   }
 
-  actor.player.effectPreview = createPreview
-    ? createPreview({ playing, t: playing ? null : getActiveT() })
-    : createEffectPreview({
-        key: effectKey,
-        playing,
-        t: playing ? null : getActiveT(),
-        now: performance.now(),
-      });
+  assignPreview();
   renderTimeline();
 }
 
