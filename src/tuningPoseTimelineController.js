@@ -7,6 +7,7 @@ import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
   moveTimelineKeyframeAction,
+  pasteTimelineFrameAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -257,28 +258,24 @@ export function createPoseTimelineController({
   }
 
   function pasteFrame() {
-    if (!copiedPoseFrame || !poseSection.classList.contains('is-open')) return;
-    beginUndoSnapshot();
-    const id = pasteTargetFrameId();
-    if (!id) {
-      commitUndoSnapshot();
-      return;
-    }
-
-    poseTimeline.pasteFrameCopy({
+    pasteTimelineFrameAction({
       copiedFrame: copiedPoseFrame,
-      id,
-      selectedPosePartKeys,
-      activePosePartKey: getActivePosePartKey(),
-    });
-
-    finishTimelineMutation({ resetGroup: true, syncToolbar: true });
-  }
-
-  function pasteTargetFrameId() {
-    return poseTimeline.pasteTargetFrameId({
-      selection: poseSelection,
-      slotToValue,
+      isOpen: poseSection.classList.contains('is-open'),
+      beginUndo: beginUndoSnapshot,
+      commitUndo: commitUndoSnapshot,
+      pasteTargetFrameId: () =>
+        poseTimeline.pasteTargetFrameId({
+          selection: poseSelection,
+          slotToValue,
+        }),
+      pasteFrameCopy: (id) =>
+        poseTimeline.pasteFrameCopy({
+          copiedFrame: copiedPoseFrame,
+          id,
+          selectedPosePartKeys,
+          activePosePartKey: getActivePosePartKey(),
+        }),
+      finish: () => finishTimelineMutation({ resetGroup: true, syncToolbar: true }),
     });
   }
 

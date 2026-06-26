@@ -9,6 +9,7 @@ import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
   moveTimelineKeyframeAction,
+  pasteTimelineFrameAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -266,25 +267,22 @@ export function createEffectTimelineController({
   }
 
   function pasteFrame() {
-    if (!copiedEffectFrame || !effectSection.classList.contains('is-open')) return;
-    beginUndoSnapshot();
-    const id = pasteTargetFrameId();
-    if (!id) {
-      commitUndoSnapshot();
-      return;
-    }
-
-    effectTimeline.pasteFrameCopy({
+    pasteTimelineFrameAction({
       copiedFrame: copiedEffectFrame,
-      id,
-    });
-    finishTimelineMutation();
-  }
-
-  function pasteTargetFrameId() {
-    return effectTimeline.pasteTargetFrameId({
-      selection: effectSelection,
-      slotToValue,
+      isOpen: effectSection.classList.contains('is-open'),
+      beginUndo: beginUndoSnapshot,
+      commitUndo: commitUndoSnapshot,
+      pasteTargetFrameId: () =>
+        effectTimeline.pasteTargetFrameId({
+          selection: effectSelection,
+          slotToValue,
+        }),
+      pasteFrameCopy: (id) =>
+        effectTimeline.pasteFrameCopy({
+          copiedFrame: copiedEffectFrame,
+          id,
+        }),
+      finish: finishTimelineMutation,
     });
   }
 

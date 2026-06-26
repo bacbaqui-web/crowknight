@@ -47,6 +47,29 @@ export function deleteTimelineKeyframeAction({
   return true;
 }
 
+export function pasteTimelineFrameAction({
+  copiedFrame,
+  isOpen,
+  beginUndo,
+  commitUndo,
+  pasteTargetFrameId,
+  pasteFrameCopy,
+  finish,
+}) {
+  if (!copiedFrame || !isOpen) return false;
+
+  beginUndo();
+  const id = pasteTargetFrameId();
+  if (!id) {
+    commitUndo();
+    return false;
+  }
+
+  pasteFrameCopy(id);
+  finish();
+  return true;
+}
+
 export function selectTimelineKeyframeAction({
   id,
   selection,
