@@ -61,7 +61,9 @@ export function createEffectTimelineController({
   const effectTimeline = createEffectTimelineAdapter({ getActor: actor, effectSelect });
 
   const {
+    activeT: timelineActiveT,
     frameCount: getFrameCount,
+    keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
     toSlot,
     slotToValue,
@@ -83,7 +85,6 @@ export function createEffectTimelineController({
     syncPreview,
     playPreview,
     renderSettings,
-    keyframes: keyframesForTimeline,
     selectSlot,
     bindDrag: bindKeyframeDragHandler,
   });
@@ -406,15 +407,8 @@ export function createEffectTimelineController({
     });
   }
 
-  function keyframesForTimeline() {
-    return effectTimeline.keyframes();
-  }
-
   function getActiveT() {
-    return effectTimeline.activeT({
-      selection: effectSelection,
-      frameCount: getFrameCount(),
-    });
+    return timelineActiveT();
   }
 
   function syncPreview() {

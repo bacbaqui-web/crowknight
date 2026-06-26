@@ -57,7 +57,9 @@ export function createPoseTimelineController({
   const poseTimeline = createPoseTimelineAdapter({ getActor: actor, poseSelect });
 
   const {
+    activeT: timelineActiveT,
     frameCount: getFrameCount,
+    keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
     toSlot,
     slotToValue,
@@ -79,7 +81,6 @@ export function createPoseTimelineController({
     syncPreview,
     playPreview,
     renderSettings,
-    keyframes: keyframesForTimeline,
     selectSlot,
     bindDrag: bindKeyframeDragHandler,
   });
@@ -386,15 +387,9 @@ export function createPoseTimelineController({
   }
 
   function getActiveT() {
-    return poseTimeline.activeT({
-      selection: poseSelection,
-      frameCount: getFrameCount(),
+    return timelineActiveT({
       activePosePartKey: getActivePosePartKey(),
     });
-  }
-
-  function keyframesForTimeline() {
-    return poseTimeline.keyframes();
   }
 
   function syncPreview() {

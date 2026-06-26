@@ -17,7 +17,6 @@ export function createTimelineControllerCore({
   syncPreview,
   playPreview,
   renderSettings,
-  keyframes,
   selectSlot,
   bindDrag,
 }) {
@@ -26,6 +25,13 @@ export function createTimelineControllerCore({
     settingsByKey: timeline.settingsByKey,
     key: timeline.key,
   });
+  const keyframesForTimeline = () => timeline.keyframes();
+  const activeT = (options = {}) =>
+    timeline.activeT({
+      selection,
+      frameCount: accessors.frameCount(),
+      ...options,
+    });
 
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount: accessors.frameCount,
@@ -44,7 +50,7 @@ export function createTimelineControllerCore({
     renderSettings,
     track,
     frameCount: accessors.frameCount,
-    keyframes,
+    keyframes: keyframesForTimeline,
     selection,
     lastSlot: accessors.lastSlot,
     toSlot: accessors.toSlot,
@@ -57,6 +63,8 @@ export function createTimelineControllerCore({
 
   return {
     ...accessors,
+    activeT,
+    keyframes: keyframesForTimeline,
     playbackControls,
     renderTimeline,
   };
