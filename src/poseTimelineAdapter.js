@@ -14,6 +14,7 @@ import { isMasterPart } from './tuningLabels.js';
 import { createPosePreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
 import { activeTimelineT } from './timelineState.js';
+import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   copyActivePoseTimelineFrame,
   pastePoseTimelineFrameCopy,
@@ -66,6 +67,18 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
       keyframes: keyframes(),
       selectedKeyframe: selection.activeKeyframeId ? selectedKeyframe(part, selection.activeKeyframeId) : null,
       frameCount,
+    });
+  }
+
+  function currentFrameValue({ part, selection }) {
+    return currentPoseTimelineFrame({
+      tuning: tuning(),
+      poseKey: key(),
+      part,
+      activeKeyframeId: selection.activeKeyframeId,
+      fixedFrame: selection.fixedFrame,
+      isMasterPart: isMasterPart(part),
+      ensureKeyframe,
     });
   }
 
@@ -167,6 +180,7 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
       addKeyframe,
       copyFrame,
       createPreview,
+      currentFrameValue,
       deleteKeyframe,
       ensureKeyframe,
       ensureSettings,

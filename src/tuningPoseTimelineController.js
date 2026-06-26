@@ -2,7 +2,6 @@ import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
-import { currentPoseTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
   applyTimelineSelectionAction,
@@ -21,7 +20,6 @@ import {
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { startTimelinePreview, stopTimelinePreview, syncPoseTimelinePreview } from './tuningTimelinePreview.js';
-import { isMasterPart } from './tuningLabels.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
 import { defineTimelineController } from './timelineControllerContract.js';
@@ -154,14 +152,9 @@ export function createPoseTimelineController({
   }
 
   function currentFrameValue(part) {
-    return currentPoseTimelineFrame({
-      tuning: poseTimeline.tuning(),
-      poseKey: poseTimeline.key(),
+    return poseTimeline.currentFrameValue({
       part,
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      fixedFrame: poseSelection.fixedFrame,
-      isMasterPart: isMasterPart(part),
-      ensureKeyframe: poseTimeline.ensureKeyframe,
+      selection: poseSelection,
     });
   }
 

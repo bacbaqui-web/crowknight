@@ -11,6 +11,7 @@ import { writeEffectTimelineSetting } from './tuningTimelineSettings.js';
 import { createEffectPreview } from './previewState.js';
 import { defineTimelineAdapter } from './timelineAdapterContract.js';
 import { activeTimelineT } from './timelineState.js';
+import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   copyActiveEffectTimelineFrame,
   pasteEffectTimelineFrameCopy,
@@ -59,6 +60,19 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
       keyframes: keyframes(),
       selectedKeyframe: selectedKeyframe(selection.activeKeyframeId),
       frameCount,
+    });
+  }
+
+  function currentFrameValue({ selection, activeT, setFixedFrame }) {
+    return currentEffectTimelineFrame({
+      tuning: tuning(),
+      effectKey: key(),
+      activeKeyframeId: selection.activeKeyframeId,
+      fixedFrame: selection.fixedFrame,
+      selectedSlot: selection.selectedSlot,
+      activeT,
+      ensureKeyframe,
+      setFixedFrame,
     });
   }
 
@@ -150,6 +164,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
       addKeyframe,
       copyFrame,
       createPreview,
+      currentFrameValue,
       deleteKeyframe,
       ensureKeyframe,
       ensureSettings,

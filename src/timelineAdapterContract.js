@@ -3,6 +3,7 @@ export const COMMON_TIMELINE_ADAPTER_METHODS = [
   'addKeyframe',
   'copyFrame',
   'createPreview',
+  'currentFrameValue',
   'deleteKeyframe',
   'ensureKeyframe',
   'ensureSettings',

@@ -4,7 +4,6 @@ import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { markActiveKeyframeButton, moveKeyframeButtons } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
-import { currentEffectTimelineFrame } from './timelineFrameRead.js';
 import {
   addTimelineKeyframeAction,
   applyTimelineSelectionAction,
@@ -121,14 +120,9 @@ export function createEffectTimelineController({
   }
 
   function currentFrameValue() {
-    return currentEffectTimelineFrame({
-      tuning: actor().tuning,
-      effectKey: effectTimeline.key(),
-      activeKeyframeId: effectSelection.activeKeyframeId,
-      fixedFrame: effectSelection.fixedFrame,
-      selectedSlot: effectSelection.selectedSlot,
+    return effectTimeline.currentFrameValue({
+      selection: effectSelection,
       activeT: getActiveT(),
-      ensureKeyframe: effectTimeline.ensureKeyframe,
       setFixedFrame: setFrameSilently,
     });
   }
