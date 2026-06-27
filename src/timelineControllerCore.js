@@ -45,6 +45,11 @@ export function createTimelineControllerCore({
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
     (!requireOpenSection || section?.classList.contains('is-open')) &&
     hasTimelineSelection(selection, { includeSelectedSlot });
+  const frameSelectionState = () => ({
+    activeKeyframeId: selection.activeKeyframeId,
+    fixedFrame: selection.fixedFrame,
+    selectedSlot: selection.selectedSlot,
+  });
   const selectKeyframe = ({ id, setContext, applySelection }) =>
     selectTimelineKeyframeAction({
       id,
@@ -112,6 +117,7 @@ export function createTimelineControllerCore({
     ...accessors,
     activeT,
     currentFrameValue,
+    frameSelectionState,
     hasFrameSelection,
     keyframes: keyframesForTimeline,
     playbackControls,

@@ -60,6 +60,7 @@ export function createEffectTimelineController({
     activeT: timelineActiveT,
     currentFrameValue: timelineCurrentFrameValue,
     frameCount: getFrameCount,
+    frameSelectionState,
     hasFrameSelection: hasTimelineFrameSelection,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
@@ -394,6 +395,7 @@ export function createEffectTimelineController({
   }
 
   function syncPreview() {
+    const selectionState = frameSelectionState();
     syncEffectTimelinePreview({
       actors,
       actor: actor(),
@@ -401,9 +403,9 @@ export function createEffectTimelineController({
       playbackButton: effectPlayback,
       renderTimeline,
       playing: effectPreviewPlaying,
-      activeKeyframeId: effectSelection.activeKeyframeId,
-      fixedFrame: effectSelection.fixedFrame,
-      selectedSlot: effectSelection.selectedSlot,
+      activeKeyframeId: selectionState.activeKeyframeId,
+      fixedFrame: selectionState.fixedFrame,
+      selectedSlot: selectionState.selectedSlot,
       createPreview: effectTimeline.createPreview,
       getActiveT,
     });

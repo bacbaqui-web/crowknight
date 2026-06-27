@@ -56,6 +56,7 @@ export function createPoseTimelineController({
     activeT: timelineActiveT,
     currentFrameValue: timelineCurrentFrameValue,
     frameCount: getFrameCount,
+    frameSelectionState,
     hasFrameSelection: hasTimelineFrameSelection,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
@@ -377,6 +378,7 @@ export function createPoseTimelineController({
   }
 
   function syncPreview() {
+    const selectionState = frameSelectionState();
     syncPoseTimelinePreview({
       actors,
       actor: actor(),
@@ -384,9 +386,9 @@ export function createPoseTimelineController({
       playbackButton: posePlayback,
       renderTimeline,
       playing: posePreviewPlaying,
-      activeKeyframeId: poseSelection.activeKeyframeId,
-      fixedFrame: poseSelection.fixedFrame,
-      selectedSlot: poseSelection.selectedSlot,
+      activeKeyframeId: selectionState.activeKeyframeId,
+      fixedFrame: selectionState.fixedFrame,
+      selectedSlot: selectionState.selectedSlot,
       settings: poseTimeline.settings() || {},
       createPreview: poseTimeline.createPreview,
       getActiveT,
