@@ -4,6 +4,8 @@ import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import { hasTimelineSelection } from './timelineState.js';
 import {
+  addTimelineKeyframeAction,
+  deleteTimelineKeyframeAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -53,6 +55,27 @@ export function createTimelineControllerCore({
       writeSetting: timeline.writeSetting,
       applySelected,
       syncPreview,
+    });
+  const addKeyframe = ({ stopPreview, finish }) =>
+    addTimelineKeyframeAction({
+      selection,
+      keyframes: keyframesForTimeline(),
+      lastSlot: accessors.lastSlot(),
+      toSlot: accessors.toSlot,
+      slotToValue: accessors.slotToValue,
+      addKeyframe: timeline.addKeyframe,
+      beginUndo,
+      stopPreview,
+      finish,
+    });
+  const deleteKeyframe = ({ resetSelection, stopPreview, finish }) =>
+    deleteTimelineKeyframeAction({
+      selection,
+      deleteKeyframe: timeline.deleteKeyframe,
+      beginUndo,
+      resetSelection,
+      stopPreview,
+      finish,
     });
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
     (!requireOpenSection || isSectionOpen()) && hasTimelineSelection(selection, { includeSelectedSlot });
@@ -133,7 +156,9 @@ export function createTimelineControllerCore({
   return {
     ...accessors,
     activeT,
+    addKeyframe,
     currentFrameValue,
+    deleteKeyframe,
     frameSelectionState,
     frameLabel,
     hasFrameSelection,

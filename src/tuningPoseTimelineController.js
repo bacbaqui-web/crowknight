@@ -2,10 +2,8 @@ import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
-  addTimelineKeyframeAction,
   applyTimelineSelectionAction,
   copyTimelineFrameAction,
-  deleteTimelineKeyframeAction,
   finishTimelineMutationAction,
   moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
@@ -53,7 +51,9 @@ export function createPoseTimelineController({
 
   const {
     activeT: timelineActiveT,
+    addKeyframe: addTimelineKeyframe,
     currentFrameValue: timelineCurrentFrameValue,
+    deleteKeyframe: deleteTimelineKeyframe,
     frameCount: getFrameCount,
     frameLabel,
     frameSelectionState,
@@ -182,24 +182,14 @@ export function createPoseTimelineController({
   }
 
   function addKeyframe() {
-    addTimelineKeyframeAction({
-      selection: poseSelection,
-      keyframes: keyframesForTimeline(),
-      lastSlot: getLastSlot(),
-      toSlot,
-      slotToValue,
-      addKeyframe: poseTimeline.addKeyframe,
-      beginUndo: beginUndoSnapshot,
+    addTimelineKeyframe({
       stopPreview,
       finish: () => finishTimelineMutation({ resetGroup: true }),
     });
   }
 
   function deleteKeyframe() {
-    deleteTimelineKeyframeAction({
-      selection: poseSelection,
-      deleteKeyframe: poseTimeline.deleteKeyframe,
-      beginUndo: beginUndoSnapshot,
+    deleteTimelineKeyframe({
       resetSelection: resetSelectionState,
       stopPreview,
       finish: () => finishTimelineMutation({ resetGroup: true }),

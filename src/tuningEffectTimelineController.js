@@ -4,10 +4,8 @@ import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
-  addTimelineKeyframeAction,
   applyTimelineSelectionAction,
   copyTimelineFrameAction,
-  deleteTimelineKeyframeAction,
   finishTimelineMutationAction,
   moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
@@ -57,7 +55,9 @@ export function createEffectTimelineController({
 
   const {
     activeT: timelineActiveT,
+    addKeyframe: addTimelineKeyframe,
     currentFrameValue: timelineCurrentFrameValue,
+    deleteKeyframe: deleteTimelineKeyframe,
     frameCount: getFrameCount,
     frameSelectionState,
     hasFrameSelection: hasTimelineFrameSelection,
@@ -202,24 +202,14 @@ export function createEffectTimelineController({
   }
 
   function addKeyframe() {
-    addTimelineKeyframeAction({
-      selection: effectSelection,
-      keyframes: keyframesForTimeline(),
-      lastSlot: getLastSlot(),
-      toSlot,
-      slotToValue,
-      addKeyframe: effectTimeline.addKeyframe,
-      beginUndo: beginUndoSnapshot,
+    addTimelineKeyframe({
       stopPreview,
       finish: finishTimelineMutation,
     });
   }
 
   function deleteKeyframe() {
-    deleteTimelineKeyframeAction({
-      selection: effectSelection,
-      deleteKeyframe: effectTimeline.deleteKeyframe,
-      beginUndo: beginUndoSnapshot,
+    deleteTimelineKeyframe({
       resetSelection: resetSelectionState,
       stopPreview,
       finish: finishTimelineMutation,
