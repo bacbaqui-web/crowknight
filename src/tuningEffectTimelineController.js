@@ -15,7 +15,6 @@ import {
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
   setFixedTimelineFrameSelectionAction,
-  updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
@@ -73,6 +72,7 @@ export function createEffectTimelineController({
     selectKeyframe: selectTimelineKeyframe,
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
+    updateSetting,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
     timeline: effectTimeline,
@@ -84,7 +84,7 @@ export function createEffectTimelineController({
     deleteButton: effectDeleteKeyframe,
     beginUndo: beginUndoSnapshot,
     commitUndo: commitUndoSnapshot,
-    updateSetting,
+    applySelected,
     isPlaying: () => effectPreviewPlaying,
     stopPreview,
     syncPreview,
@@ -171,18 +171,6 @@ export function createEffectTimelineController({
   }
 
   const hasFrameSelection = () => hasTimelineFrameSelection({ requireOpenSection: true });
-
-  function updateSetting(prop, value) {
-    updateTimelineSettingAction({
-      prop,
-      value,
-      beginUndo: beginUndoSnapshot,
-      ensureSettings: effectTimeline.ensureSettings,
-      writeSetting: effectTimeline.writeSetting,
-      applySelected,
-      syncPreview,
-    });
-  }
 
   function playPreview() {
     startTimelinePreview({

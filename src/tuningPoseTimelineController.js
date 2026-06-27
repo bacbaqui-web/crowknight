@@ -12,7 +12,6 @@ import {
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
-  updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
 import { startTimelinePreview, stopTimelinePreview, syncPoseTimelinePreview } from './tuningTimelinePreview.js';
@@ -70,6 +69,7 @@ export function createPoseTimelineController({
     selectKeyframe: selectTimelineKeyframe,
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
+    updateSetting,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
     timeline: poseTimeline,
@@ -81,7 +81,7 @@ export function createPoseTimelineController({
     deleteButton: poseDeleteKeyframe,
     beginUndo: beginUndoSnapshot,
     commitUndo: commitUndoSnapshot,
-    updateSetting,
+    applySelected,
     isPlaying: () => posePreviewPlaying,
     stopPreview,
     syncPreview,
@@ -122,18 +122,6 @@ export function createPoseTimelineController({
   }
 
   const hasFrameSelection = () => hasTimelineFrameSelection({ includeSelectedSlot: false });
-
-  function updateSetting(prop, value) {
-    updateTimelineSettingAction({
-      prop,
-      value,
-      beginUndo: beginUndoSnapshot,
-      ensureSettings: poseTimeline.ensureSettings,
-      writeSetting: poseTimeline.writeSetting,
-      applySelected,
-      syncPreview,
-    });
-  }
 
   function readDisplayValue(partKey, offset, prop) {
     return readPoseFrameDisplayValue(partKey, offset, prop, poseTimeline.source(partKey));

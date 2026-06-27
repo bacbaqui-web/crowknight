@@ -7,6 +7,7 @@ import {
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
+  updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 
 export function createTimelineControllerCore({
@@ -19,7 +20,7 @@ export function createTimelineControllerCore({
   deleteButton,
   beginUndo,
   commitUndo,
-  updateSetting,
+  applySelected,
   isPlaying,
   stopPreview,
   syncPreview,
@@ -43,6 +44,16 @@ export function createTimelineControllerCore({
     });
   const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
   const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
+  const updateSetting = (prop, value) =>
+    updateTimelineSettingAction({
+      prop,
+      value,
+      beginUndo,
+      ensureSettings: timeline.ensureSettings,
+      writeSetting: timeline.writeSetting,
+      applySelected,
+      syncPreview,
+    });
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
     (!requireOpenSection || isSectionOpen()) && hasTimelineSelection(selection, { includeSelectedSlot });
   const frameSelectionState = () => ({
@@ -133,6 +144,7 @@ export function createTimelineControllerCore({
     selectKeyframe,
     selectKeyframeForDrag,
     selectSlot: selectSlotAction,
+    updateSetting,
     writeFrameValue,
   };
 }
