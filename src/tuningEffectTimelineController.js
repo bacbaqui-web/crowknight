@@ -10,8 +10,7 @@ import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effect
 import { renderScrubGroups } from './tuningScrubControls.js';
 import { startTimelinePreview, stopTimelinePreview, syncEffectTimelinePreview } from './tuningTimelinePreview.js';
 import { renderEffectTimelineSettingsView } from './tuningEffectTimelinePanelView.js';
-import { defineTimelineController } from './timelineControllerContract.js';
-import { createTimelineControllerCommonMethods, createTimelineControllerCore } from './timelineControllerCore.js';
+import { createTimelineController } from './timelineController.js';
 
 export function createEffectTimelineController({
   actors,
@@ -68,26 +67,30 @@ export function createEffectTimelineController({
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
     setFixedFrame,
+    defineController,
     updateSetting,
     writeFrameValue: timelineWriteFrameValue,
-  } = createTimelineControllerCore({
-    timeline: effectTimeline,
-    selection: effectSelection,
-    section: effectSection,
-    durationInput: effectDuration,
-    track: effectTimelineTrack,
-    addButton: effectAddKeyframe,
-    deleteButton: effectDeleteKeyframe,
-    beginUndo: beginUndoSnapshot,
-    commitUndo: commitUndoSnapshot,
-    applySelected,
-    isPlaying: () => effectPreviewPlaying,
-    stopPreview,
-    syncPreview,
-    playPreview,
-    renderSettings,
-    selectSlot,
-    bindDrag: bindKeyframeDragHandler,
+  } = createTimelineController({
+    name: 'effect',
+    core: {
+      timeline: effectTimeline,
+      selection: effectSelection,
+      section: effectSection,
+      durationInput: effectDuration,
+      track: effectTimelineTrack,
+      addButton: effectAddKeyframe,
+      deleteButton: effectDeleteKeyframe,
+      beginUndo: beginUndoSnapshot,
+      commitUndo: commitUndoSnapshot,
+      applySelected,
+      isPlaying: () => effectPreviewPlaying,
+      stopPreview,
+      syncPreview,
+      playPreview,
+      renderSettings,
+      selectSlot,
+      bindDrag: bindKeyframeDragHandler,
+    },
   });
 
   function actor() {
@@ -360,9 +363,8 @@ export function createEffectTimelineController({
     });
   }
 
-  return defineTimelineController(
-    'effect',
-    createTimelineControllerCommonMethods({
+  return defineController({
+    common: {
       playbackControls,
       addKeyframe,
       copyFrame,
@@ -374,14 +376,14 @@ export function createEffectTimelineController({
       stopPreview,
       syncPreview,
       updateSetting,
-    }),
-    {
+    },
+    extensions: {
       clearCopiedFrame,
       clearSelection,
       currentFrameValue,
       ensureActiveFrame,
       renderFields,
       writeFrameValue,
-    }
-  );
+    },
+  });
 }
