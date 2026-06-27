@@ -851,6 +851,7 @@ src/
 - core 기반 frame label 헬퍼
 - core 기반 frame read/write 헬퍼
 - core 기반 timeline setting update 헬퍼
+- core 기반 keyframe 추가/삭제 헬퍼
 - core 기반 keyframe/slot 선택 액션
 - core 기반 drag keyframe 선택 액션
 - core 기반 frame selection 검사 헬퍼
