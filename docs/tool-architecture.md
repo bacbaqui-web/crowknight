@@ -296,6 +296,7 @@
 관련 코드:
 
 - `src/timelineControllerActions.js`
+- `src/timelineControllerClipboardControls.js`
 - `src/timelineControllerSelectionControls.js`
 - `src/timelineControllerView.js`
 - `src/timelineFrameClipboard.js`
@@ -860,6 +861,7 @@ src/
 - core 기반 selection apply 헬퍼
 - core 기반 fixed frame selection 헬퍼
 - selection controls 전용 모듈 분리
+- clipboard controls 전용 모듈 분리
 - core 기반 timeline reset 헬퍼
 - core 기반 timeline copy/paste wrapper
 - 시각 효과 타임라인 adapter
@@ -869,8 +871,9 @@ src/
 다음 작업:
 
 - 패널별 선택 상태 차이를 더 좁은 adapter 계약으로 정리
-- `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 clipboard/playback/render 책임 경계도 계속 점검
-- 복사/붙여넣기와 선택 상태 중 아직 controller에 남은 domain 후처리 분리 가능성 검토
+- 단일 `createTimelineController()` 도입 전에 field rendering, preview, mutation finish hook을 어떤 config/adapter 경계로 둘지 확정
+- `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 playback/render 책임 경계도 계속 점검
+- controller에 남은 domain 후처리 중 adapter로 넘기면 단순해지는 것만 선별
 
 ### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
 
@@ -981,10 +984,10 @@ createTimelineController({
 
 ## 10. 현재 리팩토링 우선순위
 
-1. `createTimelineControllerCore()`가 커지기 전에 option-heavy 구조인지 점검
+1. 단일 `createTimelineController()` 도입 전에 field rendering, preview, mutation finish hook 경계 확정
 2. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
-3. `createTimelineControllerCore()` 안의 clipboard/playback/render 조립 책임을 추가로 분리할지 판단
-4. 단일 `createTimelineController` 도입 가능 범위 산정
+3. `createTimelineControllerCore()` 안의 playback/render 조립 책임을 추가로 분리할지 판단
+4. 단일 `createTimelineController` 최소 도입 범위 산정
 5. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
 6. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
 7. 캐릭터 정의에 사용 동작/스킬 목록 추가
@@ -999,6 +1002,7 @@ createTimelineController({
 
 - `src/timelineControllerCore.js`: 포즈/효과 타임라인이 공유하는 읽기, 쓰기, 선택, 재생, 설정 변경, keyframe 추가/삭제, reset 흐름을 조립한다.
 - `src/timelineControllerActions.js`: undo, mutation 마무리, 선택 갱신, keyframe 추가/삭제/이동, reset, 복사/붙여넣기 같은 공통 액션 단위를 제공한다.
+- `src/timelineControllerClipboardControls.js`: 타임라인 복사/붙여넣기의 실행 순서, 열린 섹션 검사, undo 연결을 조립한다.
 - `src/timelineControllerSelectionControls.js`: 타임라인 선택, 고정 프레임 선택, 선택 적용, 선택 상태 라벨, 드래그 선택 준비를 조립한다.
 - `src/timelineAdapterContract.js`: 타임라인 adapter가 반드시 제공해야 하는 메서드 목록을 정의한다.
 - `src/poseTimelineAdapter.js`: 파츠 애니메이션 데이터 접근, 포즈 키, 파츠 source, 프레임 복사/붙여넣기 값을 담당한다.
@@ -1012,7 +1016,8 @@ createTimelineController({
 - 선택 적용의 공통 순서는 core가 맡고, 포즈의 그룹 편집 reset 같은 도메인 후처리는 controller가 결정한다.
 - start/end 같은 fixed frame 선택은 core가 맡아 controller가 selection 내부 구조를 직접 덜 만지게 했다.
 - 선택 관련 세부 조립은 `timelineControllerSelectionControls.js`로 이동했고, `timelineControllerCore.js`는 이를 연결하는 역할만 맡는다.
-- 복사/붙여넣기의 열림 상태 검사와 undo 흐름은 core가 맡고, 실제 frame payload는 adapter가 결정한다.
+- 복사/붙여넣기의 열림 상태 검사와 undo 흐름은 `timelineControllerClipboardControls.js`가 맡고, 실제 frame payload는 adapter가 결정한다.
+- `timelineControllerCore.js`는 selection, clipboard, playback, render control을 연결하는 조립 계층에 가까워졌다.
 - 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
 - `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
 
@@ -1023,14 +1028,48 @@ createTimelineController({
 - `npm run check`: 통과
 - `git diff --check`: 통과
 - `setting.html` 서버 응답: `HTTP 200 OK`
-- Headless Chrome screenshot: `/private/tmp/crow-knight-selection-module-check.png` 렌더 확인
+- Headless Chrome screenshot: `/private/tmp/crow-knight-clipboard-controls-check.png` 렌더 확인
 
 최근 리팩토링 결과:
 
-- `src/timelineControllerCore.js`: 264줄에서 198줄로 감소
+- `src/timelineControllerCore.js`: 264줄에서 187줄로 감소
+- `src/timelineControllerClipboardControls.js`: 26줄 신규 분리
 - `src/timelineControllerSelectionControls.js`: 104줄 신규 분리
 - 저장 포맷과 데이터 구조 변경 없음
 - 포즈/효과 controller 공개 계약 변경 없음
+
+## 10.3 단일 Timeline Controller 도입 전 책임 분류
+
+현재 기준으로 단일 `createTimelineController()` 도입은 가능해지고 있지만, 아직 바로 합치기보다는 아래 책임 경계를 먼저 고정해야 한다.
+
+Core가 가져가야 하는 책임:
+
+- frame count, slot 계산, keyframe 목록 접근 같은 공통 타임라인 규칙 연결
+- keyframe 추가/삭제/이동의 공통 실행 순서
+- selection, clipboard, playback, render control 조립
+- undo 시작/커밋이 필요한 공통 타임라인 액션의 연결 지점
+
+Adapter가 가져가야 하는 책임:
+
+- 실제 타임라인 데이터 접근과 정규화
+- 현재 frame 값 읽기/쓰기
+- 복사/붙여넣기 payload 생성과 적용
+- preview payload 생성
+- 포즈의 파츠/그룹 개념, 효과의 단일 이미지 슬롯처럼 데이터 모양이 다른 부분
+
+Controller에 남아야 하는 책임:
+
+- 패널별 필드 렌더링
+- 포즈 그룹 편집 reset 같은 UI 후처리
+- 효과 이미지 미리보기, clearSelection 같은 패널 고유 동작
+- controller 외부에서 주입되는 actor/elements/undo/scrub callback 연결
+
+현재 판단:
+
+- selection과 clipboard는 별도 control 모듈로 빠져 Core 비대화 위험이 줄었다.
+- playback과 render는 이미 별도 모듈이 있으므로 지금 추가 이동보다 단일 controller 도입 시 config 형태를 정하는 것이 우선이다.
+- preview는 포즈와 효과의 차이가 아직 크므로 지금 Core로 억지로 올리지 않는다.
+- 단일 controller 도입 전 남은 핵심은 field rendering, preview, mutation finish hook을 adapter/config 중 어디에 둘지 확정하는 것이다.
 
 ## 11. 유지보수 경고
 
