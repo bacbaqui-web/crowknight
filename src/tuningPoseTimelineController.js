@@ -56,6 +56,7 @@ export function createPoseTimelineController({
     activeT: timelineActiveT,
     currentFrameValue: timelineCurrentFrameValue,
     frameCount: getFrameCount,
+    frameLabel,
     frameSelectionState,
     hasFrameSelection: hasTimelineFrameSelection,
     isSectionOpen,
@@ -121,13 +122,6 @@ export function createPoseTimelineController({
   }
 
   const hasFrameSelection = () => hasTimelineFrameSelection({ includeSelectedSlot: false });
-
-  function frameLabel() {
-    if (poseSelection.fixedFrame === 'start') return '첫프레임';
-    if (poseSelection.fixedFrame === 'end') return '끝프레임';
-    if (poseSelection.activeKeyframeId) return '키프레임';
-    return '기본';
-  }
 
   function updateSetting(prop, value) {
     updateTimelineSettingAction({

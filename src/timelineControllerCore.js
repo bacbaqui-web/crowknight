@@ -50,6 +50,12 @@ export function createTimelineControllerCore({
     fixedFrame: selection.fixedFrame,
     selectedSlot: selection.selectedSlot,
   });
+  const frameLabel = () => {
+    if (selection.fixedFrame === 'start') return '첫프레임';
+    if (selection.fixedFrame === 'end') return '끝프레임';
+    if (selection.activeKeyframeId) return '키프레임';
+    return '기본';
+  };
   const selectKeyframe = ({ id, setContext, applySelection }) =>
     selectTimelineKeyframeAction({
       id,
@@ -118,6 +124,7 @@ export function createTimelineControllerCore({
     activeT,
     currentFrameValue,
     frameSelectionState,
+    frameLabel,
     hasFrameSelection,
     isSectionOpen,
     keyframes: keyframesForTimeline,
