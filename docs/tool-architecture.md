@@ -865,6 +865,7 @@ src/
 - clipboard controls 전용 모듈 분리
 - 최소 단일 `createTimelineController()` factory 도입
 - Effect Timeline의 `createTimelineController()` 실제 적용
+- Pose Timeline의 `createTimelineController()` 실제 적용
 - core 기반 timeline reset 헬퍼
 - core 기반 timeline copy/paste wrapper
 - 시각 효과 타임라인 adapter
@@ -873,8 +874,8 @@ src/
 
 다음 작업:
 
-- Pose Timeline을 단일 `createTimelineController()` factory로 옮길 수 있는지 Effect 적용 결과와 비교
-- field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload를 확정
+- Timeline 리팩토링은 완료 단계로 보고, 다음에는 히트박스 타임라인화 전 adapter/config hook 경계를 정리
+- field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload를 문서 기준으로 확정
 - `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 playback/render 책임 경계도 계속 점검
 - controller에 남은 domain 후처리 중 adapter로 넘기면 단순해지는 것만 선별
 
@@ -921,6 +922,7 @@ src/
 현재 완료된 것:
 
 - `src/poseTimelineAdapter.js`가 포즈 키, 설정, offset, 키프레임, 파츠 source 접근을 맡는다.
+- `src/tuningPoseTimelineController.js`는 실제로 `createTimelineController()` factory를 사용한다.
 - 포즈 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter와 core 경계를 지난다.
 - 포즈 preview 생성 입력과 드래그 preview가 adapter로 이동했다.
 - 포즈 active time 계산이 adapter로 이동했다.
@@ -933,8 +935,8 @@ src/
 
 남은 것:
 
-- 그룹 편집 선택 상태와 UI 후처리 차이를 단일 컨트롤러가 다룰 수 있는 형태로 정리한다.
-- 단일 컨트롤러가 요구할 세부 adapter 메서드를 더 좁힌다.
+- 포즈 그룹 편집 reset, 다중 선택, 파츠 필드 렌더링, preview sync, mutation finish hook은 controller에 남아 있다.
+- 이 차이는 현재 동작 보존을 위해 남긴 도메인 후처리이며, 이후 adapter/config hook으로 옮길지는 별도 판단한다.
 
 ### 8.4 4단계: 단일 Timeline Controller 도입
 
@@ -955,8 +957,9 @@ createTimelineController({
 
 - `src/timelineController.js`가 최소 단일 controller factory 역할을 시작했다.
 - Effect Timeline은 `createTimelineController()`를 사용해 core와 공통 controller 계약을 조립한다.
-- Pose Timeline은 비교와 안전한 이행을 위해 아직 `createTimelineControllerCore()`를 직접 사용한다.
-- 이번 단계에서는 controller 제거가 아니라 실제 적용 가능한 조립 구조 검증을 목표로 했다.
+- Pose Timeline도 `createTimelineController()`를 사용해 core와 공통 controller 계약을 조립한다.
+- Effect/Pose controller는 아직 도메인별 wrapper로 남지만, 둘 다 동일한 factory 경로를 사용한다.
+- 이 시점부터 Timeline 리팩토링은 완료 단계로 본다.
 
 ### 8.5 5단계: 툴/게임 런타임 분리
 
@@ -995,7 +998,7 @@ createTimelineController({
 
 ## 10. 현재 리팩토링 우선순위
 
-1. Pose Timeline을 `createTimelineController()` factory로 옮길 수 있는지 Effect 적용 결과와 비교
+1. Timeline 리팩토링 완료 상태를 기준으로 히트박스 타임라인화 전 adapter/config hook 경계 정리
 2. field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload 확정
 3. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
 4. `createTimelineControllerCore()` 안의 playback/render 조립 책임을 추가로 분리할지 판단
@@ -1023,6 +1026,7 @@ createTimelineController({
 책임이 분리된 부분:
 
 - Effect Timeline은 `createTimelineController()`를 통해 core와 공통 controller 계약을 조립한다.
+- Pose Timeline도 `createTimelineController()`를 통해 core와 공통 controller 계약을 조립한다.
 - 공통 타임라인 동작은 `timelineControllerCore.js`와 `timelineControllerActions.js`로 이동했다.
 - 포즈와 효과의 데이터 모양 차이는 각각 adapter가 감싼다.
 - 선택 초기화와 선택 갱신의 공통 순서는 core가 맡고, 어떤 UI 필드를 다시 그릴지는 각 controller가 결정한다.
@@ -1041,17 +1045,19 @@ createTimelineController({
 - `npm run check`: 통과
 - `git diff --check`: 통과
 - `setting.html` 서버 응답: `HTTP 200 OK`
-- Headless Chrome screenshot: `/private/tmp/crow-knight-create-timeline-controller-check.png` 렌더 확인
+- Headless Chrome screenshot: `/private/tmp/crow-knight-pose-factory-check.png` 렌더 확인
 
 최근 리팩토링 결과:
 
 - `src/timelineController.js`: 20줄 신규 도입
 - Effect Timeline이 실제로 `createTimelineController()` factory를 사용
+- Pose Timeline도 실제로 `createTimelineController()` factory를 사용
 - `src/timelineControllerCore.js`: 264줄에서 187줄로 감소
 - `src/timelineControllerClipboardControls.js`: 26줄 신규 분리
 - `src/timelineControllerSelectionControls.js`: 104줄 신규 분리
 - 저장 포맷과 데이터 구조 변경 없음
 - 포즈/효과 controller 공개 계약 변경 없음
+- Pose 그룹 편집, 다중 선택, preview, undo, copy/paste, selection 경로는 기존 후처리와 adapter payload를 유지
 
 ## 10.3 단일 Timeline Controller 도입 전 책임 분류
 
@@ -1083,9 +1089,10 @@ Controller에 남아야 하는 책임:
 
 - selection과 clipboard는 별도 control 모듈로 빠져 Core 비대화 위험이 줄었다.
 - Effect Timeline에서 `createTimelineController()`를 실제로 사용하기 시작해 단일 controller 도입 경로가 검증됐다.
+- Pose Timeline도 같은 factory 경로로 이전되어 Effect/Pose의 공통 controller 조립 경로가 일치한다.
 - playback과 render는 이미 별도 모듈이 있으므로 지금 추가 이동보다 단일 controller 도입 시 config 형태를 정하는 것이 우선이다.
 - preview는 포즈와 효과의 차이가 아직 크므로 지금 Core로 억지로 올리지 않는다.
-- 단일 controller 도입 전 남은 핵심은 Pose Timeline도 같은 factory 경로로 옮길 수 있는지 확인하고, field rendering, preview, mutation finish hook을 adapter/config 중 어디에 둘지 확정하는 것이다.
+- Timeline 리팩토링은 완료 단계로 판단한다. 남은 핵심은 새 타임라인 대상, 예를 들어 hitbox를 붙이기 전에 field rendering, preview, mutation finish hook의 adapter/config 경계를 확정하는 것이다.
 
 ## 11. 유지보수 경고
 
