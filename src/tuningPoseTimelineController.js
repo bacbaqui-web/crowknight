@@ -8,7 +8,6 @@ import {
   moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
-  resetTimelineAnimationAction,
   resetTimelineSelectionAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
@@ -66,6 +65,7 @@ export function createPoseTimelineController({
     slotToLeft,
     playbackControls,
     renderTimeline,
+    resetAnimation: resetTimelineAnimation,
     selectKeyframe: selectTimelineKeyframe,
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
@@ -197,9 +197,7 @@ export function createPoseTimelineController({
   }
 
   function resetAnimation() {
-    resetTimelineAnimationAction({
-      beginUndo: beginUndoSnapshot,
-      resetAnimation: poseTimeline.resetAnimation,
+    resetTimelineAnimation({
       resetSelection: resetSelectionState,
       clearCopiedFrame,
       stopPreview,

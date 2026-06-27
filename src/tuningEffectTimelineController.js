@@ -10,7 +10,6 @@ import {
   moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
-  resetTimelineAnimationAction,
   resetTimelineSelectionAction,
   setFixedTimelineFrameSelectionAction,
 } from './timelineControllerActions.js';
@@ -69,6 +68,7 @@ export function createEffectTimelineController({
     slotToLeft,
     playbackControls,
     renderTimeline,
+    resetAnimation: resetTimelineAnimation,
     selectKeyframe: selectTimelineKeyframe,
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
@@ -217,9 +217,7 @@ export function createEffectTimelineController({
   }
 
   function resetAnimation() {
-    resetTimelineAnimationAction({
-      beginUndo: beginUndoSnapshot,
-      resetAnimation: effectTimeline.resetAnimation,
+    resetTimelineAnimation({
       resetSelection: resetSelectionState,
       clearCopiedFrame,
       stopPreview,

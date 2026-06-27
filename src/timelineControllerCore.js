@@ -6,6 +6,7 @@ import { hasTimelineSelection } from './timelineState.js';
 import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,
+  resetTimelineAnimationAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -74,6 +75,15 @@ export function createTimelineControllerCore({
       deleteKeyframe: timeline.deleteKeyframe,
       beginUndo,
       resetSelection,
+      stopPreview,
+      finish,
+    });
+  const resetAnimation = ({ resetSelection, clearCopiedFrame, stopPreview, finish }) =>
+    resetTimelineAnimationAction({
+      beginUndo,
+      resetAnimation: timeline.resetAnimation,
+      resetSelection,
+      clearCopiedFrame,
       stopPreview,
       finish,
     });
@@ -166,6 +176,7 @@ export function createTimelineControllerCore({
     keyframes: keyframesForTimeline,
     playbackControls,
     renderTimeline,
+    resetAnimation,
     selectKeyframe,
     selectKeyframeForDrag,
     selectSlot: selectSlotAction,
