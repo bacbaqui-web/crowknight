@@ -3,12 +3,7 @@ import { effectPropertyGroups } from './tuningFieldGroups.js';
 import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
-import {
-  copyTimelineFrameAction,
-  finishTimelineMutationAction,
-  moveTimelineKeyframeWithPreviewAction,
-  pasteTimelineFrameAction,
-} from './timelineControllerActions.js';
+import { finishTimelineMutationAction, moveTimelineKeyframeWithPreviewAction } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
@@ -52,6 +47,7 @@ export function createEffectTimelineController({
     activeT: timelineActiveT,
     addKeyframe: addTimelineKeyframe,
     applySelection: applyTimelineSelectionCore,
+    copyFrame: copyTimelineFrame,
     currentFrameValue: timelineCurrentFrameValue,
     deleteKeyframe: deleteTimelineKeyframe,
     frameCount: getFrameCount,
@@ -64,6 +60,7 @@ export function createEffectTimelineController({
     slotToValue,
     slotToLeft,
     playbackControls,
+    pasteFrame: pasteTimelineFrame,
     renderTimeline,
     resetAnimation: resetTimelineAnimation,
     resetSelectionState,
@@ -225,7 +222,7 @@ export function createEffectTimelineController({
   }
 
   function copyFrame() {
-    copyTimelineFrameAction({
+    copyTimelineFrame({
       copyFrame: () =>
         effectTimeline.copyFrame({
           isOpen: isSectionOpen(),
@@ -240,11 +237,8 @@ export function createEffectTimelineController({
   }
 
   function pasteFrame() {
-    pasteTimelineFrameAction({
+    pasteTimelineFrame({
       copiedFrame: copiedEffectFrame,
-      isOpen: isSectionOpen(),
-      beginUndo: beginUndoSnapshot,
-      commitUndo: commitUndoSnapshot,
       pasteTargetFrameId: () =>
         effectTimeline.pasteTargetFrameId({
           selection: effectSelection,

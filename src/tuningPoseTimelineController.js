@@ -1,12 +1,7 @@
 import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
-import {
-  copyTimelineFrameAction,
-  finishTimelineMutationAction,
-  moveTimelineKeyframeWithPreviewAction,
-  pasteTimelineFrameAction,
-} from './timelineControllerActions.js';
+import { finishTimelineMutationAction, moveTimelineKeyframeWithPreviewAction } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
 import { startTimelinePreview, stopTimelinePreview, syncPoseTimelinePreview } from './tuningTimelinePreview.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './tuningPoseTimelinePanelView.js';
@@ -49,6 +44,7 @@ export function createPoseTimelineController({
     activeT: timelineActiveT,
     addKeyframe: addTimelineKeyframe,
     applySelection: applyTimelineSelectionCore,
+    copyFrame: copyTimelineFrame,
     currentFrameValue: timelineCurrentFrameValue,
     deleteKeyframe: deleteTimelineKeyframe,
     frameCount: getFrameCount,
@@ -62,6 +58,7 @@ export function createPoseTimelineController({
     slotToValue,
     slotToLeft,
     playbackControls,
+    pasteFrame: pasteTimelineFrame,
     renderTimeline,
     resetAnimation: resetTimelineAnimation,
     resetSelectionState,
@@ -205,7 +202,7 @@ export function createPoseTimelineController({
   }
 
   function copyFrame() {
-    copyTimelineFrameAction({
+    copyTimelineFrame({
       copyFrame: () =>
         poseTimeline.copyFrame({
           isOpen: isSectionOpen(),
@@ -221,11 +218,8 @@ export function createPoseTimelineController({
   }
 
   function pasteFrame() {
-    pasteTimelineFrameAction({
+    pasteTimelineFrame({
       copiedFrame: copiedPoseFrame,
-      isOpen: isSectionOpen(),
-      beginUndo: beginUndoSnapshot,
-      commitUndo: commitUndoSnapshot,
       pasteTargetFrameId: () =>
         poseTimeline.pasteTargetFrameId({
           selection: poseSelection,

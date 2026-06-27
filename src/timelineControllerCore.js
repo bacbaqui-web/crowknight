@@ -6,7 +6,9 @@ import { hasTimelineSelection } from './timelineState.js';
 import {
   addTimelineKeyframeAction,
   applyTimelineSelectionAction,
+  copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
+  pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
@@ -51,6 +53,22 @@ export function createTimelineControllerCore({
     });
   const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
   const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
+  const copyFrame = ({ copyFrame, setCopiedFrame, afterCopy }) =>
+    copyTimelineFrameAction({
+      copyFrame,
+      setCopiedFrame,
+      afterCopy,
+    });
+  const pasteFrame = ({ copiedFrame, pasteTargetFrameId, pasteFrameCopy, finish }) =>
+    pasteTimelineFrameAction({
+      copiedFrame,
+      isOpen: isSectionOpen(),
+      beginUndo,
+      commitUndo,
+      pasteTargetFrameId,
+      pasteFrameCopy,
+      finish,
+    });
   const updateSetting = (prop, value) =>
     updateTimelineSettingAction({
       prop,
@@ -192,6 +210,7 @@ export function createTimelineControllerCore({
     activeT,
     addKeyframe,
     applySelection,
+    copyFrame,
     currentFrameValue,
     deleteKeyframe,
     frameSelectionState,
@@ -200,6 +219,7 @@ export function createTimelineControllerCore({
     isSectionOpen,
     keyframes: keyframesForTimeline,
     playbackControls,
+    pasteFrame,
     renderTimeline,
     resetAnimation,
     resetSelectionState,
