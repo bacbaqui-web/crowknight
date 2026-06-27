@@ -855,14 +855,16 @@ src/
 - core 기반 keyframe/slot 선택 액션
 - core 기반 drag keyframe 선택 액션
 - core 기반 frame selection 검사 헬퍼
+- core 기반 timeline reset 헬퍼
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
 - 공통 adapter 계약: `timelineAdapterContract.js`
 
 다음 작업:
 
-- 패널별 선택 상태 차이 정리
-- `createTimelineControllerCore()` 적용 범위 확장
+- 패널별 선택 상태 차이를 더 좁은 adapter 계약으로 정리
+- `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 책임 경계 점검
+- 복사/붙여넣기와 선택 상태 중 아직 controller에 남은 domain 후처리 분리 가능성 검토
 
 ### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
 
@@ -877,11 +879,12 @@ src/
 현재 완료된 것:
 
 - `src/effectTimelineAdapter.js`가 시각 효과 키, 설정, offset, 키프레임 접근을 맡는다.
-- 시각 효과 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter 경계를 지난다.
+- 시각 효과 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter와 core 경계를 지난다.
 - 시각 효과 preview 생성 입력이 adapter로 이동했다.
 - 시각 효과 active time 계산이 adapter로 이동했다.
 - 시각 효과 current frame 계산이 adapter로 이동했다.
 - 시각 효과 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
+- 시각 효과 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
 
 남은 것:
 
@@ -901,11 +904,12 @@ src/
 현재 완료된 것:
 
 - `src/poseTimelineAdapter.js`가 포즈 키, 설정, offset, 키프레임, 파츠 source 접근을 맡는다.
-- 포즈 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter 경계를 지난다.
+- 포즈 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter와 core 경계를 지난다.
 - 포즈 preview 생성 입력과 드래그 preview가 adapter로 이동했다.
 - 포즈 active time 계산이 adapter로 이동했다.
 - 포즈 current frame 계산이 adapter로 이동했다.
 - 포즈 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
+- 포즈 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
 
 남은 것:
 
@@ -964,15 +968,33 @@ createTimelineController({
 
 ## 10. 현재 리팩토링 우선순위
 
-1. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
-2. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
-3. 캐릭터 정의에 사용 동작/스킬 목록 추가
-4. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
-5. 패널별 선택 상태 차이를 단일 컨트롤러 옵션으로 정리
-6. 단일 `createTimelineController` 도입 준비
-7. 히트박스 타임라인화 검토
-8. `tuningPanel.js` 부트스트랩/조립 책임 분리
-9. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
+1. 패널별 선택 상태와 후처리 차이를 더 좁은 adapter 계약으로 정리
+2. `createTimelineControllerCore()`가 커지기 전에 option-heavy 구조인지 점검
+3. 단일 `createTimelineController` 도입 준비
+4. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
+5. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
+6. 캐릭터 정의에 사용 동작/스킬 목록 추가
+7. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
+8. 히트박스 타임라인화 검토
+9. `tuningPanel.js` 부트스트랩/조립 책임 분리
+10. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
+
+## 10.1 현재 새로 만든 파일과 책임 분리
+
+새로 만든 파일:
+
+- `src/timelineControllerCore.js`: 포즈/효과 타임라인이 공유하는 읽기, 쓰기, 선택, 재생, 설정 변경, keyframe 추가/삭제, reset 흐름을 조립한다.
+- `src/timelineControllerActions.js`: undo, mutation 마무리, 선택 갱신, keyframe 추가/삭제/이동, reset, 복사/붙여넣기 같은 공통 액션 단위를 제공한다.
+- `src/timelineAdapterContract.js`: 타임라인 adapter가 반드시 제공해야 하는 메서드 목록을 정의한다.
+- `src/poseTimelineAdapter.js`: 파츠 애니메이션 데이터 접근, 포즈 키, 파츠 source, 프레임 복사/붙여넣기 값을 담당한다.
+- `src/effectTimelineAdapter.js`: 시각 효과 데이터 접근, 효과 키, 이미지/effect slot, 프레임 복사/붙여넣기 값을 담당한다.
+
+책임이 분리된 부분:
+
+- 공통 타임라인 동작은 `timelineControllerCore.js`와 `timelineControllerActions.js`로 이동했다.
+- 포즈와 효과의 데이터 모양 차이는 각각 adapter가 감싼다.
+- 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
+- `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
 
 ## 11. 유지보수 경고
 
