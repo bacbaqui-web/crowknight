@@ -1,8 +1,13 @@
+import { markActiveKeyframeButton } from './timelineDragControls.js';
 import { createControllerTimelineRenderer } from './timelineControllerView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import { hasTimelineSelection } from './timelineState.js';
-import { selectTimelineKeyframeAction, selectTimelineSlotAction } from './timelineControllerActions.js';
+import {
+  selectTimelineKeyframeAction,
+  selectTimelineKeyframeForDragAction,
+  selectTimelineSlotAction,
+} from './timelineControllerActions.js';
 
 export function createTimelineControllerCore({
   timeline,
@@ -60,6 +65,20 @@ export function createTimelineControllerCore({
       setContext,
       applySelection,
     });
+  const selectKeyframeForDrag = ({ id, stopPreview, getActiveT, setDragPreview }) =>
+    selectTimelineKeyframeForDragAction({
+      selection,
+      id,
+      keyframes: keyframesForTimeline(),
+      toSlot: accessors.toSlot,
+      stopPreview,
+      getActiveT,
+      setDragPreview,
+      setDeleteDisabled: (disabled) => {
+        deleteButton.disabled = disabled;
+      },
+      markActive: (keyframeId) => markActiveKeyframeButton(track, keyframeId),
+    });
 
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount: accessors.frameCount,
@@ -98,6 +117,7 @@ export function createTimelineControllerCore({
     playbackControls,
     renderTimeline,
     selectKeyframe,
+    selectKeyframeForDrag,
     selectSlot: selectSlotAction,
     writeFrameValue,
   };

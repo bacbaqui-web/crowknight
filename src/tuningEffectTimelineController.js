@@ -2,7 +2,6 @@ import { createEffectTimelineAdapter } from './effectTimelineAdapter.js';
 import { effectPropertyGroups } from './tuningFieldGroups.js';
 import { renderEffectImagePreview } from './tuningPanelDom.js';
 import { isEmptyEditableSlot } from './tuningTimelineDom.js';
-import { markActiveKeyframeButton } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
   addTimelineKeyframeAction,
@@ -15,7 +14,6 @@ import {
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
-  selectTimelineKeyframeForDragAction,
   setFixedTimelineFrameSelectionAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
@@ -71,6 +69,7 @@ export function createEffectTimelineController({
     playbackControls,
     renderTimeline,
     selectKeyframe: selectTimelineKeyframe,
+    selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
@@ -382,18 +381,11 @@ export function createEffectTimelineController({
   }
 
   function selectKeyframeForDrag(id) {
-    selectTimelineKeyframeForDragAction({
-      selection: effectSelection,
+    selectTimelineKeyframeForDrag({
       id,
-      keyframes: keyframesForTimeline(),
-      toSlot,
       stopPreview,
       getActiveT,
       setDragPreview: effectTimeline.setDragPreview,
-      setDeleteDisabled: (disabled) => {
-        effectDeleteKeyframe.disabled = disabled;
-      },
-      markActive: (keyframeId) => markActiveKeyframeButton(effectTimelineTrack, keyframeId),
     });
   }
 

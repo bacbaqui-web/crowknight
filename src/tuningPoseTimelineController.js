@@ -1,6 +1,5 @@
 import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
-import { markActiveKeyframeButton } from './timelineDragControls.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
   addTimelineKeyframeAction,
@@ -13,7 +12,6 @@ import {
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
-  selectTimelineKeyframeForDragAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
@@ -67,6 +65,7 @@ export function createPoseTimelineController({
     playbackControls,
     renderTimeline,
     selectKeyframe: selectTimelineKeyframe,
+    selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
@@ -363,18 +362,11 @@ export function createPoseTimelineController({
   }
 
   function selectKeyframeForDrag(id) {
-    selectTimelineKeyframeForDragAction({
-      selection: poseSelection,
+    selectTimelineKeyframeForDrag({
       id,
-      keyframes: keyframesForTimeline(),
-      toSlot,
       stopPreview,
       getActiveT,
       setDragPreview: poseTimeline.setDragPreview,
-      setDeleteDisabled: (disabled) => {
-        poseDeleteKeyframe.disabled = disabled;
-      },
-      markActive: (keyframeId) => markActiveKeyframeButton(poseTimelineTrack, keyframeId),
     });
   }
 
