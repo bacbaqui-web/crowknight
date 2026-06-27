@@ -611,6 +611,10 @@
 
 현재는 일부 분리가 진행되어 500줄 안팎이지만, 앞으로 다시 커지면 유지보수가 어려워진다.
 
+최근 일부 분리:
+
+- `src/tuningPanelBootstrap.js`: 패널 DOM 조회, panel elements 생성, panel toggle 동기화 함수 생성을 맡는다.
+
 분리 후보:
 
 - 패널 부트스트랩
@@ -972,6 +976,44 @@ createTimelineController({
 
 로 점진적으로 이동한다.
 
+### 8.6 Milestone 2: Tool Shell 분리
+
+Timeline 리팩토링은 완료 단계로 보고, 현재부터는 제작툴 shell을 더 작은 조립 계층으로 나눈다.
+
+첫 번째 대상은 `src/tuningPanel.js`다.
+
+현재 `tuningPanel.js`가 가진 책임:
+
+- Panel Bootstrap: `#tuningPanel` 조회, panel elements 생성, panel open/close toggle 동기화
+- Controller Composition: timeline, part, canvas, lifecycle, background controller 조립
+- Selection/Edit State: active part, active pose part, edit focus, selected pose parts, group edit values 관리
+- Undo 연결: tuning undo state 생성과 begin/commit/push 함수 주입
+- Timeline 연결: pose/effect timeline 생성, frame copy/paste action 연결
+- Asset/Save Action 연결: 에셋 업로드, 설정 업로드/다운로드, saveState 연결
+- Panel Control Binding: DOM control 이벤트와 callback 연결
+- Canvas/Edit Handle 연결: edit handle geometry, hover/active mode, canvas pointer callback 연결
+- Panel Sync: 현재 actor/tuning 값으로 UI 전체 동기화
+- Shortcut 연결: undo, frame copy/paste 단축키 연결
+
+완료된 첫 분리:
+
+- `src/tuningPanelBootstrap.js`를 추가했다.
+- `tuningPanel.js`에서 DOM query, `getTuningPanelElements`, panel toggle 동기화 생성 책임을 이동했다.
+- 저장 구조, selection state, controller 조립 흐름은 변경하지 않았다.
+
+다음 분리 후보:
+
+- Controller Composition: timeline/part/canvas/lifecycle/background controller 조립 묶음을 별도 composition module로 이동
+- Panel Control Binding: `initializeTuningPanelControls()`에 넘기는 긴 callback map 구성을 별도 module로 이동
+- Panel Sync: `syncPanel()`의 전체 UI 동기화 순서를 별도 module로 이동
+
+아직 건드리지 않을 것:
+
+- Selection/Edit State
+- Save/Upload/Download 동작
+- Undo state 구조
+- Workflow UI 개편
+
 ## 9. 앞으로 기능 추가 시 체크리스트
 
 새 기능을 추가하기 전에 아래를 확인한다.
@@ -998,17 +1040,16 @@ createTimelineController({
 
 ## 10. 현재 리팩토링 우선순위
 
-1. Timeline 리팩토링 완료 상태를 기준으로 히트박스 타임라인화 전 adapter/config hook 경계 정리
-2. field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload 확정
-3. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
-4. `createTimelineControllerCore()` 안의 playback/render 조립 책임을 추가로 분리할지 판단
-5. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
-6. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
-7. 캐릭터 정의에 사용 동작/스킬 목록 추가
-8. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
-9. 히트박스 타임라인화 검토
-10. `tuningPanel.js` 부트스트랩/조립 책임 분리
-11. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
+1. `tuningPanel.js`의 Controller Composition 책임 분리
+2. `initializeTuningPanelControls()`에 넘기는 callback map 구성 분리
+3. `syncPanel()` 전체 UI 동기화 순서 분리
+4. Selection/Edit State 분리 가능성 검토
+5. Save/Upload/Download 액션 경계 검토
+6. Timeline 리팩토링 완료 상태를 기준으로 히트박스 타임라인화 전 adapter/config hook 경계 정리
+7. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
+8. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
+9. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
+10. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
 
 ## 10.1 현재 새로 만든 파일과 책임 분리
 
@@ -1022,6 +1063,7 @@ createTimelineController({
 - `src/timelineAdapterContract.js`: 타임라인 adapter가 반드시 제공해야 하는 메서드 목록을 정의한다.
 - `src/poseTimelineAdapter.js`: 파츠 애니메이션 데이터 접근, 포즈 키, 파츠 source, 프레임 복사/붙여넣기 값을 담당한다.
 - `src/effectTimelineAdapter.js`: 시각 효과 데이터 접근, 효과 키, 이미지/effect slot, 프레임 복사/붙여넣기 값을 담당한다.
+- `src/tuningPanelBootstrap.js`: tuning panel DOM 조회, panel elements 생성, panel toggle 동기화 함수 생성을 담당한다.
 
 책임이 분리된 부분:
 
@@ -1036,6 +1078,8 @@ createTimelineController({
 - 복사/붙여넣기의 열림 상태 검사와 undo 흐름은 `timelineControllerClipboardControls.js`가 맡고, 실제 frame payload는 adapter가 결정한다.
 - `timelineControllerCore.js`는 selection, clipboard, playback, render control을 연결하는 조립 계층에 가까워졌다.
 - 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
+- `tuningPanel.js`에서 Panel Bootstrap 책임이 `tuningPanelBootstrap.js`로 이동했다.
+- `tuningPanel.js`는 아직 controller composition, selection/edit state, undo 연결, asset/save action 연결, control binding, panel sync를 맡는다.
 - `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
 
 ## 10.2 최근 검증 상태
@@ -1045,10 +1089,13 @@ createTimelineController({
 - `npm run check`: 통과
 - `git diff --check`: 통과
 - `setting.html` 서버 응답: `HTTP 200 OK`
-- Headless Chrome screenshot: `/private/tmp/crow-knight-pose-factory-check.png` 렌더 확인
+- Headless Chrome screenshot: `/private/tmp/crow-knight-tool-shell-bootstrap-check.png` 렌더 확인
 
 최근 리팩토링 결과:
 
+- Milestone 2 Tool Shell 분리 시작
+- `src/tuningPanelBootstrap.js`: 15줄 신규 분리
+- `src/tuningPanel.js`: 491줄에서 481줄로 감소
 - `src/timelineController.js`: 20줄 신규 도입
 - Effect Timeline이 실제로 `createTimelineController()` factory를 사용
 - Pose Timeline도 실제로 `createTimelineController()` factory를 사용
