@@ -228,9 +228,7 @@ export function createPoseTimelineController({
       beginUndo: beginUndoSnapshot,
       resetAnimation: poseTimeline.resetAnimation,
       resetSelection: resetSelectionState,
-      clearCopiedFrame: () => {
-        copiedPoseFrame = null;
-      },
+      clearCopiedFrame,
       stopPreview,
       finish: () => finishTimelineMutation({ syncToolbar: true }),
     });
@@ -308,6 +306,10 @@ export function createPoseTimelineController({
 
   function resetSelectionState() {
     resetTimelineSelectionAction(poseSelection);
+  }
+
+  function clearCopiedFrame() {
+    copiedPoseFrame = null;
   }
 
   function applyTimelineSelection(nextSelection, { resetGroup = false } = {}) {
@@ -423,6 +425,7 @@ export function createPoseTimelineController({
       syncToolbarButtons,
       updateOffset,
       writeFrameValue,
+      clearCopiedFrame,
     }
   );
 }

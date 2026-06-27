@@ -242,9 +242,7 @@ export function createEffectTimelineController({
       beginUndo: beginUndoSnapshot,
       resetAnimation: effectTimeline.resetAnimation,
       resetSelection: resetSelectionState,
-      clearCopiedFrame: () => {
-        copiedEffectFrame = null;
-      },
+      clearCopiedFrame,
       stopPreview,
       finish: finishTimelineMutation,
     });
