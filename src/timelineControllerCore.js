@@ -5,8 +5,10 @@ import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import { hasTimelineSelection } from './timelineState.js';
 import {
   addTimelineKeyframeAction,
+  refreshTimelineFrameSelectionAction,
   deleteTimelineKeyframeAction,
   resetTimelineAnimationAction,
+  resetTimelineSelectionAction,
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
@@ -86,6 +88,13 @@ export function createTimelineControllerCore({
       clearCopiedFrame,
       stopPreview,
       finish,
+    });
+  const resetSelectionState = () => resetTimelineSelectionAction(selection);
+  const refreshFrameSelection = ({ renderFields }) =>
+    refreshTimelineFrameSelectionAction({
+      stopPreview,
+      renderFields,
+      syncPreview,
     });
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
     (!requireOpenSection || isSectionOpen()) && hasTimelineSelection(selection, { includeSelectedSlot });
@@ -175,8 +184,10 @@ export function createTimelineControllerCore({
     isSectionOpen,
     keyframes: keyframesForTimeline,
     playbackControls,
+    refreshFrameSelection,
     renderTimeline,
     resetAnimation,
+    resetSelectionState,
     selectKeyframe,
     selectKeyframeForDrag,
     selectSlot: selectSlotAction,

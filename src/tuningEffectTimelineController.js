@@ -9,8 +9,6 @@ import {
   finishTimelineMutationAction,
   moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
-  refreshTimelineFrameSelectionAction,
-  resetTimelineSelectionAction,
   setFixedTimelineFrameSelectionAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
@@ -67,8 +65,10 @@ export function createEffectTimelineController({
     slotToValue,
     slotToLeft,
     playbackControls,
+    refreshFrameSelection: refreshTimelineFrameSelection,
     renderTimeline,
     resetAnimation: resetTimelineAnimation,
+    resetSelectionState,
     selectKeyframe: selectTimelineKeyframe,
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
@@ -305,10 +305,6 @@ export function createEffectTimelineController({
     renderFields();
   }
 
-  function resetSelectionState() {
-    resetTimelineSelectionAction(effectSelection);
-  }
-
   function clearCopiedFrame() {
     copiedEffectFrame = null;
   }
@@ -322,10 +318,8 @@ export function createEffectTimelineController({
   }
 
   function refreshFrameSelection() {
-    refreshTimelineFrameSelectionAction({
-      stopPreview,
+    refreshTimelineFrameSelection({
       renderFields,
-      syncPreview,
     });
   }
 
