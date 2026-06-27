@@ -34,6 +34,8 @@ export function createTimelineControllerCore({
       frameCount: accessors.frameCount(),
       ...options,
     });
+  const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
+  const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
     (!requireOpenSection || section?.classList.contains('is-open')) &&
     hasTimelineSelection(selection, { includeSelectedSlot });
@@ -69,10 +71,12 @@ export function createTimelineControllerCore({
   return {
     ...accessors,
     activeT,
+    currentFrameValue,
     hasFrameSelection,
     keyframes: keyframesForTimeline,
     playbackControls,
     renderTimeline,
+    writeFrameValue,
   };
 }
 

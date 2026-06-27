@@ -58,6 +58,7 @@ export function createPoseTimelineController({
 
   const {
     activeT: timelineActiveT,
+    currentFrameValue: timelineCurrentFrameValue,
     frameCount: getFrameCount,
     hasFrameSelection: hasTimelineFrameSelection,
     keyframes: keyframesForTimeline,
@@ -67,6 +68,7 @@ export function createPoseTimelineController({
     slotToLeft,
     playbackControls,
     renderTimeline,
+    writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
     timeline: poseTimeline,
     selection: poseSelection,
@@ -155,18 +157,14 @@ export function createPoseTimelineController({
   }
 
   function currentFrameValue(part) {
-    return poseTimeline.currentFrameValue({
-      part,
-      selection: poseSelection,
-    });
+    return timelineCurrentFrameValue({ part });
   }
 
   function writeFrameValue(part, prop, value) {
-    poseTimeline.writeFrameValue({
+    timelineWriteFrameValue({
       part,
       prop,
       value,
-      selection: poseSelection,
     });
   }
 

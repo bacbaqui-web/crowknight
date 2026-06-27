@@ -62,6 +62,7 @@ export function createEffectTimelineController({
 
   const {
     activeT: timelineActiveT,
+    currentFrameValue: timelineCurrentFrameValue,
     frameCount: getFrameCount,
     hasFrameSelection: hasTimelineFrameSelection,
     keyframes: keyframesForTimeline,
@@ -71,6 +72,7 @@ export function createEffectTimelineController({
     slotToLeft,
     playbackControls,
     renderTimeline,
+    writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
     timeline: effectTimeline,
     selection: effectSelection,
@@ -123,8 +125,7 @@ export function createEffectTimelineController({
   }
 
   function currentFrameValue() {
-    return effectTimeline.currentFrameValue({
-      selection: effectSelection,
+    return timelineCurrentFrameValue({
       activeT: getActiveT(),
       setFixedFrame: setFrameSilently,
     });
@@ -134,10 +135,9 @@ export function createEffectTimelineController({
     if (!effectSelection.activeKeyframeId && !effectSelection.fixedFrame && effectSelection.selectedSlot !== null) {
       effectSelection.activeKeyframeId = createKeyframeAtSelectedSlot();
     }
-    effectTimeline.writeFrameValue({
+    timelineWriteFrameValue({
       prop,
       value,
-      selection: effectSelection,
     });
   }
 
