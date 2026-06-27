@@ -8,9 +8,8 @@ import {
   finishTimelineMutationAction,
   moveTimelineKeyframeWithPreviewAction,
   pasteTimelineFrameAction,
-  setFixedTimelineFrameSelectionAction,
 } from './timelineControllerActions.js';
-import { createTimelineSelectionState, hasTimelineSelection } from './timelineState.js';
+import { createTimelineSelectionState } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
@@ -71,6 +70,7 @@ export function createEffectTimelineController({
     selectKeyframe: selectTimelineKeyframe,
     selectKeyframeForDrag: selectTimelineKeyframeForDrag,
     selectSlot: selectTimelineSlot,
+    setFixedFrame,
     updateSetting,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
@@ -127,7 +127,7 @@ export function createEffectTimelineController({
   function currentFrameValue() {
     return timelineCurrentFrameValue({
       activeT: getActiveT(),
-      setFixedFrame: setFrameSilently,
+      setFixedFrame,
     });
   }
 
@@ -284,17 +284,9 @@ export function createEffectTimelineController({
     });
   }
 
-  function setFrameSilently(frame) {
-    setFixedTimelineFrameSelectionAction({
-      targetSelection: effectSelection,
-      frame,
-      lastSlot: getLastSlot(),
-    });
-  }
-
   function ensureActiveFrame() {
     effectTimeline.ensureOffset();
-    if (!hasTimelineSelection(effectSelection)) setFrameSilently('start');
+    if (!hasTimelineFrameSelection()) setFixedFrame('start');
   }
 
   function clearSelection() {

@@ -13,6 +13,7 @@ import {
   selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
   selectTimelineSlotAction,
+  setFixedTimelineFrameSelectionAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 
@@ -91,6 +92,12 @@ export function createTimelineControllerCore({
       finish,
     });
   const resetSelectionState = () => resetTimelineSelectionAction(selection);
+  const setFixedFrame = (frame) =>
+    setFixedTimelineFrameSelectionAction({
+      targetSelection: selection,
+      frame,
+      lastSlot: accessors.lastSlot(),
+    });
   const refreshFrameSelection = ({ renderFields }) =>
     refreshTimelineFrameSelectionAction({
       stopPreview,
@@ -199,6 +206,7 @@ export function createTimelineControllerCore({
     selectKeyframe,
     selectKeyframeForDrag,
     selectSlot: selectSlotAction,
+    setFixedFrame,
     updateSetting,
     writeFrameValue,
   };
