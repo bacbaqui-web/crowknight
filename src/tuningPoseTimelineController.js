@@ -413,7 +413,6 @@ export function createPoseTimelineController({
       playbackControls,
       addKeyframe,
       copyFrame,
-      currentFrameValue,
       deleteKeyframe,
       hasFrameSelection,
       pasteFrame,
@@ -422,15 +421,16 @@ export function createPoseTimelineController({
       stopPreview,
       syncPreview,
       updateSetting,
-      writeFrameValue,
     }),
     {
+      currentFrameValue,
       frameLabel,
       readDisplayValue,
       renderSettings,
       renderTimeline,
       syncToolbarButtons,
       updateOffset,
+      writeFrameValue,
     }
   );
 }

@@ -433,7 +433,6 @@ export function createEffectTimelineController({
       playbackControls,
       addKeyframe,
       copyFrame,
-      currentFrameValue,
       deleteKeyframe,
       hasFrameSelection,
       pasteFrame,
@@ -442,13 +441,14 @@ export function createEffectTimelineController({
       stopPreview,
       syncPreview,
       updateSetting,
-      writeFrameValue,
     }),
     {
       clearCopiedFrame,
       clearSelection,
+      currentFrameValue,
       ensureActiveFrame,
       renderFields,
+      writeFrameValue,
     }
   );
 }

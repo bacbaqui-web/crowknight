@@ -84,7 +84,6 @@ export function createTimelineControllerCommonMethods({
   playbackControls,
   addKeyframe,
   copyFrame,
-  currentFrameValue,
   deleteKeyframe,
   hasFrameSelection,
   pasteFrame,
@@ -93,12 +92,10 @@ export function createTimelineControllerCommonMethods({
   stopPreview,
   syncPreview,
   updateSetting,
-  writeFrameValue,
 }) {
   return {
     addKeyframe,
     copyFrame,
-    currentFrameValue,
     deleteKeyframe,
     hasFrameSelection,
     pasteFrame,
@@ -111,6 +108,5 @@ export function createTimelineControllerCommonMethods({
     togglePlaybackMode: playbackControls.togglePlaybackMode,
     updatePlaybackRate: playbackControls.updatePlaybackRate,
     updateSetting,
-    writeFrameValue,
   };
 }

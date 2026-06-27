@@ -1,7 +1,6 @@
 export const COMMON_TIMELINE_CONTROLLER_METHODS = [
   'addKeyframe',
   'copyFrame',
-  'currentFrameValue',
   'deleteKeyframe',
   'hasFrameSelection',
   'pasteFrame',
@@ -14,7 +13,6 @@ export const COMMON_TIMELINE_CONTROLLER_METHODS = [
   'togglePlaybackMode',
   'updatePlaybackRate',
   'updateSetting',
-  'writeFrameValue',
 ];
 
 export function assertTimelineControllerContract(name, controller) {
