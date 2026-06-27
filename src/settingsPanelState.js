@@ -36,9 +36,9 @@ export function currentCanvasSettingsEditContext({
   editContext,
   activePartKey,
 }) {
-  const partOpen = partSection.classList.contains('is-open');
-  const poseOpen = poseSection.classList.contains('is-open');
-  const effectOpen = effectSection.classList.contains('is-open');
+  const partOpen = isOpenVisibleSection(partSection);
+  const poseOpen = isOpenVisibleSection(poseSection);
+  const effectOpen = isOpenVisibleSection(effectSection);
   if (effectOpen) return 'effect';
   if (editFocusContext === 'pose' && poseOpen) return 'pose';
   if (editFocusContext === 'part' && partOpen && activePartKey) return 'part';
@@ -50,9 +50,13 @@ export function currentCanvasSettingsEditContext({
 }
 
 function isSettingsSectionOpen(section) {
-  return document.querySelector(`[data-section="${section}"]`)?.classList.contains('is-open');
+  return isOpenVisibleSection(document.querySelector(`[data-section="${section}"]`));
 }
 
 function isPanelSectionOpen(panel, section) {
-  return panel.querySelector(`[data-section="${section}"]`)?.classList.contains('is-open');
+  return isOpenVisibleSection(panel.querySelector(`[data-section="${section}"]`));
+}
+
+function isOpenVisibleSection(section) {
+  return Boolean(section && !section.hidden && section.classList.contains('is-open'));
 }

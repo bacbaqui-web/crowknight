@@ -139,7 +139,7 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     actor.player.animTime = 0;
   }
 
-  function copyFrame({ isOpen, selection, selectedPosePartKeys, activePosePartKey }) {
+  function copyFrame({ isOpen, selection, selectedPoseParts, activePosePartKey }) {
     return copyActivePoseTimelineFrame({
       isOpen,
       activeKeyframeId: selection.activeKeyframeId,
@@ -147,18 +147,18 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
       keyframes: keyframes(),
       tuning: tuning(),
       poseKey: key(),
-      selectedPosePartKeys,
+      selectedPoseParts,
       activePosePartKey,
     });
   }
 
-  function pasteFrameCopy({ copiedFrame, id, selectedPosePartKeys, activePosePartKey }) {
+  function pasteFrameCopy({ copiedFrame, id, selectedPoseParts, activePosePartKey }) {
     return pastePoseTimelineFrameCopy({
       copiedPoseFrame: copiedFrame,
       id,
       tuning: tuning(),
       poseKey: key(),
-      selectedPosePartKeys,
+      selectedPoseParts,
       activePosePartKey,
       ensureKeyframe,
     });

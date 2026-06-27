@@ -17,6 +17,7 @@ export function createTuningPanelUndoState({
 }) {
   const undoStack = [];
   let editSnapshotOpen = false;
+  let stageRulesAccessors = null;
 
   function beginUndoSnapshot() {
     if (editSnapshotOpen) return;
@@ -30,12 +31,19 @@ export function createTuningPanelUndoState({
 
   function pushUndoSnapshot() {
     const selectedActor = getSelectedActor();
-    undoStack.push({
+    const stageRules = stageRulesAccessors?.getStageRules?.();
+    const snapshot = {
       actorId: selectedActor.id,
       tuning: clone(selectedActor.tuning),
       groupEditValues: clone(getGroupEditValues()),
-    });
+    };
+    if (stageRules) snapshot.stageRules = clone(stageRules);
+    undoStack.push(snapshot);
     if (undoStack.length > MAX_UNDO_SNAPSHOTS) undoStack.shift();
+  }
+
+  function setStageRulesAccessors(accessors) {
+    stageRulesAccessors = accessors;
   }
 
   function undoTuningChange() {
@@ -47,6 +55,7 @@ export function createTuningPanelUndoState({
     setSelectedActor(actor);
     replaceObject(actor.tuning, snapshot.tuning);
     setGroupEditValues(snapshot.groupEditValues ? clone(snapshot.groupEditValues) : createDefaultGroupEditValues());
+    if (snapshot.stageRules) stageRulesAccessors?.setStageRules?.(clone(snapshot.stageRules));
     applyActorTuning(actor);
     saveState();
     editSnapshotOpen = false;
@@ -61,6 +70,7 @@ export function createTuningPanelUndoState({
     beginUndoSnapshot,
     commitUndoSnapshot,
     pushUndoSnapshot,
+    setStageRulesAccessors,
     undoTuningChange,
   };
 }

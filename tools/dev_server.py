@@ -6,26 +6,25 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
-from clip_preview_watcher import export_preview
 from effect_asset_exporter import effect_asset_path, effect_source_psd_path, export_effect_asset
 from export_character_psd_parts import export_character_parts, find_character_psd
 from psd_preview_exporter import export_psd_preview
 
 
 class CrowKnightHandler(SimpleHTTPRequestHandler):
-    clip_path = None
+    psd_path = None
     output_path = None
     manifest_path = None
     layer_output_dir = None
     default_state_path = None
-    uploaded_clip_dir = None
+    uploaded_psd_dir = None
     characters_dir = None
     root_dir = None
 
     def do_GET(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/clip/refresh":
-            self.handle_clip_refresh()
+        if parsed.path == "/api/psd/refresh":
+            self.handle_psd_refresh()
             return
         if parsed.path == "/api/character/refresh":
             self.handle_character_refresh(parsed)
@@ -37,8 +36,8 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/clip/refresh":
-            self.handle_clip_upload_refresh()
+        if parsed.path == "/api/psd/refresh":
+            self.handle_psd_upload_refresh()
             return
         if parsed.path == "/api/character/refresh":
             self.handle_character_upload_refresh(parsed)
@@ -56,10 +55,10 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         self.send_header("Pragma", "no-cache")
         super().end_headers()
 
-    def handle_clip_refresh(self, clip_path=None):
+    def handle_psd_refresh(self, psd_path=None):
         try:
             manifest = export_background_preview(
-                clip_path or self.clip_path,
+                psd_path or self.psd_path,
                 self.output_path,
                 self.manifest_path,
                 self.layer_output_dir,
@@ -68,22 +67,22 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
-    def handle_clip_upload_refresh(self):
+    def handle_psd_upload_refresh(self):
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             if content_length <= 0:
-                self.send_json(400, {"error": "Empty clip file"})
+                self.send_json(400, {"error": "Empty PSD file"})
                 return
 
-            filename = self.headers.get("X-Clip-Filename", "uploaded.psd")
-            uploaded_name = sanitize_clip_filename(filename)
-            target_path = self.clip_path if Path(uploaded_name).suffix.lower() == self.clip_path.suffix.lower() else None
+            filename = self.headers.get("X-Psd-Filename", "uploaded.psd")
+            uploaded_name = sanitize_psd_upload_filename(filename)
+            target_path = self.psd_path if Path(uploaded_name).suffix.lower() == self.psd_path.suffix.lower() else None
             if target_path is None:
-                target_path = self.uploaded_clip_dir / uploaded_name
+                target_path = self.uploaded_psd_dir / uploaded_name
 
             target_path.parent.mkdir(parents=True, exist_ok=True)
             target_path.write_bytes(self.rfile.read(content_length))
-            self.handle_clip_refresh(target_path)
+            self.handle_psd_refresh(target_path)
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
@@ -197,12 +196,12 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
 def create_server(args):
     root = Path(args.root).resolve()
     handler = partial(CrowKnightHandler, directory=str(root))
-    CrowKnightHandler.clip_path = (root / args.clip).resolve()
+    CrowKnightHandler.psd_path = (root / args.psd).resolve()
     CrowKnightHandler.output_path = (root / args.output).resolve()
     CrowKnightHandler.manifest_path = (root / args.manifest).resolve()
     CrowKnightHandler.layer_output_dir = (root / args.layer_output_dir).resolve()
     CrowKnightHandler.default_state_path = (root / args.default_state).resolve()
-    CrowKnightHandler.uploaded_clip_dir = (root / args.uploaded_clip_dir).resolve()
+    CrowKnightHandler.uploaded_psd_dir = (root / args.uploaded_psd_dir).resolve()
     CrowKnightHandler.characters_dir = (root / args.characters_dir).resolve()
     CrowKnightHandler.root_dir = root
 
@@ -215,10 +214,10 @@ def create_server(args):
     raise RuntimeError("No available port found")
 
 
-def sanitize_clip_filename(filename):
+def sanitize_psd_upload_filename(filename):
     name = Path(unquote(filename)).name.strip() or "uploaded.psd"
     safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in name)
-    if not safe.lower().endswith((".clip", ".psd")):
+    if not safe.lower().endswith(".psd"):
         safe = f"{safe}.psd"
     return safe or "uploaded.psd"
 
@@ -257,29 +256,29 @@ def effect_asset_from_request(parsed):
 
 def export_background_preview(source_path, output_path, manifest_path, layer_output_dir):
     suffix = source_path.suffix.lower()
-    if suffix == ".psd":
-        return export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
-    return export_preview(source_path, output_path, manifest_path, layer_output_dir=layer_output_dir)
+    if suffix != ".psd":
+        raise RuntimeError("Background source must be a PSD file")
+    return export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Serve Crow Knight with local CLIP refresh API.")
+    parser = argparse.ArgumentParser(description="Serve Crow Knight with local PSD refresh API.")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=4173)
     parser.add_argument("--port-retries", type=int, default=20)
     parser.add_argument("--root", default=".")
-    parser.add_argument("--clip", default="assets/backgrounds/background_01.psd")
+    parser.add_argument("--psd", default="assets/backgrounds/background_01.psd")
     parser.add_argument("--output", default="runtime/background-preview.webp")
     parser.add_argument("--manifest", default="runtime/background-preview.json")
     parser.add_argument("--layer-output-dir", default="runtime/background-layers")
     parser.add_argument("--default-state", default="runtime/project-default-state.json")
-    parser.add_argument("--uploaded-clip-dir", default="runtime/uploaded-clips")
+    parser.add_argument("--uploaded-psd-dir", default="runtime/uploaded-psds")
     parser.add_argument("--characters-dir", default="assets/characters")
     args = parser.parse_args()
 
     server, port = create_server(args)
     print(f"Serving Crow Knight at http://{args.host}:{port}/setting.html", flush=True)
-    print("CLIP refresh API: /api/clip/refresh", flush=True)
+    print("PSD refresh API: /api/psd/refresh", flush=True)
     print("Character PSD refresh API: /api/character/refresh", flush=True)
     print("Effect asset refresh API: /api/effect/refresh", flush=True)
     print("Project default state API: /api/state/default", flush=True)

@@ -46,11 +46,19 @@ export function getTuningPanelElements(panel) {
     actorSelect: document.querySelector('#actorSelect'),
     actorName: document.querySelector('#actorName'),
     ...workflowSections,
-    backgroundClipUpload: document.querySelector('#backgroundClipUpload'),
-    backgroundClipFile: document.querySelector('#backgroundClipFile'),
+    backgroundPsdUpload: document.querySelector('#backgroundPsdUpload'),
+    backgroundPsdFile: document.querySelector('#backgroundPsdFile'),
     backgroundRefresh: document.querySelector('#backgroundRefresh'),
     backgroundReset: document.querySelector('#backgroundReset'),
     backgroundLayerList: document.querySelector('#backgroundLayerList'),
+    progressionMode: document.querySelector('#progressionMode'),
+    progressionDurationSec: document.querySelector('#progressionDurationSec'),
+    progressionDurationSecNumber: document.querySelector('#progressionDurationSecNumber'),
+    progressionRulesFields: document.querySelector('#progressionRulesFields'),
+    enemySpawnMode: document.querySelector('#enemySpawnMode'),
+    enemyRulesFields: document.querySelector('#enemyRulesFields'),
+    rewardRulesFields: document.querySelector('#rewardRulesFields'),
+    scoreRulesFields: document.querySelector('#scoreRulesFields'),
     characterPsdUpload: document.querySelector('#characterPsdUpload'),
     characterPsdFile: document.querySelector('#characterPsdFile'),
     characterPsdRefresh: document.querySelector('#characterPsdRefresh'),
@@ -155,7 +163,9 @@ export function renderLayerSelectOptions(select, layers, selectedValue) {
 
 export function markPartPicker(picker, selectedKey, selectedKeys = null) {
   picker.querySelectorAll('[data-part]').forEach((button) => {
-    const selected = selectedKeys?.size
+    const selectionSize =
+      typeof selectedKeys?.size === 'function' ? selectedKeys.size() : Number(selectedKeys?.size || 0);
+    const selected = selectionSize
       ? selectedKeys.has(button.dataset.part)
       : Boolean(selectedKey) && button.dataset.part === selectedKey;
     button.classList.toggle('is-selected', selected);

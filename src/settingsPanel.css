@@ -82,9 +82,48 @@
   font-size: 13px;
 }
 
+.workflow-session-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.workflow-session-nav button {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid #393d4b;
+  border-radius: 6px;
+  background: #202631;
+  color: #d6dbea;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.workflow-session-nav button:hover,
+.workflow-session-nav button:focus-visible {
+  border-color: #7cc3a2;
+}
+
+.workflow-session-nav button:focus-visible {
+  outline: 2px solid #7cc3a2;
+  outline-offset: 2px;
+}
+
+.workflow-session-nav button.is-active {
+  background: #d6dbea;
+  border-color: #d6dbea;
+  color: #121620;
+}
+
 .setting-section {
   display: grid;
   gap: 10px;
+}
+
+.setting-section[hidden] {
+  display: none;
 }
 
 .section-toggle {

@@ -1,1176 +1,293 @@
-# Crow Knight 제작툴 아키텍처
+# Crow Knight 제작툴 Architecture
 
-## 1. 목표
+## 1. 문서 역할
 
-`setting.html`은 단순 설정 화면이 아니라 횡스크롤 액션 게임을 제작하는 툴이다.
+이 문서는 Crow Knight 제작툴의 공식 Architecture 문서다.
 
-최종적으로 이 프로젝트는 아래처럼 역할이 분리되어야 한다.
+유지하는 내용:
 
-- `setting.html`: 게임 제작툴, 에디터, 미니 엔진 툴
-- `index.html`: 제작툴로 만든 결과물을 실행하는 플레이 화면
-- `src`: 툴 런타임, 게임 런타임, 공통 엔진 코드
+- 프로젝트 목표
+- 개발 원칙
+- 현재 Milestone
+- 현재 구조
+- 현재 우선순위
+- 현재 위험 요소
+- 다음 Sprint 목표
+
+기록하지 않는 내용:
+
+- 과거 Sprint 기록
+- 리팩토링 과정
+- 완료 과정
+- 장문의 변경 이력
+
+변경 이력은 Git이 관리한다. 이번 Sprint의 작업 보고는 `docs/CURRENT_SPRINT.md`만 사용한다.
+
+## 2. 프로젝트 목표
+
+`setting.html`은 단순 설정 화면이 아니라 횡스크롤 액션 로그라이트를 제작하는 툴이다.
+
+최종 구성:
+
+- `setting.html`: 캐릭터, 동작, 시각 효과, 스테이지를 제작하는 툴 화면
+- `index.html`: 제작툴에서 만든 데이터를 실행하는 플레이 화면
+- `src`: 현재는 툴 런타임, 게임 런타임, 공통 엔진 코드가 함께 존재
 - `assets`: 캐릭터, 시각 효과, 배경 등 제작 리소스
 
-이 문서의 목적은 앞으로 기능 추가와 리팩토링을 할 때 기준이 되는 구조를 정의하는 것이다.
+장기 목표:
 
-### 1.1 문서 운영 규칙
+- 제작툴 안정성을 게임 기능 추가보다 우선한다.
+- 툴 전용 코드, 게임 실행 코드, 공통 엔진 코드를 점진적으로 분리한다.
+- 파츠 애니메이션, 시각 효과, 히트박스, 배경 이벤트는 모두 타임라인 트랙으로 다룰 수 있어야 한다.
+- 설정 상태는 저장/마이그레이션 가능해야 하며, 파일 에셋은 Firebase Storage 참조를 기준으로 한다.
 
-이 문서는 설계 기준이면서 동시에 리팩토링 진행 상황을 공유하는 작업 대시보드다.
+## 3. 핵심 개발 원칙
 
-작업을 마친 뒤에는 반드시 이 문서의 관련 섹션을 최신 상태로 갱신한다.
+- 현재 동작 보존을 우선한다.
+- 큰 이동보다 작은 owner, adapter, controller 분리로 경계를 넓힌다.
+- 같은 UI 패턴은 같은 내부 시스템을 사용한다.
+- 새 기능은 기존 거대 컨트롤러에 덧붙이기보다 적절한 도메인 모듈에 추가한다.
+- HTML 대규모 이동과 Tool/Game/Engine 폴더 이동은 별도 Sprint에서만 진행한다.
+- 공식 Architecture 문서는 현재 상태만 기록한다.
 
-작업 종료 시 갱신해야 하는 항목:
+## 4. 제작 Workflow
 
-- 완료된 항목: 이번 작업에서 실제로 끝난 기능, 리팩토링, 검증된 구조를 기록한다.
-- 남은 항목: 아직 해결하지 못한 차이, 위험, 다음에 이어서 봐야 할 작업을 기록한다.
-- 새로 만든 파일: 새 모듈, adapter, controller, 문서가 생기면 파일명과 책임을 기록한다.
-- 책임이 분리된 부분: 어떤 책임이 어느 파일/모듈로 이동했는지 기록한다.
-- 다음 작업 우선순위: 다음 작업자가 바로 이어갈 수 있도록 1순위부터 정리한다.
-- 검증 상태: `npm run check`, 렌더링 확인, 수동 확인이 필요한 부분을 기록한다.
+현재 Milestone은 `Milestone 3: Workflow Editor`다.
 
-특히 ChatGPT 또는 다른 AI가 이 문서를 읽고 현재 방향을 설명할 수 있어야 하므로, 리팩토링 진행 상황은 과거 기록이 아니라 현재 기준으로 유지한다.
+제작 흐름:
 
-큰 변경이 끝났을 때는 최소한 아래 섹션을 확인한다.
+1. Setup
+2. Animation
+3. Effect
+4. Stage
+5. Save/Play Check
 
-- `8. 리팩토링 계획`
-- `10. 현재 리팩토링 우선순위`
-- `11. 유지보수 경고`
+### 4.1 Session별 패널
 
-문서가 실제 코드 상태와 다르면 문서를 먼저 최신화한 뒤 다음 리팩토링을 진행한다.
+| Session   | 현재 패널                    | `data-section`               | 역할                                             |
+| --------- | ---------------------------- | ---------------------------- | ------------------------------------------------ |
+| Setup     | 전체, 파츠 위치, 레이어 순서 | `collision`, `part`, `layer` | 캐릭터 정체성, PSD/rig, 크기, 기준점, HP, hitbox |
+| Animation | 동작                         | `pose`                       | 동작/스킬별 파츠 키프레임과 motion setting       |
+| Effect    | 효과                         | `effect`                     | 시각 효과 이미지, 효과 키프레임, 타이밍          |
+| Stage     | 배경                         | `scene`                      | 배경 PSD/clip, background layer list             |
+| Common    | 저장 액션, 캔버스 preview    | header, `#game`              | 저장/다운로드, 현재 편집 결과 확인               |
 
-## 2. 기본 원칙
+현재 Stage는 배경 패널만 가진다. 진행 규칙, 적 성장, 카드 보상, 점수 규칙 패널은 아직 없다.
 
-- 제작툴의 안정성을 게임 기능보다 우선한다.
-- 제작툴의 작동 모델은 After Effects식 레이어/프로퍼티/키프레임 구조를 기준으로 한다.
-- 같은 UI 패턴은 같은 내부 시스템을 사용해야 한다.
-- 작업 흐름은 캐릭터 파트와 스테이지 파트로 나눈다.
-- 캐릭터 파트는 셋업, 애니메이션, 이펙트 세션을 기본으로 한다.
-- 스테이지 파트는 배경뿐 아니라 진행 규칙, 적 성장, 카드 보상, 점수 시스템까지 포함한다.
-- 파츠 애니메이션, 시각 효과, 히트박스처럼 시간에 따라 바뀌는 값은 모두 타임라인 트랙으로 취급한다.
-- 툴 전용 코드와 게임 실행 코드는 분리한다.
-- 저장 데이터 구조는 명확하고 마이그레이션 가능해야 한다.
-- 작업에 사용되는 파일 에셋의 최종 기준 원본은 Firebase Storage에 업로드된 파일이다.
-- 새 기능은 기존 컨트롤러에 덧붙이기보다 적절한 도메인 모듈에 추가한다.
-- 큰 리팩토링은 한 번에 뒤엎지 않고 공통 코어를 넓혀가는 방식으로 진행한다.
+### 4.2 Workflow 구현 상태
 
-### 2.1 After Effects식 작동 모델
+관련 파일:
 
-제작툴의 기본 편집 감각은 After Effects를 기준으로 한다.
+- `src/tuningPanelWorkflow.js`
+- `src/tuningPanelWorkflowSessionState.js`
+- `src/tuningPanelWorkflowNavigation.js`
+- `src/tuningPanelSync.js`
+- `src/tuningPanel.js`
 
-완전히 같은 UI를 복제한다는 뜻이 아니라, 아래 작동 원리를 따른다는 뜻이다.
+현재 상태:
 
-- 컴포지션: 하나의 편집 단위다. 이 프로젝트에서는 캐릭터 동작, 시각 효과, 장면 또는 게임 제작 단위를 컴포지션처럼 본다.
-- 레이어: 시간축 위에서 편집되는 대상이다. 캐릭터 파츠, 시각 효과, 히트박스, 배경, 카메라 연출은 모두 레이어처럼 다룬다.
-- 프로퍼티: 레이어가 가진 값이다. 위치, 크기, 회전, 투명도, 앵커, 히트박스 크기, 넉백 값 등이 프로퍼티다.
-- 키프레임: 특정 프레임에서 프로퍼티 값을 저장한 것이다.
-- 타임라인: 모든 레이어와 프로퍼티가 시간에 따라 변하는 공간이다.
-- 프리뷰: 현재 타임라인 상태를 즉시 재생하거나 확인하는 기능이다.
+- Workflow Session은 `setup`, `animation`, `effect`, `stage` 중 하나다.
+- Active Session은 `createTuningPanelWorkflowSessionState()`가 값 저장만 담당한다.
+- Navigation은 `createTuningPanelWorkflowNavigation()`이 동적으로 만든다.
+- Panel에는 `data-workflow-session`, `data-workflow-active-session`, `data-workflow-session-active`, `data-workflow-session-visible` metadata가 반영된다.
+- Filtering mode는 `metadata`, `hidden`, `disabled`로 확장 가능하다.
+- 현재 기본은 `metadata` 모드이며, 실제 숨김/비활성 UI 정책은 다음 Sprint에서 결정한다.
+- Session 변경 시 `panelSync.syncSession(activeSession)`으로 필요한 패널만 sync할 수 있다.
 
-이 모델을 적용하면 아래 규칙이 생긴다.
+## 5. 현재 코드 구조
 
-- 시각 효과는 예외 기능이 아니라 시각 효과 레이어다.
-- 히트박스는 보이지 않는 레이어다.
-- 캐릭터 파츠는 이미지 레이어다.
-- 배경은 장면 레이어다.
-- 파츠 애니메이션/시각 효과/히트박스의 차이는 타임라인 시스템의 차이가 아니라 adapter의 차이다.
-- 복사/붙여넣기, 키프레임 이동, 선택, 재생, undo는 모든 레이어에서 같은 규칙으로 작동해야 한다.
-- 선택한 레이어와 선택한 프로퍼티가 현재 편집 대상이 된다.
-- 빈 프레임에 값을 붙여넣으면 그 위치에 키프레임이 생기는 것이 기본 동작이다.
+### 5.1 Tool Shell
 
-앞으로 "에펙처럼"이라고 말하면 이 문서에서는 위 모델을 따른다는 의미로 해석한다.
+중심 파일:
 
-### 2.2 용어 정리
+- `src/tuningPanel.js`
 
-앞으로 문서와 코드에서 아래 용어를 구분한다.
+현재 역할:
 
-- 캐릭터 파트: 캐릭터 하나를 제작하는 큰 영역이다. 셋업, 애니메이션, 이펙트 세션을 포함한다.
-- 스테이지 파트: 배경과 실제 게임 진행 규칙을 제작하는 큰 영역이다. 배경, 진행, 적 성장, 카드 보상, 점수 규칙을 포함한다.
-- 셋업: 캐릭터 이름, PSD/파츠, rig, 전체 크기, 기본 피격 히트박스, HP, 사용할 동작/스킬을 정하는 단계다.
-- 애니메이션: 선택한 동작/스킬의 파츠 키프레임과 동작 보정값을 만드는 단계다.
-- 이펙트 세션: 시각 효과, 공격 히트박스, 활성 프레임, 사운드, 잔상 같은 연출과 판정을 맞추는 단계다.
-- 시각 효과: 공격 이펙트 이미지처럼 화면에 보이는 효과다. 문맥상 혼동될 수 있으면 그냥 "효과" 대신 "시각 효과"라고 쓴다.
-- 카드 효과: 레벨업 카드가 플레이 중 적용하는 능력치/동작/스킬 강화다. 시각 효과와 다른 개념이다.
-- 동작: idle, run, jump, roll, attack1처럼 캐릭터가 수행하는 기본 상태 또는 행동 단위다.
-- 스킬: 캐릭터가 사용할 수 있는 능력 단위다. 필요하면 하나 이상의 동작, 공격 히트박스, 시각 효과를 묶는다.
-- 카드: 레벨업 때 제시되는 선택지다. 카드는 스킬 자체가 아니라 플레이 중 캐릭터를 강화하는 보상이다.
-- 포즈: 현재 코드에서 파츠 키프레임 데이터를 부르는 구현 용어다. 장기적으로 UI에서는 동작/스킬 애니메이션이라는 이름을 우선한다.
-- Firebase 설정 업로드: 프로젝트 설정 JSON을 저장하는 동작이다.
-- 에셋 업로드: PSD, 이미지 같은 파일을 Firebase Storage에 올리는 동작이다.
+- Tool Shell의 최상위 조립
+- selected actor bridge
+- undo state 생성과 callback 주입
+- asset/save action 연결
+- keyboard shortcut 연결
+- edit handle state 일부 보관
 
-## 3. 툴에서 보장해야 하는 기본 기능
+분리된 주변 모듈:
 
-### 3.1 전체 제작 워크플로우
+- `src/tuningPanelBootstrap.js`: panel DOM 조회와 shell toggle sync
+- `src/tuningPanelComposition.js`: timeline, part, canvas, lifecycle, background controller 조립
+- `src/tuningPanelControlBindings.js`: control callback map과 DOM event binding 진입점
+- `src/tuningPanelSync.js`: actor/tuning/controller 상태 기반 panel sync
+- `src/tuningPanelAssetActions.js`: asset upload/download action 연결
+- `src/tuningPanelShortcuts.js`: keyboard shortcut 처리
 
-제작툴은 사용자가 캐릭터와 스테이지를 순서대로 완성할 수 있도록 배치되어야 한다.
+### 5.2 Panel State Owner
 
-큰 작업 파트:
+값 저장 전용 owner:
 
-1. 캐릭터 파트
-2. 스테이지 파트
-3. 저장/플레이 확인
+- `src/tuningPanelSelectionState.js`
+  - `activePartKey`
+  - `activePartKeyGlobal`
+  - `activePosePartKey`
+  - `editContext`
+  - pose part selection API: `clear`, `toggle`, `selectOnly`, `has`, `size`, `values`, `forEach`
+- `src/tuningPanelEditingState.js`
+  - `editFocusContext`
+  - `editFocusPartKey`
+- `src/tuningPanelGroupEditState.js`
+  - `groupEditValues`
+  - `getValues`, `setValues`, `resetValues`, `resetTransformValues`
+- `src/tuningPanelWorkflowSessionState.js`
+  - active workflow session
 
-기본 제작 흐름:
+아직 `tuningPanel.js`에 남은 상태:
 
-1. 캐릭터 파트 - 셋업
-2. 캐릭터 파트 - 애니메이션
-3. 캐릭터 파트 - 이펙트
-4. 스테이지 파트 - 배경/진행/보상/적 성장
-5. 저장/플레이 확인
+- `selectedActor`
+- `editHandleHover`
+- `editHandleActiveMode`
+- `poseFrameSelectionActive`
+- `effectEditHandle`
+- shortcut bridge refs
+- controller refs
 
-캐릭터 파트 - 셋업:
+### 5.3 Timeline Core
 
-- 캐릭터를 선택하거나 새 캐릭터를 만든다.
-- 캐릭터 이름을 정한다.
-- 해당 캐릭터의 PSD 파일을 불러오고 업로드한다.
-- PSD에서 생성된 파츠를 배치하고 rig를 맞춘다.
-- 캐릭터 전체 크기를 정한다.
-- 캐릭터의 기본 피격 히트박스를 정한다.
-- 캐릭터의 HP와 기본 전투 수치를 정한다.
-- 이 캐릭터가 사용할 동작과 스킬을 선택한다.
+현재 파츠 애니메이션과 시각 효과는 공통 timeline controller factory 경로를 사용한다.
 
-캐릭터 파트 - 애니메이션:
+중심 파일:
 
-- 캐릭터 셋업에서 선택한 동작과 스킬만 편집 대상으로 보여준다.
-- 각 동작과 스킬은 타임라인을 가진 제작 단위다.
-- 사용자는 동작별 파츠 애니메이션을 만든다.
-- 동작과 스킬에 적용되는 이동 속도, 가속, 무적 시간, 쿨타임, 특수 판정 같은 동작 보정값을 정한다.
-- 동작 중 함께 재생될 시각 효과는 시각 효과 레이어로 연결하되, 구체적인 이미지와 공격 판정은 이펙트 세션에서 확정한다.
+- `src/timelineController.js`
+- `src/timelineControllerCore.js`
+- `src/timelineControllerActions.js`
+- `src/timelineControllerSelectionControls.js`
+- `src/timelineControllerClipboardControls.js`
+- `src/timelineAdapterContract.js`
+- `src/poseTimelineAdapter.js`
+- `src/effectTimelineAdapter.js`
 
-캐릭터 파트 - 이펙트:
+현재 adapter:
 
-- 선택된 동작과 스킬의 공격 히트박스를 설정한다.
-- 공격 히트박스의 켜짐/꺼짐 프레임을 정한다.
-- 동작마다 같이 나올 시각 효과 이미지를 선택하고 업로드한다.
-- 시각 효과 이미지의 위치, 크기, 회전, 투명도, 타이밍을 맞춘다.
-- 필요하면 카메라 흔들림, 사운드, 잔상 같은 연출 트랙을 추가한다.
-- 실제 게임 미리보기로 동작, 판정, 시각 효과가 함께 맞는지 확인한다.
+- Pose adapter: 파츠 애니메이션 데이터, pose key, part source, frame copy/paste payload
+- Effect adapter: 시각 효과 데이터, effect key, image/effect slot, frame copy/paste payload
 
-스테이지 파트:
+아직 controller에 남은 도메인 책임:
 
-- 배경 PSD 또는 이미지를 업로드한다.
-- 배경 레이어, 패럴랙스, 바닥 위치, 월드 경계를 조정한다.
-- 캐릭터가 오른쪽으로 계속 이동하는 기본 진행 규칙을 정한다.
-- 적 등장 규칙, 적 종류, 적 성장 곡선, 난이도 상승 규칙을 정한다.
-- 일정 수의 적을 처치하거나 경험치를 모으면 레벨업하도록 정한다.
-- 레벨업 시 네 개의 카드 보상이 뜨고, 플레이어는 그중 하나를 선택한다.
-- 카드 보상은 공격력 증가, 이동속도 증가, 구르기 성능 증가, 점프력 증가, 공격범위 증가, 생명력 회복, 방어 수치에 비례한 공격 보너스 같은 강화 효과를 가진다.
-- 카드의 "구르기 성능 증가"가 실제로 구르기 강도, 무적 시간, 쿨타임, 이동 거리 중 무엇을 바꾸는지는 카드 데이터에서 따로 정의한다.
-- 레벨이 오르거나 진행 거리가 길어질수록 더 강한 적이 등장하도록 설정한다.
-- 얼마나 전략적으로 카드를 선택했는지에 따라 더 많은 적을 무찌르고 더 높은 점수를 얻는 구조로 만든다.
-- 캐릭터가 완성된 동작과 카드 강화값으로 스테이지 안에서 자연스럽게 움직이는지 확인한다.
+- Pose field 렌더링
+- Pose group edit 후처리
+- Effect field 렌더링
+- Effect image preview
+- 일부 preview/mutation finish hook
 
-게임 플레이 모델:
+### 5.4 Canvas/Edit Handle
 
-- 장르는 오른쪽 진행형 횡스크롤 액션 로그라이트로 본다.
-- 플레이어 캐릭터는 계속 오른쪽으로 전진하며 등장하는 적을 무찌른다.
-- 적 처치, 경험치, 진행 거리 같은 기준으로 레벨이 오른다.
-- 레벨업마다 무작위 카드 네 장이 제시되고 하나만 선택한다.
-- 카드는 즉시 플레이어 캐릭터의 능력치, 동작, 스킬, 방어, 회복, 공격 범위 등을 강화한다.
-- 레벨과 진행도가 높아질수록 적의 체력, 공격력, 수, 패턴이 강해진다.
-- 플레이의 핵심 재미는 랜덤 카드 선택을 통해 현재 캐릭터 빌드를 만들고, 강해지는 적을 어디까지 버티며 처치하는지에 있다.
-- 최종 평가는 처치 수, 점수, 진행 거리, 도달 레벨 같은 값으로 한다.
+관련 파일:
 
-저장/플레이 확인:
-
-- 최종 저장/플레이 확인에서는 파일 에셋이 Firebase Storage에 업로드된 값을 기준으로 한다.
-- 프로젝트 설정은 Firebase 프로젝트 상태 업로드/다운로드 시스템으로 저장한다.
-- `index.html` 플레이 화면은 제작툴과 같은 캐릭터, 동작, 시각 효과, 스테이지 설정을 읽어야 한다.
-
-데이터 기준:
-
-- 캐릭터 정의는 이름, 에셋 참조, rig, 전체 크기, 피격 히트박스, HP, 사용 동작/스킬 목록을 포함한다.
-- 동작/스킬 정의는 고유 ID, 이름, 타입, 타임라인, 동작 보정값, 공격 판정, 연결된 시각 효과를 포함한다.
-- 스테이지 정의는 배경, 바닥/월드 경계, 적 등장 규칙, 난이도 성장 규칙, 레벨업 조건, 카드 보상 풀, 점수 규칙을 포함한다.
-- 카드 정의는 고유 ID, 이름, 설명, 등장 조건, 강화 대상, 강화량, 중첩 가능 여부를 포함한다.
-- 적 정의는 이름, 에셋 참조, HP, 공격력, 이동/공격 패턴, 등장 레벨, 성장 배율을 포함한다.
-- 선택되지 않은 동작과 스킬은 기본 UI에서 숨기되, 기존 데이터는 사용자가 삭제를 확정하기 전까지 보존한다.
-- 새 동작이나 스킬을 선택하면 기본 타임라인, 기본 히트박스, 기본 시각 효과 슬롯을 자동 생성한다.
-
-### 3.2 프로젝트/저장 시스템
-
-- 현재 선택 캐릭터와 전체 프로젝트 상태 저장
-- 로컬 저장과 불러오기
-- Firebase 업로드/다운로드
-- 프로젝트 기본값 복구
-- undo/redo
-- 설정 버전 변화에 대응하는 정규화/마이그레이션
-
-현재 오른쪽 위 `Firebase 업로드`, `Firebase 다운로드` 버튼은 앞으로도 기본 저장/동기화 시스템으로 유지한다.
-
-기본 규칙:
-
-- Firebase 업로드는 현재 제작툴의 전체 프로젝트 상태를 원격 저장소에 올린다.
-- Firebase 다운로드는 원격 저장소의 프로젝트 상태를 받아와 현재 작업 환경에 반영한다.
-- 이 시스템은 간편한 프로젝트 백업/복구/기기 간 이동 수단으로 계속 사용한다.
-- 로컬 저장은 빠른 자동 저장과 임시 복구용으로 사용한다.
-- Firebase 저장은 명시적으로 사용자가 누르는 기준 저장 지점으로 사용한다.
-- 저장 데이터에는 캐릭터 정의, 동작/스킬 타임라인, 시각 효과 설정/키프레임, 스테이지 설정, 선택된 세션 정보가 포함되어야 한다.
-- 다운로드 후에는 저장 데이터 정규화와 마이그레이션을 반드시 거친다.
-- 업로드 전에는 현재 로컬 상태가 최신인지 보장해야 한다.
-- 저장 실패/다운로드 실패는 툴 UI에서 명확히 보여야 한다.
-
-설정 상태와 파일 에셋은 분리해서 생각한다.
-
-- 설정 상태: 캐릭터 정의, 동작/스킬 키프레임, 시각 효과 키프레임, 스테이지 설정, 세션 선택 정보처럼 JSON으로 저장 가능한 값이다.
-- 파일 에셋: 캐릭터 PSD/파츠 이미지, 시각 효과 이미지, 배경 PSD/이미지처럼 실제 바이너리 파일이다.
-- 설정 상태는 Firebase 프로젝트 상태 저장/다운로드 시스템으로 동기화한다.
-- 파일 에셋은 Firebase Storage에 업로드하고, 설정 상태에는 Storage 경로/URL/버전 같은 참조 정보만 남기는 것을 기준으로 한다.
-- 따라서 최종 저장과 플레이 확인에서는 플레이 화면과 제작툴 미리보기가 같은 Storage 기준 에셋을 참조해야 한다.
-
-현재 오른쪽 위 `초기화` 버튼은 선택 캐릭터의 설정 초기화 기능이다.
-
-초기화 규칙:
-
-- 초기화는 저장 시스템과 다르게 파괴적 편집 작업으로 취급한다.
-- 초기화 전에는 확인창이 필요하다.
-- 초기화는 undo 가능한 작업이어야 한다.
-- 전체 프로젝트 초기화가 필요해지면 선택 캐릭터 초기화와 버튼/문구를 명확히 분리한다.
-
-관련 코드:
-
-- `src/saveStateStorage.js`
-- `src/firebaseProjectState.js`
-- `src/firebaseStorageAssets.js`
-- `src/tuningNormalize.js`
-- `src/tuningPanelUndoState.js`
-
-### 3.3 캐릭터/파츠 편집
-
-- 캐릭터 선택
-- 캐릭터 이름 편집
-- 파츠 이미지 교체/새로고침
-- 파츠 위치, 크기, 회전, 투명도 편집
-- 관절/앵커 편집
-- 레이어 순서 편집
-- 캐릭터 전체 크기 편집
-- 기본 피격 히트박스 편집
-- HP와 기본 전투 수치 편집
-- 사용할 동작/스킬 선택
-- 캔버스 드래그 편집
-- 다중 파츠 선택과 그룹 편집
-
-관련 코드:
-
-- `src/actorState.js`
-- `src/actorTuning.js`
-- `src/tuningPanelPartController.js`
+- `src/tuningPanelCanvasController.js`
 - `src/tuningCanvasPointerDrag.js`
 - `src/tuningCanvasDragFactory.js`
-- `src/tuningParts.js`
-- `src/playerDefaultRig.js`
-
-### 3.4 타임라인 애니메이션
-
-타임라인은 제작툴의 핵심 엔진이다.
-
-필수 기능:
-
-- 키프레임 추가
-- 키프레임 삭제
-- 키프레임 선택
-- 빈 슬롯 선택
-- 키프레임 드래그 이동
-- 시작/끝 프레임 편집
-- 프레임 복사/붙여넣기
-- 프레임 수 조절
-- 재생 속도 조절
-- 반복/한 번 재생
-- undo/redo 연동
-- 미리보기 연동
-
-현재 타임라인 대상:
-
-- 선택된 동작/스킬의 파츠 애니메이션 타임라인
-- 선택된 동작/스킬에 연결된 시각 효과 타임라인
-
-참고: 현재 코드와 일부 파일명에서는 파츠 애니메이션 타임라인을 `포즈 타임라인`이라고 부른다.
-
-앞으로 타임라인 대상이 될 수 있는 것:
-
-- 공격 히트박스
-- 구르기 히트박스
-- 피격/파편 시각 효과
-- 배경 이벤트
-- 카메라 연출
-
-관련 코드:
-
-- `src/timelineControllerActions.js`
-- `src/timelineControllerClipboardControls.js`
-- `src/timelineController.js`
-- `src/timelineControllerSelectionControls.js`
-- `src/timelineControllerView.js`
-- `src/timelineFrameClipboard.js`
-- `src/timelineFrameRead.js`
-- `src/timelineKeyframeMutations.js`
-- `src/timelineRenderer.js`
-- `src/timelineState.js`
-- `src/timelineControllerContract.js`
-- `src/tuningTimelineAccessors.js`
-- `src/tuningTimelinePreview.js`
-
-공통 타임라인 컨트롤러 계약:
-
-동작 타임라인과 시각 효과 타임라인은 최소한 아래 메서드를 공통으로 제공해야 한다.
-
-- `addKeyframe`
-- `deleteKeyframe`
-- `copyFrame`
-- `pasteFrame`
-- `resetAnimation`
-- `resetSelectionState`
-- `currentFrameValue`
-- `writeFrameValue`
-- `hasFrameSelection`
-- `stepDuration`
-- `togglePlayback`
-- `togglePlaybackMode`
-- `updatePlaybackRate`
-- `updateSetting`
-- `stopPreview`
-- `syncPreview`
-
-각 타임라인은 이 공통 계약 위에 세션별 확장 메서드를 추가할 수 있다.
-
-- 동작 타임라인: 파츠 필드 렌더링, 그룹 편집, 포즈 툴바 동기화
-- 시각 효과 타임라인: 효과 필드 렌더링, 효과 이미지 미리보기, 효과 선택 초기화
-
-### 3.5 동작/스킬 애니메이션 편집
-
-현재 코드의 포즈 편집 UI는 장기적으로 동작/스킬 애니메이션 세션으로 확장되어야 한다.
-
-동작과 스킬은 여러 파츠를 동시에 다루는 타임라인 대상이다.
-
-기본 동작:
-
-- idle
-- run
-- jump
-- fall
-- glide
-- roll
-- guard
-- guardBreak
-- hurt
-- death
-
-기본 전투/스킬:
-
-- jumpAttack
-- attack1
-- attack2
-- attack3
-
-동작/스킬 편집 기능:
-
-- 동작/스킬별 파츠 키프레임 편집
-- 파츠별 위치/크기/회전/투명도
-- 마스터 파츠 편집
-- 여러 파츠 선택 후 그룹 편집
-- 동작/스킬 재생과 미리보기
-- 동작/스킬 프레임 복사/붙여넣기
-- 동작/스킬별 이동 속도, 무적 시간, 쿨타임 같은 보정값 편집
-
-중요한 방향:
-
-캐릭터 셋업에서 선택한 동작과 스킬만 이 세션에 나타나야 한다.
-
-관련 코드:
-
-- `src/tuningPoseTimelineController.js`
-- `src/tuningPoseTimelinePanelView.js`
-- `src/tuningFieldValues.js`
-- `src/tuningGroupPoseEdit.js`
-- `src/puppetPlayerPose.js`
-
-### 3.6 시각 효과/이펙트 편집
-
-시각 효과는 단일 파츠처럼 다루는 타임라인 대상이다.
-
-현재 시각 효과 슬롯:
-
-- attack1
-- attack2
-- attack3
-- jumpAttack
-- 기타 동작/스킬별 시각 효과 슬롯
-
-시각 효과 편집 기능:
-
-- 위치
-- 크기
-- 회전
-- 투명도
-- 앵커
-- 키프레임 복사/붙여넣기
-- 재생/미리보기
-
-중요한 방향:
-
-시각 효과는 별도의 예외 시스템이 아니라 "타임라인을 가진 단일 파츠"처럼 다루는 것이 좋다.
-시각 효과 이미지 선택과 업로드는 캐릭터 파트의 이펙트 세션 핵심 작업으로 본다.
-
-관련 코드:
-
-- `src/tuningEffectTimelineController.js`
-- `src/tuningEffectTimelinePanelView.js`
-- `src/effectVisualValues.js`
-- `src/settingsEffectPreviewRenderer.js`
-- `src/actorEffectsRenderer.js`
-
-### 3.7 게임플레이 튜닝
-
-제작툴은 애니메이션뿐 아니라 실제 게임 동작 수치도 조절해야 한다.
-
-현재 주요 튜닝 항목:
-
-- 캐릭터 전체 크기
-- 캐릭터 HP
-- 이동 속도
-- 이동 가속도
-- 이동 상하 움직임
-- 점프 높이
-- 활강 시간/낙하 속도
-- 구르기 강도
-- 구르기 무기 여부
-- 구르기 쿨타임
-- 구른 뒤 무적
-- 공격 쿨타임
-- 콤보 유지 시간
-- 피격 무적
-- 각 동작/스킬별 애니메이션 강도
-- 각 동작/스킬별 이동 보정, 무적 시간, 쿨타임, 사용 가능 조건
-
-관련 코드:
-
-- `src/tuningMotionFieldRows.js`
-- `src/tuningPanelControlSetup.js`
-- `src/tuningControlValueTransforms.js`
-- `src/playerDefaultTuning.js`
-- `src/puppetPlayerActions.js`
-- `src/runSpeedMotion.js`
-
-### 3.8 전투/충돌 편집
-
-전투/충돌 편집은 캐릭터 파트의 이펙트 세션 중심 기능이다.
-
-필수 기능:
-
-- 플레이어 피격 히트박스 편집
-- 공격 히트박스 편집
-- 점프 공격 히트박스 편집
-- 구르기 히트박스 편집
-- 경직/넉백/파편 힘 편집
-- 디버그 박스 표시
-
-미래 방향:
-
-히트박스도 시간에 따라 바뀔 수 있으므로 타임라인 트랙으로 편입할 수 있어야 한다.
-선택된 동작과 스킬마다 공격 히트박스와 활성 프레임을 따로 가질 수 있어야 한다.
-
-관련 코드:
-
-- `src/combatSystem.js`
-- `src/combatGeometry.js`
-- `src/settingsDebugRenderer.js`
-- `src/tuningMotionFieldRows.js`
-
-### 3.9 스테이지 편집
-
-필수 기능:
-
-- 배경 레이어 관리
-- 배경 이미지 교체/새로고침
-- 패럴랙스 속도
-- 월드 경계
-- 바닥 위치
-- 오른쪽 진행 규칙
-- 적 등장 규칙
-- 적 종류와 성장 곡선
-- 레벨업 조건
-- 카드 보상 풀
-- 카드 강화 효과
-- 점수 계산 규칙
-- 플레이 화면 미리보기 반영
-
-현재는 배경 이미지 편집이 중심이지만, 장기적으로 스테이지 파트는 실제 게임 진행을 설계하는 영역이 되어야 한다.
-
-스테이지 파트에서 다룰 게임 시스템:
-
-- 기본은 자동 오른쪽 진행으로 한다. 입력으로 얼마나 보조할지는 스테이지 진행 규칙에서 별도로 정한다.
-- 진행 중 적 등장
-- 적 처치 수 또는 경험치 기반 레벨업
-- 레벨업 시 네 장의 카드 보상 제시
-- 카드 하나 선택 후 즉시 강화 적용
-- 레벨/거리/시간에 따른 적 강화
-- 처치 수, 진행 거리, 도달 레벨 기반 점수
-
-관련 코드:
-
-- `src/backgroundPanelController.js`
-- `src/backgroundRenderer.js`
-- `src/sceneSession.js`
-- `src/clipBackgroundRuntime.js`
-
-### 3.10 미리보기/디버그
-
-제작툴은 항상 현재 편집 상태를 즉시 확인할 수 있어야 한다.
-
-필수 기능:
-
-- 선택한 캐릭터 미리보기
-- 동작/스킬 애니메이션 미리보기
-- 시각 효과 미리보기
-- 히트박스 디버그 표시
-- 앵커/관절 표시
-- 캔버스 편집 핸들 표시
-- 실제 게임 움직임 테스트
-
-관련 코드:
-
-- `src/previewState.js`
-- `src/tuningTimelinePreview.js`
-- `src/tuningPanelDebugView.js`
-- `src/editHandleRenderer.js`
+- `src/canvasDragApply.js`
 - `src/tuningEditHandleGeometry.js`
+- `src/editHandleGeometry.js`
+- `src/editHandleRenderer.js`
 
-### 3.11 에셋 업로드/스토리지 기준
+현재 상태:
 
-작업에 들어가는 모든 파일 에셋은 업로드 버튼을 통해 Firebase Storage에 반영되는 것을 최종 기준으로 한다.
+- Part, pose part, group edit, effect handle이 같은 canvas surface에서 편집된다.
+- Group edit values는 owner로 분리되었지만, drag 중 같은 객체를 mutation한다.
+- Edit handle hover/active/effect handle state는 아직 별도 owner가 없다.
 
-대상 에셋:
+### 5.5 Save/Upload
 
-- 캐릭터 PSD와 파츠 이미지
-- 시각 효과 이미지
-- 배경 PSD와 배경 레이어 이미지
-- 나중에 추가될 사운드, 타일셋, 카메라 리소스 같은 제작 파일
+관련 파일:
 
-기본 규칙:
-
-- 업로드 버튼을 누르고 업로드가 성공한 순간 해당 에셋은 Firebase Storage의 기준 파일로 갱신된다.
-- 로컬에서 선택한 파일은 업로드가 완료되기 전까지 임시 입력값이다.
-- 업로드 성공 후에는 Storage URL, 경로, 버전 값을 설정 상태에 반영한다.
-- 저장, 공유, `index.html` 플레이는 모두 Storage에 올라간 파일을 기준으로 동작해야 한다.
-- 개발 중 로컬 watcher/API로 임시 미리보기를 할 수 있지만, 업로드가 성공한 뒤에는 Storage 참조가 기준이 되어야 한다.
-- 같은 에셋을 다시 업로드하면 기존 Storage 에셋이 새 버전으로 갱신된 것으로 취급한다.
-- 별도 버전 관리 기능을 만들기 전까지는 이전 에셋으로 되돌리는 기능을 보장하지 않는다.
-- 캐시 때문에 예전 이미지가 보이지 않도록 업로드 시점의 버전 값이나 갱신 시간을 참조에 포함한다.
-- 업로드 실패 시에는 기존 Storage 에셋과 설정 상태를 유지하고, 실패 상태를 UI에 명확히 보여준다.
-- 새로고침 버튼은 로컬 watcher/API에서 다시 빌드한 에셋을 불러온 뒤 Storage와 설정 상태를 갱신하는 동작으로 정리한다.
-- 초기화 버튼은 에셋 업로드가 아니라 설정 초기화이므로 업로드 버튼과 의미를 분리한다.
-
-파트별 기준:
-
-- 캐릭터/파츠: PSD 업로드 버튼은 캐릭터 원본 PSD와 생성된 파츠 이미지를 갱신하는 동작이다.
-- 파츠 위치: 위치, 크기, 회전, 앵커 값은 파일 에셋이 아니라 설정 상태다. 이 값은 프로젝트 저장 업로드로 동기화한다.
-- 시각 효과: 효과 업로드 버튼은 현재 선택한 시각 효과 슬롯의 이미지 에셋을 갱신하는 동작이다.
-- 배경: 배경 업로드 버튼은 배경 PSD/레이어 이미지를 갱신하고, 갱신된 Storage 참조를 스테이지 설정에 반영하는 동작이다.
-
-관련 코드:
-
+- `src/saveStateStorage.js`
+- `src/projectStateController.js`
+- `src/firebaseProjectState.js`
 - `src/firebaseStorageAssets.js`
 - `src/characterPsdRuntime.js`
 - `src/effectAssetRuntime.js`
 - `src/clipBackgroundRuntime.js`
+
+현재 기준:
+
+- 설정 상태는 프로젝트 저장/업로드 대상이다.
+- PSD, 이미지, 배경 clip 같은 파일 에셋은 Firebase Storage 참조가 최종 기준이다.
+- `Firebase 업로드`, `Firebase 다운로드`는 현재 project state 동기화의 핵심 entry point다.
+- 선택 캐릭터 초기화는 저장과 다른 파괴적 편집 작업으로 취급한다.
+
+### 5.6 Stage
+
+관련 파일:
+
 - `src/backgroundPanelController.js`
-- `src/tuningPanel.js`
+- `src/backgroundPanelView.js`
+- `src/backgroundRenderer.js`
+- `src/sceneSession.js`
+- `src/clipBackgroundRuntime.js`
 
-## 4. 현재 구조의 문제점
+현재 상태:
 
-### 4.1 UI는 같지만 내부 시스템이 갈라져 있음
+- Stage Session은 현재 Background 편집만 제공한다.
+- scene session은 background와 world 정보를 저장할 수 있다.
+- 진행 규칙, 적 성장, 카드 보상, 점수 규칙 editor는 아직 없다.
 
-파츠 애니메이션 타임라인과 시각 효과 타임라인은 UI가 비슷하지만 내부 컨트롤러가 나뉘어 있다.
+## 6. 데이터 기준
 
-- `src/tuningPoseTimelineController.js`
-- `src/tuningEffectTimelineController.js`
+현재 저장/편집 데이터는 크게 아래로 나뉜다.
 
-이 때문에 한쪽에서 고친 기능이 다른 쪽에 자동 반영되지 않는 문제가 생겼다.
+- Actor tuning: rig, scale, anchor, hitbox, HP, pose offsets/settings, effect offsets/settings
+- Effect assets: 시각 효과 이미지 에셋과 슬롯
+- Scene session: background, world settings
+- Project state: actors, active scene session, scene sessions
+- Runtime preview state: 현재 툴 화면에서만 쓰는 preview/selection/edit 상태
 
-최근 일부 공통화가 진행된 상태:
+Session 간 데이터 전달:
 
-- 공통 컨트롤러 계약: `timelineControllerContract.js`
-- 키프레임 추가/삭제: `timelineControllerActions.js`
-- 선택/드래그 선택/드래그 이동: `timelineControllerActions.js`
-- 복사/붙여넣기 코어: `timelineFrameClipboard.js`
-- 렌더/드래그 바인딩: `timelineControllerView.js`
-- 툴바 상태 동기화: `tuningTimelinePanelSync.js`
-- 재생 설정 동기화: `tuningTimelinePanelSync.js`, `tuningTimelineDom.js`
-- 미리보기 동기화 흐름: `tuningTimelinePreview.js`
-- 시각 효과 타임라인 adapter: `effectTimelineAdapter.js`
-- 파츠 애니메이션 타임라인 adapter: `poseTimelineAdapter.js`
+- Setup -> Animation: actor identity, rig, layer order, scale, anchor, base hitbox를 사용한다.
+- Animation -> Effect: pose key, duration, playback timing, motion setting을 기준으로 effect slot을 맞춘다.
+- Effect -> Stage: actor runtime preview가 효과 데이터를 읽는 상태에서 배경과 stage를 검증한다.
+- Stage -> Save/Play Check: scene session/background와 stage rule 데이터를 project state로 저장해야 한다.
 
-아직 분리되어 있는 부분:
+## 7. 현재 위험 요소
 
-- 필드 렌더링
-- adapter별 복사/붙여넣기 확장 로직
-- 패널별 선택 상태 처리
+- `docs/tool-architecture.md`는 현재 정리되었지만, 앞으로 다시 Sprint 로그가 누적되지 않도록 운영 규칙을 지켜야 한다.
+- `setting.html`은 500줄 이상이며 패널 구조가 계속 커질 수 있다.
+- `src/tuningPanel.js`는 줄 수는 줄었지만 아직 shell bridge, selected actor, undo, shortcut, edit handle state를 함께 가진다.
+- `src/tuningPoseTimelineController.js`, `src/tuningEffectTimelineController.js`는 아직 도메인별 렌더링/preview hook을 가진다.
+- Workflow filtering은 구조만 있고 실제 hidden/disabled 정책은 확정되지 않았다.
+- Session 전환 시 preview/playback 정지 정책이 아직 없다.
+- Stage Session은 배경만 있으며 게임 진행 규칙 editor가 없다.
+- Save 구조는 actor/scene/project state 경계가 더 명확해질 필요가 있다.
+- Tool/Game/Engine 폴더 분리는 아직 시작하지 않았다.
 
-### 4.2 `tuningPanel.js`가 너무 많은 책임을 가짐
+## 8. 현재 우선순위
 
-`tuningPanel.js`는 패널 생성, 상태 연결, 선택 상태, undo, 컨트롤러 생성까지 여러 책임을 가진다.
+1. Workflow Editor에서 실제 panel filtering 정책 결정: metadata, hidden, disabled 중 선택
+2. Workflow Navigation 최소 스타일과 접근성 정리
+3. Session 전환 시 preview/playback 정지 정책 확정
+4. Stage Session의 다음 패널 설계: 진행 규칙, 적 성장, 카드 보상, 점수 규칙
+5. Edit Handle State 분리: `editHandleHover`, `editHandleActiveMode`, `effectEditHandle`
+6. Save/Upload/Download action 경계 검토
+7. Hitbox timeline adapter 설계 전 Timeline hook 경계 점검
+8. Tool/Game/Engine/Shared 폴더 이동 계획 수립
 
-현재는 일부 분리가 진행되어 500줄 안팎이지만, 앞으로 다시 커지면 유지보수가 어려워진다.
+## 9. 다음 Sprint 목표
 
-최근 일부 분리:
+추천 목표:
 
-- `src/tuningPanelBootstrap.js`: 패널 DOM 조회, panel elements 생성, panel toggle 동기화 함수 생성을 맡는다.
+- Workflow Panel Filtering 1차 적용
 
-분리 후보:
+범위:
 
-- 패널 부트스트랩
-- 컨트롤러 조립
-- 파일/에셋 액션
-- 전역 단축키
-- 선택 상태 관리
+- 현재 active session에 속하지 않는 panel을 숨길지 비활성화할지 결정한다.
+- `tuningPanelWorkflow.js`의 filter mode를 실제 UI 정책에 연결한다.
+- Session 전환 시 preview/playback 처리 정책을 최소한으로 정한다.
+- HTML 대규모 이동, CSS 개편, Stage 기능 추가, Save 구조 변경은 하지 않는다.
 
-### 4.3 게임 런타임과 툴 런타임의 경계가 약함
+## 10. 문서 운영
 
-일부 코드는 게임 실행과 툴 편집 양쪽에서 사용된다.
+프로젝트 문서는 두 개만 사용한다.
 
-좋은 방향:
+- `docs/tool-architecture.md`: 현재 Architecture, 현재 Milestone, 현재 구조, 현재 위험 요소, 현재 우선순위
+- `docs/CURRENT_SPRINT.md`: 이번 Sprint 보고서
 
-- 게임 런타임: 실제 플레이에 필요한 코드
-- 툴 런타임: 편집 UI와 캔버스 핸들
-- 공통 엔진: 애니메이션 계산, 프레임 보간, 전투 판정 등
-
-### 4.4 제작 흐름이 패널 기능 단위로 흩어져 있음
-
-현재 UI는 캐릭터를 만드는 순서보다 기능별 패널에 가깝다.
-
-이 때문에 사용자는 아래 작업 순서를 직접 기억해야 한다.
-
-- 캐릭터 선택
-- PSD 업로드
-- 파츠 배치와 rig
-- 캐릭터 크기/피격 히트박스/HP 설정
-- 사용할 동작과 스킬 선택
-- 동작 애니메이션 제작
-- 이펙트, 공격 히트박스, 연출 설정
-- 스테이지 배경, 적 성장, 카드 보상, 점수 규칙 설정
-
-좋은 방향:
-
-- 제작툴은 크게 캐릭터 파트와 스테이지 파트로 나뉘어야 한다.
-- 캐릭터 파트는 셋업, 애니메이션, 이펙트 세션으로 나뉘어야 한다.
-- 이후 세션은 앞 세션의 결과를 받아서 편집 대상을 자동으로 줄여야 한다.
-- 선택한 동작과 스킬만 타임라인, 이펙트, 플레이 테스트에 나타나야 한다.
-- 스테이지 파트는 배경 편집과 게임 진행 규칙 편집을 함께 가져야 한다.
-- 사용자가 지금 무엇을 완성 중인지 세션 단위로 알 수 있어야 한다.
-
-## 5. 목표 아키텍처
-
-목표 구조:
-
-```text
-setting.html
-  └─ Tool Shell
-      ├─ Workflow Shell
-      │   ├─ Character Part
-      │   │   ├─ Setup Session
-      │   │   ├─ Animation Session
-      │   │   └─ Effect Session
-      │   └─ Stage Part
-      │       ├─ Background Session
-      │       ├─ Progression Session
-      │       ├─ Enemy Scaling Session
-      │       └─ Card Reward Session
-      ├─ Project System
-      ├─ Actor Definition Editor
-      ├─ Rig / Part Editor
-      ├─ Action / Skill Registry
-      ├─ Timeline Editor Core
-      │   ├─ Pose Adapter
-      │   ├─ Effect Adapter
-      │   ├─ Hitbox Adapter
-      │   └─ Future Track Adapter
-      ├─ Combat / Hitbox Editor
-      ├─ Gameplay Tuning
-      ├─ Stage / Background Editor
-      ├─ Stage Progression Editor
-      ├─ Card Reward Editor
-      ├─ Enemy Scaling Editor
-      ├─ Asset Storage / Upload System
-      ├─ Preview Runtime
-      └─ Save / Load System
-
-index.html
-  └─ Game Runtime
-      ├─ Actor Runtime
-      ├─ Combat Runtime
-      ├─ Animation Runtime
-      ├─ Effect Runtime
-      ├─ Scene Runtime
-      ├─ Progression Runtime
-      ├─ Card Reward Runtime
-      ├─ Enemy Scaling Runtime
-      └─ Input Runtime
-```
-
-## 6. Timeline Core 설계
-
-타임라인 코어는 파츠 애니메이션, 시각 효과, 히트박스가 공유하는 시스템이다.
-
-### 6.1 Timeline Core가 책임지는 것
-
-- 프레임 수
-- 슬롯 계산
-- 키프레임 목록
-- 키프레임 선택
-- 빈 슬롯 선택
-- 키프레임 추가/삭제
-- 키프레임 이동
-- 복사/붙여넣기
-- 재생 설정
-- 반복/한 번 재생
-- undo 연결 지점
-- UI 버튼 상태
-
-### 6.2 Adapter가 책임지는 것
-
-타임라인 대상마다 데이터 구조가 다르므로 adapter가 필요하다.
-
-공통 adapter 형태:
-
-```js
-const adapter = {
-  key(),
-  ensureData(tuning),
-  keyframes(tuning),
-  currentFrame(context),
-  readField(frame, prop),
-  writeField(context, prop, value),
-  addKeyframe(tuning, t),
-  deleteKeyframe(tuning, id),
-  moveKeyframe(tuning, id, t),
-  copyFrame(context),
-  pasteFrame(context, copiedFrame, targetId),
-  renderFields(container, context),
-  syncPreview(context),
-};
-```
-
-파츠 애니메이션 adapter:
-
-- 여러 파츠를 다룬다.
-- 선택 파츠/다중 선택/마스터 파츠 개념이 있다.
-- 그룹 편집이 필요하다.
-
-시각 효과 adapter:
-
-- 단일 파츠처럼 다룬다.
-- 위치/크기/회전/투명도/앵커만 다룬다.
-- 나중에 시각 효과 이미지 선택도 adapter에 포함할 수 있다.
-
-히트박스 adapter:
-
-- x/y/w/h/rot와 전투 수치를 다룬다.
-- 공격 타이밍에 따라 켜짐/꺼짐이 필요할 수 있다.
-
-## 7. 추천 폴더 구조
-
-현재는 `src` 루트에 파일이 많다.
-
-장기적으로 아래처럼 분류하는 것을 권장한다.
-
-```text
-src/
-  engine/
-    animation/
-    combat/
-    actor/
-    scene/
-    math/
-
-  game/
-    main.js
-    input/
-    hud/
-    ranking/
-    progression/
-    card-reward/
-    enemy-scaling/
-
-  tool/
-    shell/
-    project/
-    panel/
-    canvas/
-    timeline/
-    adapters/
-      poseTimelineAdapter.js
-      effectTimelineAdapter.js
-      hitboxTimelineAdapter.js
-    workflow/
-    actor/
-    part/
-    action-skill/
-    effect/
-    stage/
-    card-reward/
-    enemy-scaling/
-    preview/
-
-  shared/
-    config/
-    assets/
-    storage/
-    utils/
-```
-
-이 구조는 한 번에 이동하지 않는다.
-
-우선 타임라인 기능은 `tool/timeline`, 캐릭터 제작 기능은 `tool/actor`, 스테이지 제작 기능은 `tool/stage` 성격의 모듈로 분리하고, 기존 파일은 단계적으로 이동한다.
-
-## 8. 리팩토링 계획
-
-### 8.1 1단계: 타임라인 공통 코어 강화
-
-기술 리팩토링 관점에서 현재 진행 중인 단계다.
-
-완료된 것:
-
-- 공통 타임라인 컨트롤러 계약
-- 실제 공통 API 기준으로 컨트롤러 계약 축소
-- 공통 타임라인 컨트롤러 반환 형태 정리
-- 공통 키프레임 추가/삭제 액션
-- 공통 선택/드래그 액션
-- 공통 선택 상태 반영/refresh 액션
-- 공통 드래그 이동 preview 액션
-- 공통 복사/붙여넣기 코어
-- 공통 복사/초기화 액션
-- 공통 붙여넣기 액션
-- 공통 mutation 마무리 액션
-- 공통 트랙 렌더 생성기
-- 공통 드래그 바인더
-- 공통 툴바 상태 동기화
-- 공통 재생 설정 동기화
-- 공통 미리보기 동기화 흐름
-- 공통 미리보기 재생 시작/정지 헬퍼
-- 공통 active time adapter 계약
-- 공통 current frame adapter 계약
-- selection 기반 frame write adapter 경계
-- selection 기반 frame copy adapter 경계
-- 1차 `createTimelineControllerCore()` 도입
-- 공통 컨트롤러 반환 메서드 조립
-- core 기반 keyframes/active time 헬퍼
-- core 기반 frame selection state 헬퍼
-- core 기반 section open 검사 헬퍼
-- core 기반 frame label 헬퍼
-- core 기반 frame read/write 헬퍼
-- core 기반 timeline setting update 헬퍼
-- core 기반 keyframe 추가/삭제 헬퍼
-- core 기반 keyframe/slot 선택 액션
-- core 기반 drag keyframe 선택 액션
-- core 기반 frame selection 검사 헬퍼
-- core 기반 selection reset/refresh 헬퍼
-- core 기반 selection apply 헬퍼
-- core 기반 fixed frame selection 헬퍼
-- selection controls 전용 모듈 분리
-- clipboard controls 전용 모듈 분리
-- 최소 단일 `createTimelineController()` factory 도입
-- Effect Timeline의 `createTimelineController()` 실제 적용
-- Pose Timeline의 `createTimelineController()` 실제 적용
-- core 기반 timeline reset 헬퍼
-- core 기반 timeline copy/paste wrapper
-- 시각 효과 타임라인 adapter
-- 파츠 애니메이션 타임라인 adapter
-- 공통 adapter 계약: `timelineAdapterContract.js`
-
-다음 작업:
-
-- Timeline 리팩토링은 완료 단계로 보고, 다음에는 히트박스 타임라인화 전 adapter/config hook 경계를 정리
-- field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload를 문서 기준으로 확정
-- `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 playback/render 책임 경계도 계속 점검
-- controller에 남은 domain 후처리 중 adapter로 넘기면 단순해지는 것만 선별
-
-### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
-
-시각 효과는 파츠 애니메이션보다 단순하므로 먼저 이전한다.
-
-목표:
-
-- `tuningEffectTimelineController.js`를 얇게 만든다.
-- 시각 효과 데이터 접근은 `effectTimelineAdapter`로 이동한다.
-- 기존 UI와 저장 구조는 유지한다.
-
-현재 완료된 것:
-
-- `src/effectTimelineAdapter.js`가 시각 효과 키, 설정, offset, 키프레임 접근을 맡는다.
-- `src/tuningEffectTimelineController.js`는 실제로 `createTimelineController()` factory를 사용한다.
-- 시각 효과 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter와 core 경계를 지난다.
-- 시각 효과 preview 생성 입력이 adapter로 이동했다.
-- 시각 효과 active time 계산이 adapter로 이동했다.
-- 시각 효과 current frame 계산이 adapter로 이동했다.
-- 시각 효과 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
-- 시각 효과 복사/붙여넣기 실행 껍데기는 core wrapper를 사용하고, 복사할 값과 붙여넣을 값은 effect adapter가 결정한다.
-- 시각 효과 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
-- 시각 효과 선택 초기화와 선택 갱신 흐름은 core 헬퍼를 사용하고, 효과 필드 렌더링만 controller에 남아 있다.
-- 시각 효과 선택 적용 흐름은 core 헬퍼를 사용하고, 선택 후 다시 그릴 필드만 controller가 넘긴다.
-- 시각 효과의 start/end 고정 프레임 선택은 core 헬퍼를 사용한다.
-
-남은 것:
-
-- Effect controller에는 아직 필드 렌더링, 효과 이미지 미리보기, preview sync, mutation finish hook이 남아 있다.
-- 단일 controller가 요구할 세부 adapter/config 메서드를 더 좁힌다.
-
-### 8.3 3단계: 파츠 애니메이션 타임라인을 adapter로 이전
-
-파츠 애니메이션은 다중 파츠/그룹 편집 때문에 더 복잡하다.
-
-목표:
-
-- `tuningPoseTimelineController.js`를 얇게 만든다.
-- 파츠별 읽기/쓰기 로직을 `poseTimelineAdapter`로 이동한다.
-- 그룹 편집은 파츠 애니메이션 adapter의 확장 기능으로 둔다.
-
-현재 완료된 것:
-
-- `src/poseTimelineAdapter.js`가 포즈 키, 설정, offset, 키프레임, 파츠 source 접근을 맡는다.
-- `src/tuningPoseTimelineController.js`는 실제로 `createTimelineController()` factory를 사용한다.
-- 포즈 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter와 core 경계를 지난다.
-- 포즈 preview 생성 입력과 드래그 preview가 adapter로 이동했다.
-- 포즈 active time 계산이 adapter로 이동했다.
-- 포즈 current frame 계산이 adapter로 이동했다.
-- 포즈 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
-- 포즈 복사/붙여넣기 실행 껍데기는 core wrapper를 사용하고, 복사할 값과 붙여넣을 값은 pose adapter가 결정한다.
-- 포즈 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
-- 포즈 선택 초기화와 선택 갱신 흐름은 core 헬퍼를 사용하고, 파츠 필드 렌더링만 controller에 남아 있다.
-- 포즈 선택 적용 흐름은 core 헬퍼를 사용하고, 그룹 편집 reset 조건만 controller에 남아 있다.
-
-남은 것:
-
-- 포즈 그룹 편집 reset, 다중 선택, 파츠 필드 렌더링, preview sync, mutation finish hook은 controller에 남아 있다.
-- 이 차이는 현재 동작 보존을 위해 남긴 도메인 후처리이며, 이후 adapter/config hook으로 옮길지는 별도 판단한다.
-
-### 8.4 4단계: 단일 Timeline Controller 도입
-
-최종 목표:
-
-```js
-createTimelineController({
-  adapter,
-  elements,
-  undo,
-  preview,
-});
-```
-
-파츠 애니메이션, 시각 효과, 히트박스는 모두 같은 컨트롤러를 사용하고 adapter만 다르게 한다.
-
-현재 적용 범위:
-
-- `src/timelineController.js`가 최소 단일 controller factory 역할을 시작했다.
-- Effect Timeline은 `createTimelineController()`를 사용해 core와 공통 controller 계약을 조립한다.
-- Pose Timeline도 `createTimelineController()`를 사용해 core와 공통 controller 계약을 조립한다.
-- Effect/Pose controller는 아직 도메인별 wrapper로 남지만, 둘 다 동일한 factory 경로를 사용한다.
-- 이 시점부터 Timeline 리팩토링은 완료 단계로 본다.
-
-### 8.5 5단계: 툴/게임 런타임 분리
-
-목표:
-
-- `src/tool`
-- `src/game`
-- `src/engine`
-- `src/shared`
-
-로 점진적으로 이동한다.
-
-### 8.6 Milestone 2: Tool Shell 분리
-
-Timeline 리팩토링은 완료 단계로 보고, 현재부터는 제작툴 shell을 더 작은 조립 계층으로 나눈다.
-
-첫 번째 대상은 `src/tuningPanel.js`다.
-
-현재 `tuningPanel.js`가 가진 책임:
-
-- Panel Bootstrap: `#tuningPanel` 조회, panel elements 생성, panel open/close toggle 동기화
-- Controller Composition: timeline, part, canvas, lifecycle, background controller 조립
-- Selection/Edit State: active part, active pose part, edit focus, selected pose parts, group edit values 관리
-- Undo 연결: tuning undo state 생성과 begin/commit/push 함수 주입
-- Timeline 연결: pose/effect timeline 생성, frame copy/paste action 연결
-- Asset/Save Action 연결: 에셋 업로드, 설정 업로드/다운로드, saveState 연결
-- Panel Control Binding: DOM control 이벤트와 callback 연결
-- Canvas/Edit Handle 연결: edit handle geometry, hover/active mode, canvas pointer callback 연결
-- Panel Sync: 현재 actor/tuning 값으로 UI 전체 동기화
-- Shortcut 연결: undo, frame copy/paste 단축키 연결
-
-완료된 첫 분리:
-
-- `src/tuningPanelBootstrap.js`를 추가했다.
-- `tuningPanel.js`에서 DOM query, `getTuningPanelElements`, panel toggle 동기화 생성 책임을 이동했다.
-- 저장 구조, selection state, controller 조립 흐름은 변경하지 않았다.
-
-다음 분리 후보:
-
-- Controller Composition: timeline/part/canvas/lifecycle/background controller 조립 묶음을 별도 composition module로 이동
-- Panel Control Binding: `initializeTuningPanelControls()`에 넘기는 긴 callback map 구성을 별도 module로 이동
-- Panel Sync: `syncPanel()`의 전체 UI 동기화 순서를 별도 module로 이동
-
-아직 건드리지 않을 것:
-
-- Selection/Edit State
-- Save/Upload/Download 동작
-- Undo state 구조
-- Workflow UI 개편
-
-## 9. 앞으로 기능 추가 시 체크리스트
-
-새 기능을 추가하기 전에 아래를 확인한다.
-
-- 이 기능은 게임 런타임 기능인가, 툴 기능인가, 공통 엔진 기능인가?
-- 이 기능은 캐릭터 파트인가, 스테이지 파트인가?
-- 캐릭터 파트라면 셋업, 애니메이션, 이펙트 중 어느 세션에 속하는가?
-- 스테이지 파트라면 배경, 진행 규칙, 적 성장, 카드 보상, 점수 중 어느 영역에 속하는가?
-- 이 기능은 캐릭터 전체 값인가, 특정 동작/스킬에 속한 값인가?
-- 이 기능은 한 번의 플레이 중 변하는 런타임 강화값인가, 제작툴에서 고정하는 기본값인가?
-- 시간에 따라 바뀌는 값인가?
-- 타임라인 트랙으로 표현할 수 있는가?
-- 기존 adapter로 표현 가능한가?
-- 새 adapter가 필요한가?
-- 선택한 동작/스킬 목록에 따라 보이거나 숨겨져야 하는가?
-- 카드 보상이나 적 성장 규칙에 의해 값이 변할 수 있는가?
-- Firebase Storage에 올라간 에셋 참조가 필요한가?
-- 저장 데이터 정규화가 필요한가?
-- undo/redo가 필요한가?
-- 미리보기가 필요한가?
-- 디버그 표시가 필요한가?
-- `index.html` 플레이 화면도 같은 데이터를 읽어야 하는가?
-- 파츠 애니메이션과 시각 효과 중 한쪽에만 적용되는 중복 코드를 만들고 있지는 않은가?
-
-## 10. 현재 리팩토링 우선순위
-
-1. `tuningPanel.js`의 Controller Composition 책임 분리
-2. `initializeTuningPanelControls()`에 넘기는 callback map 구성 분리
-3. `syncPanel()` 전체 UI 동기화 순서 분리
-4. Selection/Edit State 분리 가능성 검토
-5. Save/Upload/Download 액션 경계 검토
-6. Timeline 리팩토링 완료 상태를 기준으로 히트박스 타임라인화 전 adapter/config hook 경계 정리
-7. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
-8. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
-9. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
-10. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
-
-## 10.1 현재 새로 만든 파일과 책임 분리
-
-새로 만든 파일:
-
-- `src/timelineController.js`: core, 공통 controller 계약, 확장 메서드를 묶어 단일 timeline controller factory 역할을 한다.
-- `src/timelineControllerCore.js`: 포즈/효과 타임라인이 공유하는 읽기, 쓰기, 선택, 재생, 설정 변경, keyframe 추가/삭제, reset 흐름을 조립한다.
-- `src/timelineControllerActions.js`: undo, mutation 마무리, 선택 갱신, keyframe 추가/삭제/이동, reset, 복사/붙여넣기 같은 공통 액션 단위를 제공한다.
-- `src/timelineControllerClipboardControls.js`: 타임라인 복사/붙여넣기의 실행 순서, 열린 섹션 검사, undo 연결을 조립한다.
-- `src/timelineControllerSelectionControls.js`: 타임라인 선택, 고정 프레임 선택, 선택 적용, 선택 상태 라벨, 드래그 선택 준비를 조립한다.
-- `src/timelineAdapterContract.js`: 타임라인 adapter가 반드시 제공해야 하는 메서드 목록을 정의한다.
-- `src/poseTimelineAdapter.js`: 파츠 애니메이션 데이터 접근, 포즈 키, 파츠 source, 프레임 복사/붙여넣기 값을 담당한다.
-- `src/effectTimelineAdapter.js`: 시각 효과 데이터 접근, 효과 키, 이미지/effect slot, 프레임 복사/붙여넣기 값을 담당한다.
-- `src/tuningPanelBootstrap.js`: tuning panel DOM 조회, panel elements 생성, panel toggle 동기화 함수 생성을 담당한다.
-
-책임이 분리된 부분:
-
-- Effect Timeline은 `createTimelineController()`를 통해 core와 공통 controller 계약을 조립한다.
-- Pose Timeline도 `createTimelineController()`를 통해 core와 공통 controller 계약을 조립한다.
-- 공통 타임라인 동작은 `timelineControllerCore.js`와 `timelineControllerActions.js`로 이동했다.
-- 포즈와 효과의 데이터 모양 차이는 각각 adapter가 감싼다.
-- 선택 초기화와 선택 갱신의 공통 순서는 core가 맡고, 어떤 UI 필드를 다시 그릴지는 각 controller가 결정한다.
-- 선택 적용의 공통 순서는 core가 맡고, 포즈의 그룹 편집 reset 같은 도메인 후처리는 controller가 결정한다.
-- start/end 같은 fixed frame 선택은 core가 맡아 controller가 selection 내부 구조를 직접 덜 만지게 했다.
-- 선택 관련 세부 조립은 `timelineControllerSelectionControls.js`로 이동했고, `timelineControllerCore.js`는 이를 연결하는 역할만 맡는다.
-- 복사/붙여넣기의 열림 상태 검사와 undo 흐름은 `timelineControllerClipboardControls.js`가 맡고, 실제 frame payload는 adapter가 결정한다.
-- `timelineControllerCore.js`는 selection, clipboard, playback, render control을 연결하는 조립 계층에 가까워졌다.
-- 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
-- `tuningPanel.js`에서 Panel Bootstrap 책임이 `tuningPanelBootstrap.js`로 이동했다.
-- `tuningPanel.js`는 아직 controller composition, selection/edit state, undo 연결, asset/save action 연결, control binding, panel sync를 맡는다.
-- `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
-
-## 10.2 최근 검증 상태
-
-최근 검증:
-
-- `npm run check`: 통과
-- `git diff --check`: 통과
-- `setting.html` 서버 응답: `HTTP 200 OK`
-- Headless Chrome screenshot: `/private/tmp/crow-knight-tool-shell-bootstrap-check.png` 렌더 확인
-
-최근 리팩토링 결과:
-
-- Milestone 2 Tool Shell 분리 시작
-- `src/tuningPanelBootstrap.js`: 15줄 신규 분리
-- `src/tuningPanel.js`: 491줄에서 481줄로 감소
-- `src/timelineController.js`: 20줄 신규 도입
-- Effect Timeline이 실제로 `createTimelineController()` factory를 사용
-- Pose Timeline도 실제로 `createTimelineController()` factory를 사용
-- `src/timelineControllerCore.js`: 264줄에서 187줄로 감소
-- `src/timelineControllerClipboardControls.js`: 26줄 신규 분리
-- `src/timelineControllerSelectionControls.js`: 104줄 신규 분리
-- 저장 포맷과 데이터 구조 변경 없음
-- 포즈/효과 controller 공개 계약 변경 없음
-- Pose 그룹 편집, 다중 선택, preview, undo, copy/paste, selection 경로는 기존 후처리와 adapter payload를 유지
-
-## 10.3 단일 Timeline Controller 도입 전 책임 분류
-
-현재 기준으로 단일 `createTimelineController()` 도입은 가능해지고 있지만, 아직 바로 합치기보다는 아래 책임 경계를 먼저 고정해야 한다.
-
-Core가 가져가야 하는 책임:
-
-- frame count, slot 계산, keyframe 목록 접근 같은 공통 타임라인 규칙 연결
-- keyframe 추가/삭제/이동의 공통 실행 순서
-- selection, clipboard, playback, render control 조립
-- undo 시작/커밋이 필요한 공통 타임라인 액션의 연결 지점
-
-Adapter가 가져가야 하는 책임:
-
-- 실제 타임라인 데이터 접근과 정규화
-- 현재 frame 값 읽기/쓰기
-- 복사/붙여넣기 payload 생성과 적용
-- preview payload 생성
-- 포즈의 파츠/그룹 개념, 효과의 단일 이미지 슬롯처럼 데이터 모양이 다른 부분
-
-Controller에 남아야 하는 책임:
-
-- 패널별 필드 렌더링
-- 포즈 그룹 편집 reset 같은 UI 후처리
-- 효과 이미지 미리보기, clearSelection 같은 패널 고유 동작
-- controller 외부에서 주입되는 actor/elements/undo/scrub callback 연결
-
-현재 판단:
-
-- selection과 clipboard는 별도 control 모듈로 빠져 Core 비대화 위험이 줄었다.
-- Effect Timeline에서 `createTimelineController()`를 실제로 사용하기 시작해 단일 controller 도입 경로가 검증됐다.
-- Pose Timeline도 같은 factory 경로로 이전되어 Effect/Pose의 공통 controller 조립 경로가 일치한다.
-- playback과 render는 이미 별도 모듈이 있으므로 지금 추가 이동보다 단일 controller 도입 시 config 형태를 정하는 것이 우선이다.
-- preview는 포즈와 효과의 차이가 아직 크므로 지금 Core로 억지로 올리지 않는다.
-- Timeline 리팩토링은 완료 단계로 판단한다. 남은 핵심은 새 타임라인 대상, 예를 들어 hitbox를 붙이기 전에 field rendering, preview, mutation finish hook의 adapter/config 경계를 확정하는 것이다.
-
-## 11. 유지보수 경고
-
-현재 파일 크기 기준으로 주의할 파일:
-
-- `docs/tool-architecture.md`: 1000줄 이상
-- `setting.html`: 500줄 이상
-- `src/tuningPanel.js`: 500줄 안팎
-- `src/tuningEffectTimelineController.js`: 400줄 안팎
-- `src/tuningPoseTimelineController.js`: 400줄 안팎
-
-이 파일들은 계속 기능이 추가되면 AI 작업에서도 많은 컨텍스트를 요구한다.
-
-권장:
-
-- 문서는 개요, 워크플로우, 타임라인 설계, 리팩토링 계획으로 분리한다.
-- CSS는 패널 영역별로 분리한다.
-- `tuningPanel.js`는 조립/상태/버튼 액션을 분리한다.
-- `setting.html`은 구조만 유지하고 반복 UI는 JS 렌더링 또는 템플릿화한다.
-
-## 12. 결론
-
-이 프로젝트의 중심은 더 이상 단순한 캐릭터 설정이 아니라 제작툴이다.
-
-따라서 앞으로의 방향은 다음과 같다.
-
-- 게임 결과물보다 제작툴 안정성을 먼저 본다.
-- 제작툴은 캐릭터 파트와 스테이지 파트로 나눈다.
-- 캐릭터 파트는 셋업, 애니메이션, 이펙트 순서로 진행한다.
-- 스테이지 파트는 배경뿐 아니라 오른쪽 진행, 적 성장, 카드 보상, 점수 규칙을 포함한다.
-- 파츠 애니메이션/시각 효과/히트박스는 모두 타임라인 대상이다.
-- 타임라인은 반드시 하나의 공통 시스템으로 합친다.
-- 각 기능의 차이는 adapter로 표현한다.
-- 리팩토링은 작은 공통 코어부터 넓혀간다.
+`docs/CURRENT_SPRINT.md`는 Sprint마다 덮어쓴다. 과거 Sprint 기록은 남기지 않는다.

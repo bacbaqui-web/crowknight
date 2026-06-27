@@ -14,7 +14,7 @@ export function tuningEditHandleGeometry({
   selectedActor,
   poseFrameSelectionActive,
   editFocusContext,
-  selectedPosePartKeys,
+  selectedPoseParts,
   groupEditValues,
 }) {
   if (!isPanelOpen) return null;
@@ -27,7 +27,7 @@ export function tuningEditHandleGeometry({
 
   const groupGeometry = tuningGroupEditHandleGeometry({
     editFocusContext,
-    selectedPosePartKeys,
+    selectedPoseParts,
     poseFrameSelectionActive,
     selectedActor,
     groupEditValues,
@@ -48,14 +48,14 @@ export function tuningEffectEditHandleGeometry({ openEditContext, effectEditHand
 
 export function tuningGroupEditHandleGeometry({
   editFocusContext,
-  selectedPosePartKeys,
+  selectedPoseParts,
   poseFrameSelectionActive,
   selectedActor,
   groupEditValues,
 }) {
   return createGroupEditHandleGeometry({
     editFocusContext,
-    selectedPosePartKeys,
+    selectedPoseParts,
     poseFrameSelectionActive,
     editHandles: selectedActor.player.editHandles,
     hitRegions: selectedActor.player.hitRegions,

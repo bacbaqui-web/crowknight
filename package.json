@@ -9,9 +9,7 @@
     "dev:5500": ".venv/bin/python tools/dev_server.py --port 5500",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "check": "npm run lint && prettier --check .",
-    "clip:preview": ".venv/bin/python tools/clip_preview_watcher.py --once",
-    "clip:watch": ".venv/bin/python tools/clip_preview_watcher.py"
+    "check": "npm run lint && prettier --check ."
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

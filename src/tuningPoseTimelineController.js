@@ -12,7 +12,7 @@ export function createPoseTimelineController({
   actors,
   elements,
   undoState,
-  selectedPosePartKeys,
+  selectedPoseParts,
   getSelectedActor,
   getActivePosePartKey,
   setFrameSelectionActive,
@@ -210,7 +210,7 @@ export function createPoseTimelineController({
         poseTimeline.copyFrame({
           isOpen: isSectionOpen(),
           selection: poseSelection,
-          selectedPosePartKeys,
+          selectedPoseParts,
           activePosePartKey: getActivePosePartKey(),
         }),
       setCopiedFrame: (copy) => {
@@ -232,7 +232,7 @@ export function createPoseTimelineController({
         poseTimeline.pasteFrameCopy({
           copiedFrame: copiedPoseFrame,
           id,
-          selectedPosePartKeys,
+          selectedPoseParts,
           activePosePartKey: getActivePosePartKey(),
         }),
       finish: () => finishTimelineMutation({ resetGroup: true, syncToolbar: true }),

@@ -8,14 +8,13 @@ import {
   isBackgroundControlTarget,
   renderBackgroundLayerSignature,
 } from './backgroundPanelView.js';
-import { refreshClipBackground } from './clipBackgroundRuntime.js';
+import { refreshPsdBackground } from './psdBackgroundRuntime.js';
 import { createDefaultBackground, normalizeSceneBackground } from './sceneSession.js';
 
 const NUMBER_DRAG_PIXELS_PER_STEP = 8;
 
-export function createBackgroundPanelController({ elements, getSceneSession, saveState, refreshClipSettings }) {
-  const { backgroundClipUpload, backgroundClipFile, backgroundRefresh, backgroundReset, backgroundLayerList } =
-    elements;
+export function createBackgroundPanelController({ elements, getSceneSession, saveState, refreshPsdSettings }) {
+  const { backgroundPsdUpload, backgroundPsdFile, backgroundRefresh, backgroundReset, backgroundLayerList } = elements;
   if (!backgroundLayerList) return { sync: () => {} };
 
   let draggedLayerId = null;
@@ -23,18 +22,18 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
   let numberDrag = null;
   let refreshInFlight = false;
 
-  backgroundClipUpload?.addEventListener('click', () => {
+  backgroundPsdUpload?.addEventListener('click', () => {
     if (refreshInFlight) return;
-    backgroundClipFile.value = '';
-    backgroundClipFile.click();
+    backgroundPsdFile.value = '';
+    backgroundPsdFile.click();
   });
-  backgroundClipFile?.addEventListener('change', async () => {
-    const clipFile = backgroundClipFile.files?.[0];
-    if (!clipFile) return;
+  backgroundPsdFile?.addEventListener('change', async () => {
+    const psdFile = backgroundPsdFile.files?.[0];
+    if (!psdFile) return;
     await runClipRefresh({
-      button: backgroundClipUpload,
+      button: backgroundPsdUpload,
       label: '로컬 PSD 파일 선택 및 업로드',
-      clipFile,
+      psdFile,
     });
   });
   backgroundRefresh?.addEventListener('click', async () => {
@@ -62,20 +61,20 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
   backgroundLayerList.addEventListener('drop', handleDrop);
   backgroundLayerList.addEventListener('dragend', handleDragEnd);
 
-  async function runClipRefresh({ button, label, clipFile = null }) {
+  async function runClipRefresh({ button, label, psdFile = null }) {
     if (refreshInFlight) return;
     refreshInFlight = true;
     button.disabled = true;
     button.classList.add('is-refreshing');
     button.setAttribute('aria-label', `${label} 처리중`);
     try {
-      const refreshed = refreshClipSettings
-        ? await refreshClipSettings({ clipFile })
-        : await refreshClipBackground({
+      const refreshed = refreshPsdSettings
+        ? await refreshPsdSettings({ psdFile })
+        : await refreshPsdBackground({
             getSceneSession,
             onUpdate: preloadSceneBackground,
             force: true,
-            clipFile,
+            psdFile,
           });
       setRefreshResult(button, label, refreshed);
       if (refreshed) sync({ force: true });
@@ -163,7 +162,7 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     if (!layerId) return;
     const session = getSceneSession();
     const background = normalizeSceneBackground({ ...session.background, type: 'layers' });
-    const layer = background.clipLayers.find((item) => item.id === layerId);
+    const layer = background.psdLayers.find((item) => item.id === layerId);
     if (!layer) return;
 
     Object.assign(layer, patch);
@@ -177,7 +176,7 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
 
     const session = getSceneSession();
     const background = normalizeSceneBackground({ ...session.background, type: 'layers' });
-    const layers = [...background.clipLayers];
+    const layers = [...background.psdLayers];
     const fromIndex = layers.findIndex((layer) => layer.id === fromId);
     const toIndex = layers.findIndex((layer) => layer.id === toId);
     if (fromIndex < 0 || toIndex < 0) return;
@@ -188,7 +187,7 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
       layer.order = index;
     });
 
-    background.clipLayers = layers;
+    background.psdLayers = layers;
     session.background = background;
     saveState();
   }
@@ -275,10 +274,10 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     const session = getSceneSession();
     const background = normalizeSceneBackground({ ...session.background, type: 'layers' });
     session.background = background;
-    const nextSignature = renderBackgroundLayerSignature(background.clipLayers);
+    const nextSignature = renderBackgroundLayerSignature(background.psdLayers);
     if (!force && nextSignature === lastRenderedSignature) return;
     lastRenderedSignature = nextSignature;
-    render(background.clipLayers);
+    render(background.psdLayers);
   }
 
   function setRefreshResult(button, label, ok) {
@@ -304,7 +303,7 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     if (!layers.length) {
       const empty = document.createElement('div');
       empty.className = 'part-empty';
-      empty.textContent = 'clip 레이어를 기다리는 중';
+      empty.textContent = 'PSD 레이어를 기다리는 중';
       backgroundLayerList.append(empty);
       return;
     }

@@ -6,8 +6,8 @@ const metricsCache = new WeakMap();
 
 export function preloadSceneBackground(background) {
   const normalized = normalizeSceneBackground(background);
-  if (normalized.clipPreview.enabled && normalized.clipPreview.url.trim()) getCachedImage(normalized.clipPreview.url);
-  normalized.clipLayers.forEach((layer) => {
+  if (normalized.psdPreview.enabled && normalized.psdPreview.url.trim()) getCachedImage(normalized.psdPreview.url);
+  normalized.psdLayers.forEach((layer) => {
     if (layer.enabled && layer.imageSrc.trim()) getCachedImage(layer.imageSrc);
   });
   if (normalized.type === 'image' && normalized.imageSrc.trim()) getCachedImage(normalized.imageSrc);
@@ -20,14 +20,14 @@ export function preloadSceneBackground(background) {
 
 export function drawSceneBackground(ctx, world, view, background) {
   const normalized = normalizeSceneBackground(background);
-  const hasClipBackground = hasActiveClipBackground(normalized);
+  const hasPsdBackground = hasActivePsdBackground(normalized);
 
   ctx.save();
   ctx.clearRect(0, 0, world.viewW, world.viewH);
   drawBaseColor(ctx, world, normalized.color);
-  drawClipBackgroundRoleLayers(ctx, world, view, normalized, ['back', 'ground']);
+  drawPsdBackgroundRoleLayers(ctx, world, view, normalized, ['back', 'ground']);
 
-  if (!hasClipBackground) {
+  if (!hasPsdBackground) {
     if (normalized.type === 'preset') drawPresetBackground(ctx, world, view, normalized);
     if (normalized.type === 'image') drawImageBackground(ctx, world, normalized);
     if (normalized.type === 'layers') drawLayeredBackground(ctx, world, view, normalized);
@@ -39,13 +39,13 @@ export function drawSceneBackground(ctx, world, view, background) {
 
 export function drawSceneForeground(ctx, world, view, background) {
   const normalized = normalizeSceneBackground(background);
-  drawClipBackgroundRoleLayers(ctx, world, view, normalized, ['front']);
+  drawPsdBackgroundRoleLayers(ctx, world, view, normalized, ['front']);
 }
 
-function drawClipBackgroundRoleLayers(ctx, world, view, background, roles) {
-  const layersWithImages = background.clipLayers.filter((layer) => layer.enabled && layer.imageSrc.trim());
+function drawPsdBackgroundRoleLayers(ctx, world, view, background, roles) {
+  const layersWithImages = background.psdLayers.filter((layer) => layer.enabled && layer.imageSrc.trim());
   if (!layersWithImages.length) {
-    if (roles.includes('back')) drawClipPreviewBackground(ctx, world, background);
+    if (roles.includes('back')) drawPsdPreviewBackground(ctx, world, background);
     return;
   }
 
@@ -53,15 +53,15 @@ function drawClipBackgroundRoleLayers(ctx, world, view, background, roles) {
   [...roleLayers].reverse().forEach((layer) => drawClipLayerImage(ctx, world, view, background, layer));
 }
 
-function hasActiveClipBackground(background) {
-  const hasLayer = background.clipLayers.some((layer) => layer.enabled && layer.imageSrc.trim());
-  return hasLayer || Boolean(background.clipPreview.enabled && background.clipPreview.url.trim());
+function hasActivePsdBackground(background) {
+  const hasLayer = background.psdLayers.some((layer) => layer.enabled && layer.imageSrc.trim());
+  return hasLayer || Boolean(background.psdPreview.enabled && background.psdPreview.url.trim());
 }
 
-function drawClipPreviewBackground(ctx, world, background) {
-  if (!background.clipPreview.enabled || !background.clipPreview.url.trim()) return;
+function drawPsdPreviewBackground(ctx, world, background) {
+  if (!background.psdPreview.enabled || !background.psdPreview.url.trim()) return;
 
-  const imageState = getCachedImage(background.clipPreview.url);
+  const imageState = getCachedImage(background.psdPreview.url);
   if (!imageState.loaded || imageState.error) return;
 
   drawCoverImage(ctx, world, imageState.image, { opacity: 1, offsetX: 0, offsetY: 0, scale: 1 });

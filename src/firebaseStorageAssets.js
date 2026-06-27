@@ -2,26 +2,26 @@ import { FIREBASE_PROJECT_STATE_CONFIG } from './firebaseConfig.js';
 
 const FIREBASE_STORAGE_BASE_URL = 'https://firebasestorage.googleapis.com/v0';
 
-export async function uploadSceneClipAssetsToFirebase(background) {
-  if (!isFirebaseStorageEnabled() || !background?.clipPreview) return false;
+export async function uploadScenePsdAssetsToFirebase(background) {
+  if (!isFirebaseStorageEnabled() || !background?.psdPreview) return false;
 
-  const version = background.clipPreview.updatedAt || Date.now();
+  const version = background.psdPreview.updatedAt || Date.now();
   const uploadTasks = [];
 
-  if (isLocalRuntimeAsset(background.clipPreview.url)) {
+  if (isLocalRuntimeAsset(background.psdPreview.url)) {
     uploadTasks.push(
       uploadAsset(
-        background.clipPreview.url,
-        objectPath(`psd/preview${extensionFromUrl(background.clipPreview.url)}`),
+        background.psdPreview.url,
+        objectPath(`psd/preview${extensionFromUrl(background.psdPreview.url)}`),
         version
       ).then((url) => {
-        background.clipPreview.url = url;
+        background.psdPreview.url = url;
       })
     );
   }
 
-  if (Array.isArray(background.clipLayers)) {
-    background.clipLayers.forEach((layer) => {
+  if (Array.isArray(background.psdLayers)) {
+    background.psdLayers.forEach((layer) => {
       if (!isLocalRuntimeAsset(layer?.imageSrc)) return;
       const extension = extensionFromUrl(layer.imageSrc);
       uploadTasks.push(

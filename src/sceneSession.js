@@ -1,3 +1,5 @@
+import { createDefaultStageRules, normalizeStageRules } from './stageRulesState.js';
+
 export const DEFAULT_SCENE_SESSION_ID = 'default';
 
 export const BACKGROUND_TYPES = [
@@ -9,7 +11,7 @@ export const BACKGROUND_TYPES = [
 ];
 
 export const BACKGROUND_LAYER_COUNT = 10;
-export const CLIP_LAYER_ROLES = ['back', 'ground', 'front'];
+export const PSD_LAYER_ROLES = ['back', 'ground', 'front'];
 export const BACKGROUND_LAYER_ASSETS = Array.from({ length: BACKGROUND_LAYER_COUNT }, (_, index) => {
   const number = String(index + 1).padStart(2, '0');
   return {
@@ -41,6 +43,7 @@ export function createDefaultSceneSession() {
     name: '기본 세션',
     background: createDefaultBackground(),
     world: createDefaultWorldSettings(),
+    stageRules: createDefaultStageRules(),
   };
 }
 
@@ -56,13 +59,13 @@ export function createDefaultBackground() {
     offsetX: 0,
     offsetY: 0,
     parallaxStrength: 1,
-    clipPreview: createDefaultClipPreviewBackground(),
-    clipLayers: [],
+    psdPreview: createDefaultPsdPreviewBackground(),
+    psdLayers: [],
     layers: createDefaultBackgroundLayers(),
   };
 }
 
-export function createDefaultClipPreviewBackground() {
+export function createDefaultPsdPreviewBackground() {
   return {
     enabled: false,
     url: '',
@@ -124,6 +127,7 @@ export function normalizeSceneSession(saved) {
     name: nonEmptyString(saved?.name) || defaults.name,
     background: normalizeSceneBackground(saved?.background),
     world: normalizeWorldSettings(saved?.world),
+    stageRules: normalizeStageRules(saved?.stageRules),
   };
 }
 
@@ -163,14 +167,14 @@ export function normalizeSceneBackground(saved) {
     offsetX: clampNumber(saved?.offsetX, -1200, 1200, defaults.offsetX),
     offsetY: clampNumber(saved?.offsetY, -1200, 1200, defaults.offsetY),
     parallaxStrength: clampNumber(saved?.parallaxStrength, 0, 2, defaults.parallaxStrength),
-    clipPreview: normalizeClipPreviewBackground(saved?.clipPreview),
-    clipLayers: normalizeClipBackgroundLayers(saved?.clipLayers),
+    psdPreview: normalizePsdPreviewBackground(saved?.psdPreview),
+    psdLayers: normalizePsdBackgroundLayers(saved?.psdLayers),
     layers: normalizeBackgroundLayers(saved?.layers),
   };
 }
 
-function normalizeClipPreviewBackground(saved) {
-  const defaults = createDefaultClipPreviewBackground();
+function normalizePsdPreviewBackground(saved) {
+  const defaults = createDefaultPsdPreviewBackground();
   return {
     enabled: Boolean(saved?.enabled),
     url: typeof saved?.url === 'string' ? saved.url : defaults.url,
@@ -200,24 +204,24 @@ export function normalizeBackgroundLayers(savedLayers) {
   });
 }
 
-export function normalizeClipBackgroundLayers(savedLayers) {
+export function normalizePsdBackgroundLayers(savedLayers) {
   if (!Array.isArray(savedLayers)) return [];
-  return savedLayers.map((layer, index) => normalizeClipBackgroundLayer(layer, index)).filter((layer) => layer.id);
+  return savedLayers.map((layer, index) => normalizePsdBackgroundLayer(layer, index)).filter((layer) => layer.id);
 }
 
-export function getActiveClipGroundLayer(background) {
+export function getActivePsdGroundLayer(background) {
   const normalized = normalizeSceneBackground(background);
   return (
-    normalized.clipLayers.find((layer) => layer.enabled && layer.role === 'ground' && layer.imageSrc.trim()) || null
+    normalized.psdLayers.find((layer) => layer.enabled && layer.role === 'ground' && layer.imageSrc.trim()) || null
   );
 }
 
-export function usesClipGround(background) {
-  return Boolean(getActiveClipGroundLayer(background));
+export function usesPsdGround(background) {
+  return Boolean(getActivePsdGroundLayer(background));
 }
 
-export function mergeClipBackgroundLayers(savedLayers, manifestLayers) {
-  const savedLayersNormalized = normalizeClipBackgroundLayers(savedLayers);
+export function mergePsdBackgroundLayers(savedLayers, manifestLayers) {
+  const savedLayersNormalized = normalizePsdBackgroundLayers(savedLayers);
   const savedById = new Map(savedLayersNormalized.map((layer) => [layer.id, layer]));
   const savedByName = uniqueLayerNameMap(savedLayersNormalized);
   const manifestList = Array.isArray(manifestLayers) ? manifestLayers : [];
@@ -229,7 +233,7 @@ export function mergeClipBackgroundLayers(savedLayers, manifestLayers) {
       const saved = savedById.get(id) || savedByName.get(manifestName);
       const hasLayerImage = typeof manifestLayer?.image === 'string' && manifestLayer.image.trim();
       const savedHadLayerImage = typeof saved?.imageSrc === 'string' && saved.imageSrc.trim();
-      return normalizeClipBackgroundLayer(
+      return normalizePsdBackgroundLayer(
         {
           ...saved,
           id,
@@ -258,10 +262,10 @@ function uniqueLayerNameMap(layers) {
   return new Map(layers.filter((layer) => counts.get(layer.name) === 1).map((layer) => [layer.name, layer]));
 }
 
-function normalizeClipBackgroundLayer(layer, fallbackOrder) {
+function normalizePsdBackgroundLayer(layer, fallbackOrder) {
   const id = nonEmptyString(layer?.id);
   if (!id) return { id: '' };
-  const role = CLIP_LAYER_ROLES.includes(layer?.role) ? layer.role : 'back';
+  const role = PSD_LAYER_ROLES.includes(layer?.role) ? layer.role : 'back';
   return {
     id,
     sourceId: Number.isFinite(layer?.sourceId) ? layer.sourceId : null,
@@ -269,12 +273,12 @@ function normalizeClipBackgroundLayer(layer, fallbackOrder) {
     imageSrc: typeof layer?.imageSrc === 'string' ? layer.imageSrc : '',
     role,
     enabled: layer?.enabled !== false,
-    influence: clampNumber(layer?.influence, 0, 2, defaultClipLayerInfluence(fallbackOrder)),
+    influence: clampNumber(layer?.influence, 0, 2, defaultPsdLayerInfluence(fallbackOrder)),
     verticalInfluence: clampNumber(
       layer?.verticalInfluence,
       0,
       2,
-      defaultClipLayerVerticalInfluence(role, fallbackOrder)
+      defaultPsdLayerVerticalInfluence(role, fallbackOrder)
     ),
     offsetX: clampNumber(layer?.offsetX, -1200, 1200, 0),
     offsetY: clampNumber(layer?.offsetY, -1200, 1200, 0),
@@ -284,11 +288,11 @@ function normalizeClipBackgroundLayer(layer, fallbackOrder) {
   };
 }
 
-function defaultClipLayerInfluence(index) {
+function defaultPsdLayerInfluence(index) {
   return clampNumber((index + 1) * 0.08, 0, 2, 0.08);
 }
 
-function defaultClipLayerVerticalInfluence(role, index) {
+function defaultPsdLayerVerticalInfluence(role, index) {
   if (role === 'ground') return 1;
   if (role === 'front') return 0.45;
   return clampNumber((index + 1) * 0.035, 0, 0.4, 0.04);

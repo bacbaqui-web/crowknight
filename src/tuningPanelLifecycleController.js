@@ -7,7 +7,7 @@ export function createTuningPanelLifecycleController({
   elements,
   actors,
   playerActor,
-  selectedPosePartKeys,
+  selectedPoseParts,
   getSelectedActor,
   setActiveActor,
   setActivePartKey,
@@ -48,7 +48,7 @@ export function createTuningPanelLifecycleController({
   }
 
   function clearPanelSelectionState({ clearCopiedEffect = false } = {}) {
-    selectedPosePartKeys.clear();
+    selectedPoseParts.clear();
     setActivePartKeyGlobal(null);
     setActivePartKey(null);
     setActivePosePartKey(null);

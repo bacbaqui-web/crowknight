@@ -1,5 +1,5 @@
-import { refreshClipBackground } from './clipBackgroundRuntime.js';
-import { uploadSceneClipAssetsToFirebase } from './firebaseStorageAssets.js';
+import { refreshPsdBackground } from './psdBackgroundRuntime.js';
+import { uploadScenePsdAssetsToFirebase } from './firebaseStorageAssets.js';
 import {
   downloadSavedStateFromFirebase,
   saveGameState,
@@ -41,17 +41,17 @@ export function createProjectStateController({
     return downloaded;
   }
 
-  async function refreshClipAndUploadSettings({ clipFile = null } = {}) {
-    const refreshed = await refreshClipBackground({
+  async function refreshPsdAndUploadSettings({ psdFile = null } = {}) {
+    const refreshed = await refreshPsdBackground({
       getSceneSession,
       onUpdate: onSceneBackgroundUpdate,
       force: true,
-      clipFile,
+      psdFile,
     });
     if (!refreshed) return false;
 
     const sceneSession = getSceneSession();
-    const uploadedAssets = await uploadSceneClipAssetsToFirebase(sceneSession.background);
+    const uploadedAssets = await uploadScenePsdAssetsToFirebase(sceneSession.background);
     if (!uploadedAssets) return false;
 
     onSceneBackgroundUpdate(sceneSession.background);
@@ -60,7 +60,7 @@ export function createProjectStateController({
 
   return {
     downloadSettingsFromFirebase,
-    refreshClipAndUploadSettings,
+    refreshPsdAndUploadSettings,
     saveState,
     uploadSettingsToFirebase,
   };

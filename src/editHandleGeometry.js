@@ -128,15 +128,15 @@ export function createEffectEditHandleInfo(ctx, frame, key, placementMatrix = nu
 
 export function createGroupEditHandleGeometry({
   editFocusContext,
-  selectedPosePartKeys,
+  selectedPoseParts,
   poseFrameSelectionActive,
   editHandles,
   hitRegions,
   groupEditValues,
 }) {
-  if (editFocusContext !== 'pose' || selectedPosePartKeys.size < 2 || !poseFrameSelectionActive) return null;
+  if (editFocusContext !== 'pose' || selectedPoseParts.size() < 2 || !poseFrameSelectionActive) return null;
 
-  const parts = [...selectedPosePartKeys];
+  const parts = selectedPoseParts.values();
   const infos = parts.map((part) => editHandles?.[part]).filter(Boolean);
   if (infos.length < 2) return null;
 

@@ -15,45 +15,23 @@ export function activeEditPartKeyForContext(context, editFocusPartKey) {
   return editFocusPartKey;
 }
 
-export function activeEditPartKeysForContext({ context, editFocusContext, selectedPosePartKeys, editFocusPartKey }) {
+export function activeEditPartKeysForContext({ context, editFocusContext, selectedPoseParts, editFocusPartKey }) {
   if (!context) return [];
-  if (editFocusContext === 'pose' && selectedPosePartKeys.size > 1) {
-    return [...selectedPosePartKeys];
+  if (editFocusContext === 'pose' && selectedPoseParts.size() > 1) {
+    return selectedPoseParts.values();
   }
   return editFocusPartKey ? [editFocusPartKey] : [];
 }
 
-export function togglePosePartSelection(selectedPosePartKeys, partKey) {
-  if (selectedPosePartKeys.has(partKey)) {
-    selectedPosePartKeys.delete(partKey);
-    return;
-  }
-  selectedPosePartKeys.add(partKey);
-}
-
-export function selectOnlyPosePart(selectedPosePartKeys, partKey) {
-  selectedPosePartKeys.clear();
-  selectedPosePartKeys.add(partKey);
-  return partKey;
-}
-
-export function clearPosePartSelectionState(selectedPosePartKeys, masterPartKey) {
-  selectedPosePartKeys.clear();
-  return {
-    activePosePartKey: null,
-    editFocusPartKey: masterPartKey,
-  };
-}
-
-export function posePartFocusAfterMultiSelect(selectedPosePartKeys, partKey, masterPartKey) {
-  const activePosePartKey = selectedPosePartKeys.size
-    ? selectedPosePartKeys.has(partKey)
+export function posePartFocusAfterMultiSelect(selectedPoseParts, partKey, masterPartKey) {
+  const activePosePartKey = selectedPoseParts.size()
+    ? selectedPoseParts.has(partKey)
       ? partKey
-      : [...selectedPosePartKeys].at(-1) || null
+      : selectedPoseParts.values().at(-1) || null
     : null;
 
   return {
     activePosePartKey,
-    editFocusPartKey: selectedPosePartKeys.size > 1 ? activePosePartKey : activePosePartKey || masterPartKey,
+    editFocusPartKey: selectedPoseParts.size() > 1 ? activePosePartKey : activePosePartKey || masterPartKey,
   };
 }

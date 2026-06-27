@@ -1,12 +1,5 @@
 import { syncActorHealthCapacity } from './actorTuning.js';
-import { bindNumberDragInput } from './tuningNumberInputs.js';
-import { syncNumericFields } from './tuningPanelDom.js';
-import {
-  activeEditPartKeyForContext,
-  activeEditPartKeysForContext,
-  createDefaultGroupEditValues,
-  resetGroupTransformValues as resetGroupTransformValueState,
-} from './panelEditState.js';
+import { activeEditPartKeyForContext, activeEditPartKeysForContext } from './panelEditState.js';
 import { syncActorAnchorDebugPart } from './previewState.js';
 import { renderEditHandles as renderEditHandlesView } from './editHandleRenderer.js';
 import {
@@ -14,21 +7,21 @@ import {
   tuningEditHandleGeometry,
   tuningGroupEditHandleGeometry,
 } from './tuningEditHandleGeometry.js';
-import { initializeTuningPanelControls } from './tuningPanelControlSetup.js';
 import { createTuningPanelUndoState } from './tuningPanelUndoState.js';
-import { createTuningPanelCanvasController } from './tuningPanelCanvasController.js';
-import { createTuningPanelPartController } from './tuningPanelPartController.js';
-import { createTuningPanelLifecycleController } from './tuningPanelLifecycleController.js';
 import { currentSettingsEditContext, isSettingsPanelOpen } from './settingsPanelState.js';
 import { drawTuningPanelDebugBoxes } from './tuningPanelDebugView.js';
 import { handlePanelKeyboardShortcut } from './tuningPanelShortcuts.js';
-import { TUNING_FIELDS } from './gameConfig.js';
-import { createBackgroundPanelController } from './backgroundPanelController.js';
 import { bindTuningPanelAssetActions } from './tuningPanelAssetActions.js';
-import { createTuningPanelTimelines } from './tuningPanelTimelines.js';
-import { moveSelectedTuningLayer, renderTuningLayerOrder } from './tuningPanelLayerOrder.js';
-import { createTuningPanelTimelineFrameActions } from './tuningPanelTimelineFrameActions.js';
+import { moveSelectedTuningLayer } from './tuningPanelLayerOrder.js';
 import { createTuningPanelBootstrap } from './tuningPanelBootstrap.js';
+import { createTuningPanelComposition } from './tuningPanelComposition.js';
+import { bindTuningPanelControls, openTuningPanelEffectSection } from './tuningPanelControlBindings.js';
+import { createTuningPanelEditingState } from './tuningPanelEditingState.js';
+import { createTuningPanelGroupEditState } from './tuningPanelGroupEditState.js';
+import { createTuningPanelSelectionState } from './tuningPanelSelectionState.js';
+import { createTuningPanelSync } from './tuningPanelSync.js';
+import { createTuningPanelWorkflowController } from './tuningPanelWorkflowController.js';
+import { createTuningPanelWorkflowSessionState } from './tuningPanelWorkflowSessionState.js';
 
 export function createTuningPanel({
   canvas,
@@ -42,7 +35,7 @@ export function createTuningPanel({
   saveState,
   uploadSettings,
   downloadSettings,
-  refreshClipSettings,
+  refreshPsdSettings,
 }) {
   let selectedActor = getSelectedActor();
 
@@ -51,13 +44,12 @@ export function createTuningPanel({
     setSelectedActor(actor);
   }
 
-  let editFocusPartKey = null;
-  let editFocusContext = null;
+  const selectionState = createTuningPanelSelectionState();
+  const editingState = createTuningPanelEditingState();
+  const groupEditState = createTuningPanelGroupEditState();
+  const workflowSessionState = createTuningPanelWorkflowSessionState();
   let editHandleHover = null;
   let editHandleActiveMode = null;
-  let activePartKeyGlobal = null;
-  let selectedPosePartKeysGlobal = new Set();
-  let groupEditValues = createDefaultGroupEditValues();
   let undoTuningChangeGlobal = null;
   let poseFrameCopyGlobal = null;
   let poseFramePasteGlobal = null;
@@ -66,28 +58,23 @@ export function createTuningPanel({
   let effectEditHandle = null;
 
   function activeEditPartKey() {
-    return activeEditPartKeyForContext(currentOpenEditContext(), editFocusPartKey);
+    return activeEditPartKeyForContext(currentOpenEditContext(), editingState.getEditFocusPartKey());
   }
 
   function activeEditPartKeys() {
     return activeEditPartKeysForContext({
       context: currentOpenEditContext(),
-      editFocusContext,
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
-      editFocusPartKey,
+      editFocusContext: editingState.getEditFocusContext(),
+      selectedPoseParts: selectionState.poseParts,
+      editFocusPartKey: editingState.getEditFocusPartKey(),
     });
   }
 
-  function resetGroupEditValues() {
-    groupEditValues = createDefaultGroupEditValues();
-  }
-
-  function resetGroupTransformValues() {
-    resetGroupTransformValueState(groupEditValues);
-  }
-
   function currentOpenEditContext() {
-    return currentSettingsEditContext({ editFocusContext, activePartKey: activePartKeyGlobal });
+    return currentSettingsEditContext({
+      editFocusContext: editingState.getEditFocusContext(),
+      activePartKey: selectionState.getActivePartKeyGlobal(),
+    });
   }
 
   function drawSettingsDebugBoxes() {
@@ -100,22 +87,22 @@ export function createTuningPanel({
       isPanelOpen: isSettingsPanelOpen(),
       openEditContext: currentOpenEditContext(),
       effectEditHandle,
-      editFocusPartKey,
+      editFocusPartKey: editingState.getEditFocusPartKey(),
       selectedActor,
       poseFrameSelectionActive,
-      editFocusContext,
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
-      groupEditValues,
+      editFocusContext: editingState.getEditFocusContext(),
+      selectedPoseParts: selectionState.poseParts,
+      groupEditValues: groupEditState.getValues(),
     });
   }
 
   function getGroupEditHandleGeometry() {
     return tuningGroupEditHandleGeometry({
-      editFocusContext,
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
+      editFocusContext: editingState.getEditFocusContext(),
+      selectedPoseParts: selectionState.poseParts,
       poseFrameSelectionActive,
       selectedActor,
-      groupEditValues,
+      groupEditValues: groupEditState.getValues(),
     });
   }
 
@@ -128,29 +115,27 @@ export function createTuningPanel({
     if (!bootstrap) return;
 
     const { panel, elements: panelElements, syncPanelToggle } = bootstrap;
-    const { actorSelect, actorName, partSection, poseSection, effectSection, poseSelect, effectSelect, layerOrder } =
-      panelElements;
-    let editContext = 'part';
-    let activePartKey = null;
-    let activePosePartKey = null;
-    let poseTimeline = null;
-    let effectTimeline = null;
-    let partController = null;
-    let backgroundController = null;
-    let canvasController = null;
-    let lifecycleController = null;
+    const { layerOrder } = panelElements;
+    let poseTimeline;
+    let effectTimeline;
+    let partController;
+    let backgroundController;
+    let canvasController;
+    let lifecycleController;
+    let stageRulesController;
+    let stageRulesPanelController;
     let timelineFrameActions;
+    let panelSync = null;
+    let workflowController = null;
     const undoState = createTuningPanelUndoState({
       actors,
       getSelectedActor: () => selectedActor,
       setSelectedActor: (actor) => {
         selectedActor = actor;
       },
-      getGroupEditValues: () => groupEditValues,
-      setGroupEditValues: (value) => {
-        groupEditValues = value;
-      },
-      createDefaultGroupEditValues,
+      getGroupEditValues: groupEditState.getValues,
+      setGroupEditValues: groupEditState.setValues,
+      createDefaultGroupEditValues: groupEditState.createDefaultValues,
       applyActorTuning: (actor) => actor.player.applyTuning(actor.tuning),
       saveState,
       syncPanel,
@@ -159,41 +144,78 @@ export function createTuningPanel({
     const { beginUndoSnapshot, commitUndoSnapshot, pushUndoSnapshot, undoTuningChange } = undoState;
     undoTuningChangeGlobal = undoTuningChange;
 
-    const fields = TUNING_FIELDS;
     const scrubCallbacks = {
       beginChange: beginUndoSnapshot,
       commitChange: commitUndoSnapshot,
     };
-    const bindNumberDrag = (number, peer, updateValue) =>
-      bindNumberDragInput(number, peer, updateValue, {
-        beginChange: beginUndoSnapshot,
-        commitChange: commitUndoSnapshot,
-      });
-    ({ poseTimeline, effectTimeline } = createTuningPanelTimelines({
+    ({
+      poseTimeline,
+      effectTimeline,
+      timelineFrameActions,
+      backgroundController,
+      partController,
+      stageRulesController,
+      stageRulesPanelController,
+      canvasController,
+      lifecycleController,
+    } = createTuningPanelComposition({
       actors,
+      applySelected,
+      beginUndoSnapshot,
+      canvas,
+      clearEditHandleState,
+      commitUndoSnapshot,
       effectAssets,
       elements: panelElements,
       undoState,
       scrubCallbacks,
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
+      getActivePartKey: selectionState.getActivePartKey,
+      getActivePartKeyGlobal: selectionState.getActivePartKeyGlobal,
+      getActivePosePartKey: selectionState.getActivePosePartKey,
+      getEditFocusContext: editingState.getEditFocusContext,
+      getEditFocusPartKey: editingState.getEditFocusPartKey,
+      getEditContext: selectionState.getEditContext,
+      getEditHandleAt,
+      getGroupEditHandleGeometry,
+      getGroupEditValues: groupEditState.getValues,
+      getOpenEditContext: currentOpenEditContext,
+      getSceneSession,
       getSelectedActor: () => selectedActor,
-      getActivePosePartKey: () => activePosePartKey,
+      panel,
+      playerActor,
+      pushUndoSnapshot,
+      refreshPsdSettings,
+      resetGroupEditValues: groupEditState.resetValues,
+      resetGroupTransformValues: groupEditState.resetTransformValues,
+      saveState,
+      selectedPoseParts: selectionState.poseParts,
+      setActiveActor,
+      setActivePartKey: selectionState.setActivePartKey,
+      setActivePartKeyGlobal: selectionState.setActivePartKeyGlobal,
+      setActivePosePartKey: selectionState.setActivePosePartKey,
       setFrameSelectionActive: (value) => {
         poseFrameSelectionActive = value;
       },
-      setEditContext: (value) => {
-        editContext = value;
+      setEditContext: selectionState.setEditContext,
+      setEditFocusContext: editingState.setEditFocusContext,
+      setEditFocusPartKey: editingState.setEditFocusPartKey,
+      setEditHandleActiveMode: (value) => {
+        editHandleActiveMode = value;
       },
-      resetGroupEditValues,
-      renderPosePartFields: () => partController?.renderPosePartFields(),
-      beginUndoSnapshot,
-      commitUndoSnapshot,
-      applySelected,
+      setEditHandleHover: (value) => {
+        editHandleHover = value;
+      },
+      syncAnchorDebugPart,
+      syncPanel,
+      syncPanelToggle,
     }));
-    timelineFrameActions = createTuningPanelTimelineFrameActions({
-      getOpenEditContext: currentOpenEditContext,
-      getPoseTimeline: () => poseTimeline,
-      getEffectTimeline: () => effectTimeline,
+    undoState.setStageRulesAccessors({
+      getStageRules: stageRulesController.getStageRules,
+      setStageRules: (stageRules) => {
+        const restoredStageRules = stageRulesController.setStageRules(stageRules, { notify: false });
+        const session = getSceneSession();
+        if (session) session.stageRules = restoredStageRules;
+      },
     });
     poseFrameCopyGlobal = timelineFrameActions.copyCurrentFrame;
     poseFramePasteGlobal = timelineFrameActions.pasteCurrentFrame;
@@ -209,194 +231,46 @@ export function createTuningPanel({
       uploadSettings,
       downloadSettings,
     });
-    backgroundController = createBackgroundPanelController({
+    panelSync = createTuningPanelSync({
       elements: panelElements,
-      getSceneSession,
-      saveState,
-      refreshClipSettings,
-    });
-    partController = createTuningPanelPartController({
-      elements: panelElements,
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
-      scrubCallbacks,
       getSelectedActor: () => selectedActor,
-      getActivePartKey: () => activePartKey,
-      setActivePartKey: (value) => {
-        activePartKey = value;
-      },
-      setActivePartKeyGlobal: (value) => {
-        activePartKeyGlobal = value;
-      },
-      getActivePosePartKey: () => activePosePartKey,
-      setActivePosePartKey: (value) => {
-        activePosePartKey = value;
-      },
-      getEditFocusPartKey: () => editFocusPartKey,
-      setEditContext: (value) => {
-        editContext = value;
-      },
-      getEditFocusContext: () => editFocusContext,
-      setEditFocusContext: (value) => {
-        editFocusContext = value;
-      },
-      setEditFocusPartKey: (value) => {
-        editFocusPartKey = value;
-      },
-      getGroupEditValues: () => groupEditValues,
-      resetGroupEditValues,
-      clearEditHandleState,
+      lifecycleController,
+      partController,
+      effectTimeline,
+      backgroundController,
+      stageRulesPanelController,
+      poseTimeline,
       syncAnchorDebugPart,
-      poseTimeline,
-      effectTimeline,
-      getCanvasController: () => canvasController,
-      beginUndoSnapshot,
-      applySelected,
     });
-    canvasController = createTuningPanelCanvasController({
-      canvas,
+    bindTuningPanelControls({
+      actors,
       panel,
-      sections: {
-        part: partSection,
-        pose: poseSection,
-        effect: effectSection,
-      },
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
-      getSelectedActor: () => selectedActor,
-      getEditFocusPartKey: () => editFocusPartKey,
-      setEditFocusPartKey: (value) => {
-        editFocusPartKey = value;
-      },
-      getEditFocusContext: () => editFocusContext,
-      getEditContext: () => editContext,
-      setEditContext: (value) => {
-        editContext = value;
-      },
-      getActivePartKey: () => activePartKeyGlobal,
-      getGroupEditValues: () => groupEditValues,
-      getEditHandleAt,
-      getGroupEditHandleGeometry,
-      setEditHandleHover: (value) => {
-        editHandleHover = value;
-      },
-      setEditHandleActiveMode: (value) => {
-        editHandleActiveMode = value;
-      },
-      resetGroupTransformValues,
-      poseTimeline,
-      effectTimeline,
-      getPoseKey: () => poseSelect.value,
-      getEffectKey: () => effectSelect.value,
+      canvas,
+      elements: panelElements,
       applySelected,
-      saveState,
-      renderPartFields: partController.renderPartFields,
-      renderPosePartFields: partController.renderPosePartFields,
-      pushUndoSnapshot,
       beginUndoSnapshot,
       commitUndoSnapshot,
-    });
-    lifecycleController = createTuningPanelLifecycleController({
-      elements: panelElements,
-      actors,
-      playerActor,
-      selectedPosePartKeys: selectedPosePartKeysGlobal,
       getSelectedActor: () => selectedActor,
-      setActiveActor,
-      setActivePartKey: (value) => {
-        activePartKey = value;
-      },
-      setActivePartKeyGlobal: (value) => {
-        activePartKeyGlobal = value;
-      },
-      setActivePosePartKey: (value) => {
-        activePosePartKey = value;
-      },
-      setEditContext: (value) => {
-        editContext = value;
-      },
-      setEditFocusPartKey: (value) => {
-        editFocusPartKey = value;
-      },
-      setEditFocusContext: (value) => {
-        editFocusContext = value;
-      },
-      resetGroupEditValues,
-      clearEditHandleState,
+      partController,
+      lifecycleController,
       poseTimeline,
       effectTimeline,
-      partController,
-      syncPanel,
-      syncPanelToggle,
-      pushUndoSnapshot,
-      saveState,
+      timelineFrameActions,
+      canvasController,
+      moveSelectedLayer,
+      undoTuningChange,
+      setEditContext: selectionState.setEditContext,
+      setEditFocusContext: editingState.setEditFocusContext,
+      setEditFocusPartKey: editingState.setEditFocusPartKey,
     });
-
-    initializeTuningPanelControls({
+    workflowController = createTuningPanelWorkflowController({
       panel,
-      canvas,
-      actors,
-      rig: selectedActor.tuning.rig,
-      fields,
-      elements: panelElements,
-      bindNumberDrag,
-      callbacks: {
-        beginUndoSnapshot,
-        getTuning: () => selectedActor.tuning,
-        applySelected,
-        handleActorChange: lifecycleController.handleActorChange,
-        handleActorNameInput: lifecycleController.handleActorNameInput,
-        handlePartChange: partController.handlePartChange,
-        handlePoseChange: partController.handlePoseChange,
-        handleEffectChange: lifecycleController.handleEffectChange,
-        handlePosePartChange: partController.handlePosePartChange,
-        selectPickerPart: partController.selectPickerPart,
-        openPartSection: partController.openPartSection,
-        closePartSection: () => partController.clearPartSelection('part'),
-        openPoseSection: partController.openPoseSection,
-        closePoseSection: () => partController.clearPartSelection('pose'),
-        openEffectSection: () => {
-          partController.closeEditSection('part');
-          partController.closeEditSection('pose');
-          editContext = 'effect';
-          editFocusContext = null;
-          editFocusPartKey = null;
-          effectTimeline.ensureActiveFrame();
-          effectTimeline.renderFields();
-          effectTimeline.syncPreview();
-        },
-        clearEffectSelection: effectTimeline.clearSelection,
-        updatePoseSetting: poseTimeline.updateSetting,
-        commitUndoSnapshot,
-        updatePosePlaybackRate: poseTimeline.updatePlaybackRate,
-        stepPoseDuration: poseTimeline.stepDuration,
-        togglePosePlayback: poseTimeline.togglePlayback,
-        togglePosePlaybackMode: poseTimeline.togglePlaybackMode,
-        copyActivePoseFrame: poseTimeline.copyFrame,
-        pasteActivePoseFrame: poseTimeline.pasteFrame,
-        undoTuningChange,
-        addPoseKeyframe: poseTimeline.addKeyframe,
-        deletePoseKeyframe: poseTimeline.deleteKeyframe,
-        resetCurrentPoseAnimation: poseTimeline.resetAnimation,
-        updateEffectSetting: effectTimeline.updateSetting,
-        updateEffectPlaybackRate: effectTimeline.updatePlaybackRate,
-        stepEffectDuration: effectTimeline.stepDuration,
-        toggleEffectPlayback: effectTimeline.togglePlayback,
-        toggleEffectPlaybackMode: effectTimeline.togglePlaybackMode,
-        copyActiveEffectFrame: effectTimeline.copyFrame,
-        pasteActiveEffectFrame: effectTimeline.pasteFrame,
-        addEffectKeyframe: effectTimeline.addKeyframe,
-        deleteEffectKeyframe: effectTimeline.deleteKeyframe,
-        resetCurrentEffectAnimation: effectTimeline.resetAnimation,
-        moveSelectedLayer,
-        openPanel: lifecycleController.openPanel,
-        closePanel: lifecycleController.closePanel,
-        copyCurrentFrame: timelineFrameActions.copyCurrentFrame,
-        pasteCurrentFrame: timelineFrameActions.pasteCurrentFrame,
-        hasFrameSelection: timelineFrameActions.hasCurrentFrameSelection,
-        resetSelectedActorTuning: lifecycleController.resetSelectedActorTuning,
-        onCanvasPointerDown: canvasController.onPointerDown,
-        onCanvasPointerMove: canvasController.onPointerMove,
-        endCanvasDrag: canvasController.endDrag,
-      },
+      getActiveSession: workflowSessionState.getActiveSession,
+      setActiveSession: workflowSessionState.setActiveSession,
+      enterSession: enterWorkflowSession,
+      exitSession: exitWorkflowSession,
+      syncAllPanels: () => panelSync?.sync(),
+      syncSessionPanels: (session) => panelSync?.syncSession(session),
     });
 
     function clearEditHandleState() {
@@ -406,11 +280,11 @@ export function createTuningPanel({
     }
 
     function syncAnchorDebugPart() {
-      syncActorAnchorDebugPart(actors, selectedActor, selectedPosePartKeysGlobal.size > 1 ? null : editFocusPartKey);
-    }
-
-    function renderLayerOrder(selectedValue = layerOrder.value) {
-      renderTuningLayerOrder(layerOrder, selectedActor, selectedValue);
+      syncActorAnchorDebugPart(
+        actors,
+        selectedActor,
+        selectionState.poseParts.size() > 1 ? null : editingState.getEditFocusPartKey()
+      );
     }
 
     function moveSelectedLayer(direction) {
@@ -434,22 +308,52 @@ export function createTuningPanel({
     }
 
     function syncPanel() {
-      actorSelect.value = selectedActor.id;
-      actorName.value = selectedActor.name;
-      lifecycleController.syncActorOptions();
+      workflowController?.syncAll();
+    }
 
-      syncNumericFields(fields, selectedActor.tuning);
+    function enterWorkflowSession(session) {
+      if (session === 'setup') enterSetupWorkflowSession();
+      else if (session === 'animation') enterAnimationWorkflowSession();
+      else if (session === 'effect') enterEffectWorkflowSession();
+      else if (session === 'stage') enterStageWorkflowSession();
+    }
 
-      partController.renderPartFields();
-      partController.renderPosePartFields();
-      effectTimeline.renderFields();
-      backgroundController.sync();
-      partController.syncMotionRows();
-      partController.syncPartPickers();
-      syncAnchorDebugPart();
-      poseTimeline.syncPreview();
-      effectTimeline.syncPreview();
-      renderLayerOrder();
+    function exitWorkflowSession(session, nextSession) {
+      if (session === 'animation' && nextSession !== 'animation') poseTimeline?.stopPreview();
+      if (session === 'effect' && nextSession !== 'effect') effectTimeline?.stopPreview();
+      clearEditHandleState();
+    }
+
+    function enterSetupWorkflowSession() {
+      openWorkflowSection(panelElements.collisionSection);
+      openWorkflowSection(panelElements.layerSection);
+    }
+
+    function enterAnimationWorkflowSession() {
+      openWorkflowSection(panelElements.poseSection, partController.openPoseSection);
+    }
+
+    function enterEffectWorkflowSession() {
+      openWorkflowSection(panelElements.effectSection, () =>
+        openTuningPanelEffectSection({
+          partController,
+          effectTimeline,
+          setEditContext: selectionState.setEditContext,
+          setEditFocusContext: editingState.setEditFocusContext,
+          setEditFocusPartKey: editingState.setEditFocusPartKey,
+        })
+      );
+    }
+
+    function enterStageWorkflowSession() {
+      openWorkflowSection(panelElements.sceneSection);
+      openWorkflowSection(panelElements.progressionSection);
+    }
+
+    function openWorkflowSection(section, onOpen) {
+      if (!section) return;
+      section.classList.add('is-open');
+      onOpen?.();
     }
 
     syncPanel();

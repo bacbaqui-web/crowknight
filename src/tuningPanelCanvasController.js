@@ -26,7 +26,7 @@ export function createTuningPanelCanvasController({
   canvas,
   panel,
   sections,
-  selectedPosePartKeys,
+  selectedPoseParts,
   getSelectedActor,
   getEditFocusPartKey,
   setEditFocusPartKey,
@@ -233,7 +233,7 @@ export function createTuningPanelCanvasController({
   }
 
   function applyCurrentGroupOpacity(opacity) {
-    selectedPosePartKeys.forEach((part) => {
+    selectedPoseParts.forEach((part) => {
       ensurePoseOffset(getSelectedActor().tuning, getPoseKey(), part);
       poseTimeline.writeFrameValue(part, 'opacity', opacity);
     });

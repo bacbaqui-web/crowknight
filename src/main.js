@@ -64,7 +64,7 @@ const actors = await createActors(savedState, world);
 const effectAssets = await loadEffectAssets();
 const playerActor = actors[0];
 const particleEffects = createParticleEffects({ actors, world, ctx });
-const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshClipAndUploadSettings } =
+const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshPsdAndUploadSettings } =
   createProjectStateController({
     actors,
     world,
@@ -135,7 +135,7 @@ const tuningPanel = createTuningPanel({
   saveState,
   uploadSettings: uploadSettingsToFirebase,
   downloadSettings: downloadSettingsFromFirebase,
-  refreshClipSettings: refreshClipAndUploadSettings,
+  refreshPsdSettings: refreshPsdAndUploadSettings,
 });
 bindKeyboardControls({
   keys,

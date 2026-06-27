@@ -4,12 +4,7 @@ import { readPartFieldDisplayValue } from './tuningFieldValues.js';
 import { emptyPartMessage, markPartPicker, renderPosePartHeader } from './tuningPanelDom.js';
 import { isMasterPart } from './tuningLabels.js';
 import { partPositionSources, poseMotionGroups } from './tuningParts.js';
-import {
-  clearPosePartSelectionState,
-  posePartFocusAfterMultiSelect,
-  selectOnlyPosePart,
-  togglePosePartSelection,
-} from './panelEditState.js';
+import { posePartFocusAfterMultiSelect } from './panelEditState.js';
 import { updateRigPartValue } from './canvasVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import { applyGroupPoseEditValue } from './tuningGroupPoseEdit.js';
@@ -17,7 +12,7 @@ import { MASTER_PART_KEY } from './gameConfig.js';
 
 export function createTuningPanelPartController({
   elements,
-  selectedPosePartKeys,
+  selectedPoseParts,
   scrubCallbacks,
   getSelectedActor,
   getActivePartKey,
@@ -121,12 +116,12 @@ export function createTuningPanelPartController({
   }
 
   function clearPosePartSelection() {
-    const nextSelection = clearPosePartSelectionState(selectedPosePartKeys, MASTER_PART_KEY);
-    setActivePosePartKey(nextSelection.activePosePartKey);
+    selectedPoseParts.clear();
+    setActivePosePartKey(null);
     resetGroupEditValues();
     setEditContext('pose');
     setEditFocusContext('pose');
-    setEditFocusPartKey(nextSelection.editFocusPartKey);
+    setEditFocusPartKey(MASTER_PART_KEY);
     renderPosePartFields();
     poseTimeline.syncPreview();
   }
@@ -145,7 +140,7 @@ export function createTuningPanelPartController({
   function togglePosePartMultiSelection(partKey) {
     setEditContext('pose');
     setEditFocusContext('pose');
-    togglePosePartSelection(selectedPosePartKeys, partKey);
+    selectedPoseParts.toggle(partKey);
     resetGroupEditValues();
 
     syncActivePosePartAfterMultiSelect(partKey);
@@ -158,20 +153,20 @@ export function createTuningPanelPartController({
 
   function selectSinglePosePart(partKey) {
     setEditContext('pose');
-    setActivePosePartKey(selectOnlyPosePart(selectedPosePartKeys, partKey));
+    setActivePosePartKey(selectedPoseParts.selectOnly(partKey));
     resetGroupEditValues();
     posePartSelect.value = partKey;
   }
 
   function syncActivePosePartAfterMultiSelect(partKey) {
-    const nextFocus = posePartFocusAfterMultiSelect(selectedPosePartKeys, partKey, MASTER_PART_KEY);
+    const nextFocus = posePartFocusAfterMultiSelect(selectedPoseParts, partKey, MASTER_PART_KEY);
     setActivePosePartKey(nextFocus.activePosePartKey);
     setEditFocusPartKey(nextFocus.editFocusPartKey);
   }
 
   function syncPartPickers() {
     markPartPicker(partPicker, getActivePartKey());
-    markPartPicker(posePartPicker, getActivePosePartKey(), selectedPosePartKeys);
+    markPartPicker(posePartPicker, getActivePosePartKey(), selectedPoseParts);
   }
 
   function renderPartFields() {
@@ -196,9 +191,9 @@ export function createTuningPanelPartController({
   function renderPosePartFields() {
     poseTimeline.renderTimeline();
     const frameLabel = poseTimeline.frameLabel();
-    if (selectedPosePartKeys.size > 1) {
+    if (selectedPoseParts.size() > 1) {
       posePartFields.innerHTML = '';
-      renderPosePartHeader(posePartFields, 'group', selectedPosePartKeys.size, frameLabel);
+      renderPosePartHeader(posePartFields, 'group', selectedPoseParts.size(), frameLabel);
       if (!poseTimeline.hasFrameSelection()) {
         posePartFields.insertAdjacentHTML('beforeend', emptyPartMessage('그룹을 편집할 프레임을 선택하세요.'));
         return;
@@ -223,7 +218,7 @@ export function createTuningPanelPartController({
     ensurePoseOffset(getSelectedActor().tuning, poseSelect.value, partKey);
     const offset = poseTimeline.currentFrameValue(partKey);
     posePartFields.innerHTML = '';
-    renderPosePartHeader(posePartFields, partKey, selectedPosePartKeys.size, frameLabel);
+    renderPosePartHeader(posePartFields, partKey, selectedPoseParts.size(), frameLabel);
 
     renderScrubGroups(
       posePartFields,
@@ -285,10 +280,10 @@ export function createTuningPanelPartController({
     setEditContext('pose');
     poseTimeline.stopPreview();
     poseTimeline.resetSelectionState();
-    const nextSelection = clearPosePartSelectionState(selectedPosePartKeys, MASTER_PART_KEY);
+    selectedPoseParts.clear();
     resetGroupEditValues();
-    setActivePosePartKey(nextSelection.activePosePartKey);
-    setEditFocusPartKey(nextSelection.editFocusPartKey);
+    setActivePosePartKey(null);
+    setEditFocusPartKey(MASTER_PART_KEY);
     renderPosePartFields();
     syncMotionRows();
     poseTimeline.syncPreview();
@@ -297,7 +292,7 @@ export function createTuningPanelPartController({
   function handlePosePartChange() {
     setEditContext('pose');
     setEditFocusContext('pose');
-    setActivePosePartKey(selectOnlyPosePart(selectedPosePartKeys, posePartSelect.value));
+    setActivePosePartKey(selectedPoseParts.selectOnly(posePartSelect.value));
     resetGroupEditValues();
     setEditFocusPartKey(getActivePosePartKey());
     renderPosePartFields();

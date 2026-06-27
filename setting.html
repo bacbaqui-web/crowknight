@@ -388,9 +388,9 @@
           <button class="section-toggle" type="button">배경</button>
           <div class="section-content">
             <div class="section-action-row" aria-label="배경 PSD 작업">
-              <input id="backgroundClipFile" class="hidden-file-input" type="file" accept=".psd,.clip" />
+              <input id="backgroundPsdFile" class="hidden-file-input" type="file" accept=".psd" />
               <button
-                id="backgroundClipUpload"
+                id="backgroundPsdUpload"
                 class="icon-button"
                 type="button"
                 aria-label="로컬 PSD 파일 선택 및 업로드"
@@ -435,6 +435,8 @@
             <div id="backgroundLayerList" class="background-layer-list"></div>
           </div>
         </section>
+
+        <div id="stageRulesPanelMount"></div>
 
         <section class="setting-section" data-collapsible data-section="part">
           <button class="section-toggle" type="button">파츠 위치</button>
