@@ -2,11 +2,10 @@ import { createControllerTimelineRenderer } from './timelineControllerView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import { createTimelineSelectionControls } from './timelineControllerSelectionControls.js';
+import { createTimelineClipboardControls } from './timelineControllerClipboardControls.js';
 import {
   addTimelineKeyframeAction,
-  copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
-  pasteTimelineFrameAction,
   resetTimelineAnimationAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
@@ -44,22 +43,6 @@ export function createTimelineControllerCore({
     });
   const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
   const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
-  const copyFrame = ({ copyFrame, setCopiedFrame, afterCopy }) =>
-    copyTimelineFrameAction({
-      copyFrame,
-      setCopiedFrame,
-      afterCopy,
-    });
-  const pasteFrame = ({ copiedFrame, pasteTargetFrameId, pasteFrameCopy, finish }) =>
-    pasteTimelineFrameAction({
-      copiedFrame,
-      isOpen: selectionControls.isSectionOpen(),
-      beginUndo,
-      commitUndo,
-      pasteTargetFrameId,
-      pasteFrameCopy,
-      finish,
-    });
   const updateSetting = (prop, value) =>
     updateTimelineSettingAction({
       prop,
@@ -111,6 +94,12 @@ export function createTimelineControllerCore({
     syncPreview,
   });
 
+  const clipboardControls = createTimelineClipboardControls({
+    isOpen: selectionControls.isSectionOpen,
+    beginUndo,
+    commitUndo,
+  });
+
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount: accessors.frameCount,
     durationInput,
@@ -144,7 +133,7 @@ export function createTimelineControllerCore({
     activeT,
     addKeyframe,
     applySelection: selectionControls.applySelection,
-    copyFrame,
+    copyFrame: clipboardControls.copyFrame,
     currentFrameValue,
     deleteKeyframe,
     frameSelectionState: selectionControls.frameSelectionState,
@@ -153,7 +142,7 @@ export function createTimelineControllerCore({
     isSectionOpen: selectionControls.isSectionOpen,
     keyframes: keyframesForTimeline,
     playbackControls,
-    pasteFrame,
+    pasteFrame: clipboardControls.pasteFrame,
     renderTimeline,
     resetAnimation,
     resetSelectionState: selectionControls.resetSelectionState,
