@@ -34,6 +34,7 @@ export function createTimelineControllerCore({
     key: timeline.key,
   });
   const keyframesForTimeline = () => timeline.keyframes();
+  const isSectionOpen = () => Boolean(section?.classList.contains('is-open'));
   const activeT = (options = {}) =>
     timeline.activeT({
       selection,
@@ -43,8 +44,7 @@ export function createTimelineControllerCore({
   const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
   const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
-    (!requireOpenSection || section?.classList.contains('is-open')) &&
-    hasTimelineSelection(selection, { includeSelectedSlot });
+    (!requireOpenSection || isSectionOpen()) && hasTimelineSelection(selection, { includeSelectedSlot });
   const frameSelectionState = () => ({
     activeKeyframeId: selection.activeKeyframeId,
     fixedFrame: selection.fixedFrame,
@@ -119,6 +119,7 @@ export function createTimelineControllerCore({
     currentFrameValue,
     frameSelectionState,
     hasFrameSelection,
+    isSectionOpen,
     keyframes: keyframesForTimeline,
     playbackControls,
     renderTimeline,

@@ -58,6 +58,7 @@ export function createPoseTimelineController({
     frameCount: getFrameCount,
     frameSelectionState,
     hasFrameSelection: hasTimelineFrameSelection,
+    isSectionOpen,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
     toSlot,
@@ -238,7 +239,7 @@ export function createPoseTimelineController({
     copyTimelineFrameAction({
       copyFrame: () =>
         poseTimeline.copyFrame({
-          isOpen: poseSection.classList.contains('is-open'),
+          isOpen: isSectionOpen(),
           activeKeyframeId: poseSelection.activeKeyframeId,
           fixedFrame: poseSelection.fixedFrame,
           selectedPosePartKeys,
@@ -254,7 +255,7 @@ export function createPoseTimelineController({
   function pasteFrame() {
     pasteTimelineFrameAction({
       copiedFrame: copiedPoseFrame,
-      isOpen: poseSection.classList.contains('is-open'),
+      isOpen: isSectionOpen(),
       beginUndo: beginUndoSnapshot,
       commitUndo: commitUndoSnapshot,
       pasteTargetFrameId: () =>

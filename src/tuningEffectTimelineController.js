@@ -62,6 +62,7 @@ export function createEffectTimelineController({
     frameCount: getFrameCount,
     frameSelectionState,
     hasFrameSelection: hasTimelineFrameSelection,
+    isSectionOpen,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
     toSlot,
@@ -163,7 +164,7 @@ export function createEffectTimelineController({
       settings,
       frameCount: getFrameCount(),
       playing: effectPreviewPlaying,
-      hasSelection: effectSection.classList.contains('is-open'),
+      hasSelection: isSectionOpen(),
       hasCopiedFrame: Boolean(copiedEffectFrame),
       undoCount: undoState.undoCount,
     });
@@ -252,7 +253,7 @@ export function createEffectTimelineController({
     copyTimelineFrameAction({
       copyFrame: () =>
         effectTimeline.copyFrame({
-          isOpen: effectSection.classList.contains('is-open'),
+          isOpen: isSectionOpen(),
           id: effectSelection.activeKeyframeId || effectSelection.fixedFrame,
           fallbackFrame: currentFrameValue(),
         }),
@@ -266,7 +267,7 @@ export function createEffectTimelineController({
   function pasteFrame() {
     pasteTimelineFrameAction({
       copiedFrame: copiedEffectFrame,
-      isOpen: effectSection.classList.contains('is-open'),
+      isOpen: isSectionOpen(),
       beginUndo: beginUndoSnapshot,
       commitUndo: commitUndoSnapshot,
       pasteTargetFrameId: () =>
