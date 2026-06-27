@@ -1,6 +1,6 @@
 import { syncActorHealthCapacity } from './actorTuning.js';
 import { bindNumberDragInput } from './tuningNumberInputs.js';
-import { getTuningPanelElements, syncNumericFields, syncPanelToggleState } from './tuningPanelDom.js';
+import { syncNumericFields } from './tuningPanelDom.js';
 import {
   activeEditPartKeyForContext,
   activeEditPartKeysForContext,
@@ -28,6 +28,7 @@ import { bindTuningPanelAssetActions } from './tuningPanelAssetActions.js';
 import { createTuningPanelTimelines } from './tuningPanelTimelines.js';
 import { moveSelectedTuningLayer, renderTuningLayerOrder } from './tuningPanelLayerOrder.js';
 import { createTuningPanelTimelineFrameActions } from './tuningPanelTimelineFrameActions.js';
+import { createTuningPanelBootstrap } from './tuningPanelBootstrap.js';
 
 export function createTuningPanel({
   canvas,
@@ -123,21 +124,12 @@ export function createTuningPanel({
   }
 
   function buildTuningPanel() {
-    const panel = document.querySelector('#tuningPanel');
-    if (!panel) return;
+    const bootstrap = createTuningPanelBootstrap();
+    if (!bootstrap) return;
 
-    const panelElements = getTuningPanelElements(panel);
-    const {
-      openButton,
-      actorSelect,
-      actorName,
-      partSection,
-      poseSection,
-      effectSection,
-      poseSelect,
-      effectSelect,
-      layerOrder,
-    } = panelElements;
+    const { panel, elements: panelElements, syncPanelToggle } = bootstrap;
+    const { actorSelect, actorName, partSection, poseSection, effectSection, poseSelect, effectSelect, layerOrder } =
+      panelElements;
     let editContext = 'part';
     let activePartKey = null;
     let activePosePartKey = null;
@@ -166,8 +158,6 @@ export function createTuningPanel({
     });
     const { beginUndoSnapshot, commitUndoSnapshot, pushUndoSnapshot, undoTuningChange } = undoState;
     undoTuningChangeGlobal = undoTuningChange;
-
-    const syncPanelToggle = () => syncPanelToggleState(panel, openButton);
 
     const fields = TUNING_FIELDS;
     const scrubCallbacks = {
