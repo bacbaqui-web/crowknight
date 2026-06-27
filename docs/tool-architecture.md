@@ -296,6 +296,7 @@
 관련 코드:
 
 - `src/timelineControllerActions.js`
+- `src/timelineControllerSelectionControls.js`
 - `src/timelineControllerView.js`
 - `src/timelineFrameClipboard.js`
 - `src/timelineFrameRead.js`
@@ -858,6 +859,7 @@ src/
 - core 기반 selection reset/refresh 헬퍼
 - core 기반 selection apply 헬퍼
 - core 기반 fixed frame selection 헬퍼
+- selection controls 전용 모듈 분리
 - core 기반 timeline reset 헬퍼
 - core 기반 timeline copy/paste wrapper
 - 시각 효과 타임라인 adapter
@@ -867,7 +869,7 @@ src/
 다음 작업:
 
 - 패널별 선택 상태 차이를 더 좁은 adapter 계약으로 정리
-- `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 책임 경계 점검
+- `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 clipboard/playback/render 책임 경계도 계속 점검
 - 복사/붙여넣기와 선택 상태 중 아직 controller에 남은 domain 후처리 분리 가능성 검토
 
 ### 8.2 2단계: 시각 효과 타임라인을 adapter로 이전
@@ -981,14 +983,15 @@ createTimelineController({
 
 1. `createTimelineControllerCore()`가 커지기 전에 option-heavy 구조인지 점검
 2. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
-3. 단일 `createTimelineController` 도입 가능 범위 산정
-4. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
-5. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
-6. 캐릭터 정의에 사용 동작/스킬 목록 추가
-7. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
-8. 히트박스 타임라인화 검토
-9. `tuningPanel.js` 부트스트랩/조립 책임 분리
-10. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
+3. `createTimelineControllerCore()` 안의 clipboard/playback/render 조립 책임을 추가로 분리할지 판단
+4. 단일 `createTimelineController` 도입 가능 범위 산정
+5. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
+6. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
+7. 캐릭터 정의에 사용 동작/스킬 목록 추가
+8. 스테이지 정의에 배경, 진행 규칙, 적 성장, 카드 보상, 점수 규칙 추가
+9. 히트박스 타임라인화 검토
+10. `tuningPanel.js` 부트스트랩/조립 책임 분리
+11. `src/tool`, `src/game`, `src/engine`, `src/shared` 구조로 점진 이동
 
 ## 10.1 현재 새로 만든 파일과 책임 분리
 
@@ -996,6 +999,7 @@ createTimelineController({
 
 - `src/timelineControllerCore.js`: 포즈/효과 타임라인이 공유하는 읽기, 쓰기, 선택, 재생, 설정 변경, keyframe 추가/삭제, reset 흐름을 조립한다.
 - `src/timelineControllerActions.js`: undo, mutation 마무리, 선택 갱신, keyframe 추가/삭제/이동, reset, 복사/붙여넣기 같은 공통 액션 단위를 제공한다.
+- `src/timelineControllerSelectionControls.js`: 타임라인 선택, 고정 프레임 선택, 선택 적용, 선택 상태 라벨, 드래그 선택 준비를 조립한다.
 - `src/timelineAdapterContract.js`: 타임라인 adapter가 반드시 제공해야 하는 메서드 목록을 정의한다.
 - `src/poseTimelineAdapter.js`: 파츠 애니메이션 데이터 접근, 포즈 키, 파츠 source, 프레임 복사/붙여넣기 값을 담당한다.
 - `src/effectTimelineAdapter.js`: 시각 효과 데이터 접근, 효과 키, 이미지/effect slot, 프레임 복사/붙여넣기 값을 담당한다.
@@ -1007,9 +1011,26 @@ createTimelineController({
 - 선택 초기화와 선택 갱신의 공통 순서는 core가 맡고, 어떤 UI 필드를 다시 그릴지는 각 controller가 결정한다.
 - 선택 적용의 공통 순서는 core가 맡고, 포즈의 그룹 편집 reset 같은 도메인 후처리는 controller가 결정한다.
 - start/end 같은 fixed frame 선택은 core가 맡아 controller가 selection 내부 구조를 직접 덜 만지게 했다.
+- 선택 관련 세부 조립은 `timelineControllerSelectionControls.js`로 이동했고, `timelineControllerCore.js`는 이를 연결하는 역할만 맡는다.
 - 복사/붙여넣기의 열림 상태 검사와 undo 흐름은 core가 맡고, 실제 frame payload는 adapter가 결정한다.
 - 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
 - `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
+
+## 10.2 최근 검증 상태
+
+최근 검증:
+
+- `npm run check`: 통과
+- `git diff --check`: 통과
+- `setting.html` 서버 응답: `HTTP 200 OK`
+- Headless Chrome screenshot: `/private/tmp/crow-knight-selection-module-check.png` 렌더 확인
+
+최근 리팩토링 결과:
+
+- `src/timelineControllerCore.js`: 264줄에서 198줄로 감소
+- `src/timelineControllerSelectionControls.js`: 104줄 신규 분리
+- 저장 포맷과 데이터 구조 변경 없음
+- 포즈/효과 controller 공개 계약 변경 없음
 
 ## 11. 유지보수 경고
 
@@ -1017,9 +1038,9 @@ createTimelineController({
 
 - `docs/tool-architecture.md`: 1000줄 이상
 - `setting.html`: 500줄 이상
-- `src/tuningEffectTimelineController.js`: 500줄 안팎
 - `src/tuningPanel.js`: 500줄 안팎
-- `src/tuningPoseTimelineController.js`: 500줄 안팎
+- `src/tuningEffectTimelineController.js`: 400줄 안팎
+- `src/tuningPoseTimelineController.js`: 400줄 안팎
 
 이 파일들은 계속 기능이 추가되면 AI 작업에서도 많은 컨텍스트를 요구한다.
 
