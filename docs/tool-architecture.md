@@ -859,6 +859,7 @@ src/
 - core 기반 selection apply 헬퍼
 - core 기반 fixed frame selection 헬퍼
 - core 기반 timeline reset 헬퍼
+- core 기반 timeline copy/paste wrapper
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
 - 공통 adapter 계약: `timelineAdapterContract.js`
@@ -887,6 +888,7 @@ src/
 - 시각 효과 active time 계산이 adapter로 이동했다.
 - 시각 효과 current frame 계산이 adapter로 이동했다.
 - 시각 효과 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
+- 시각 효과 복사/붙여넣기 실행 껍데기는 core wrapper를 사용하고, 복사할 값과 붙여넣을 값은 effect adapter가 결정한다.
 - 시각 효과 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
 - 시각 효과 선택 초기화와 선택 갱신 흐름은 core 헬퍼를 사용하고, 효과 필드 렌더링만 controller에 남아 있다.
 - 시각 효과 선택 적용 흐름은 core 헬퍼를 사용하고, 선택 후 다시 그릴 필드만 controller가 넘긴다.
@@ -915,6 +917,7 @@ src/
 - 포즈 active time 계산이 adapter로 이동했다.
 - 포즈 current frame 계산이 adapter로 이동했다.
 - 포즈 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
+- 포즈 복사/붙여넣기 실행 껍데기는 core wrapper를 사용하고, 복사할 값과 붙여넣을 값은 pose adapter가 결정한다.
 - 포즈 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
 - 포즈 선택 초기화와 선택 갱신 흐름은 core 헬퍼를 사용하고, 파츠 필드 렌더링만 controller에 남아 있다.
 - 포즈 선택 적용 흐름은 core 헬퍼를 사용하고, 그룹 편집 reset 조건만 controller에 남아 있다.
@@ -1004,6 +1007,7 @@ createTimelineController({
 - 선택 초기화와 선택 갱신의 공통 순서는 core가 맡고, 어떤 UI 필드를 다시 그릴지는 각 controller가 결정한다.
 - 선택 적용의 공통 순서는 core가 맡고, 포즈의 그룹 편집 reset 같은 도메인 후처리는 controller가 결정한다.
 - start/end 같은 fixed frame 선택은 core가 맡아 controller가 selection 내부 구조를 직접 덜 만지게 했다.
+- 복사/붙여넣기의 열림 상태 검사와 undo 흐름은 core가 맡고, 실제 frame payload는 adapter가 결정한다.
 - 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
 - `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
 
