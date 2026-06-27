@@ -823,6 +823,7 @@ src/
 - core 기반 keyframes/active time 헬퍼
 - core 기반 frame selection state 헬퍼
 - core 기반 section open 검사 헬퍼
+- core 기반 frame label 헬퍼
 - core 기반 frame read/write 헬퍼
 - core 기반 keyframe/slot 선택 액션
 - core 기반 drag keyframe 선택 액션
