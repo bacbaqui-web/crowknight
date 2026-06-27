@@ -856,6 +856,7 @@ src/
 - core 기반 drag keyframe 선택 액션
 - core 기반 frame selection 검사 헬퍼
 - core 기반 selection reset/refresh 헬퍼
+- core 기반 selection apply 헬퍼
 - core 기반 timeline reset 헬퍼
 - 시각 효과 타임라인 adapter
 - 파츠 애니메이션 타임라인 adapter
@@ -887,6 +888,7 @@ src/
 - 시각 효과 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
 - 시각 효과 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
 - 시각 효과 선택 초기화와 선택 갱신 흐름은 core 헬퍼를 사용하고, 효과 필드 렌더링만 controller에 남아 있다.
+- 시각 효과 선택 적용 흐름은 core 헬퍼를 사용하고, 선택 후 다시 그릴 필드만 controller가 넘긴다.
 
 남은 것:
 
@@ -913,6 +915,7 @@ src/
 - 포즈 프레임 복사/붙여넣기와 붙여넣기 대상 프레임 계산이 adapter 경계를 지난다.
 - 포즈 reset 흐름은 `createTimelineControllerCore()`의 공통 reset 헬퍼를 사용한다.
 - 포즈 선택 초기화와 선택 갱신 흐름은 core 헬퍼를 사용하고, 파츠 필드 렌더링만 controller에 남아 있다.
+- 포즈 선택 적용 흐름은 core 헬퍼를 사용하고, 그룹 편집 reset 조건만 controller에 남아 있다.
 
 남은 것:
 
@@ -971,9 +974,9 @@ createTimelineController({
 
 ## 10. 현재 리팩토링 우선순위
 
-1. 패널별 선택 상태와 후처리 차이를 더 좁은 adapter 계약으로 정리
-2. `createTimelineControllerCore()`가 커지기 전에 option-heavy 구조인지 점검
-3. 단일 `createTimelineController` 도입 준비
+1. `createTimelineControllerCore()`가 커지기 전에 option-heavy 구조인지 점검
+2. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
+3. 단일 `createTimelineController` 도입 가능 범위 산정
 4. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
 5. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
 6. 캐릭터 정의에 사용 동작/스킬 목록 추가
@@ -997,6 +1000,7 @@ createTimelineController({
 - 공통 타임라인 동작은 `timelineControllerCore.js`와 `timelineControllerActions.js`로 이동했다.
 - 포즈와 효과의 데이터 모양 차이는 각각 adapter가 감싼다.
 - 선택 초기화와 선택 갱신의 공통 순서는 core가 맡고, 어떤 UI 필드를 다시 그릴지는 각 controller가 결정한다.
+- 선택 적용의 공통 순서는 core가 맡고, 포즈의 그룹 편집 reset 같은 도메인 후처리는 controller가 결정한다.
 - 포즈/효과 controller는 아직 UI 렌더링, 선택 후처리, 도메인별 표시 갱신을 맡는다.
 - `docs/tool-architecture.md`는 설계 문서이면서 리팩토링 진행 대시보드 역할을 같이 한다.
 
