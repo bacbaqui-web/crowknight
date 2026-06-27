@@ -15,9 +15,7 @@ import {
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
-  selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
-  selectTimelineSlotAction,
   setFixedTimelineFrameSelectionAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
@@ -72,6 +70,8 @@ export function createEffectTimelineController({
     slotToLeft,
     playbackControls,
     renderTimeline,
+    selectKeyframe: selectTimelineKeyframe,
+    selectSlot: selectTimelineSlot,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
     timeline: effectTimeline,
@@ -295,24 +295,16 @@ export function createEffectTimelineController({
   }
 
   function selectKeyframe(id) {
-    selectTimelineKeyframeAction({
+    selectTimelineKeyframe({
       id,
-      selection: effectSelection,
-      keyframes: keyframesForTimeline(),
-      toSlot,
-      lastSlot: getLastSlot(),
       setContext: () => setEditContext('effect'),
       applySelection: applyTimelineSelection,
     });
   }
 
   function selectSlot(slot) {
-    selectTimelineSlotAction({
+    selectTimelineSlot({
       slot,
-      selection: effectSelection,
-      keyframes: keyframesForTimeline(),
-      toSlot,
-      lastSlot: getLastSlot(),
       setContext: () => setEditContext('effect'),
       applySelection: applyTimelineSelection,
     });

@@ -13,9 +13,7 @@ import {
   refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
   resetTimelineSelectionAction,
-  selectTimelineKeyframeAction,
   selectTimelineKeyframeForDragAction,
-  selectTimelineSlotAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
@@ -68,6 +66,8 @@ export function createPoseTimelineController({
     slotToLeft,
     playbackControls,
     renderTimeline,
+    selectKeyframe: selectTimelineKeyframe,
+    selectSlot: selectTimelineSlot,
     writeFrameValue: timelineWriteFrameValue,
   } = createTimelineControllerCore({
     timeline: poseTimeline,
@@ -287,12 +287,8 @@ export function createPoseTimelineController({
   }
 
   function selectKeyframe(id) {
-    selectTimelineKeyframeAction({
+    selectTimelineKeyframe({
       id,
-      selection: poseSelection,
-      keyframes: keyframesForTimeline(),
-      toSlot,
-      lastSlot: getLastSlot(),
       setContext: () => setEditContext('pose'),
       applySelection: (nextSelection) =>
         applyTimelineSelection(nextSelection, { resetGroup: nextSelection.kind === 'fixed' }),
@@ -300,12 +296,8 @@ export function createPoseTimelineController({
   }
 
   function selectSlot(slot) {
-    selectTimelineSlotAction({
+    selectTimelineSlot({
       slot,
-      selection: poseSelection,
-      keyframes: keyframesForTimeline(),
-      toSlot,
-      lastSlot: getLastSlot(),
       setContext: () => setEditContext('pose'),
       applySelection: (nextSelection) =>
         applyTimelineSelection(nextSelection, {

@@ -2,6 +2,7 @@ import { createControllerTimelineRenderer } from './timelineControllerView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import { hasTimelineSelection } from './timelineState.js';
+import { selectTimelineKeyframeAction, selectTimelineSlotAction } from './timelineControllerActions.js';
 
 export function createTimelineControllerCore({
   timeline,
@@ -39,6 +40,26 @@ export function createTimelineControllerCore({
   const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
     (!requireOpenSection || section?.classList.contains('is-open')) &&
     hasTimelineSelection(selection, { includeSelectedSlot });
+  const selectKeyframe = ({ id, setContext, applySelection }) =>
+    selectTimelineKeyframeAction({
+      id,
+      selection,
+      keyframes: keyframesForTimeline(),
+      toSlot: accessors.toSlot,
+      lastSlot: accessors.lastSlot(),
+      setContext,
+      applySelection,
+    });
+  const selectSlotAction = ({ slot, setContext, applySelection }) =>
+    selectTimelineSlotAction({
+      slot,
+      selection,
+      keyframes: keyframesForTimeline(),
+      toSlot: accessors.toSlot,
+      lastSlot: accessors.lastSlot(),
+      setContext,
+      applySelection,
+    });
 
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount: accessors.frameCount,
@@ -76,6 +97,8 @@ export function createTimelineControllerCore({
     keyframes: keyframesForTimeline,
     playbackControls,
     renderTimeline,
+    selectKeyframe,
+    selectSlot: selectSlotAction,
     writeFrameValue,
   };
 }
