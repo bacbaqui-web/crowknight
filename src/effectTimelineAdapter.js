@@ -127,11 +127,11 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     getActor().player.effectPreview = createPreview({ playing: false, t });
   }
 
-  function copyFrame({ isOpen, id, fallbackFrame }) {
+  function copyFrame({ isOpen, selection, fallbackFrame }) {
     return copyActiveEffectTimelineFrame({
       isOpen,
       effectKey: key(),
-      id,
+      id: selection.activeKeyframeId || selection.fixedFrame,
       keyframes: keyframes(),
       fallbackFrame,
     });

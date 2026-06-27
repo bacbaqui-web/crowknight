@@ -254,7 +254,7 @@ export function createEffectTimelineController({
       copyFrame: () =>
         effectTimeline.copyFrame({
           isOpen: isSectionOpen(),
-          id: effectSelection.activeKeyframeId || effectSelection.fixedFrame,
+          selection: effectSelection,
           fallbackFrame: currentFrameValue(),
         }),
       setCopiedFrame: (copy) => {

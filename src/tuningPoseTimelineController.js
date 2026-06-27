@@ -240,8 +240,7 @@ export function createPoseTimelineController({
       copyFrame: () =>
         poseTimeline.copyFrame({
           isOpen: isSectionOpen(),
-          activeKeyframeId: poseSelection.activeKeyframeId,
-          fixedFrame: poseSelection.fixedFrame,
+          selection: poseSelection,
           selectedPosePartKeys,
           activePosePartKey: getActivePosePartKey(),
         }),
