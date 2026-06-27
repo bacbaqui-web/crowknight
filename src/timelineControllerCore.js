@@ -1,21 +1,13 @@
-import { markActiveKeyframeButton } from './timelineDragControls.js';
 import { createControllerTimelineRenderer } from './timelineControllerView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
 import { createTimelineAccessors } from './tuningTimelineAccessors.js';
-import { hasTimelineSelection } from './timelineState.js';
+import { createTimelineSelectionControls } from './timelineControllerSelectionControls.js';
 import {
   addTimelineKeyframeAction,
-  applyTimelineSelectionAction,
   copyTimelineFrameAction,
   deleteTimelineKeyframeAction,
   pasteTimelineFrameAction,
-  refreshTimelineFrameSelectionAction,
   resetTimelineAnimationAction,
-  resetTimelineSelectionAction,
-  selectTimelineKeyframeAction,
-  selectTimelineKeyframeForDragAction,
-  selectTimelineSlotAction,
-  setFixedTimelineFrameSelectionAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
 
@@ -44,7 +36,6 @@ export function createTimelineControllerCore({
     key: timeline.key,
   });
   const keyframesForTimeline = () => timeline.keyframes();
-  const isSectionOpen = () => Boolean(section?.classList.contains('is-open'));
   const activeT = (options = {}) =>
     timeline.activeT({
       selection,
@@ -62,7 +53,7 @@ export function createTimelineControllerCore({
   const pasteFrame = ({ copiedFrame, pasteTargetFrameId, pasteFrameCopy, finish }) =>
     pasteTimelineFrameAction({
       copiedFrame,
-      isOpen: isSectionOpen(),
+      isOpen: selectionControls.isSectionOpen(),
       beginUndo,
       commitUndo,
       pasteTargetFrameId,
@@ -109,73 +100,16 @@ export function createTimelineControllerCore({
       stopPreview,
       finish,
     });
-  const resetSelectionState = () => resetTimelineSelectionAction(selection);
-  const setFixedFrame = (frame) =>
-    setFixedTimelineFrameSelectionAction({
-      targetSelection: selection,
-      frame,
-      lastSlot: accessors.lastSlot(),
-    });
-  const refreshFrameSelection = ({ renderFields }) =>
-    refreshTimelineFrameSelectionAction({
-      stopPreview,
-      renderFields,
-      syncPreview,
-    });
-  const applySelection = ({ nextSelection, beforeRefresh = null, renderFields }) =>
-    applyTimelineSelectionAction({
-      targetSelection: selection,
-      nextSelection,
-      beforeRefresh,
-      refresh: () => refreshFrameSelection({ renderFields }),
-    });
-  const hasFrameSelection = ({ includeSelectedSlot = true, requireOpenSection = false } = {}) =>
-    (!requireOpenSection || isSectionOpen()) && hasTimelineSelection(selection, { includeSelectedSlot });
-  const frameSelectionState = () => ({
-    activeKeyframeId: selection.activeKeyframeId,
-    fixedFrame: selection.fixedFrame,
-    selectedSlot: selection.selectedSlot,
+  const selectionControls = createTimelineSelectionControls({
+    selection,
+    section,
+    accessors,
+    keyframes: keyframesForTimeline,
+    track,
+    deleteButton,
+    stopPreview,
+    syncPreview,
   });
-  const frameLabel = () => {
-    if (selection.fixedFrame === 'start') return '첫프레임';
-    if (selection.fixedFrame === 'end') return '끝프레임';
-    if (selection.activeKeyframeId) return '키프레임';
-    return '기본';
-  };
-  const selectKeyframe = ({ id, setContext, applySelection }) =>
-    selectTimelineKeyframeAction({
-      id,
-      selection,
-      keyframes: keyframesForTimeline(),
-      toSlot: accessors.toSlot,
-      lastSlot: accessors.lastSlot(),
-      setContext,
-      applySelection,
-    });
-  const selectSlotAction = ({ slot, setContext, applySelection }) =>
-    selectTimelineSlotAction({
-      slot,
-      selection,
-      keyframes: keyframesForTimeline(),
-      toSlot: accessors.toSlot,
-      lastSlot: accessors.lastSlot(),
-      setContext,
-      applySelection,
-    });
-  const selectKeyframeForDrag = ({ id, stopPreview, getActiveT, setDragPreview }) =>
-    selectTimelineKeyframeForDragAction({
-      selection,
-      id,
-      keyframes: keyframesForTimeline(),
-      toSlot: accessors.toSlot,
-      stopPreview,
-      getActiveT,
-      setDragPreview,
-      setDeleteDisabled: (disabled) => {
-        deleteButton.disabled = disabled;
-      },
-      markActive: (keyframeId) => markActiveKeyframeButton(track, keyframeId),
-    });
 
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount: accessors.frameCount,
@@ -209,24 +143,24 @@ export function createTimelineControllerCore({
     ...accessors,
     activeT,
     addKeyframe,
-    applySelection,
+    applySelection: selectionControls.applySelection,
     copyFrame,
     currentFrameValue,
     deleteKeyframe,
-    frameSelectionState,
-    frameLabel,
-    hasFrameSelection,
-    isSectionOpen,
+    frameSelectionState: selectionControls.frameSelectionState,
+    frameLabel: selectionControls.frameLabel,
+    hasFrameSelection: selectionControls.hasFrameSelection,
+    isSectionOpen: selectionControls.isSectionOpen,
     keyframes: keyframesForTimeline,
     playbackControls,
     pasteFrame,
     renderTimeline,
     resetAnimation,
-    resetSelectionState,
-    selectKeyframe,
-    selectKeyframeForDrag,
-    selectSlot: selectSlotAction,
-    setFixedFrame,
+    resetSelectionState: selectionControls.resetSelectionState,
+    selectKeyframe: selectionControls.selectKeyframe,
+    selectKeyframeForDrag: selectionControls.selectKeyframeForDrag,
+    selectSlot: selectionControls.selectSlot,
+    setFixedFrame: selectionControls.setFixedFrame,
     updateSetting,
     writeFrameValue,
   };
