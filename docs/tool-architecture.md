@@ -297,6 +297,7 @@
 
 - `src/timelineControllerActions.js`
 - `src/timelineControllerClipboardControls.js`
+- `src/timelineController.js`
 - `src/timelineControllerSelectionControls.js`
 - `src/timelineControllerView.js`
 - `src/timelineFrameClipboard.js`
@@ -862,6 +863,8 @@ src/
 - core 기반 fixed frame selection 헬퍼
 - selection controls 전용 모듈 분리
 - clipboard controls 전용 모듈 분리
+- 최소 단일 `createTimelineController()` factory 도입
+- Effect Timeline의 `createTimelineController()` 실제 적용
 - core 기반 timeline reset 헬퍼
 - core 기반 timeline copy/paste wrapper
 - 시각 효과 타임라인 adapter
@@ -870,8 +873,8 @@ src/
 
 다음 작업:
 
-- 패널별 선택 상태 차이를 더 좁은 adapter 계약으로 정리
-- 단일 `createTimelineController()` 도입 전에 field rendering, preview, mutation finish hook을 어떤 config/adapter 경계로 둘지 확정
+- Pose Timeline을 단일 `createTimelineController()` factory로 옮길 수 있는지 Effect 적용 결과와 비교
+- field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload를 확정
 - `createTimelineControllerCore()`가 과도한 옵션 묶음이 되지 않도록 playback/render 책임 경계도 계속 점검
 - controller에 남은 domain 후처리 중 adapter로 넘기면 단순해지는 것만 선별
 
@@ -888,6 +891,7 @@ src/
 현재 완료된 것:
 
 - `src/effectTimelineAdapter.js`가 시각 효과 키, 설정, offset, 키프레임 접근을 맡는다.
+- `src/tuningEffectTimelineController.js`는 실제로 `createTimelineController()` factory를 사용한다.
 - 시각 효과 키프레임 추가/삭제/이동/초기화/mutation 호출이 adapter와 core 경계를 지난다.
 - 시각 효과 preview 생성 입력이 adapter로 이동했다.
 - 시각 효과 active time 계산이 adapter로 이동했다.
@@ -901,8 +905,8 @@ src/
 
 남은 것:
 
-- 선택 상태와 UI 후처리 차이를 단일 컨트롤러가 다룰 수 있는 형태로 정리한다.
-- 단일 컨트롤러가 요구할 세부 adapter 메서드를 더 좁힌다.
+- Effect controller에는 아직 필드 렌더링, 효과 이미지 미리보기, preview sync, mutation finish hook이 남아 있다.
+- 단일 controller가 요구할 세부 adapter/config 메서드를 더 좁힌다.
 
 ### 8.3 3단계: 파츠 애니메이션 타임라인을 adapter로 이전
 
@@ -947,6 +951,13 @@ createTimelineController({
 
 파츠 애니메이션, 시각 효과, 히트박스는 모두 같은 컨트롤러를 사용하고 adapter만 다르게 한다.
 
+현재 적용 범위:
+
+- `src/timelineController.js`가 최소 단일 controller factory 역할을 시작했다.
+- Effect Timeline은 `createTimelineController()`를 사용해 core와 공통 controller 계약을 조립한다.
+- Pose Timeline은 비교와 안전한 이행을 위해 아직 `createTimelineControllerCore()`를 직접 사용한다.
+- 이번 단계에서는 controller 제거가 아니라 실제 적용 가능한 조립 구조 검증을 목표로 했다.
+
 ### 8.5 5단계: 툴/게임 런타임 분리
 
 목표:
@@ -984,10 +995,10 @@ createTimelineController({
 
 ## 10. 현재 리팩토링 우선순위
 
-1. 단일 `createTimelineController()` 도입 전에 field rendering, preview, mutation finish hook 경계 확정
-2. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
-3. `createTimelineControllerCore()` 안의 playback/render 조립 책임을 추가로 분리할지 판단
-4. 단일 `createTimelineController` 최소 도입 범위 산정
+1. Pose Timeline을 `createTimelineController()` factory로 옮길 수 있는지 Effect 적용 결과와 비교
+2. field rendering, preview, mutation finish hook 중 controller에 남길 hook과 adapter로 넘길 payload 확정
+3. 패널별 선택 후처리 차이를 adapter 계약으로 더 넘길 수 있는지 검토
+4. `createTimelineControllerCore()` 안의 playback/render 조립 책임을 추가로 분리할지 판단
 5. 캐릭터 파트와 스테이지 파트 기준으로 UI 흐름 재배치
 6. 캐릭터 파트를 셋업, 애니메이션, 이펙트 세션으로 분리
 7. 캐릭터 정의에 사용 동작/스킬 목록 추가
@@ -1000,6 +1011,7 @@ createTimelineController({
 
 새로 만든 파일:
 
+- `src/timelineController.js`: core, 공통 controller 계약, 확장 메서드를 묶어 단일 timeline controller factory 역할을 한다.
 - `src/timelineControllerCore.js`: 포즈/효과 타임라인이 공유하는 읽기, 쓰기, 선택, 재생, 설정 변경, keyframe 추가/삭제, reset 흐름을 조립한다.
 - `src/timelineControllerActions.js`: undo, mutation 마무리, 선택 갱신, keyframe 추가/삭제/이동, reset, 복사/붙여넣기 같은 공통 액션 단위를 제공한다.
 - `src/timelineControllerClipboardControls.js`: 타임라인 복사/붙여넣기의 실행 순서, 열린 섹션 검사, undo 연결을 조립한다.
@@ -1010,6 +1022,7 @@ createTimelineController({
 
 책임이 분리된 부분:
 
+- Effect Timeline은 `createTimelineController()`를 통해 core와 공통 controller 계약을 조립한다.
 - 공통 타임라인 동작은 `timelineControllerCore.js`와 `timelineControllerActions.js`로 이동했다.
 - 포즈와 효과의 데이터 모양 차이는 각각 adapter가 감싼다.
 - 선택 초기화와 선택 갱신의 공통 순서는 core가 맡고, 어떤 UI 필드를 다시 그릴지는 각 controller가 결정한다.
@@ -1028,10 +1041,12 @@ createTimelineController({
 - `npm run check`: 통과
 - `git diff --check`: 통과
 - `setting.html` 서버 응답: `HTTP 200 OK`
-- Headless Chrome screenshot: `/private/tmp/crow-knight-clipboard-controls-check.png` 렌더 확인
+- Headless Chrome screenshot: `/private/tmp/crow-knight-create-timeline-controller-check.png` 렌더 확인
 
 최근 리팩토링 결과:
 
+- `src/timelineController.js`: 20줄 신규 도입
+- Effect Timeline이 실제로 `createTimelineController()` factory를 사용
 - `src/timelineControllerCore.js`: 264줄에서 187줄로 감소
 - `src/timelineControllerClipboardControls.js`: 26줄 신규 분리
 - `src/timelineControllerSelectionControls.js`: 104줄 신규 분리
@@ -1067,9 +1082,10 @@ Controller에 남아야 하는 책임:
 현재 판단:
 
 - selection과 clipboard는 별도 control 모듈로 빠져 Core 비대화 위험이 줄었다.
+- Effect Timeline에서 `createTimelineController()`를 실제로 사용하기 시작해 단일 controller 도입 경로가 검증됐다.
 - playback과 render는 이미 별도 모듈이 있으므로 지금 추가 이동보다 단일 controller 도입 시 config 형태를 정하는 것이 우선이다.
 - preview는 포즈와 효과의 차이가 아직 크므로 지금 Core로 억지로 올리지 않는다.
-- 단일 controller 도입 전 남은 핵심은 field rendering, preview, mutation finish hook을 adapter/config 중 어디에 둘지 확정하는 것이다.
+- 단일 controller 도입 전 남은 핵심은 Pose Timeline도 같은 factory 경로로 옮길 수 있는지 확인하고, field rendering, preview, mutation finish hook을 adapter/config 중 어디에 둘지 확정하는 것이다.
 
 ## 11. 유지보수 경고
 
