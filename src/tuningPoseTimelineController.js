@@ -2,7 +2,6 @@ import { createPoseTimelineAdapter } from './poseTimelineAdapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './tuningFieldValues.js';
 import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import {
-  applyTimelineSelectionAction,
   copyTimelineFrameAction,
   finishTimelineMutationAction,
   moveTimelineKeyframeWithPreviewAction,
@@ -49,6 +48,7 @@ export function createPoseTimelineController({
   const {
     activeT: timelineActiveT,
     addKeyframe: addTimelineKeyframe,
+    applySelection: applyTimelineSelectionCore,
     currentFrameValue: timelineCurrentFrameValue,
     deleteKeyframe: deleteTimelineKeyframe,
     frameCount: getFrameCount,
@@ -62,7 +62,6 @@ export function createPoseTimelineController({
     slotToValue,
     slotToLeft,
     playbackControls,
-    refreshFrameSelection: refreshTimelineFrameSelection,
     renderTimeline,
     resetAnimation: resetTimelineAnimation,
     resetSelectionState,
@@ -279,18 +278,11 @@ export function createPoseTimelineController({
   }
 
   function applyTimelineSelection(nextSelection, { resetGroup = false } = {}) {
-    applyTimelineSelectionAction({
-      targetSelection: poseSelection,
+    applyTimelineSelectionCore({
       nextSelection,
       beforeRefresh: ({ kind }) => {
         if (resetGroup || kind === 'fixed') resetGroupEditValues();
       },
-      refresh: refreshFrameSelection,
-    });
-  }
-
-  function refreshFrameSelection() {
-    refreshTimelineFrameSelection({
       renderFields: renderPosePartFields,
     });
   }
