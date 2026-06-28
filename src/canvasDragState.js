@@ -1,5 +1,3 @@
-import { defaultEffectSize } from './animationFrames.js';
-
 export function pickDragValues(editState) {
   const target = editState.target;
   return {
@@ -13,22 +11,6 @@ export function pickDragValues(editState) {
     opacity: Number(target.opacity ?? 1),
     anchorX: Number(target.anchorX || 0),
     anchorY: Number(target.anchorY || 0),
-  };
-}
-
-export function pickEffectDragValues(target, effectKey) {
-  const size = defaultEffectSize(effectKey);
-  const w = Number(target.w || size.w);
-  const h = Number(target.h || size.h);
-  return {
-    x: Number(target.x || 0),
-    y: Number(target.y || 0),
-    ax: Number(target.ax ?? w / 2),
-    ay: Number(target.ay ?? h / 2),
-    w,
-    h,
-    rot: Number(target.rot || 0),
-    opacity: Number(target.opacity ?? 1),
   };
 }
 

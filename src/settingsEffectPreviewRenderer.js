@@ -18,7 +18,7 @@ export function drawEffectSettingsPreview(ctx, actor, key, effectAssets) {
   ctx.translate(transform.x, transform.y);
   const placementMatrix = ctx.getTransform();
   ctx.rotate((transform.rot * Math.PI) / 180);
-  const editHandle = createEffectEditHandleInfo(ctx, frame, key, placementMatrix);
+  const editHandle = createEffectEditHandleInfo(ctx, frame, key, placementMatrix, drawRect);
   ctx.globalAlpha = clamp(Number(frame.opacity ?? 1), 0, 1) * 0.88;
   if (asset) {
     ctx.drawImage(asset, drawRect.x, drawRect.y, drawRect.w, drawRect.h);

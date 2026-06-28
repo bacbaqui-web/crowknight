@@ -82,6 +82,7 @@ function characterBasisSource(tuning) {
 }
 
 export function partFieldLimits(prop, partKey = '') {
+  if (partKey === 'effect') return effectFieldLimits(prop);
   if (isInteractionObjectPartKey(partKey)) {
     if (prop === 'w' || prop === 'h') return { min: 1, max: 320 };
     if (prop === 'rot') return { min: -360, max: 360 };

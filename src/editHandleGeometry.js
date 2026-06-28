@@ -10,15 +10,18 @@ import { isMasterPart } from './tuningLabels.js';
 import { INTERACTION_OBJECT_TARGET_TYPE } from './tuningInteractionObjects.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 
+export const EFFECT_TARGET_TYPE = 'effect';
+
 export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, poseFrameSelectionActive }) {
   if (!editFocusPartKey || !editHandleInfo) return null;
 
   const info = editHandleInfo;
   const isImagePart = imagePartKeys().includes(editFocusPartKey);
   const isInteractionObjectPart = info.target?.type === INTERACTION_OBJECT_TARGET_TYPE;
+  const isEffect = info.target?.type === EFFECT_TARGET_TYPE;
   const isMaster = isMasterPart(editFocusPartKey);
   const isScalablePart =
-    isMaster || isImagePart || isInteractionObjectPart || controlGroupPartKeys().includes(editFocusPartKey);
+    isMaster || isImagePart || isInteractionObjectPart || isEffect || controlGroupPartKeys().includes(editFocusPartKey);
   const anchor = info.anchor;
   const xAxis = info.xAxis;
   const yAxis = info.yAxis;
@@ -49,7 +52,7 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
   if (
     !isInteractionObjectPart &&
     ((isMaster && !poseFrameSelectionActive) ||
-      (!isMaster && (isImagePart || controlGroupPartKeys().includes(editFocusPartKey))))
+      (!isMaster && (isImagePart || isEffect || controlGroupPartKeys().includes(editFocusPartKey))))
   ) {
     handles.anchor = { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS };
   }
@@ -64,6 +67,7 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
     moveYAxis,
     moveXUnit: info.moveXUnit || info.xUnit || 1,
     moveYUnit: info.moveYUnit || info.yUnit || 1,
+    isEffect,
     isImagePart,
     isInteractionObjectPart,
     isMaster,
@@ -103,46 +107,7 @@ function vectorFromPoints(from, to) {
   };
 }
 
-export function createEffectEditHandleGeometry(info) {
-  if (!info) return null;
-
-  const anchor = info.anchor;
-  const xAxis = info.xAxis;
-  const yAxis = info.yAxis;
-  const up = { x: -yAxis.x, y: -yAxis.y };
-  const left = { x: -xAxis.x, y: -xAxis.y };
-  const sizeDir = normalizeScreenVector(xAxis.x + yAxis.x, xAxis.y + yAxis.y);
-  const rotateDir = normalizeScreenVector(xAxis.x - yAxis.x, xAxis.y - yAxis.y);
-  const opacityDir = normalizeScreenVector(-xAxis.x + yAxis.x, -xAxis.y + yAxis.y);
-
-  return {
-    isEffect: true,
-    key: info.key,
-    anchor,
-    xAxis,
-    yAxis,
-    xUnit: info.xUnit || 1,
-    yUnit: info.yUnit || 1,
-    moveXAxis: info.moveXAxis,
-    moveYAxis: info.moveYAxis,
-    moveXUnit: info.moveXUnit || 1,
-    moveYUnit: info.moveYUnit || 1,
-    isImagePart: true,
-    isMaster: false,
-    isScalablePart: true,
-    handles: {
-      anchor: { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS },
-      move: { mode: 'move', point: anchor, radius: MOVE_HANDLE_RADIUS },
-      width: { mode: 'width', point: addScreenVector(anchor, left, 70), radius: 18 },
-      height: { mode: 'height', point: addScreenVector(anchor, up, 70), radius: 18 },
-      rotate: { mode: 'rotate', point: addScreenVector(anchor, rotateDir, 78), radius: 17 },
-      size: { mode: 'size', point: addScreenVector(anchor, sizeDir, 78), radius: 18 },
-      opacity: { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 },
-    },
-  };
-}
-
-export function createEffectEditHandleInfo(ctx, frame, key, placementMatrix = null) {
+export function createEffectEditHandleInfo(ctx, frame, key, placementMatrix = null, drawRect = null) {
   const matrix = ctx.getTransform();
   const anchor = transformCanvasPoint(matrix, 0, 0);
   const placement = placementMatrix || matrix;
@@ -150,6 +115,7 @@ export function createEffectEditHandleInfo(ctx, frame, key, placementMatrix = nu
   const yInfo = axisFromCanvasMatrix(matrix, anchor, 0, 1);
   const moveXInfo = axisFromCanvasMatrix(placement, anchor, 1, 0);
   const moveYInfo = axisFromCanvasMatrix(placement, anchor, 0, 1);
+  const target = drawRect ? createEditHandleTarget(matrix, key, frame, drawRect) : null;
   return {
     key,
     frame,
@@ -162,6 +128,30 @@ export function createEffectEditHandleInfo(ctx, frame, key, placementMatrix = nu
     moveYAxis: moveYInfo.axis,
     moveXUnit: moveXInfo.unit,
     moveYUnit: moveYInfo.unit,
+    target,
+  };
+}
+
+function createEditHandleTarget(matrix, key, source, rect) {
+  const points = [
+    transformCanvasPoint(matrix, rect.x, rect.y),
+    transformCanvasPoint(matrix, rect.x + rect.w, rect.y),
+    transformCanvasPoint(matrix, rect.x + rect.w, rect.y + rect.h),
+    transformCanvasPoint(matrix, rect.x, rect.y + rect.h),
+  ];
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  return {
+    type: EFFECT_TARGET_TYPE,
+    key,
+    source,
+    points,
+    bounds: {
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+    },
   };
 }
 

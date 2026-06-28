@@ -1,4 +1,4 @@
-import { pickDragValues, pickEffectDragValues, pickVisualValues } from './canvasDragState.js';
+import { pickDragValues, pickVisualValues } from './canvasDragState.js';
 import { isMasterPart } from './tuningLabels.js';
 import { canvasGroupDragItems } from './tuningCanvasEditState.js';
 
@@ -27,6 +27,7 @@ export function createCanvasPartDrag({
   handle,
   mode,
   writePoseFrameValue,
+  writeValue,
 }) {
   return {
     pointerId,
@@ -42,20 +43,7 @@ export function createCanvasPartDrag({
     mode,
     context,
     writePoseFrameValue,
-  };
-}
-
-export function createCanvasEffectDrag({ pointerId, point, target, handle, mode, effectKey }) {
-  return {
-    pointerId,
-    target,
-    handle,
-    startX: point.x,
-    startY: point.y,
-    startValues: pickEffectDragValues(target, effectKey),
-    startAngle: Math.atan2(point.y - handle.anchor.y, point.x - handle.anchor.x),
-    mode,
-    context: 'effect',
+    writeValue,
   };
 }
 

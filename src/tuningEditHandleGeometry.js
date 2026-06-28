@@ -1,9 +1,4 @@
-import {
-  createEffectEditHandleGeometry,
-  createGroupEditHandleGeometry,
-  createPartEditHandleGeometry,
-  findEditHandleAt,
-} from './editHandleGeometry.js';
+import { createGroupEditHandleGeometry, createPartEditHandleGeometry, findEditHandleAt } from './editHandleGeometry.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
 
 export function tuningEditHandleGeometry({
@@ -43,7 +38,11 @@ export function tuningEditHandleGeometry({
 
 export function tuningEffectEditHandleGeometry({ openEditContext, effectEditHandle }) {
   if (openEditContext !== 'effect' || !effectEditHandle) return null;
-  return createEffectEditHandleGeometry(effectEditHandle);
+  return createPartEditHandleGeometry({
+    editFocusPartKey: effectEditHandle.key,
+    editHandleInfo: effectEditHandle,
+    poseFrameSelectionActive: true,
+  });
 }
 
 export function tuningGroupEditHandleGeometry({

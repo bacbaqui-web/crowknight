@@ -27,8 +27,3 @@ export function effectSizePercent(effectKey, frame, prop) {
 export function effectSizeFromPercent(effectKey, prop, percent) {
   return effectSizeBase(effectKey, prop) * (clamp(Number(percent), 5, 300) / 100);
 }
-
-export function clampEffectFrameSize(effectKey, prop, value) {
-  const baseValue = effectSizeBase(effectKey, prop);
-  return clamp(Number(value), baseValue * 0.05, baseValue * 3);
-}

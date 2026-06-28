@@ -29,6 +29,11 @@ export function setCanvasVisualValue(drag, prop, value) {
     return;
   }
 
+  if (typeof drag.writeValue === 'function') {
+    drag.writeValue(prop, value);
+    return;
+  }
+
   drag.target[prop] = value;
 }
 

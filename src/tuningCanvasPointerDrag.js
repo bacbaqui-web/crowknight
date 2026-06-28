@@ -1,6 +1,6 @@
 import { canvasPointFromEvent } from './canvasDragMath.js';
+import { defaultEffectSize } from './animationFrames.js';
 import {
-  createCanvasEffectDrag,
   createCanvasGroupDrag,
   createCanvasPartDrag,
   isTemporaryCanvasGroupAnchorDrag,
@@ -167,6 +167,7 @@ export function handleEffectCanvasPointerDown(
       handle: handleHit.geometry,
       mode: handleHit.mode,
       effectKey,
+      writeEffectFrameValue,
       beginUndoSnapshot,
     })
   );
@@ -232,18 +233,28 @@ export function beginCanvasEffectPointerDrag({
   handle,
   mode,
   effectKey,
+  writeEffectFrameValue,
   beginUndoSnapshot,
 }) {
   beginUndoSnapshot();
   canvas.style.cursor = 'grabbing';
   canvas.setPointerCapture(event.pointerId);
-  return createCanvasEffectDrag({
+  const size = defaultEffectSize(effectKey);
+  return createCanvasPartDrag({
     pointerId: event.pointerId,
     point,
-    target,
+    part: 'effect',
+    context: 'effect',
+    editState: {
+      target,
+      base: {
+        baseW: size.w,
+        baseH: size.h,
+      },
+    },
     handle,
     mode,
-    effectKey,
+    writeValue: writeEffectFrameValue,
   });
 }
 

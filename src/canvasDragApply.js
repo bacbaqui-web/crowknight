@@ -8,16 +8,10 @@ import {
   setCanvasVisualValue,
   setPartAnchorValue,
 } from './canvasVisualValues.js';
-import { defaultEffectSize } from './animationFrames.js';
-import { clampEffectFrameSize } from './effectVisualValues.js';
 import { isMasterPart } from './tuningLabels.js';
 import { clamp } from './utils.js';
 
-export function applyTuningCanvasDrag(drag, dx, dy, { effectKey, groupEditValues, writeEffectFrameValue }) {
-  if (drag.context === 'effect') {
-    applyEffectCanvasDrag(drag, dx, dy, effectKey, writeEffectFrameValue);
-    return;
-  }
+export function applyTuningCanvasDrag(drag, dx, dy, { groupEditValues }) {
   if (drag.group) {
     applyCanvasGroupDrag(drag, dx, dy, groupEditValues);
     return;
@@ -40,8 +34,15 @@ export function applyCanvasPartDrag(drag, dx, dy) {
     }
     const scaleX = anchorScaleForPart(drag.target, 'ax', drag.part);
     const scaleY = anchorScaleForPart(drag.target, 'ay', drag.part);
-    setPartAnchorValue(drag.target, 'ax', drag.startValues.ax + moveLocalX / scaleX, drag.part);
-    setPartAnchorValue(drag.target, 'ay', drag.startValues.ay + moveLocalY / scaleY, drag.part);
+    const nextAx = drag.startValues.ax + moveLocalX / scaleX;
+    const nextAy = drag.startValues.ay + moveLocalY / scaleY;
+    if (typeof drag.writeValue === 'function') {
+      setCanvasVisualValue(drag, 'ax', nextAx);
+      setCanvasVisualValue(drag, 'ay', nextAy);
+      return;
+    }
+    setPartAnchorValue(drag.target, 'ax', nextAx, drag.part);
+    setPartAnchorValue(drag.target, 'ay', nextAy, drag.part);
     return;
   }
 
@@ -173,66 +174,6 @@ export function applyCanvasGroupRotation(drag, degrees) {
 
 export function applyCanvasGroupScale(drag, scale) {
   applyCanvasGroupTransform(drag, (point) => scalePointAround(point, drag.handle.anchor, scale), 0, scale);
-}
-
-export function applyEffectCanvasDrag(drag, dx, dy, effectKey, writeEffectFrameValue) {
-  const localX = screenDeltaToLocal(dx, dy, drag.handle.xAxis, drag.handle.xUnit);
-  const localY = screenDeltaToLocal(dx, dy, drag.handle.yAxis, drag.handle.yUnit);
-  const moveX = screenDeltaToLocal(dx, dy, drag.handle.moveXAxis, drag.handle.moveXUnit);
-  const moveY = screenDeltaToLocal(dx, dy, drag.handle.moveYAxis, drag.handle.moveYUnit);
-
-  if (drag.mode === 'anchor') {
-    writeEffectFrameValue('ax', drag.startValues.ax + localX);
-    writeEffectFrameValue('ay', drag.startValues.ay + localY);
-    return;
-  }
-
-  if (drag.mode === 'rotate') {
-    const currentX = drag.startX + dx;
-    const currentY = drag.startY + dy;
-    const angle = Math.atan2(currentY - drag.handle.anchor.y, currentX - drag.handle.anchor.x);
-    writeEffectFrameValue('rot', drag.startValues.rot + ((angle - drag.startAngle) * 180) / Math.PI);
-    return;
-  }
-
-  if (drag.mode === 'width') {
-    const resized = resizeEditableTransformFromHandle({
-      transform: drag.startValues,
-      mode: 'width',
-      widthDelta: -localX,
-    });
-    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', resized.w));
-    return;
-  }
-
-  if (drag.mode === 'height') {
-    const resized = resizeEditableTransformFromHandle({
-      transform: drag.startValues,
-      mode: 'height',
-      heightDelta: -localY,
-    });
-    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', resized.h));
-    return;
-  }
-
-  if (drag.mode === 'size') {
-    const baseW = defaultEffectSize(effectKey).w;
-    const baseH = defaultEffectSize(effectKey).h;
-    const resized = resizeEditableTransformFromHandle({
-      transform: drag.startValues,
-      mode: 'size',
-      widthDelta: localX,
-      heightDelta: localY,
-      baseW,
-      baseH,
-    });
-    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', resized.w));
-    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', resized.h));
-    return;
-  }
-
-  writeEffectFrameValue('x', drag.startValues.x + moveX);
-  writeEffectFrameValue('y', drag.startValues.y + moveY);
 }
 
 function applyCanvasGroupTransform(drag, transformPoint, rotationDelta, scale) {

@@ -248,9 +248,7 @@ export function createTuningPanelCanvasController({
 
   function applyCanvasDrag(drag, dx, dy) {
     applyTuningCanvasDrag(drag, dx, dy, {
-      effectKey: getEffectKey(),
       groupEditValues: getGroupEditValues(),
-      writeEffectFrameValue: effectTimeline.writeFrameValue,
     });
   }
 
