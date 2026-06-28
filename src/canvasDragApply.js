@@ -36,6 +36,11 @@ export function applyCanvasPartDrag(drag, dx, dy) {
     const scaleY = anchorScaleForPart(drag.target, 'ay', drag.part);
     const nextAx = drag.startValues.ax + moveLocalX / scaleX;
     const nextAy = drag.startValues.ay + moveLocalY / scaleY;
+    if (drag.context === 'pose' && typeof drag.writePoseFrameValue === 'function') {
+      drag.writePoseFrameValue(drag.part, 'ax', nextAx);
+      drag.writePoseFrameValue(drag.part, 'ay', nextAy);
+      return;
+    }
     if (typeof drag.writeValue === 'function') {
       setCanvasVisualValue(drag, 'ax', nextAx);
       setCanvasVisualValue(drag, 'ay', nextAy);

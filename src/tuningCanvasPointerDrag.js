@@ -5,14 +5,9 @@ import {
   createCanvasPartDrag,
   isTemporaryCanvasGroupAnchorDrag,
 } from './tuningCanvasDragFactory.js';
-import { isMasterPart } from './tuningLabels.js';
 
 export function toggleCanvasOpacity(value) {
   return (value ?? 1) > 0 ? 0 : 1;
-}
-
-export function canvasPartHandleMode({ mode, context, part }) {
-  return mode === 'anchor' && context !== 'part' && !isMasterPart(part) ? 'move' : mode;
 }
 
 export function handleCanvasPointerDown(
@@ -88,11 +83,7 @@ export function handleCanvasPointerDown(
   setEditFocusPartKey(activePart);
   const editState = canvasEditState(activePart, canvasContext);
   const target = editState.target;
-  const handleMode = canvasPartHandleMode({
-    mode: handleHit.mode,
-    context: canvasContext,
-    part: activePart,
-  });
+  const handleMode = handleHit.mode;
 
   if (handleMode === 'opacity') {
     pushUndoSnapshot();

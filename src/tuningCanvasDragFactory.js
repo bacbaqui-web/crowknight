@@ -1,5 +1,4 @@
 import { pickDragValues, pickVisualValues } from './canvasDragState.js';
-import { isMasterPart } from './tuningLabels.js';
 import { canvasGroupDragItems } from './tuningCanvasEditState.js';
 
 export function createCanvasGroupDrag({ pointerId, point, handle, mode, parts, writePoseFrameValue }) {
@@ -67,17 +66,7 @@ export function createCurrentCanvasGroupDrag({ geometry, parts, mode, writePoseF
   };
 }
 
-export function canvasHandleHoverMode({ hit, currentContext, editFocusPartKey }) {
-  if (
-    hit?.mode === 'anchor' &&
-    !hit.geometry?.isGroup &&
-    !hit.geometry?.isEffect &&
-    currentContext !== 'part' &&
-    !isMasterPart(editFocusPartKey)
-  ) {
-    return 'move';
-  }
-
+export function canvasHandleHoverMode({ hit }) {
   return hit?.mode || null;
 }
 

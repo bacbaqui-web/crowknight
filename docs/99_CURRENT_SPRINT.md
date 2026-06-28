@@ -2,57 +2,37 @@
 
 ## Sprint 목표
 
-Effect handle/drag를 Part 편집 흐름에 흡수한다.
+Editable object handle 표시 정책을 통일한다.
 
-최종 목표는 모든 editable object가 같은 transform, handle geometry, canvas drag 규칙을 쓰게 만드는 것이다.
+같은 transform을 가진 객체는 같은 handle set을 보여야 한다.
 
 ## 핵심 원칙
 
-- 같은 UX는 같은 내부 시스템을 사용한다.
-- Effect 전용 handle geometry/drag 계산을 남기지 않는다.
-- 저장 위치는 변경하지 않는다.
+- 같은 UX는 같은 handle을 사용한다.
+- 기준점/이동/크기/회전/투명 handle은 editable transform object의 기본 조작이다.
+- 특정 객체만 handle을 숨기는 예외를 줄인다.
+- 저장 구조는 변경하지 않는다.
 - Runtime combat 규칙은 변경하지 않는다.
-- 큰 구조 이동 없이 작은 경계부터 통합한다.
 
 ## 완료한 작업
 
-- Effect edit handle info에 Part target과 같은 `target.points/bounds/type/source`를 추가.
-- Effect handle geometry가 `createPartEditHandleGeometry()`를 사용하도록 변경.
-- Effect resize/rotate/move/anchor/opacity handle이 Part handle 생성 규칙을 공유.
-- Effect canvas drag가 `createCanvasPartDrag()`를 사용하도록 변경.
-- Effect canvas drag apply가 `applyCanvasPartDrag()`를 사용하도록 변경.
-- `setCanvasVisualValue()`가 generic `writeValue()` writer를 지원하도록 변경.
-- Effect size clamp가 Part drag의 `canvasSizePercentBase()`/`clampCanvasVisualSize()` 경로를 타도록 변경.
-- 더 이상 쓰지 않는 Effect 전용 함수 제거.
+- InteractionObject에도 opacity handle 표시.
+- InteractionObject에도 anchor handle 표시.
+- Action context에서 anchor handle을 move로 바꾸던 정책 제거.
+- Hover cursor도 anchor를 anchor 그대로 표시.
+- Action anchor drag가 `poseOffsets[poseKey][partKey].ax/ay`로 기록되도록 변경.
+- 불필요해진 `canvasPartHandleMode()` 제거.
 
 ## 변경한 파일과 변경 이유
 
 - `src/editHandleGeometry.js`
-  - Effect target type 추가.
-  - Effect도 `createPartEditHandleGeometry()`에서 처리.
-  - `createEffectEditHandleGeometry()` 제거.
-- `src/settingsEffectPreviewRenderer.js`
-  - Effect preview handle info에 draw rect 기반 target 전달.
-- `src/tuningEditHandleGeometry.js`
-  - Effect handle geometry를 Part handle geometry 경로로 연결.
-- `src/tuningCanvasDragFactory.js`
-  - Effect 전용 drag factory 제거.
-  - Part drag factory에 generic `writeValue` 추가.
-- `src/tuningCanvasPointerDrag.js`
-  - Effect drag 시작 시 `createCanvasPartDrag()` 사용.
+  - InteractionObject가 Part/Effect와 같은 handle set을 갖도록 변경.
 - `src/canvasDragApply.js`
-  - Effect 전용 drag apply 제거.
-  - Effect도 `applyCanvasPartDrag()` 경로 사용.
-- `src/canvasVisualValues.js`
-  - non-pose object writer 지원.
-- `src/canvasDragState.js`
-  - Effect 전용 drag value picker 제거.
-- `src/effectVisualValues.js`
-  - 미사용 `clampEffectFrameSize()` 제거.
-- `src/tuningPanelCanvasController.js`
-  - Effect 전용 drag apply 인자 제거.
-- `src/tuningParts.js`
-  - `partFieldLimits('effect')`가 Effect limits를 사용하도록 연결.
+  - pose context anchor drag가 `ax/ay` frame value로 기록되도록 변경.
+- `src/tuningCanvasPointerDrag.js`
+  - anchor handle을 move로 바꾸던 변환 제거.
+- `src/tuningCanvasDragFactory.js`
+  - hover mode에서 anchor 예외 제거.
 - `docs/99_CURRENT_SPRINT.md`
   - 이번 Sprint 결과 기록.
 
@@ -61,94 +41,85 @@ Effect handle/drag를 Part 편집 흐름에 흡수한다.
 Before:
 
 ```text
-Effect handle
-→ createEffectEditHandleGeometry()
-→ createCanvasEffectDrag()
-→ applyEffectCanvasDrag()
-→ writeEffectFrameValue()
+InteractionObject
+→ no opacity handle
+→ no anchor handle
+```
+
+```text
+Action Part anchor handle
+→ move handle로 변환
+→ x/y 변경
 ```
 
 After:
 
 ```text
-Effect handle
-→ createPartEditHandleGeometry()
-→ createCanvasPartDrag()
-→ applyCanvasPartDrag()
-→ setCanvasVisualValue()
-→ writeValue(writeEffectFrameValue)
+Editable object handle
+→ move / width / height / size / rotate / opacity / anchor
+```
+
+```text
+Action Part anchor handle
+→ applyCanvasPartDrag(anchor)
+→ writePoseFrameValue(partKey, 'ax'/'ay')
+→ tuning.poseOffsets[poseKey][partKey].ax/ay
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- `createEffectEditHandleGeometry()` 제거.
-- `createCanvasEffectDrag()` 제거.
-- `applyEffectCanvasDrag()` 제거.
-- `pickEffectDragValues()` 제거.
-- `clampEffectFrameSize()` 제거.
-- Effect handle 위치 계산이 Part handle geometry와 같은 target boundary 기준을 사용.
-- Effect resize 계산이 Part resize transform helper를 공유.
+- InteractionObject opacity handle 숨김 제거.
+- InteractionObject anchor handle 숨김 제거.
+- Action non-master anchor를 move로 바꾸던 예외 제거.
+- Hover에서 anchor를 move로 바꾸던 예외 제거.
+- `canvasPartHandleMode()` 제거.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
-- Effect 저장 위치는 `tuning.effectOffsets` 유지.
-- Effect panel/timeline controller는 유지.
-- Effect preview renderer는 유지.
+- Master/root handle 정책은 유지.
+- Group edit handle 정책은 유지.
+- Effect pointer down entry는 유지.
+- Effect preview/render entry는 유지.
+- InteractionObject 저장 구조는 유지.
 - Runtime combat system은 변경하지 않음.
-- fallback InteractionObject 4개는 유지.
-- Master/root `anchorX/anchorY` 구조는 변경하지 않음.
-- Background/Stage/HUD는 변경하지 않음.
 
 ## 아직 남아있는 예외 처리
 
-- Effect pointer down entry는 아직 별도 함수다.
-  - `handleEffectCanvasPointerDown()`
-  - `beginCanvasEffectPointerDrag()`
-- Effect preview/render entry는 아직 별도다.
-  - `settingsEffectPreviewRenderer.js`
-  - `actorEffectsRenderer.js`
+- Master/root는 아직 `anchorX/anchorY` 기반이다.
+- Group edit는 screen-space group transform이다.
+- Effect pointer down entry는 아직 별도다.
 - Effect value adapter는 아직 별도다.
-  - `effectVisualValues.js`
-- `tuningEditHandleGeometry()`에는 Effect context routing이 남아 있다.
-- InteractionObject는 opacity/anchor handle 정책이 일반 Part와 다르다.
-- Master/root와 Group edit는 아직 `anchorX/anchorY` screen-space 기준을 사용한다.
+- Background/Stage/HUD는 아직 editable object handle 시스템에 흡수되지 않았다.
 
 ## 검증 방법 및 결과
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: Effect Part handle geometry smoke test.
-  - Effect target이 `createPartEditHandleGeometry()`에서 처리됨 확인.
-  - Effect size handle이 target boundary 기준을 사용함 확인.
-- 통과: Effect Part drag apply smoke test.
-  - Effect move가 `applyCanvasPartDrag()`에서 `x/y` writer로 기록됨 확인.
-  - Effect width resize가 `w` writer로 기록됨 확인.
-  - Effect anchor drag가 `ax/ay` writer로 기록됨 확인.
+- 통과: InteractionObject full handle geometry smoke test.
+  - move/width/height/size/rotate/opacity/anchor 모두 생성 확인.
+- 통과: pose anchor handle write smoke test.
+  - Action anchor drag가 `ax/ay` writer로 기록됨 확인.
 - 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- Effect handle 위치가 기존 고정 offset 방식에서 target boundary 기준으로 바뀌었다.
-- Effect drag는 공통 Part drag를 쓰지만 pointer down entry는 아직 Effect 전용이다.
-- 실제 UI에서 Effect handle 위치/드래그 체감 QA가 필요하다.
+- InteractionObject에 새로 보이는 opacity/anchor handle은 실제 UI QA가 필요하다.
+- Action에서 anchor handle이 이제 실제 `ax/ay`를 바꾸므로 기존 사용 감각과 달라질 수 있다.
+- Master/Group은 여전히 다른 규칙을 갖기 때문에 “완전 통일”은 아직 아니다.
 
 ## 다음 Sprint 추천
 
-1. Effect pointer down routing 통합.
+1. 실제 UI QA.
+   - Setup InteractionObject anchor/opacity handle.
+   - Action Part anchor handle.
+   - Action InteractionObject anchor/opacity handle.
+   - Effect anchor/opacity handle.
+2. Effect pointer down routing 통합.
    - `handleEffectCanvasPointerDown()`을 일반 pointer down 경로로 흡수.
-2. Effect value adapter 통합.
-   - `effectVisualValues.js`를 common editable value adapter로 합치기.
-3. Effect preview/render entry 통합.
-   - Effect preview target도 `player.editHandles` 또는 공통 editable target source로 연결.
-4. InteractionObject handle 예외 정책 결정.
-   - opacity handle 허용 여부.
-   - anchor handle 허용 여부.
-5. 미사용 export 정리.
-   - `interactionObjectPartSources()`
-   - `createEditableObject()`
-   - `centeredEditableTransform()`
-   - `centerOffsetEditableTransform()`
-   - `editableTransformBounds()`
+3. Master/root transform 정리 설계.
+   - `anchorX/anchorY`를 editable transform 규칙에 맞출지 결정.
+4. Group edit 규칙 정리 설계.
+   - Group도 같은 handle set을 유지할지 결정.
 
 ## 리팩토링 후보와 이유
 
@@ -158,10 +129,8 @@ Effect handle
   - Effect context routing이 남아 있음.
 - `src/effectVisualValues.js`
   - Effect display/input 변환만 별도.
-- `src/settingsEffectPreviewRenderer.js`
-  - Effect preview target 생성이 별도.
-- `src/actorEffectsRenderer.js`
-  - Runtime Effect render entry가 별도.
+- `src/tuningParts.js`
+  - capability/limits/source 역할이 한 파일에 모임.
 
 ## 파일 크기 또는 구조상 주의할 점
 

@@ -45,14 +45,13 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
     handles.height = { mode: 'height', point: boundaryHandles?.height || addScreenVector(anchor, up, 70), radius: 18 };
     handles.size = { mode: 'size', point: boundaryHandles?.size || addScreenVector(anchor, sizeDir, 78), radius: 18 };
     if (boundaryHandles?.rotate) handles.rotate = { mode: 'rotate', point: boundaryHandles.rotate, radius: 17 };
-    if (!isInteractionObjectPart)
-      handles.opacity = { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 };
+    handles.opacity = { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 };
   }
 
   if (
-    !isInteractionObjectPart &&
-    ((isMaster && !poseFrameSelectionActive) ||
-      (!isMaster && (isImagePart || isEffect || controlGroupPartKeys().includes(editFocusPartKey))))
+    (isMaster && !poseFrameSelectionActive) ||
+    (!isMaster &&
+      (isImagePart || isInteractionObjectPart || isEffect || controlGroupPartKeys().includes(editFocusPartKey)))
   ) {
     handles.anchor = { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS };
   }
