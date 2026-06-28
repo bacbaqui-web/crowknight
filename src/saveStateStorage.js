@@ -1,4 +1,4 @@
-import { OBSOLETE_STORAGE_KEYS, OBSOLETE_TUNING_KEYS, STORAGE_KEY } from './gameConfig.js';
+import { OBSOLETE_EFFECT_FRAME_KEYS, OBSOLETE_STORAGE_KEYS, OBSOLETE_TUNING_KEYS, STORAGE_KEY } from './gameConfig.js';
 import {
   DEFAULT_SCENE_SESSION_ID,
   normalizeSceneSession,
@@ -150,11 +150,24 @@ function hasObsoleteTuningKeys(saved) {
   return Object.values(saved?.actors || {}).some((actorState) => {
     const tuning = actorState?.tuning || {};
     if (containsObsoleteKey(tuning.rig)) return true;
-    return Object.values(tuning.poseOffsets || {}).some((poseOffset) => containsObsoleteKey(poseOffset));
+    if (Object.values(tuning.poseOffsets || {}).some((poseOffset) => containsObsoleteKey(poseOffset))) return true;
+    return Object.values(tuning.effectOffsets || {}).some((effectOffset) =>
+      containsObsoleteEffectFrameKey(effectOffset)
+    );
   });
 }
 
 function containsObsoleteKey(source) {
   if (!source) return false;
   return OBSOLETE_TUNING_KEYS.some((key) => Object.hasOwn(source, key));
+}
+
+function containsObsoleteEffectFrameKey(effectOffset) {
+  if (!effectOffset) return false;
+  const frames = [
+    effectOffset.start,
+    effectOffset.end,
+    ...(Array.isArray(effectOffset.keyframes) ? effectOffset.keyframes : []),
+  ];
+  return frames.some((frame) => frame && OBSOLETE_EFFECT_FRAME_KEYS.some((key) => Object.hasOwn(frame, key)));
 }

@@ -3,7 +3,7 @@ import { isPartWithAnchor, isPartWithOpacity, isPartWithPrimarySizeLabel, isPart
 
 export function effectPropertyGroups() {
   return [
-    { label: '기준', props: axisProps('anchorX', 'anchorY', 'X', 'Y') },
+    { label: '기준', props: axisProps('ax', 'ay') },
     { label: '위치', props: axisProps('x', 'y') },
     { label: '크기', props: axisProps('w', 'h', 'W', 'H') },
     { label: '회전', props: [{ prop: 'rot', label: 'R' }] },

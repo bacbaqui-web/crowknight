@@ -1,6 +1,6 @@
 import { defaultEffectSize } from './animationFrames.js';
 import { createEffectEditHandleInfo } from './editHandleGeometry.js';
-import { centerOffsetEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
+import { createEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
 import { drawEffectPreviewBounds } from './settingsDebugRenderer.js';
 import { effectFrameAt } from './tuningNormalize.js';
 import { clamp } from './utils.js';
@@ -34,13 +34,13 @@ export function drawEffectSettingsPreview(ctx, actor, key, effectAssets) {
 }
 
 function effectMetricsTransform(metrics, frame) {
-  return centerOffsetEditableTransform({
+  return createEditableTransform({
     x: metrics.cx,
     y: metrics.cy,
     w: metrics.width,
     h: metrics.height,
-    anchorOffsetX: frame.anchorX,
-    anchorOffsetY: frame.anchorY,
+    ax: frame.ax,
+    ay: frame.ay,
     rot: frame.rot,
   });
 }
@@ -63,12 +63,14 @@ function effectPreviewTime(actor, key) {
 }
 
 function effectPreviewMetrics(actor, key, frame) {
+  const width = Math.max(1, Number(frame.w || defaultEffectSize(key).w));
+  const height = Math.max(1, Number(frame.h || defaultEffectSize(key).h));
   return {
-    width: Math.max(1, Number(frame.w || defaultEffectSize(key).w)),
-    height: Math.max(1, Number(frame.h || defaultEffectSize(key).h)),
+    width,
+    height,
     cx: actor.player.x + Number(frame.x || 0),
     cy: actor.player.y - 70 + Number(frame.y || 0),
-    anchorOffsetX: Number(frame.anchorX || 0),
-    anchorOffsetY: Number(frame.anchorY || 0),
+    ax: Number(frame.ax ?? width / 2),
+    ay: Number(frame.ay ?? height / 2),
   };
 }

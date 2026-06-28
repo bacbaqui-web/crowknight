@@ -8,6 +8,7 @@ export const OBSOLETE_TUNING_KEYS = [
   'attackInteractionBox',
   'guardInteractionBox',
 ];
+export const OBSOLETE_EFFECT_FRAME_KEYS = ['anchorX', 'anchorY'];
 export const RANKING_KEY = 'crowKnight.rankings.v1';
 export const SURVIVAL_SCORE_PER_SECOND = 10;
 export const KILL_SCORE = 1000;

@@ -128,6 +128,7 @@ Frame value:
 - `id`
 - `t`
 - `x`, `y`
+- `ax`, `ay`
 - `w`, `h`
 - `rot`
 - `opacity`

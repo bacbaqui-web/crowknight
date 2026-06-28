@@ -182,8 +182,8 @@ export function applyEffectCanvasDrag(drag, dx, dy, effectKey, writeEffectFrameV
   const moveY = screenDeltaToLocal(dx, dy, drag.handle.moveYAxis, drag.handle.moveYUnit);
 
   if (drag.mode === 'anchor') {
-    writeEffectFrameValue('anchorX', drag.startValues.anchorX + localX);
-    writeEffectFrameValue('anchorY', drag.startValues.anchorY + localY);
+    writeEffectFrameValue('ax', drag.startValues.ax + localX);
+    writeEffectFrameValue('ay', drag.startValues.ay + localY);
     return;
   }
 

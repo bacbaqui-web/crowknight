@@ -1,5 +1,5 @@
 import { defaultEffectSize } from './animationFrames.js';
-import { centerOffsetEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
+import { createEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
 import { isMasterPart } from './tuningLabels.js';
 import { effectFrameAt } from './tuningNormalize.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
@@ -39,13 +39,13 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
   const width = Math.max(1, Number(config.w || defaultEffectSize(effectKey).w));
   const height = Math.max(1, Number(config.h || defaultEffectSize(effectKey).h));
   const flip = player.facing === 1 ? 1 : -1;
-  const transform = centerOffsetEditableTransform({
+  const transform = createEditableTransform({
     x: Number(config.x || 0),
     y: Number(config.y || 0),
     w: width,
     h: height,
-    anchorOffsetX: config.anchorX,
-    anchorOffsetY: config.anchorY,
+    ax: config.ax,
+    ay: config.ay,
     rot: config.rot,
   });
   const drawRect = editableTransformDrawRect(transform);

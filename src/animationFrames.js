@@ -24,8 +24,6 @@ export function interpolateEffectFrameValues(keyframes = [], t = 0, key = 'attac
       h: lerp(a.h || 0, b.h || 0, localT),
       rot: lerp(a.rot || 0, b.rot || 0, localT),
       opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, localT),
-      anchorX: lerp(a.anchorX || 0, b.anchorX || 0, localT),
-      anchorY: lerp(a.anchorY || 0, b.anchorY || 0, localT),
     };
   }
 
@@ -37,15 +35,17 @@ export function effectFrameValue(value = {}, key = 'attack1') {
   const scale = Number(value?.scale ?? 1);
   const w = value?.w !== undefined ? Number(value.w) : size.w * scale;
   const h = value?.h !== undefined ? Number(value.h) : size.h * scale;
+  const width = Number.isFinite(w) ? w : size.w;
+  const height = Number.isFinite(h) ? h : size.h;
   return {
     x: Number(value?.x || 0),
     y: Number(value?.y || 0),
-    w: Number.isFinite(w) ? w : size.w,
-    h: Number.isFinite(h) ? h : size.h,
+    ax: Number(value?.ax ?? width / 2),
+    ay: Number(value?.ay ?? height / 2),
+    w: width,
+    h: height,
     rot: Number(value?.rot || 0),
     opacity: Number(value?.opacity ?? 1),
-    anchorX: Number(value?.anchorX || 0),
-    anchorY: Number(value?.anchorY || 0),
   };
 }
 

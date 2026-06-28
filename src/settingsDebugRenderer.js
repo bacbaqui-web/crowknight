@@ -59,12 +59,12 @@ function fallbackAttackRegionLabel(key) {
   return `${key.replace('attack', '')}타`;
 }
 
-export function drawEffectPreviewBounds(ctx, { cx, cy, width, height, anchorOffsetX, anchorOffsetY }) {
+export function drawEffectPreviewBounds(ctx, { cx, cy, width, height, ax, ay }) {
   ctx.save();
   ctx.strokeStyle = 'rgba(124, 195, 162, .92)';
   ctx.fillStyle = 'rgba(124, 195, 162, .92)';
   ctx.lineWidth = 2;
-  ctx.strokeRect(cx - width / 2 - anchorOffsetX, cy - height / 2 - anchorOffsetY, width, height);
+  ctx.strokeRect(cx - ax, cy - ay, width, height);
   ctx.beginPath();
   ctx.arc(cx, cy, 4, 0, Math.PI * 2);
   ctx.fill();

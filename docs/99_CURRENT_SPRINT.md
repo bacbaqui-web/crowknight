@@ -37,6 +37,9 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
 - field group이 InteractionObject 여부를 직접 묻지 않고 capability helper를 사용하도록 변경.
 - canvas/store value 변환에서 InteractionObject 직접 분기를 `parentSizedPart` 역할로 변경.
 - debug preview의 fallback object key 계산을 `interactionObjectPartKeysForEditFocus()`로 이동.
+- Effect Timeline frame을 `anchorX/anchorY` 대신 `ax/ay`로 변경.
+- Effect render/preview/handle drag가 `x/y/ax/ay/w/h/rot/opacity` 규칙을 사용하도록 변경.
+- Effect frame에 old `anchorX/anchorY`가 있으면 saved state를 불러오지 않도록 차단.
 - debug flag를 `debugInteractionObjects`로 변경.
 - palette CSS class를 `part-*-interaction-object`로 변경.
 - UI aria label과 part label을 `히트박스/박스` 대신 `판정 영역/영역` 기준으로 변경.
@@ -81,6 +84,15 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
   - import/helper/type 이름을 InteractionObject 기준으로 변경.
 - `src/tuningInteractionObjects.js`
   - edit focus 기준 fallback object key helper 추가.
+- `src/animationFrames.js`
+  - Effect frame value/interpolation을 `ax/ay` 기준으로 변경.
+- `src/effectVisualValues.js`
+- `src/canvasDragState.js`
+- `src/canvasDragApply.js`
+- `src/settingsEffectPreviewRenderer.js`
+- `src/actorEffectsRenderer.js`
+- `src/settingsDebugRenderer.js`
+  - Effect property/canvas/runtime preview를 `ax/ay` 기준으로 변경.
 - `src/partPicker.css`
   - palette class 이름을 InteractionObject 기준으로 변경.
 - `setting.html`
@@ -129,6 +141,8 @@ No active object region
 - old `...InteractionBox` key가 포함된 saved state load/save 차단.
 - `tuningFieldGroups.js`의 InteractionObject 전용 property group 분기 제거.
 - canvas/display value 코드의 InteractionObject 직접 분기 일부를 parent-sized capability로 이동.
+- Effect의 `anchorX/anchorY` frame field 제거.
+- old Effect `anchorX/anchorY` frame이 포함된 saved state load/save 차단.
 - `debugInteractionBoxes` 이름 제거.
 - palette `*-interaction-box` CSS class 제거.
 - 코드와 일반 문서에서 `InteractionBox`, `interactionBox`, `INTERACTION_BOX` 검색 결과 제거.
@@ -142,7 +156,8 @@ No active object region
   - guard → shield
 - Runtime combat system의 attack/hurt/collision/guard 동작은 변경하지 않음.
 - Runtime `InteractionRegion` 이름 유지.
-- Background/HUD/Effect 저장 구조는 변경하지 않음.
+- Background/HUD 저장 구조는 변경하지 않음.
+- Effect 저장 구조는 `ax/ay` 기준으로 변경함.
 - Firebase remote data migration은 추가하지 않음.
 - Firebase remote data에 old key가 있으면 불러오지 않음.
 
@@ -169,6 +184,12 @@ No active object region
 - 통과: field capability smoke test.
   - Setup `attackInteractionObject`에 기준/크기/투명 group 유지.
   - Action active+attack frame에 상호작용/공격 group 유지.
+- 통과: Effect `ax/ay` smoke test.
+  - 기본 Effect frame에 `ax/ay` 존재 확인.
+  - Effect frame에 `anchorX/anchorY` 미포함 확인.
+  - Effect property group이 `ax/ay`를 사용함 확인.
+- 통과: obsolete Effect anchor smoke test.
+  - old Effect `anchorX`가 포함된 saved state 제거 확인.
 - 통과: `http://127.0.0.1:5514/setting.html` HTTP 200.
 - 통과: `src/tuningInteractionObjects.js` HTTP 200.
 - 통과: old `src/tuningInteractionBoxes.js` HTTP 404.

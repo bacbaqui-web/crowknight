@@ -17,15 +17,18 @@ export function pickDragValues(editState) {
 }
 
 export function pickEffectDragValues(target, effectKey) {
+  const size = defaultEffectSize(effectKey);
+  const w = Number(target.w || size.w);
+  const h = Number(target.h || size.h);
   return {
     x: Number(target.x || 0),
     y: Number(target.y || 0),
-    w: Number(target.w || defaultEffectSize(effectKey).w),
-    h: Number(target.h || defaultEffectSize(effectKey).h),
+    ax: Number(target.ax ?? w / 2),
+    ay: Number(target.ay ?? h / 2),
+    w,
+    h,
     rot: Number(target.rot || 0),
     opacity: Number(target.opacity ?? 1),
-    anchorX: Number(target.anchorX || 0),
-    anchorY: Number(target.anchorY || 0),
   };
 }
 
