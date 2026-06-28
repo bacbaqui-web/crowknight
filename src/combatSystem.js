@@ -39,6 +39,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       const removed = applyHitDamage({
         attacker,
         target,
+        attackRegion: box,
         comboStep,
         playerActor,
         world,
@@ -48,7 +49,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       });
       if (removed) return;
 
-      applyHitReaction(attacker, target, comboStep, particleEffects);
+      applyHitReaction(attacker, target, box, comboStep, particleEffects);
     });
   });
 }
@@ -142,6 +143,7 @@ function shouldSkipTarget(attacker, target) {
 function applyHitDamage({
   attacker,
   target,
+  attackRegion,
   comboStep,
   playerActor,
   world,
@@ -158,7 +160,7 @@ function applyHitDamage({
   }
 
   if (attacker.id === 'player') onPlayerKill();
-  const reaction = attackReaction(attacker, comboStep);
+  const reaction = interactionReaction(attackRegion);
   particleEffects.triggerHitImpact(attacker, target, comboStep, true);
   queueEnemyRespawn(target, {
     playerActor,
@@ -173,8 +175,8 @@ function applyHitDamage({
   return true;
 }
 
-function applyHitReaction(attacker, target, comboStep, particleEffects) {
-  const reaction = attackReaction(attacker, comboStep);
+function applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects) {
+  const reaction = interactionReaction(attackRegion);
   target.hurtCooldown = Math.max(0.18, reaction.stun);
   target.hitStun = reaction.stun;
   target.invulnTime = Math.max(target.invulnTime, target.tuning.invulnerability.hurt);
@@ -185,13 +187,8 @@ function applyHitReaction(attacker, target, comboStep, particleEffects) {
   particleEffects.triggerHitImpact(attacker, target, comboStep);
 }
 
-function attackReaction(attacker, comboStep) {
-  const effects = attacker.tuning.attackEffects || {};
-  if (attacker.player.poseKey === 'roll' && attacker.player.canRollUseWeapon) {
-    return effects.roll || effects.attack1 || fallbackAttackEffect();
-  }
-  const attackKey = attacker.player.poseKey === 'jumpAttack' ? 'jumpAttack' : `attack${comboStep}`;
-  return effects[attackKey] || effects.attack1 || fallbackAttackEffect();
+function interactionReaction(attackRegion) {
+  return attackRegion?.reaction || fallbackAttackEffect();
 }
 
 function fallbackAttackEffect() {

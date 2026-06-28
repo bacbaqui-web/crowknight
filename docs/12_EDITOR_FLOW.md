@@ -104,14 +104,16 @@ property input
 → applySelected
 ```
 
-InteractionBox state:
+Action object interaction state:
 
 ```text
-Action InteractionBox select
+Action object select
 → property active 0/1
-→ poseTimeline.writeFrameValue(boxKey, 'active', value)
+→ poseTimeline.writeFrameValue(partKey, 'active', value)
+→ poseTimeline.writeFrameValue(partKey, interaction setting, value)
+→ tuning.poseOffsets[poseKey][partKey]
 → animationFrames / puppetPlayerGeometry stepped frame value
-→ actor.player.getPartOffset(boxKey).active
+→ actor.player.getPartOffset(partKey)
 ```
 
 Runtime attack:
@@ -125,8 +127,8 @@ combatSystem
 → weapon parent transform + tuning.rig.attackInteractionBox + pose offset
 → Runtime attack region
 → combatGeometry.interactionRegionsOverlap()
-→ combatSystem.attackReaction()
-→ tuning.attackEffects[attackKey]
+→ attackInteractionRegion.reaction
+→ combatSystem.applyHitReaction()
 ```
 
 Canvas drag:
@@ -194,7 +196,8 @@ activeAttackSettingsKey()
 
 주의:
 
-- Runtime combat reaction은 `attackEffects`를 사용한다.
+- 공통 Action object 판정 설정은 `poseOffsets`에 저장한다.
+- Runtime combat reaction은 `attackInteractionRegion.reaction`을 사용한다.
 - `active`는 선형 보간하지 않는다.
 - `active = 1`이면 강조 표시하고, `0`이면 같은 source를 연하게 표시한다.
 

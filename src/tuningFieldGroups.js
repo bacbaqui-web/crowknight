@@ -28,9 +28,11 @@ export function partPropertyGroups(partKey) {
 
   if (isInteractionBoxPartKey(partKey)) {
     return [
+      { label: '기준', props: axisProps('ax', 'ay') },
       { label: '위치', props: axisProps('x', 'y') },
       { label: '크기', props: axisProps('w', 'h', 'W', 'H') },
       { label: '회전', props: [{ prop: 'rot', label: 'R' }] },
+      { label: '투명', props: [{ prop: 'opacity', label: 'O' }] },
     ];
   }
 
@@ -52,11 +54,18 @@ export function partPropertyGroups(partKey) {
   return groups;
 }
 
-export function posePropertyGroups(partKey, hasFrameSelection) {
+export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null) {
   const groups = [];
   if (isMasterPart(partKey) && !hasFrameSelection) {
     groups.push({ label: '기준', props: axisProps('anchorX', 'anchorY', 'X', 'Y') });
     return groups;
+  }
+  if (
+    imagePartKeys().includes(partKey) ||
+    controlGroupPartKeys().includes(partKey) ||
+    isInteractionBoxPartKey(partKey)
+  ) {
+    groups.push({ label: '기준', props: axisProps('ax', 'ay') });
   }
   groups.push({ label: '위치', props: axisProps('x', 'y') });
   if (
@@ -74,14 +83,29 @@ export function posePropertyGroups(partKey, hasFrameSelection) {
     });
   }
   groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
-  if (
-    !isInteractionBoxPartKey(partKey) &&
-    (isMasterPart(partKey) || imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey))
-  ) {
+  if (isMasterPart(partKey) || imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
     groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
   }
   if (isInteractionBoxPartKey(partKey)) {
+    groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
+  }
+  if (isEditableObjectPart(partKey)) {
     groups.push({ label: '판정', props: [{ prop: 'active', label: 'ON' }] });
   }
+  if (isEditableObjectPart(partKey) && Number(frameValue?.active || 0) >= 0.5) {
+    groups.push({
+      label: '판정 설정',
+      props: [
+        { prop: 'stun', label: 'ST' },
+        { prop: 'knockbackX', label: 'KX' },
+        { prop: 'knockbackY', label: 'KY' },
+        { prop: 'deathBurst', label: 'DB' },
+      ],
+    });
+  }
   return groups;
+}
+
+function isEditableObjectPart(partKey) {
+  return !isMasterPart(partKey);
 }

@@ -1,4 +1,5 @@
 import { defaultEffectSize } from './animationFrames.js';
+import { centerOffsetEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
 import { isMasterPart } from './tuningLabels.js';
 import { effectFrameAt } from './tuningNormalize.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
@@ -38,20 +39,24 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
   const width = Math.max(1, Number(config.w || defaultEffectSize(effectKey).w));
   const height = Math.max(1, Number(config.h || defaultEffectSize(effectKey).h));
   const flip = player.facing === 1 ? 1 : -1;
+  const transform = centerOffsetEditableTransform({
+    x: Number(config.x || 0),
+    y: Number(config.y || 0),
+    w: width,
+    h: height,
+    anchorOffsetX: config.anchorX,
+    anchorOffsetY: config.anchorY,
+    rot: config.rot,
+  });
+  const drawRect = editableTransformDrawRect(transform);
 
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(flip, 1);
-  ctx.translate(Number(config.x || 0), Number(config.y || 0));
-  ctx.rotate((Number(config.rot || 0) * Math.PI) / 180);
+  ctx.translate(transform.x, transform.y);
+  ctx.rotate((transform.rot * Math.PI) / 180);
   ctx.globalAlpha = clamp(Number(config.opacity ?? 1), 0, 1);
-  ctx.drawImage(
-    asset,
-    -width / 2 - Number(config.anchorX || 0),
-    -height / 2 - Number(config.anchorY || 0),
-    width,
-    height
-  );
+  ctx.drawImage(asset, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   ctx.restore();
 }
 

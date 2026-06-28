@@ -226,11 +226,17 @@ export function createTuningPanelPartController({
 
     renderScrubGroups(
       posePartFields,
-      posePropertyGroups(partKey, poseTimeline.hasFrameSelection()),
+      posePropertyGroups(partKey, poseTimeline.hasFrameSelection(), offset),
       (prop) => poseTimeline.readDisplayValue(partKey, offset, prop),
-      (prop, value) => poseTimeline.updateOffset(prop, value),
+      (prop, value) => updatePosePartValue(prop, value),
       scrubCallbacks
     );
+  }
+
+  function updatePosePartValue(prop, value) {
+    const nextValue = poseTimeline.updateOffset(prop, value);
+    if (prop === 'active') renderPosePartFields();
+    return nextValue;
   }
 
   function updateGroupPoseValue(prop, value) {

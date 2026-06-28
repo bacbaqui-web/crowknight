@@ -20,7 +20,7 @@ import {
   INTERACTION_BOX_PART_TYPE,
   interactionBoxParentPartKey,
 } from './tuningInteractionBoxes.js';
-import { clamp, clone } from './utils.js';
+import { clamp, clone, lerp } from './utils.js';
 
 export function mergeTuning(base, saved) {
   if (!saved) {
@@ -48,7 +48,6 @@ export function mergeTuning(base, saved) {
     saved.effectSettings || merged.effectSettings,
     base.effectSettings || base.poseSettings
   );
-  merged.attackEffects = normalizeAttackEffects(saved.attackEffects || merged.attackEffects, base.attackEffects);
   normalizeControlGroups(merged.rig);
   normalizeRigImageAnchors(merged.rig, saved.rig);
   normalizeRigRotations(merged.rig, base.rig);
@@ -73,22 +72,40 @@ function normalizeRigInteractionBoxParts(tuning, base, saved = null) {
       current,
       fallback: base.rig?.[key],
       parent: rig[interactionBoxParentPartKey(key)],
+      legacyTopLeft: Boolean(
+        savedRigPart &&
+        savedRigPart.ax === undefined &&
+        savedRigPart.ay === undefined &&
+        (savedRigPart.x !== undefined || savedRigPart.y !== undefined)
+      ),
     });
   });
 }
 
-function normalizeRigInteractionBoxPart({ current, fallback = {}, parent = {} }) {
+function normalizeRigInteractionBoxPart({ current, fallback = {}, parent = {}, legacyTopLeft = false }) {
   const source = current || fallback;
+  const width = Math.max(1, Number(source.w ?? fallback.w ?? parent.w ?? 1));
+  const height = Math.max(1, Number(source.h ?? fallback.h ?? parent.h ?? 1));
+  const baseW = Math.max(1, Number(source.baseW ?? fallback.baseW ?? parent.w ?? source.w ?? 1));
+  const baseH = Math.max(1, Number(source.baseH ?? fallback.baseH ?? parent.h ?? source.h ?? 1));
+  const hasAnchor = !legacyTopLeft && (source.ax !== undefined || source.ay !== undefined);
+  const fallbackAx = Number(fallback.ax ?? width / 2);
+  const fallbackAy = Number(fallback.ay ?? height / 2);
+  const ax = Number(source.ax ?? fallbackAx);
+  const ay = Number(source.ay ?? fallbackAy);
   return {
     type: INTERACTION_BOX_PART_TYPE,
     parent: source.parent || fallback.parent || null,
-    x: Number(source.x ?? fallback.x ?? 0),
-    y: Number(source.y ?? fallback.y ?? 0),
-    w: Math.max(1, Number(source.w ?? fallback.w ?? parent.w ?? 1)),
-    h: Math.max(1, Number(source.h ?? fallback.h ?? parent.h ?? 1)),
-    baseW: Math.max(1, Number(source.baseW ?? fallback.baseW ?? parent.w ?? source.w ?? 1)),
-    baseH: Math.max(1, Number(source.baseH ?? fallback.baseH ?? parent.h ?? source.h ?? 1)),
+    x: Number(source.x ?? fallback.x ?? 0) + (hasAnchor ? 0 : ax),
+    y: Number(source.y ?? fallback.y ?? 0) + (hasAnchor ? 0 : ay),
+    ax,
+    ay,
+    w: width,
+    h: height,
+    baseW,
+    baseH,
     rot: Number(source.rot ?? fallback.rot ?? 0),
+    opacity: clamp(Number(source.opacity ?? fallback.opacity ?? 1), 0, 1),
   };
 }
 
@@ -286,15 +303,63 @@ function normalizePoseOffsets(current = {}) {
 
 function poseFrameValueWithInteractionDefaults(pose, part, value) {
   const fallback = DEFAULT_PLAYER_TUNING.poseOffsets?.[pose]?.[part];
-  if (part !== ATTACK_INTERACTION_BOX_KEY || !fallback || poseFrameHasProp(value, 'active')) return value;
-  return fallback;
+  if (part !== ATTACK_INTERACTION_BOX_KEY || !fallback) return value;
+  if (!value) return fallback;
+  return withInteractionFrameDefaults(value, fallback);
 }
 
-function poseFrameHasProp(value, prop) {
-  if (!value) return false;
-  if (value[prop] !== undefined) return true;
-  if (value.start?.[prop] !== undefined || value.end?.[prop] !== undefined) return true;
-  return Array.isArray(value.keyframes) && value.keyframes.some((frame) => frame?.[prop] !== undefined);
+function withInteractionFrameDefaults(value = {}, fallback = {}) {
+  return {
+    ...value,
+    active: value.active ?? fallback.active,
+    start: withInteractionFrameDefault(value.start, fallback.start),
+    end: withInteractionFrameDefault(value.end, fallback.end),
+    keyframes: withInteractionKeyframeDefaults(value.keyframes, fallback.keyframes, value),
+  };
+}
+
+function withInteractionFrameDefault(frame = {}, fallback = {}) {
+  return {
+    ...frame,
+    active: frame.active ?? fallback.active ?? 0,
+    stun: frame.stun ?? fallback.stun ?? 0,
+    knockbackX: frame.knockbackX ?? fallback.knockbackX ?? 0,
+    knockbackY: frame.knockbackY ?? fallback.knockbackY ?? 0,
+    deathBurst: frame.deathBurst ?? fallback.deathBurst ?? 1,
+  };
+}
+
+function withInteractionKeyframeDefaults(keyframes, fallbackKeyframes = [], value = {}) {
+  if (!Array.isArray(keyframes) || !keyframes.length) {
+    return fallbackKeyframes.map((frame) => ({
+      ...interpolatePoseFrameDefaults(value, frame.t),
+      ...frame,
+    }));
+  }
+  return keyframes.map((frame, index) => {
+    const fallback =
+      fallbackKeyframes.find((item) => item.id && item.id === frame.id) ||
+      fallbackKeyframes.find((item) => Number(item.t) === Number(frame.t)) ||
+      fallbackKeyframes[index] ||
+      {};
+    return withInteractionFrameDefault(frame, fallback);
+  });
+}
+
+function interpolatePoseFrameDefaults(value = {}, t = 0) {
+  const start = frameValue(value.start);
+  const end = frameValue(value.end || value.start);
+  const amount = clamp(Number(t), 0, 1);
+  return {
+    x: lerp(start.x, end.x, amount),
+    y: lerp(start.y, end.y, amount),
+    ax: lerp(start.ax, end.ax, amount),
+    ay: lerp(start.ay, end.ay, amount),
+    w: lerp(start.w, end.w, amount),
+    h: lerp(start.h, end.h, amount),
+    rot: lerp(start.rot, end.rot, amount),
+    opacity: lerp(start.opacity, end.opacity, amount),
+  };
 }
 
 function legacyPosePartKey(part) {
@@ -375,21 +440,6 @@ function normalizeLayerOrder(current, fallback) {
   const kept = (current || []).filter((layer) => valid.has(layer));
   const missing = fallback.filter((layer) => !kept.includes(layer));
   return [...kept, ...missing];
-}
-
-function normalizeAttackEffects(current, fallback) {
-  const normalized = {};
-  ['attack1', 'attack2', 'attack3', 'jumpAttack', 'roll'].forEach((key) => {
-    const source = current?.[key] || {};
-    normalized[key] = {
-      ...(fallback[key] || {}),
-      stun: Number(source.stun ?? fallback[key]?.stun ?? 0),
-      knockbackX: Number(source.knockbackX ?? fallback[key]?.knockbackX ?? 0),
-      knockbackY: Number(source.knockbackY ?? fallback[key]?.knockbackY ?? 0),
-      deathBurst: Number(source.deathBurst ?? fallback[key]?.deathBurst ?? 1),
-    };
-  });
-  return normalized;
 }
 
 function mergeInto(target, source) {

@@ -283,6 +283,8 @@ export class PuppetPlayer {
     const empty = {
       x: 0,
       y: 0,
+      ax: 0,
+      ay: 0,
       w: 0,
       h: 0,
       rot: 0,
@@ -290,6 +292,10 @@ export class PuppetPlayer {
       anchorX: 0,
       anchorY: 0,
       active: 0,
+      stun: 0,
+      knockbackX: 0,
+      knockbackY: 0,
+      deathBurst: 1,
     };
     if (!value) return empty;
     if (Array.isArray(value.keyframes) && value.keyframes.length) {
@@ -303,6 +309,8 @@ export class PuppetPlayer {
     return {
       x: lerp(start.x, end.x, t),
       y: lerp(start.y, end.y, t),
+      ax: lerp(start.ax, end.ax, t),
+      ay: lerp(start.ay, end.ay, t),
       w: lerp(start.w, end.w, t),
       h: lerp(start.h, end.h, t),
       rot: lerp(start.rot, end.rot, t),
@@ -310,6 +318,10 @@ export class PuppetPlayer {
       anchorX: Number(value.anchorX || 0),
       anchorY: Number(value.anchorY || 0),
       active: Number(start.active || 0) >= 0.5 ? 1 : 0,
+      stun: lerp(start.stun, end.stun, t),
+      knockbackX: lerp(start.knockbackX, end.knockbackX, t),
+      knockbackY: lerp(start.knockbackY, end.knockbackY, t),
+      deathBurst: lerp(start.deathBurst, end.deathBurst, t),
     };
   }
 

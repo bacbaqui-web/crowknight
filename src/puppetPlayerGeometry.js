@@ -115,6 +115,8 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
     .map((frame) => ({
       x: Number(frame.x || 0),
       y: Number(frame.y || 0),
+      ax: Number(frame.ax || 0),
+      ay: Number(frame.ay || 0),
       w: Number(frame.w || 0),
       h: Number(frame.h || 0),
       rot: Number(frame.rot || 0),
@@ -122,6 +124,10 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
       anchorX: Number(frame.anchorX || 0),
       anchorY: Number(frame.anchorY || 0),
       active: steppedFrameFlag(frame.active),
+      stun: Number(frame.stun || 0),
+      knockbackX: Number(frame.knockbackX || 0),
+      knockbackY: Number(frame.knockbackY || 0),
+      deathBurst: Number(frame.deathBurst ?? 1),
       t: clamp(Number(frame.t), 0, 1),
     }))
     .sort((a, b) => a.t - b.t);
@@ -138,6 +144,8 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
     return {
       x: lerp(a.x, b.x, localT),
       y: lerp(a.y, b.y, localT),
+      ax: lerp(a.ax, b.ax, localT),
+      ay: lerp(a.ay, b.ay, localT),
       w: lerp(a.w, b.w, localT),
       h: lerp(a.h, b.h, localT),
       rot: lerp(a.rot, b.rot, localT),
@@ -145,6 +153,10 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
       anchorX: lerp(a.anchorX, b.anchorX, localT),
       anchorY: lerp(a.anchorY, b.anchorY, localT),
       active: steppedFrameFlag(a.active),
+      stun: lerp(a.stun, b.stun, localT),
+      knockbackX: lerp(a.knockbackX, b.knockbackX, localT),
+      knockbackY: lerp(a.knockbackY, b.knockbackY, localT),
+      deathBurst: lerp(a.deathBurst, b.deathBurst, localT),
     };
   }
 

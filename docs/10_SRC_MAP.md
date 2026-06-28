@@ -130,6 +130,7 @@
 
 ## Canvas / Edit Handles
 
+- `src/editableObjectModel.js`: editable object 순수 계산. 수정: transform/appearance/interaction 계산. 같이: handle, renderer, drag apply. 위험: 중간.
 - `src/tuningPanelPartController.js`: part/property controller. 수정: Setup/Action selection/property write. 같이: field groups/values, timeline. 위험: 높음.
 - `src/tuningPanelLayerOrder.js`: layer order UI. 수정: layer drag reorder. 같이: rig/layer data. 위험: 중간.
 - `src/tuningPanelCanvasController.js`: canvas controller. 수정: pointer/edit/apply flow. 같이: canvas drag files, handle geometry. 위험: 높음.

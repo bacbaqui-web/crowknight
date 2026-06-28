@@ -1,16 +1,15 @@
 import { rotatePointAround, scalePointAround, screenDeltaToLocal } from './canvasDragMath.js';
+import { resizeEditableTransformFromHandle } from './editableObjectModel.js';
 import {
   anchorScaleForPart,
   canvasSizeDelta,
   canvasSizePercentBase,
-  clampCanvasVisualSize,
   isGroupScalablePart,
   setCanvasVisualValue,
   setPartAnchorValue,
 } from './canvasVisualValues.js';
 import { defaultEffectSize } from './animationFrames.js';
 import { clampEffectFrameSize } from './effectVisualValues.js';
-import { isInteractionBoxPartKey } from './tuningInteractionBoxes.js';
 import { isMasterPart } from './tuningLabels.js';
 import { clamp } from './utils.js';
 
@@ -55,23 +54,38 @@ export function applyCanvasPartDrag(drag, dx, dy) {
   }
 
   if (drag.mode === 'width') {
-    setCanvasPartSizeValue(drag, 'w', drag.startVisual.w + canvasSizeDelta(drag, 'w', -handleLocalX));
+    const resized = resizeEditableTransformFromHandle({
+      transform: drag.startVisual,
+      mode: 'width',
+      widthDelta: canvasSizeDelta(drag, 'w', -handleLocalX),
+    });
+    setCanvasPartSizeValue(drag, 'w', resized.w);
     return;
   }
 
   if (drag.mode === 'height') {
-    setCanvasPartSizeValue(drag, 'h', drag.startVisual.h + canvasSizeDelta(drag, 'h', -handleLocalY));
+    const resized = resizeEditableTransformFromHandle({
+      transform: drag.startVisual,
+      mode: 'height',
+      heightDelta: canvasSizeDelta(drag, 'h', -handleLocalY),
+    });
+    setCanvasPartSizeValue(drag, 'h', resized.h);
     return;
   }
 
   if (drag.mode === 'size') {
     const baseW = canvasSizePercentBase(drag, 'w');
     const baseH = canvasSizePercentBase(drag, 'h');
-    const deltaW = canvasSizeDelta(drag, 'w', handleLocalX);
-    const deltaH = canvasSizeDelta(drag, 'h', handleLocalY);
-    const sharedPercentDelta = (deltaW / baseW + deltaH / baseH) / 2;
-    setCanvasPartSizeValue(drag, 'w', drag.startVisual.w + baseW * sharedPercentDelta);
-    setCanvasPartSizeValue(drag, 'h', drag.startVisual.h + baseH * sharedPercentDelta);
+    const resized = resizeEditableTransformFromHandle({
+      transform: drag.startVisual,
+      mode: 'size',
+      widthDelta: canvasSizeDelta(drag, 'w', handleLocalX),
+      heightDelta: canvasSizeDelta(drag, 'h', handleLocalY),
+      baseW,
+      baseH,
+    });
+    setCanvasPartSizeValue(drag, 'w', resized.w);
+    setCanvasPartSizeValue(drag, 'h', resized.h);
     return;
   }
 
@@ -80,22 +94,7 @@ export function applyCanvasPartDrag(drag, dx, dy) {
 }
 
 function setCanvasPartSizeValue(drag, prop, value) {
-  if (!isInteractionBoxPartKey(drag.part)) {
-    setCanvasVisualValue(drag, prop, value);
-    return;
-  }
-
-  const nextValue = clampCanvasVisualSize(drag, prop, value);
-  if (prop === 'w') {
-    const centerX = Number(drag.startVisual.x || 0) + Number(drag.startVisual.w || 0) / 2;
-    setCanvasVisualValue(drag, 'w', nextValue);
-    setCanvasVisualValue(drag, 'x', centerX - nextValue / 2);
-    return;
-  }
-
-  const centerY = Number(drag.startVisual.y || 0) + Number(drag.startVisual.h || 0) / 2;
-  setCanvasVisualValue(drag, 'h', nextValue);
-  setCanvasVisualValue(drag, 'y', centerY - nextValue / 2);
+  setCanvasVisualValue(drag, prop, value);
 }
 
 export function applyCanvasGroupDrag(drag, dx, dy, groupEditValues) {
@@ -197,23 +196,38 @@ export function applyEffectCanvasDrag(drag, dx, dy, effectKey, writeEffectFrameV
   }
 
   if (drag.mode === 'width') {
-    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', drag.startValues.w - localX));
+    const resized = resizeEditableTransformFromHandle({
+      transform: drag.startValues,
+      mode: 'width',
+      widthDelta: -localX,
+    });
+    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', resized.w));
     return;
   }
 
   if (drag.mode === 'height') {
-    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', drag.startValues.h - localY));
+    const resized = resizeEditableTransformFromHandle({
+      transform: drag.startValues,
+      mode: 'height',
+      heightDelta: -localY,
+    });
+    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', resized.h));
     return;
   }
 
   if (drag.mode === 'size') {
     const baseW = defaultEffectSize(effectKey).w;
     const baseH = defaultEffectSize(effectKey).h;
-    const deltaW = localX / Math.max(1, baseW);
-    const deltaH = localY / Math.max(1, baseH);
-    const scaleDelta = (deltaW + deltaH) / 2;
-    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', drag.startValues.w + baseW * scaleDelta));
-    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', drag.startValues.h + baseH * scaleDelta));
+    const resized = resizeEditableTransformFromHandle({
+      transform: drag.startValues,
+      mode: 'size',
+      widthDelta: localX,
+      heightDelta: localY,
+      baseW,
+      baseH,
+    });
+    writeEffectFrameValue('w', clampEffectFrameSize(effectKey, 'w', resized.w));
+    writeEffectFrameValue('h', clampEffectFrameSize(effectKey, 'h', resized.h));
     return;
   }
 

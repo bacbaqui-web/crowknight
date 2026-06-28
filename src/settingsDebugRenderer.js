@@ -6,6 +6,7 @@ export function drawEditableInteractionBoxTarget(ctx, actor, partKey, { fill, st
   if (!target) return null;
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha *= Number(target.opacity ?? 1);
   drawInteractionBoxRect(ctx, target, { fill, stroke });
   ctx.restore();
   return target;

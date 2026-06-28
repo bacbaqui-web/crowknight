@@ -5,9 +5,16 @@ import { clamp } from './utils.js';
 export const ACTION_BASE_TRANSFORM_DISPLAY = {
   x: 0,
   y: 0,
+  ax: 0,
+  ay: 0,
   w: 100,
   h: 100,
   rot: 0,
+  active: 0,
+  stun: 0,
+  knockbackX: 0,
+  knockbackY: 0,
+  deathBurst: 1,
 };
 
 export function readActionBaseTransformDisplayValue(partKey, frameValue, prop, basePart) {

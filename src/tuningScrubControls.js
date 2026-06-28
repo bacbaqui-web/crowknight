@@ -28,7 +28,7 @@ function renderScrubValue(label, prop, value, writeValue, container, readValue, 
   button.type = 'button';
   button.dataset.scrubProp = prop;
   button.dataset.scrubLabel = label;
-  button.classList.toggle('is-off', prop === 'opacity' && Number(value ?? 1) <= 0);
+  button.classList.toggle('is-off', isTogglePropOff(prop, value));
   button.innerHTML = `<span>${label}</span><strong>${formatPartValue(value, prop)}</strong>`;
   bindScrubValue(button, prop, writeValue, container, readValue, callbacks);
   control.append(button, renderScrubSteppers(button, prop, writeValue, container, readValue, callbacks));
@@ -60,15 +60,14 @@ function stepScrubValue(event, button, prop, direction, writeValue, container, r
   event.preventDefault();
   event.stopPropagation();
   callbacks.beginChange();
-  const current = Number(readValue(prop) ?? (prop === 'opacity' ? 1 : 0));
-  const next =
-    prop === 'opacity'
-      ? direction > 0
-        ? 1
-        : 0
-      : event.shiftKey
-        ? stepNumberByTen(current, direction)
-        : stepNumberByOne(current, direction);
+  const current = Number(readValue(prop) ?? togglePropFallback(prop));
+  const next = isToggleProp(prop)
+    ? direction > 0
+      ? 1
+      : 0
+    : event.shiftKey
+      ? stepNumberByTen(current, direction)
+      : stepNumberByOne(current, direction);
   const nextValue = writeValue(prop, next);
   callbacks.commitChange();
   syncScrubValue(button, prop, nextValue ?? readValue(prop));
@@ -85,7 +84,7 @@ function bindScrubValue(button, prop, writeValue, container, readValue, callback
     scrub = {
       pointerId: event.pointerId,
       startY: event.clientY,
-      startValue: Number(readValue(prop) ?? (prop === 'opacity' ? 1 : 0)),
+      startValue: Number(readValue(prop) ?? togglePropFallback(prop)),
       moved: false,
       hasSnapshot: false,
     };
@@ -95,7 +94,7 @@ function bindScrubValue(button, prop, writeValue, container, readValue, callback
 
   button.addEventListener('pointermove', (event) => {
     if (!scrub || scrub.pointerId !== event.pointerId) return;
-    if (prop === 'opacity') return;
+    if (isToggleProp(prop)) return;
     event.preventDefault();
     const dragDistance = scrub.startY - event.clientY;
     if (!scrub.moved && Math.abs(dragDistance) < 2) return;
@@ -118,9 +117,9 @@ function bindScrubValue(button, prop, writeValue, container, readValue, callback
     if (shouldCommit) callbacks.commitChange();
     if (!shouldEdit) return;
 
-    if (prop === 'opacity') {
+    if (isToggleProp(prop)) {
       callbacks.beginChange();
-      const current = Number(readValue(prop) ?? 1);
+      const current = Number(readValue(prop) ?? togglePropFallback(prop));
       const nextValue = writeValue(prop, current > 0 ? 0 : 1);
       syncScrubValue(button, prop, nextValue ?? readValue(prop));
       callbacks.commitChange();
@@ -188,7 +187,7 @@ function syncScrubValues(container, readValue) {
 
 function syncScrubValue(button, prop, value) {
   const label = button.dataset.scrubLabel || propLabelForScrub(prop);
-  button.classList.toggle('is-off', prop === 'opacity' && Number(value ?? 1) <= 0);
+  button.classList.toggle('is-off', isTogglePropOff(prop, value));
   button.innerHTML = `<span>${label}</span><strong>${formatPartValue(value, prop)}</strong>`;
 }
 
@@ -211,12 +210,14 @@ function propLabelForScrub(prop) {
 function scrubInputValue(value, prop) {
   if (prop === 'rot') return formatRotationValue(value);
   if (prop === 'w' || prop === 'h' || prop === 'scale') return parseScrubNumber(formatPartValue(value, prop));
+  if (prop === 'stun' || prop === 'deathBurst') return formatDecimalValue(value, 2);
   const number = Number(value ?? 0);
   return Number.isInteger(number) ? String(number) : number.toFixed(1);
 }
 
 function scrubStep(prop) {
-  if (prop === 'opacity') return 0.01;
+  if (isToggleProp(prop)) return 0.01;
+  if (prop === 'stun' || prop === 'deathBurst') return 0.01;
   if (prop === 'w' || prop === 'h' || prop === 'scale') return 1;
   return 1;
 }
@@ -231,7 +232,7 @@ function parseScrubInput(value, prop) {
 }
 
 function formatPartValue(value, prop) {
-  const fallback = prop === 'opacity' ? 1 : 0;
+  const fallback = togglePropFallback(prop);
   const number = Number(value ?? fallback);
   if (prop === 'rot') return formatRotationValue(number);
   if (prop === 'w' || prop === 'h' || prop === 'scale') {
@@ -241,7 +242,30 @@ function formatPartValue(value, prop) {
   if (prop === 'opacity') {
     return number > 0 ? '보임' : '숨김';
   }
+  if (prop === 'active') {
+    return number > 0 ? '켜짐' : '꺼짐';
+  }
+  if (prop === 'stun' || prop === 'deathBurst') return formatDecimalValue(number, 2);
   return Number.isInteger(number) ? String(number) : number.toFixed(1);
+}
+
+function isToggleProp(prop) {
+  return prop === 'opacity' || prop === 'active';
+}
+
+function isTogglePropOff(prop, value) {
+  return isToggleProp(prop) && Number(value ?? togglePropFallback(prop)) <= 0;
+}
+
+function togglePropFallback(prop) {
+  if (prop === 'opacity') return 1;
+  return 0;
+}
+
+function formatDecimalValue(value, decimals) {
+  const number = Number(value ?? 0);
+  if (!Number.isFinite(number)) return '0';
+  return Number(number.toFixed(decimals)).toString();
 }
 
 function formatRotationValue(value) {

@@ -1,4 +1,5 @@
 import { axisFromMatrix, transformPoint } from './puppetPlayerGeometry.js';
+import { createEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
 
 export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
   if (!key) return null;
@@ -52,14 +53,34 @@ export function recordPuppetEditHandle(player, ctx, key, placementMatrix = null)
   return handle;
 }
 
-export function recordPuppetRectPart(player, ctx, key, x, y, w, h, { rot = 0, type = 'part', source = null } = {}) {
+export function recordPuppetRectPart(
+  player,
+  ctx,
+  key,
+  x,
+  y,
+  w,
+  h,
+  { ax = Number(w || 0) / 2, ay = Number(h || 0) / 2, rot = 0, opacity = 1, type = 'part', source = null } = {}
+) {
   if (!key) return null;
 
+  const transform = createEditableTransform({
+    x: Number(x || 0) + Number(ax || 0),
+    y: Number(y || 0) + Number(ay || 0),
+    w,
+    h,
+    ax,
+    ay,
+    rot,
+  });
+  const drawRect = editableTransformDrawRect(transform);
+
   ctx.save();
-  ctx.translate(x + w / 2, y + h / 2);
+  ctx.translate(transform.x, transform.y);
   const placementMatrix = ctx.getTransform();
-  ctx.rotate((Number(rot || 0) * Math.PI) / 180);
-  const region = recordPuppetImageRegion(player, ctx, key, -w / 2, -h / 2, w, h);
+  ctx.rotate((transform.rot * Math.PI) / 180);
+  const region = recordPuppetImageRegion(player, ctx, key, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   const handle = recordPuppetEditHandle(player, ctx, key, placementMatrix);
   if (handle && region) {
     handle.target = {
@@ -73,6 +94,7 @@ export function recordPuppetRectPart(player, ctx, key, x, y, w, h, { rot = 0, ty
       h: region.bounds.h,
       points: region.points,
       bounds: region.bounds,
+      opacity,
     };
   }
   ctx.restore();

@@ -1,4 +1,10 @@
 import { clamp, deg } from './utils.js';
+import {
+  createEditableAppearance,
+  createEditableTransform,
+  editableTransformDrawRect,
+  scaledEditableAnchor,
+} from './editableObjectModel.js';
 import { drawPuppetAnchorDot, drawPuppetDebug } from './puppetPlayerDebug.js';
 import {
   recordPuppetAnchorDebugPoint,
@@ -163,8 +169,8 @@ export function puppetGroupControl(base = {}, offset = {}) {
     w: Math.max(0.05, Number(base.w ?? 1) + Number(offset.w || 0)),
     h: Math.max(0.05, Number(base.h ?? 1) + Number(offset.h || 0)),
     opacity: clamp((base.opacity ?? 1) * (offset.opacity ?? 1), 0, 1),
-    ax: Number(base.ax || 0),
-    ay: Number(base.ay || 0),
+    ax: Number(base.ax || 0) + Number(offset.ax || 0),
+    ay: Number(base.ay || 0) + Number(offset.ay || 0),
     anchorOffsetX: Number(base.anchorOffsetX || 0),
     anchorOffsetY: Number(base.anchorOffsetY || 0),
   };
@@ -268,28 +274,36 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   const referenceW = part.baseW || partWidth(image);
   const referenceH = part.baseH || partHeight(image);
   const { width, height } = partRectSize(part, offset, referenceW, referenceH);
-  const anchorLocalX = part.ax ?? part.ox;
-  const anchorLocalY = part.ay ?? part.oy;
+  const anchorLocalX = Number(part.ax ?? part.ox ?? 0) + Number(offset.ax || 0);
+  const anchorLocalY = Number(part.ay ?? part.oy ?? 0) + Number(offset.ay || 0);
   const scaledAnchorX = anchorLocalX * (width / Math.max(1, referenceW));
   const scaledAnchorY = anchorLocalY * (height / Math.max(1, referenceH));
-  const anchorX = imageX + anchorLocalX;
-  const anchorY = imageY + anchorLocalY;
+  const transform = createEditableTransform({
+    x: imageX + anchorLocalX,
+    y: imageY + anchorLocalY,
+    w: width,
+    h: height,
+    ax: scaledAnchorX,
+    ay: scaledAnchorY,
+    rot: partRectRotation(part, offset),
+  });
+  const drawRect = editableTransformDrawRect(transform);
 
   ctx.save();
-  ctx.translate(anchorX, anchorY);
+  ctx.translate(transform.x, transform.y);
   const placementMatrix = ctx.getTransform();
-  ctx.rotate(rotation + deg(partRectRotation(part, offset)));
-  recordPuppetImageRegion(player, ctx, key, -scaledAnchorX, -scaledAnchorY, width, height);
+  ctx.rotate(rotation + deg(transform.rot));
+  recordPuppetImageRegion(player, ctx, key, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
-  drawPuppetImageLessChildParts(player, ctx, key, -scaledAnchorX, -scaledAnchorY);
+  drawPuppetImageLessChildParts(player, ctx, key, drawRect.x, drawRect.y);
   ctx.globalAlpha *= clamp((part.opacity ?? 1) * (offset.opacity ?? 1), 0, 1);
   if (shouldGlowPartKey(key, player.glowPart, player.glowParts)) {
-    drawPuppetImageGlow(ctx, image, -scaledAnchorX, -scaledAnchorY, width, height);
+    drawPuppetImageGlow(ctx, image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   }
-  ctx.drawImage(image, -scaledAnchorX, -scaledAnchorY, width, height);
+  ctx.drawImage(image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   ctx.restore();
 
-  if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, anchorX, anchorY);
+  if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, transform.x, transform.y);
 }
 
 function drawPuppetImageLessChildParts(player, ctx, parentKey, parentX, parentY) {
@@ -313,16 +327,30 @@ function imageLessChildPartsForParent(parentKey) {
 function drawPuppetImageLessRectPart(player, ctx, key, part, parentX, parentY, { type = 'part' } = {}) {
   const offset = player.getPartOffset(key);
   const { width, height } = partRectSize(part, offset, part.baseW || 1, part.baseH || 1);
+  const appearance = createEditableAppearance({
+    opacity: (part.opacity ?? 1) * (offset.opacity ?? 1),
+  });
+  const anchor = scaledEditableAnchor({
+    ax: Number(part.ax ?? width / 2) + Number(offset.ax || 0),
+    ay: Number(part.ay ?? height / 2) + Number(offset.ay || 0),
+    w: width,
+    h: height,
+    baseW: part.baseW || width,
+    baseH: part.baseH || height,
+  });
   recordPuppetRectPart(
     player,
     ctx,
     key,
-    parentX + Number(part.x || 0) + Number(offset.x || 0),
-    parentY + Number(part.y || 0) + Number(offset.y || 0),
+    parentX + Number(part.x || 0) + Number(offset.x || 0) - anchor.ax,
+    parentY + Number(part.y || 0) + Number(offset.y || 0) - anchor.ay,
     width,
     height,
     {
+      ax: anchor.ax,
+      ay: anchor.ay,
       rot: partRectRotation(part, offset),
+      opacity: appearance.opacity,
       type,
       source: part,
     }

@@ -36,6 +36,8 @@ export function pickVisualValues(editState) {
     return {
       x: Number(base.x || 0) + Number(target.x || 0),
       y: Number(base.y || 0) + Number(target.y || 0),
+      ax: Number(base.ax || 0) + Number(target.ax || 0),
+      ay: Number(base.ay || 0) + Number(target.ay || 0),
       w: Number(base.w || 0) + Number(target.w || 0),
       h: Number(base.h || 0) + Number(target.h || 0),
       rot: Number(base.rot || 0) + Number(target.rot || 0),

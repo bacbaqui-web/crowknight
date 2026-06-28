@@ -37,21 +37,18 @@ Setup에서 직접 편집하는 base rig다.
 
 Editor 기준 판정 박스 저장 위치다.
 
-| Key                       | Role        | Parent   | 저장 필드                                                     |
-| ------------------------- | ----------- | -------- | ------------------------------------------------------------- |
-| `collisionInteractionBox` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
-| `hurtInteractionBox`      | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
-| `attackInteractionBox`    | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
-| `guardInteractionBox`     | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
+| Key                       | Role        | Parent   | 저장 필드                                                                            |
+| ------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------ |
+| `collisionInteractionBox` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| `hurtInteractionBox`      | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| `attackInteractionBox`    | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| `guardInteractionBox`     | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
 
 저장 key는 InteractionBox 용어를 사용한다.
 
 ## Runtime InteractionRegion
 
 Runtime/Combat 계산값이다.
-
-- `tuning.attackEffects`: Runtime combat reaction 효과값.
-- `tuning.attackEffects.*`: `stun`, `knockbackX`, `knockbackY`, `deathBurst`.
 
 Runtime 피격 판정 geometry:
 
@@ -71,8 +68,9 @@ tuning.rig.attackInteractionBox
 Runtime 공격 효과:
 
 ```text
-tuning.attackEffects[attackKey]
-→ combatSystem.attackReaction()
+tuning.poseOffsets[poseKey][partKey].stun/knockbackX/knockbackY/deathBurst
+→ actor.player.attackInteractionRegion.reaction
+→ combatSystem.applyHitReaction()
 ```
 
 Runtime mirror field는 저장하지 않는다.
@@ -98,10 +96,12 @@ Frame value:
 - `id`
 - `t`
 - `x`, `y`
+- `ax`, `ay`
 - `w`, `h`
 - `rot`
 - `opacity`
-- `active` (`InteractionBox` stepped state)
+- `active` (common interaction state)
+- `stun`, `knockbackX`, `knockbackY`, `deathBurst` (common interaction settings)
 - root anchor field 일부
 
 ## `effectOffsets`

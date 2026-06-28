@@ -3,6 +3,7 @@ import {
   ATTACK_INTERACTION_BOX_KEY,
   HURT_INTERACTION_BOX_KEY,
 } from './tuningInteractionBoxes.js';
+import { scaledEditableAnchor } from './editableObjectModel.js';
 import { deg } from './utils.js';
 import {
   multiplyMatrix,
@@ -12,18 +13,31 @@ import {
   translationMatrix,
 } from './puppetPlayerGeometry.js';
 
-export function createInteractionRegion({ key, role, matrix, x, y, w, h, rot = 0, active = true }) {
+export function createInteractionRegion({
+  key,
+  role,
+  matrix,
+  x,
+  y,
+  w,
+  h,
+  ax = Number(w || 0) / 2,
+  ay = Number(h || 0) / 2,
+  rot = 0,
+  active = true,
+  interaction = null,
+}) {
   const width = Math.max(1, Number(w || 1));
   const height = Math.max(1, Number(h || 1));
   const regionMatrix = multiplyMatrix(
-    multiplyMatrix(matrix, translationMatrix(Number(x || 0) + width / 2, Number(y || 0) + height / 2)),
+    multiplyMatrix(matrix, translationMatrix(Number(x || 0), Number(y || 0))),
     rotationMatrix(deg(Number(rot || 0)))
   );
   const points = [
-    transformMatrixPoint(regionMatrix, -width / 2, -height / 2),
-    transformMatrixPoint(regionMatrix, width / 2, -height / 2),
-    transformMatrixPoint(regionMatrix, width / 2, height / 2),
-    transformMatrixPoint(regionMatrix, -width / 2, height / 2),
+    transformMatrixPoint(regionMatrix, -Number(ax || 0), -Number(ay || 0)),
+    transformMatrixPoint(regionMatrix, width - Number(ax || 0), -Number(ay || 0)),
+    transformMatrixPoint(regionMatrix, width - Number(ax || 0), height - Number(ay || 0)),
+    transformMatrixPoint(regionMatrix, -Number(ax || 0), height - Number(ay || 0)),
   ];
   const bounds = boundsFromPoints(points);
 
@@ -36,6 +50,16 @@ export function createInteractionRegion({ key, role, matrix, x, y, w, h, rot = 0
     w: bounds.w,
     h: bounds.h,
     points,
+    reaction: interactionReactionFromValue(interaction),
+  };
+}
+
+export function interactionReactionFromValue(value = {}) {
+  return {
+    stun: Math.max(0, Number(value?.stun || 0)),
+    knockbackX: Number(value?.knockbackX || 0),
+    knockbackY: Number(value?.knockbackY || 0),
+    deathBurst: Math.max(0, Number(value?.deathBurst ?? 1)),
   };
 }
 
@@ -61,14 +85,22 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
   const referenceH = Math.max(1, Number(weapon.baseH || weapon.h || 1));
   const weaponW = Math.max(1, Number(weapon.w || referenceW) + Number(weaponOffset.w || 0));
   const weaponH = Math.max(1, Number(weapon.h || referenceH) + Number(weaponOffset.h || 0));
-  const anchorLocalX = Number(weapon.ax ?? weapon.ox ?? 0);
-  const anchorLocalY = Number(weapon.ay ?? weapon.oy ?? 0);
+  const anchorLocalX = Number(weapon.ax ?? weapon.ox ?? 0) + Number(weaponOffset.ax || 0);
+  const anchorLocalY = Number(weapon.ay ?? weapon.oy ?? 0) + Number(weaponOffset.ay || 0);
   const scaledAnchorX = anchorLocalX * (weaponW / referenceW);
   const scaledAnchorY = anchorLocalY * (weaponH / referenceH);
   const x = -scaledAnchorX + Number(attackPart.x || 0) + Number(offset.x || 0);
   const y = -scaledAnchorY + Number(attackPart.y || 0) + Number(offset.y || 0);
   const w = Math.max(1, Number(attackPart.w || attackPart.baseW || 1) + Number(offset.w || 0));
   const h = Math.max(1, Number(attackPart.h || attackPart.baseH || 1) + Number(offset.h || 0));
+  const attackAnchor = scaledEditableAnchor({
+    ax: Number(attackPart.ax ?? w / 2) + Number(offset.ax || 0),
+    ay: Number(attackPart.ay ?? h / 2) + Number(offset.ay || 0),
+    w,
+    h,
+    baseW: attackPart.baseW || w,
+    baseH: attackPart.baseH || h,
+  });
   const rot = Number(attackPart.rot || 0) + Number(offset.rot || 0);
   return createInteractionRegion({
     key: ATTACK_INTERACTION_BOX_KEY,
@@ -79,7 +111,10 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
     y,
     w,
     h,
+    ax: attackAnchor.ax,
+    ay: attackAnchor.ay,
     rot,
+    interaction: offset,
   });
 }
 
@@ -97,6 +132,14 @@ function createParentedInteractionRegion(player, boxKey, role) {
   const offset = player.getPartOffset(boxKey);
   const w = Math.max(1, Number(boxPart.w || boxPart.baseW || 1) + Number(offset.w || 0));
   const h = Math.max(1, Number(boxPart.h || boxPart.baseH || 1) + Number(offset.h || 0));
+  const boxAnchor = scaledEditableAnchor({
+    ax: Number(boxPart.ax ?? w / 2) + Number(offset.ax || 0),
+    ay: Number(boxPart.ay ?? h / 2) + Number(offset.ay || 0),
+    w,
+    h,
+    baseW: boxPart.baseW || w,
+    baseH: boxPart.baseH || h,
+  });
   return createInteractionRegion({
     key: boxKey,
     role,
@@ -106,6 +149,8 @@ function createParentedInteractionRegion(player, boxKey, role) {
     y: parent.y + Number(boxPart.y || 0) + Number(offset.y || 0),
     w,
     h,
+    ax: boxAnchor.ax,
+    ay: boxAnchor.ay,
     rot: Number(boxPart.rot || 0) + Number(offset.rot || 0),
   });
 }
@@ -119,8 +164,8 @@ function parentImageTransform(player, parentKey) {
     const referenceH = Math.max(1, Number(weapon.baseH || weapon.h || 1));
     const width = Math.max(1, Number(weapon.w || referenceW) + Number(offset.w || 0));
     const height = Math.max(1, Number(weapon.h || referenceH) + Number(offset.h || 0));
-    const anchorLocalX = Number(weapon.ax ?? weapon.ox ?? 0);
-    const anchorLocalY = Number(weapon.ay ?? weapon.oy ?? 0);
+    const anchorLocalX = Number(weapon.ax ?? weapon.ox ?? 0) + Number(offset.ax || 0);
+    const anchorLocalY = Number(weapon.ay ?? weapon.oy ?? 0) + Number(offset.ay || 0);
     return {
       matrix: player.weaponAnchorTransform(),
       x: -anchorLocalX * (width / referenceW),
@@ -136,8 +181,8 @@ function parentImageTransform(player, parentKey) {
   const referenceH = Math.max(1, Number(part.baseH || part.h || 1));
   const width = Math.max(1, Number(part.w || referenceW) + Number(offset.w || 0));
   const height = Math.max(1, Number(part.h || referenceH) + Number(offset.h || 0));
-  const anchorLocalX = Number(part.ax ?? part.ox ?? 0);
-  const anchorLocalY = Number(part.ay ?? part.oy ?? 0);
+  const anchorLocalX = Number(part.ax ?? part.ox ?? 0) + Number(offset.ax || 0);
+  const anchorLocalY = Number(part.ay ?? part.oy ?? 0) + Number(offset.ay || 0);
   const imageX = Number(part.x || 0) + Number(part.anchorOffsetX || 0) + Number(offset.x || 0);
   const imageY = Number(part.y || 0) + Number(part.anchorOffsetY || 0) + Number(offset.y || 0);
   const anchorX = imageX + anchorLocalX;

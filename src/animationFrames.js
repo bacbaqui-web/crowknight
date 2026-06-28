@@ -18,6 +18,8 @@ export function interpolateEffectFrameValues(keyframes = [], t = 0, key = 'attac
     return {
       x: lerp(a.x || 0, b.x || 0, localT),
       y: lerp(a.y || 0, b.y || 0, localT),
+      ax: lerp(a.ax || 0, b.ax || 0, localT),
+      ay: lerp(a.ay || 0, b.ay || 0, localT),
       w: lerp(a.w || 0, b.w || 0, localT),
       h: lerp(a.h || 0, b.h || 0, localT),
       rot: lerp(a.rot || 0, b.rot || 0, localT),
@@ -112,6 +114,8 @@ export function interpolateFrameValues(keyframes = [], t = 0) {
     return {
       x: lerp(a.x || 0, b.x || 0, localT),
       y: lerp(a.y || 0, b.y || 0, localT),
+      ax: lerp(a.ax || 0, b.ax || 0, localT),
+      ay: lerp(a.ay || 0, b.ay || 0, localT),
       w: lerp(a.w || 0, b.w || 0, localT),
       h: lerp(a.h || 0, b.h || 0, localT),
       rot: lerp(a.rot || 0, b.rot || 0, localT),
@@ -119,6 +123,10 @@ export function interpolateFrameValues(keyframes = [], t = 0) {
       anchorX: lerp(a.anchorX || 0, b.anchorX || 0, localT),
       anchorY: lerp(a.anchorY || 0, b.anchorY || 0, localT),
       active: steppedFrameFlag(a.active),
+      stun: lerp(a.stun || 0, b.stun || 0, localT),
+      knockbackX: lerp(a.knockbackX || 0, b.knockbackX || 0, localT),
+      knockbackY: lerp(a.knockbackY || 0, b.knockbackY || 0, localT),
+      deathBurst: lerp(a.deathBurst ?? 1, b.deathBurst ?? 1, localT),
     };
   }
 
@@ -129,6 +137,8 @@ export function frameValue(value = {}) {
   return {
     x: Number(value?.x || 0),
     y: Number(value?.y || 0),
+    ax: Number(value?.ax || 0),
+    ay: Number(value?.ay || 0),
     w: Number(value?.w || 0),
     h: Number(value?.h || 0),
     rot: Number(value?.rot || 0),
@@ -136,5 +146,9 @@ export function frameValue(value = {}) {
     anchorX: Number(value?.anchorX || 0),
     anchorY: Number(value?.anchorY || 0),
     active: steppedFrameFlag(value?.active),
+    stun: Number(value?.stun || 0),
+    knockbackX: Number(value?.knockbackX || 0),
+    knockbackY: Number(value?.knockbackY || 0),
+    deathBurst: Number(value?.deathBurst ?? 1),
   };
 }

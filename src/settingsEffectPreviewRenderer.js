@@ -1,5 +1,6 @@
 import { defaultEffectSize } from './animationFrames.js';
 import { createEffectEditHandleInfo } from './editHandleGeometry.js';
+import { centerOffsetEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
 import { drawEffectPreviewBounds } from './settingsDebugRenderer.js';
 import { effectFrameAt } from './tuningNormalize.js';
 import { clamp } from './utils.js';
@@ -10,30 +11,38 @@ export function drawEffectSettingsPreview(ctx, actor, key, effectAssets) {
 
   const metrics = effectPreviewMetrics(actor, key, frame);
   const asset = effectAssets[frame.image];
+  const transform = effectMetricsTransform(metrics, frame);
+  const drawRect = editableTransformDrawRect(transform);
 
   ctx.save();
-  ctx.translate(metrics.cx, metrics.cy);
+  ctx.translate(transform.x, transform.y);
   const placementMatrix = ctx.getTransform();
-  ctx.rotate((Number(frame.rot || 0) * Math.PI) / 180);
+  ctx.rotate((transform.rot * Math.PI) / 180);
   const editHandle = createEffectEditHandleInfo(ctx, frame, key, placementMatrix);
   ctx.globalAlpha = clamp(Number(frame.opacity ?? 1), 0, 1) * 0.88;
   if (asset) {
-    ctx.drawImage(
-      asset,
-      -metrics.width / 2 - metrics.anchorOffsetX,
-      -metrics.height / 2 - metrics.anchorOffsetY,
-      metrics.width,
-      metrics.height
-    );
+    ctx.drawImage(asset, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   } else {
     ctx.strokeStyle = 'rgba(255,255,255,.85)';
     ctx.lineWidth = 3;
-    ctx.strokeRect(-metrics.width / 2, -metrics.height / 2, metrics.width, metrics.height);
+    ctx.strokeRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   }
   ctx.restore();
 
   drawEffectPreviewBounds(ctx, metrics);
   return editHandle;
+}
+
+function effectMetricsTransform(metrics, frame) {
+  return centerOffsetEditableTransform({
+    x: metrics.cx,
+    y: metrics.cy,
+    w: metrics.width,
+    h: metrics.height,
+    anchorOffsetX: frame.anchorX,
+    anchorOffsetY: frame.anchorY,
+    rot: frame.rot,
+  });
 }
 
 function effectPreviewTime(actor, key) {

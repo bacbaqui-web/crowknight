@@ -98,19 +98,13 @@ export function updateRigPartValue(part, partKey, prop, value, tuning = null) {
 function updateInteractionBoxPartValue(part, partKey, prop, value, tuning) {
   if (prop === 'w') {
     const parentW = interactionBoxParentSize(tuning, partKey, 'w', part.w);
-    const nextW = Math.max(1, (parentW * value) / 100);
-    const centerX = Number(part.x || 0) + Number(part.w || parentW) / 2;
-    part.w = nextW;
-    part.x = centerX - nextW / 2;
+    part.w = Math.max(1, (parentW * value) / 100);
     return;
   }
 
   if (prop === 'h') {
     const parentH = interactionBoxParentSize(tuning, partKey, 'h', part.h);
-    const nextH = Math.max(1, (parentH * value) / 100);
-    const centerY = Number(part.y || 0) + Number(part.h || parentH) / 2;
-    part.h = nextH;
-    part.y = centerY - nextH / 2;
+    part.h = Math.max(1, (parentH * value) / 100);
     return;
   }
 
