@@ -1,4 +1,4 @@
-import { INTERACTION_BOX_PART_KEYS, RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY } from './tuningInteractionBoxes.js';
+import { HURT_INTERACTION_BOX_KEY, INTERACTION_BOX_PART_KEYS } from './tuningInteractionBoxes.js';
 
 export const STORAGE_KEY = 'crowKnight.actorTuning.v1';
 export const RANKING_KEY = 'crowKnight.rankings.v1';
@@ -87,10 +87,10 @@ export const TUNING_FIELDS = [
   ['hudOffsetY', ['hud', 'offsetY']],
   ['anchorX', ['transform', 'anchorX']],
   ['anchorY', ['transform', 'anchorY']],
-  ['hurtInteractionBoxX', [RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY, 'x']],
-  ['hurtInteractionBoxY', [RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY, 'y']],
-  ['hurtInteractionBoxW', [RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY, 'w']],
-  ['hurtInteractionBoxH', [RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY, 'h']],
+  ['hurtInteractionBoxX', ['rig', HURT_INTERACTION_BOX_KEY, 'x']],
+  ['hurtInteractionBoxY', ['rig', HURT_INTERACTION_BOX_KEY, 'y']],
+  ['hurtInteractionBoxW', ['rig', HURT_INTERACTION_BOX_KEY, 'w']],
+  ['hurtInteractionBoxH', ['rig', HURT_INTERACTION_BOX_KEY, 'h']],
   ['attack1Stun', ['attackEffects', 'attack1', 'stun']],
   ['attack1KnockbackX', ['attackEffects', 'attack1', 'knockbackX']],
   ['attack1KnockbackY', ['attackEffects', 'attack1', 'knockbackY']],

@@ -1,10 +1,5 @@
 import { DEFAULT_PLAYER_RIG } from './playerDefaultRig.js';
-import {
-  ATTACK_INTERACTION_BOX_KEY,
-  RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY,
-  RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY,
-  RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY,
-} from './tuningInteractionBoxes.js';
+import { ATTACK_INTERACTION_BOX_KEY } from './tuningInteractionBoxes.js';
 
 export const DEFAULT_PLAYER_TUNING = {
   maxHpPips: 5,
@@ -21,46 +16,6 @@ export const DEFAULT_PLAYER_TUNING = {
   invulnerability: { hurt: 0.45, rollEnd: 0.18 },
   transform: { scale: 1, anchorX: 0, anchorY: 0 },
   hud: { offsetY: 0 },
-  collisionBox: { x: 0, y: 0, w: 64, h: 96, rot: 0 },
-  [RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY]: { x: 0, y: 0, w: 64, h: 96, rot: 0 },
-  [RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY]: { x: 0, y: 0, w: 48, h: 72, rot: 0 },
-  [RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY]: {
-    attack1: {
-      x: 0,
-      y: 0,
-      w: 96,
-      h: 24,
-      rot: 0,
-    },
-    attack2: {
-      x: 8,
-      y: -13,
-      w: 108,
-      h: 30,
-      rot: 0,
-    },
-    attack3: {
-      x: 6,
-      y: -15,
-      w: 124,
-      h: 34,
-      rot: 0,
-    },
-    jumpAttack: {
-      x: 6,
-      y: -14,
-      w: 104,
-      h: 32,
-      rot: 0,
-    },
-    roll: {
-      x: 8,
-      y: -14,
-      w: 96,
-      h: 30,
-      rot: 0,
-    },
-  },
   attackEffects: {
     attack1: { stun: 0.22, knockbackX: 330, knockbackY: 110, deathBurst: 1 },
     attack2: { stun: 0.22, knockbackX: 380, knockbackY: 120, deathBurst: 1.08 },
@@ -100,13 +55,6 @@ export const DEFAULT_PLAYER_TUNING = {
     attack1: { duration: 0.26, playback: 'once', playbackRate: 1 },
     attack2: { duration: 0.28, playback: 'once', playbackRate: 1 },
     attack3: { duration: 0.36, playback: 'once', playbackRate: 1 },
-  },
-  hitReaction: {
-    stun: 0.22,
-    knockbackX: 330,
-    knockbackY: 110,
-    heavyKnockbackX: 520,
-    heavyKnockbackY: 190,
   },
   motion: {
     walkBob: 5,

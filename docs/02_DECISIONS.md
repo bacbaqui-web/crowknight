@@ -64,11 +64,11 @@
 - 이유: 제작 편의성과 실행 계산은 서로 다른 요구를 가진다.
 - 대체안: Runtime 데이터를 Editor 원본으로 직접 편집하는 방식은 채택하지 않는다.
 
-## Runtime 데이터는 Export 또는 Mirror
+## Runtime 데이터는 계산값
 
-- 결정: Runtime이 필요한 데이터는 Editor 원본에서 export 또는 mirror한다.
-- 이유: 기존 실행 호환성을 유지하면서 Editor 구조를 정리할 수 있다.
-- 대체안: Runtime 호환 필드를 계속 Editor 원본처럼 쓰는 방식은 채택하지 않는다.
+- 결정: Runtime 판정 데이터는 저장하지 않고 Editor 원본에서 실행 중 계산한다.
+- 이유: 원본과 mirror가 동시에 존재하면 Editor/Preview/Combat source가 어긋난다.
+- 대체안: Runtime mirror 필드를 저장하거나 Editor source처럼 쓰는 방식은 채택하지 않는다.
 
 ## HUD는 하나의 그룹
 

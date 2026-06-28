@@ -1,7 +1,7 @@
 import { clamp, clone, deg, lerp } from './utils.js';
 import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
-import { ATTACK_INTERACTION_BOX_KEY, RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY } from './tuningInteractionBoxes.js';
-import { createAttackInteractionRegion } from './interactionBoxRuntime.js';
+import { ATTACK_INTERACTION_BOX_KEY } from './tuningInteractionBoxes.js';
+import { createAttackInteractionRegion, createHurtInteractionRegion } from './interactionBoxRuntime.js';
 import {
   drawPuppetArm,
   drawPuppetImageGlow,
@@ -93,9 +93,7 @@ export class PuppetPlayer {
     this.comboResetTime = next.comboResetTime;
     this.invulnerability = next.invulnerability;
     this.transform = next.transform;
-    this.hurtInteractionRegionConfig = next[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY];
     this.effects = next.effects;
-    this.hitReaction = next.hitReaction;
     this.motion = next.motion;
     this.layerOrder = next.layerOrder;
     this.poseOffsets = next.poseOffsets;
@@ -104,8 +102,7 @@ export class PuppetPlayer {
   }
 
   get hurtInteractionRegion() {
-    const h = this.hurtInteractionRegionConfig;
-    return { x: this.x + h.x, y: this.y + h.y, w: h.w, h: h.h };
+    return createHurtInteractionRegion(this) || { x: this.x, y: this.y, w: 1, h: 1 };
   }
 
   get attackInteractionRegion() {

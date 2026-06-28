@@ -22,7 +22,6 @@ import { createTuningPanelSelectionState } from './tuningPanelSelectionState.js'
 import { createTuningPanelSync } from './tuningPanelSync.js';
 import { createTuningPanelWorkflowController } from './tuningPanelWorkflowController.js';
 import { createTuningPanelWorkflowSessionState } from './tuningPanelWorkflowSessionState.js';
-import { syncRuntimeInteractionBoxesFromRig } from './tuningInteractionBoxes.js';
 
 export function createTuningPanel({
   canvas,
@@ -314,7 +313,6 @@ export function createTuningPanel({
     }
 
     function applyActorTuning(actor) {
-      syncRuntimeInteractionBoxesFromRig(actor.tuning);
       actor.player.applyTuning(actor.tuning);
     }
 

@@ -46,16 +46,19 @@ Editor 기준 판정 박스 저장 위치다.
 
 현재 저장 key는 호환을 위해 유지한다.
 
-## Runtime InteractionBox Mirror
+## Runtime InteractionRegion
 
-Runtime/Combat 호환 필드다.
+Runtime/Combat 계산값이다.
 
-- `tuning.hitbox`: Runtime 피격 박스.
-- `tuning.collisionBox`: Runtime 충돌 박스.
-- `tuning.shieldHitbox`: Runtime 방패 박스 후보.
-- `tuning.attackBoxes`: legacy 공격 geometry mirror. effect 값은 저장하지 않는다.
 - `tuning.attackEffects`: Runtime combat reaction 효과값.
 - `tuning.attackEffects.*`: `stun`, `knockbackX`, `knockbackY`, `deathBurst`.
+
+Runtime 피격 판정 geometry:
+
+```text
+tuning.rig.hurtHitbox
+→ actor.player.hurtInteractionRegion
+```
 
 Runtime 공격 판정 geometry:
 
@@ -72,17 +75,7 @@ tuning.attackEffects[attackKey]
 → combatSystem.attackReaction()
 ```
 
-Mirror 생성 위치:
-
-- `tuningNormalize.mergeTuning()`
-- `tuningInteractionBoxes.syncRuntimeInteractionBoxesFromRig()`
-- 일부 panel apply/canvas preview 경로
-
-Legacy input:
-
-- 기존 저장 데이터의 `type: "hitbox"`는 normalize 시 `type: "interactionBox"`로 보정된다.
-- 기존 저장 데이터의 `attackBox` / `attackBoxes.*` 효과값은 `attackEffects.*`로 migration된다.
-- normalize 후 `attackBoxes.*`에는 `x`, `y`, `w`, `h`, `rot`만 남긴다.
+Runtime mirror field는 저장하지 않는다.
 
 ## `poseOffsets`
 

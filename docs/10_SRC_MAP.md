@@ -10,7 +10,7 @@
 - `src/tuningParts.js`: editable part source와 InteractionBox limits.
 - `src/tuningPanelPartController.js`: Setup/Action selection과 property write.
 - `src/canvasVisualValues.js`: canvas/property 표시값을 저장값으로 변환.
-- `src/tuningNormalize.js`: tuning schema normalize와 migration.
+- `src/tuningNormalize.js`: tuning schema normalize.
 - `src/tuningPanelCanvasController.js`: canvas pointer/edit/apply flow.
 
 ## App / Runtime Entry
@@ -34,7 +34,7 @@
 
 - `src/puppetPlayer.js`: player Runtime state. 수정: tuning 적용, Runtime action state. 같이: `combatSystem.js`, `puppetPlayerPose.js`, `interactionBoxRuntime.js`. 위험: 높음.
 - `src/interactionBoxRuntime.js`: InteractionBox Runtime region 계산. 수정: 판정 geometry 계산, role별 region 확장. 같이: `puppetPlayer.js`, `combatSystem.js`. 위험: 높음.
-- `src/tuningInteractionBoxes.js`: InteractionBox key/role/parent/mirror helper. 수정: Editor/Runtime box source 경계. 같이: `tuningNormalize.js`, `interactionBoxRuntime.js`. 위험: 높음.
+- `src/tuningInteractionBoxes.js`: InteractionBox key/role/parent helper. 수정: Editor/Runtime box source 경계. 같이: `tuningNormalize.js`, `interactionBoxRuntime.js`. 위험: 높음.
 - `src/puppetPlayerActions.js`: action 전환. 수정: Runtime action rules. 같이: `inputControls.js`, `gameConfig.js`. 위험: 중간.
 - `src/puppetPlayerPose.js`: pose transform 계산. 수정: Setup base + Action keyframe 합성. 같이: `poseTimelineAdapter.js`, `animationFrames.js`. 위험: 높음.
 - `src/puppetPlayerRenderer.js`: rig part 렌더와 edit region 기록. 수정: part/InteractionBox render/edit region. 같이: `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`. 위험: 높음.
@@ -81,7 +81,7 @@
 
 - `src/playerDefaultTuning.js`: tuning defaults. 수정: actor 기본 schema. 같이: `tuningNormalize.js`, `playerDefaultRig.js`. 위험: 높음.
 - `src/playerDefaultRig.js`: rig defaults. 수정: 기본 part/InteractionBox 배치. 같이: `tuningParts.js`, `tuningNormalize.js`. 위험: 높음.
-- `src/tuningNormalize.js`: tuning normalize/migration. 수정: 저장 schema 보정. 같이: defaults, timeline adapters. 위험: 높음.
+- `src/tuningNormalize.js`: tuning normalize. 수정: 저장 schema 보정. 같이: defaults, timeline adapters. 위험: 높음.
 - `src/animationFrames.js`: frame defaults/interpolation. 수정: pose/effect frame schema. 같이: timeline mutation/read files. 위험: 높음.
 - `src/characterHudLayout.js`: HUD layout. 수정: 이름/HP 위치 계산. 같이: `actorHudRenderer.js`, setup controls. 위험: 중간.
 - `src/sceneSession.js`: scene session data. 수정: background/stage session schema. 같이: stage/background files. 위험: 중간.

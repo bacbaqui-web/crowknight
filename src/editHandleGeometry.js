@@ -7,7 +7,7 @@ import {
 } from './screenGeometry.js';
 import { ANCHOR_HANDLE_RADIUS, MOVE_HANDLE_RADIUS, handleLineStart } from './editHandleDrawing.js';
 import { isMasterPart } from './tuningLabels.js';
-import { INTERACTION_BOX_TARGET_TYPE, LEGACY_INTERACTION_BOX_TARGET_TYPE } from './tuningInteractionBoxes.js';
+import { INTERACTION_BOX_TARGET_TYPE } from './tuningInteractionBoxes.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 
 export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, poseFrameSelectionActive }) {
@@ -15,8 +15,7 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
 
   const info = editHandleInfo;
   const isImagePart = imagePartKeys().includes(editFocusPartKey);
-  const isInteractionBoxPart =
-    info.target?.type === INTERACTION_BOX_TARGET_TYPE || info.target?.type === LEGACY_INTERACTION_BOX_TARGET_TYPE;
+  const isInteractionBoxPart = info.target?.type === INTERACTION_BOX_TARGET_TYPE;
   const isMaster = isMasterPart(editFocusPartKey);
   const isScalablePart =
     isMaster || isImagePart || isInteractionBoxPart || controlGroupPartKeys().includes(editFocusPartKey);

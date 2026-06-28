@@ -52,15 +52,13 @@ drawPuppetImagePart(parent)
 → editHandleRenderer
 ```
 
-저장/Runtime mirror:
+저장/Runtime 계산:
 
 ```text
 canvas/property edit
 → tuning.rig[boxKey]
-→ tuningInteractionBoxes.syncRuntimeInteractionBoxesFromRig()
-→ legacy runtime mirror fields
-→ hitbox / collisionBox / shieldHitbox / attackBoxes.attack1
 → actor.player.applyTuning(actor.tuning)
+→ interactionBoxRuntime
 → saveState
 ```
 
@@ -186,7 +184,6 @@ activeAttackSettingsKey()
 
 주의:
 
-- Editor preview는 `tuning.attackBoxes.*` geometry를 직접 그리지 않는다.
 - Runtime combat reaction은 `attackEffects`를 사용한다.
 - `active`는 선형 보간하지 않는다.
 - `active = 1`이면 강조 표시하고, `0`이면 같은 source를 연하게 표시한다.

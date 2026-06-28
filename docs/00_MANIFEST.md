@@ -64,7 +64,7 @@ Crow Knight는 횡스크롤 액션 로그라이트를 만들기 위한 프로젝
 - InteractionBox도 Editor 편집 대상이다.
 - Editor와 Runtime은 분리한다.
 - Runtime은 Editor 원본을 직접 수정하지 않는다.
-- Editor 원본에서 Runtime용 데이터를 export 또는 mirror한다.
+- Runtime 데이터는 Editor 원본에서 실행 중 계산한다.
 - 공통 UI는 공통 시스템을 사용한다.
 - 저장 구조 변경은 별도 Sprint에서만 한다.
 - Tool, Game, Engine 대이동은 별도 Sprint에서만 한다.
