@@ -1,7 +1,7 @@
 import { ensurePoseOffset } from './tuningNormalize.js';
 import { handleCursor } from './editHandleDrawing.js';
 import { canvasPointFromEvent } from './canvasDragMath.js';
-import { canvasPartEditState, refreshCanvasDragTargets } from './tuningCanvasEditState.js';
+import { canvasEffectEditState, canvasPartEditState, refreshCanvasDragTargets } from './tuningCanvasEditState.js';
 import {
   canvasHandleHoverMode,
   createCanvasGroupDragItems,
@@ -10,7 +10,6 @@ import {
 import {
   finishCanvasPointerDrag,
   handleCanvasPointerDown,
-  handleEffectCanvasPointerDown,
   handleCanvasPointerMove,
 } from './tuningCanvasPointerDrag.js';
 import {
@@ -59,12 +58,13 @@ export function createTuningPanelCanvasController({
       isPanelOpen: () => panel.classList.contains('is-open'),
       canvas,
       currentCanvasEditContext,
-      handleEffectPointerDown: onEffectPointerDown,
       activePart: currentCanvasActivePart(),
       getEditHandleAt,
       groupEditValues: getGroupEditValues(),
       applyCurrentGroupOpacity,
       applySelected,
+      renderEffectFields: effectTimeline.renderFields,
+      syncEffectPreview: effectTimeline.syncPreview,
       renderPosePartFields,
       renderPartFields,
       createGroupDragItems,
@@ -95,29 +95,9 @@ export function createTuningPanelCanvasController({
 
   function currentCanvasActivePart() {
     const context = currentCanvasEditContext();
+    if (context === 'effect') return 'effect';
     if (context === 'pose') return getEditFocusPartKey() || MASTER_PART_KEY;
     return getEditFocusPartKey();
-  }
-
-  function onEffectPointerDown(event) {
-    handleEffectCanvasPointerDown(event, {
-      canvas,
-      effectKey: getEffectKey(),
-      ensureActiveEffectFrame: effectTimeline.ensureActiveFrame,
-      currentEffectFrameValue: effectTimeline.currentFrameValue,
-      getEditHandleAt,
-      writeEffectFrameValue: effectTimeline.writeFrameValue,
-      applySelected,
-      renderEffectFields: effectTimeline.renderFields,
-      syncEffectPreview: effectTimeline.syncPreview,
-      pushUndoSnapshot,
-      beginUndoSnapshot,
-      setEditContext,
-      setEditHandleActiveMode,
-      setCanvasDrag: (value) => {
-        canvasDrag = value;
-      },
-    });
   }
 
   function onPointerMove(event) {
@@ -168,6 +148,15 @@ export function createTuningPanelCanvasController({
 
   function canvasEditState(part, context) {
     const actor = getSelectedActor();
+    if (context === 'effect') {
+      effectTimeline.ensureActiveFrame();
+      return canvasEffectEditState({
+        effectKey: getEffectKey(),
+        target: effectTimeline.currentFrameValue(),
+        writeValue: effectTimeline.writeFrameValue,
+      });
+    }
+
     if (context === 'pose') {
       ensurePoseOffset(actor.tuning, getPoseKey(), part);
     }

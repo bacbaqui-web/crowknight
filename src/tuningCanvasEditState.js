@@ -1,4 +1,5 @@
 import { pickDragValues, pickVisualValues } from './canvasDragState.js';
+import { defaultEffectSize } from './animationFrames.js';
 import { isMasterPart } from './tuningLabels.js';
 import { partEditSources } from './tuningParts.js';
 
@@ -13,6 +14,20 @@ export function canvasPartEditState({ part, context, tuning, poseValue }) {
     part,
     base,
     target: context === 'pose' ? poseValue : base,
+  };
+}
+
+export function canvasEffectEditState({ effectKey, target, writeValue }) {
+  const size = defaultEffectSize(effectKey);
+  return {
+    context: 'effect',
+    part: 'effect',
+    base: {
+      baseW: size.w,
+      baseH: size.h,
+    },
+    target,
+    writeValue,
   };
 }
 

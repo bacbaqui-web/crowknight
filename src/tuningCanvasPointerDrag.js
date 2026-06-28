@@ -1,5 +1,4 @@
 import { canvasPointFromEvent } from './canvasDragMath.js';
-import { defaultEffectSize } from './animationFrames.js';
 import {
   createCanvasGroupDrag,
   createCanvasPartDrag,
@@ -16,12 +15,13 @@ export function handleCanvasPointerDown(
     isPanelOpen,
     canvas,
     currentCanvasEditContext,
-    handleEffectPointerDown,
     activePart,
     getEditHandleAt,
     groupEditValues,
     applyCurrentGroupOpacity,
     applySelected,
+    renderEffectFields,
+    syncEffectPreview,
     renderPosePartFields,
     renderPartFields,
     createGroupDragItems,
@@ -40,10 +40,6 @@ export function handleCanvasPointerDown(
 
   const canvasContext = currentCanvasEditContext();
   if (!canvasContext) return;
-  if (canvasContext === 'effect') {
-    handleEffectPointerDown(event);
-    return;
-  }
   if (!activePart) return;
 
   const point = canvasPointFromEvent(canvas, event);
@@ -80,17 +76,23 @@ export function handleCanvasPointerDown(
   }
 
   setEditContext(canvasContext);
-  setEditFocusPartKey(activePart);
+  if (canvasContext !== 'effect') setEditFocusPartKey(activePart);
   const editState = canvasEditState(activePart, canvasContext);
   const target = editState.target;
   const handleMode = handleHit.mode;
 
   if (handleMode === 'opacity') {
     pushUndoSnapshot();
-    target.opacity = toggleCanvasOpacity(target.opacity);
+    const nextOpacity = toggleCanvasOpacity(target.opacity);
+    if (typeof editState.writeValue === 'function') editState.writeValue('opacity', nextOpacity);
+    else target.opacity = nextOpacity;
     applySelected();
-    renderPartFields();
-    renderPosePartFields();
+    renderFieldsForContext(canvasContext, {
+      renderEffectFields,
+      syncEffectPreview,
+      renderPartFields,
+      renderPosePartFields,
+    });
     return;
   }
 
@@ -106,59 +108,7 @@ export function handleCanvasPointerDown(
       handle: handleHit.geometry,
       mode: handleMode,
       writePoseFrameValue,
-      beginUndoSnapshot,
-    })
-  );
-}
-
-export function handleEffectCanvasPointerDown(
-  event,
-  {
-    canvas,
-    effectKey,
-    ensureActiveEffectFrame,
-    currentEffectFrameValue,
-    getEditHandleAt,
-    writeEffectFrameValue,
-    applySelected,
-    renderEffectFields,
-    syncEffectPreview,
-    pushUndoSnapshot,
-    beginUndoSnapshot,
-    setEditContext,
-    setEditHandleActiveMode,
-    setCanvasDrag,
-  }
-) {
-  ensureActiveEffectFrame();
-  const point = canvasPointFromEvent(canvas, event);
-  const handleHit = getEditHandleAt(point);
-  if (!handleHit?.geometry?.isEffect) return;
-
-  event.preventDefault();
-  setEditContext('effect');
-  const target = currentEffectFrameValue();
-
-  if (handleHit.mode === 'opacity') {
-    pushUndoSnapshot();
-    writeEffectFrameValue('opacity', toggleCanvasOpacity(target.opacity));
-    applySelected();
-    renderEffectFields();
-    syncEffectPreview();
-    return;
-  }
-
-  setEditHandleActiveMode(handleHit.mode);
-  setCanvasDrag(
-    beginCanvasEffectPointerDrag({
-      event,
-      canvas,
-      point,
-      target,
-      handle: handleHit.geometry,
-      mode: handleHit.mode,
-      effectKey,
-      writeEffectFrameValue,
+      writeValue: editState.writeValue,
       beginUndoSnapshot,
     })
   );
@@ -199,6 +149,7 @@ export function beginCanvasPartPointerDrag({
   handle,
   mode,
   writePoseFrameValue,
+  writeValue,
   beginUndoSnapshot,
 }) {
   beginUndoSnapshot();
@@ -213,40 +164,21 @@ export function beginCanvasPartPointerDrag({
     handle,
     mode,
     writePoseFrameValue,
+    writeValue,
   });
 }
 
-export function beginCanvasEffectPointerDrag({
-  event,
-  canvas,
-  point,
-  target,
-  handle,
-  mode,
-  effectKey,
-  writeEffectFrameValue,
-  beginUndoSnapshot,
-}) {
-  beginUndoSnapshot();
-  canvas.style.cursor = 'grabbing';
-  canvas.setPointerCapture(event.pointerId);
-  const size = defaultEffectSize(effectKey);
-  return createCanvasPartDrag({
-    pointerId: event.pointerId,
-    point,
-    part: 'effect',
-    context: 'effect',
-    editState: {
-      target,
-      base: {
-        baseW: size.w,
-        baseH: size.h,
-      },
-    },
-    handle,
-    mode,
-    writeValue: writeEffectFrameValue,
-  });
+function renderFieldsForContext(
+  context,
+  { renderEffectFields, syncEffectPreview, renderPartFields, renderPosePartFields }
+) {
+  if (context === 'effect') {
+    renderEffectFields();
+    syncEffectPreview();
+    return;
+  }
+  renderPartFields();
+  renderPosePartFields();
 }
 
 export function canvasDragDeltaFromEvent(canvas, event, drag) {
