@@ -176,6 +176,16 @@ input or pointer drag
 → applySelected
 ```
 
+Effect interaction:
+
+```text
+tuning.effectOffsets[effectKey].active / attack / hurt / collision / guard
+→ actorEffectsRenderer.drawAttackTrail()
+→ player.hitRegions[effect:effectKey].interaction
+→ interactionRegionRuntime.createActiveInteractionRegions()
+→ combatSystem
+```
+
 ## Action Object Interaction 편집
 
 ```text

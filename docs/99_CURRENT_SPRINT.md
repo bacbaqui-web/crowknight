@@ -2,247 +2,131 @@
 
 ## Sprint 목표
 
-InteractionBox legacy naming 제거.
+Effect를 editable object interaction 흐름에 흡수한다.
 
-Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어로 정리한다.
+목표는 별도 Effect 판정 시스템을 만들지 않고, 기존 editable object의 `active/attack/hurt/collision/guard/reaction` 규칙을 재사용하는 것이다.
 
 ## 핵심 원칙
 
-- 모든 editable object는 interaction state를 가질 수 있다.
-- fallback interaction target도 editable object다.
-- 저장 key는 `...InteractionObject`를 사용한다.
-- Runtime combat 계산값은 `InteractionRegion`이다.
-- 과거 `InteractionBox` 저장값은 호환하지 않는 clean init 방향이다.
+- 모든 editable object는 같은 transform 규칙을 따른다.
+- 모든 editable object는 같은 interaction state를 가질 수 있다.
+- Runtime combat geometry는 `InteractionRegion`이다.
+- Effect 전용 판정 geometry 계산을 만들지 않는다.
+- clean init 방향을 유지한다.
 
 ## 완료한 작업
 
-- `src/tuningInteractionBoxes.js`를 `src/tuningInteractionObjects.js`로 rename.
-- fallback 저장 key 변경:
-  - `collisionInteractionBox` → `collisionInteractionObject`
-  - `hurtInteractionBox` → `hurtInteractionObject`
-  - `attackInteractionBox` → `attackInteractionObject`
-  - `guardInteractionBox` → `guardInteractionObject`
-- type/target type 변경:
-  - `interactionBox` → `interactionObject`
-- 관련 constant/helper 이름을 `INTERACTION_OBJECT_*`, `isInteractionObjectPartKey()` 계열로 변경.
-- local tuning storage key를 `crowKnight.actorTuning.v2`로 변경.
-- obsolete local tuning key `crowKnight.actorTuning.v1` 삭제 처리 추가.
-- saved state에 old `...InteractionBox` key가 있으면 local/Firebase/default 모두 불러오지 않도록 차단.
-- old top-left interaction object normalize 보정 제거.
-- part capability helper 추가:
-  - `isPartWithAnchor()`
-  - `isPartWithSize()`
-  - `isPartWithOpacity()`
-  - `isParentSizedPart()`
-- field group이 InteractionObject 여부를 직접 묻지 않고 capability helper를 사용하도록 변경.
-- canvas/store value 변환에서 InteractionObject 직접 분기를 `parentSizedPart` 역할로 변경.
-- debug preview의 fallback object key 계산을 `interactionObjectPartKeysForEditFocus()`로 이동.
-- Effect Timeline frame을 `anchorX/anchorY` 대신 `ax/ay`로 변경.
-- Effect render/preview/handle drag가 `x/y/ax/ay/w/h/rot/opacity` 규칙을 사용하도록 변경.
-- Effect frame에 old `anchorX/anchorY`가 있으면 saved state를 불러오지 않도록 차단.
-- debug flag를 `debugInteractionObjects`로 변경.
-- palette CSS class를 `part-*-interaction-object`로 변경.
-- UI aria label과 part label을 `히트박스/박스` 대신 `판정 영역/영역` 기준으로 변경.
-- debug preview 함수 이름을 box 중심에서 target/region 중심으로 변경.
-- 문서의 InteractionBox 중심 설명을 InteractionObject/InteractionRegion 기준으로 갱신.
+- Effect frame value에 interaction fields 추가.
+- Effect keyframe interpolation에서 interaction toggle은 stepped value로 처리.
+- Effect property panel에 공통 `판정/상호작용/공격/충돌` group 적용.
+- Effect `active/attack/hurt/collision/guard` 변경 시 field group을 즉시 다시 렌더.
+- Effect field limits가 Action editable object와 같은 interaction limit을 사용하도록 통합.
+- `drawAttackTrail()`이 active Effect를 `player.hitRegions`에 기록.
+- recorded Effect region에 `region.interaction = effectFrameValue`를 붙임.
+- `interactionRegionRuntime`이 `region.interaction`을 우선 사용하도록 변경.
+- 문서에 Effect interaction data/flow 반영.
 
 ## 변경한 파일과 변경 이유
 
-- `src/tuningInteractionObjects.js`
-  - fallback interaction object key/role/parent helper의 기준 파일.
-- `src/gameConfig.js`
-  - `POSE_PART_KEYS`가 새 object key를 사용.
-  - local storage key를 v2로 변경.
-  - obsolete local storage key 목록 추가.
-- `src/saveStateStorage.js`
-  - load/save 시 obsolete local tuning key 삭제.
-  - old `...InteractionBox` key가 포함된 saved state 거부.
-- `src/playerDefaultRig.js`
-  - 기본 rig 저장 key와 type을 InteractionObject로 변경.
-- `src/playerDefaultTuning.js`
-  - 기본 attack frame value가 `attackInteractionObject`에 연결.
-- `src/tuningNormalize.js`
-  - 새 key normalize.
-  - 과거 top-left 보정 제거.
-- `src/interactionRegionRuntime.js`
-  - fallback key 참조를 새 object key로 변경.
-- `src/tuningParts.js`
-  - editable part capability helper 추가.
-- `src/tuningSelectionPalette.js`
-- `src/tuningPanelDom.js`
-- `src/tuningLabels.js`
-- `src/tuningFieldGroups.js`
-  - InteractionObject 직접 field group 분기 제거.
-- `src/tuningFieldValues.js`
-  - parent-sized part display value helper 사용.
-- `src/canvasVisualValues.js`
-  - parent-sized part 저장 변환 helper 사용.
-- `src/editHandleGeometry.js`
-- `src/puppetPlayerRenderer.js`
-- `src/settingsDebugRenderer.js`
-- `src/tuningPanelDebugView.js`
-  - import/helper/type 이름을 InteractionObject 기준으로 변경.
-- `src/tuningInteractionObjects.js`
-  - edit focus 기준 fallback object key helper 추가.
 - `src/animationFrames.js`
-  - Effect frame value/interpolation을 `ax/ay` 기준으로 변경.
-- `src/effectVisualValues.js`
-- `src/canvasDragState.js`
-- `src/canvasDragApply.js`
-- `src/settingsEffectPreviewRenderer.js`
+  - Effect frame value/interpolation에 interaction fields 추가.
+- `src/tuningFieldGroups.js`
+  - Effect와 Action이 같은 interaction property group 생성 함수를 공유.
+- `src/tuningEffectTimelineController.js`
+  - Effect active/role toggle 후 조건부 field group 갱신.
+- `src/tuningParts.js`
+  - Action/Effect interaction field limits 공통화.
 - `src/actorEffectsRenderer.js`
-- `src/settingsDebugRenderer.js`
-  - Effect property/canvas/runtime preview를 `ax/ay` 기준으로 변경.
-- `src/partPicker.css`
-  - palette class 이름을 InteractionObject 기준으로 변경.
-- `setting.html`
-  - palette aria label 용어 정리.
-- `docs/00_MANIFEST.md`
-- `docs/02_DECISIONS.md`
-- `docs/03_ARCHITECTURE.md`
-- `docs/10_SRC_MAP.md`
+  - rendered Effect를 공통 `recordPuppetImageRegion()` 경로로 기록.
+- `src/interactionRegionRuntime.js`
+  - recorded region의 inline interaction config 지원.
 - `docs/11_DATA_MODEL.md`
+  - Effect frame value에 interaction fields 추가.
 - `docs/12_EDITOR_FLOW.md`
+  - Effect interaction runtime flow 추가.
 - `docs/99_CURRENT_SPRINT.md`
-  - 현재 구조와 용어 반영.
+  - 이번 Sprint 상태로 갱신.
 
 ## 변경된 데이터 흐름
 
 ```text
-Setup fallback interaction object
-→ tuning.rig[interactionObjectKey]
-→ puppetPlayerRenderer image-less rect
-→ player.editHandles[interactionObjectKey]
-→ handle/debug preview
-```
-
-```text
-Action editable object
-→ tuning.poseOffsets[poseKey][partKey]
-→ active/attack/hurt/collision/guard/reaction settings
-→ renderer records active object regions
-→ interactionRegionRuntime
+Effect Timeline
+→ tuning.effectOffsets[effectKey]
+→ active/attack/hurt/collision/guard/reaction fields
+→ actorEffectsRenderer.drawAttackTrail()
+→ player.hitRegions[effect:effectKey].interaction
+→ interactionRegionRuntime.createActiveInteractionRegions()
 → combatSystem
-```
-
-```text
-No active object region
-→ fallback tuning.rig.attackInteractionObject / hurtInteractionObject / collisionInteractionObject / guardInteractionObject
-→ Runtime InteractionRegion
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- `InteractionBox` module/file name 제거.
-- `interactionBox` type string 제거.
-- `...InteractionBox` 저장 key 제거.
-- old top-left interaction object normalize 보정 제거.
-- obsolete local tuning v1 삭제 처리 추가.
-- old `...InteractionBox` key가 포함된 saved state load/save 차단.
-- `tuningFieldGroups.js`의 InteractionObject 전용 property group 분기 제거.
-- canvas/display value 코드의 InteractionObject 직접 분기 일부를 parent-sized capability로 이동.
-- Effect의 `anchorX/anchorY` frame field 제거.
-- old Effect `anchorX/anchorY` frame이 포함된 saved state load/save 차단.
-- `debugInteractionBoxes` 이름 제거.
-- palette `*-interaction-box` CSS class 제거.
-- 코드와 일반 문서에서 `InteractionBox`, `interactionBox`, `INTERACTION_BOX` 검색 결과 제거.
+- Effect interaction field group 전용 코드 생성하지 않음.
+- Effect interaction field limits를 별도로 유지하지 않음.
+- Effect runtime 판정 geometry 전용 계산을 만들지 않음.
+- Runtime region 생성이 part offset만 읽던 예외를 줄이고 `region.interaction`도 처리.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
+- Effect render entry point는 `actorEffectsRenderer.drawAttackTrail()` 유지.
+- Effect 저장 위치는 `tuning.effectOffsets` 유지.
+- Action pose 저장 위치는 `tuning.poseOffsets` 유지.
 - fallback interaction object 4개는 유지.
-- fallback object의 parent mapping 유지:
-  - collision/hurt → body
-  - attack → weapon
-  - guard → shield
-- Runtime combat system의 attack/hurt/collision/guard 동작은 변경하지 않음.
-- Runtime `InteractionRegion` 이름 유지.
-- Background/HUD 저장 구조는 변경하지 않음.
-- Effect 저장 구조는 `ax/ay` 기준으로 변경함.
-- Firebase remote data migration은 추가하지 않음.
-- Firebase remote data에 old key가 있으면 불러오지 않음.
+- Runtime combat system의 판정 규칙 자체는 변경하지 않음.
+- Firebase migration은 추가하지 않음.
 
 ## 아직 남아있는 예외 처리
 
-- fallback interaction object 4개는 아직 별도 helper 파일을 가진다.
-- `isInteractionObjectPartKey()` 분기는 경계 파일에만 남아 있다.
-  - `tuningInteractionObjects.js`
-  - `tuningParts.js`
-  - `tuningSelectionPalette.js`
-- Runtime active object region은 renderer가 기록한 `hitRegions`를 사용한다.
-- active object region이 없으면 fallback object region을 사용한다.
-- collision push는 X축 최소 분리만 처리한다.
-- guard region이 없으면 기존 `isGuarding` 방어 동작을 유지한다.
+- Effect renderer는 아직 `puppetPlayerRenderer` 안으로 합쳐지지 않았다.
+- Effect region은 현재 attack trail render가 실행될 때만 기록된다.
+- Effect asset이 없거나 opacity가 0이면 region도 기록되지 않는다.
+- fallback interaction object helper는 아직 별도 파일에 남아 있다.
 
 ## 검증 방법 및 결과
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: obsolete saved state smoke test.
-  - `crowKnight.actorTuning.v1` 삭제 확인.
-  - `crowKnight.actorTuning.v2`에 old `attackInteractionBox` key가 있으면 저장값 제거 확인.
-  - clean `attackInteractionObject` key 저장값은 유지 확인.
-- 통과: field capability smoke test.
-  - Setup `attackInteractionObject`에 기준/크기/투명 group 유지.
-  - Action active+attack frame에 상호작용/공격 group 유지.
-- 통과: Effect `ax/ay` smoke test.
-  - 기본 Effect frame에 `ax/ay` 존재 확인.
-  - Effect frame에 `anchorX/anchorY` 미포함 확인.
-  - Effect property group이 `ax/ay`를 사용함 확인.
-- 통과: obsolete Effect anchor smoke test.
-  - old Effect `anchorX`가 포함된 saved state 제거 확인.
+- 통과: Effect interaction frame smoke test.
+  - Effect frame에 `active/attack/stun/knockbackX` 저장 확인.
+  - Effect property group에 `판정/상호작용/공격` 표시 확인.
+  - Effect toggle interpolation이 stepped value로 유지됨 확인.
+- 통과: recorded Effect interaction region smoke test.
+  - `region.interaction` 기반 attack region 생성 확인.
+  - role이 맞지 않으면 region 생성 안 됨 확인.
 - 통과: `http://127.0.0.1:5514/setting.html` HTTP 200.
-- 통과: `src/tuningInteractionObjects.js` HTTP 200.
-- 통과: old `src/tuningInteractionBoxes.js` HTTP 404.
-- 통과: legacy 용어 검색. 단, 변경 전 이름을 기록한 이 보고서는 제외.
-  - `InteractionBox`
-  - `interactionBox`
-  - `INTERACTION_BOX`
-  - `interaction-box`
-  - `tuningInteractionBoxes`
-  - `collision-box`
-  - `히트박스`
-- 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 이번 단계에서 수행하지 않음.
+- 제한: 인앱 브라우저 목록이 비어 있어 실제 `setting.html` 클릭/드래그 QA는 수행하지 못함.
 
 ## 알려진 위험 요소
 
-- local tuning storage key가 v2로 변경되어 기존 local tuning v1 저장값은 삭제된다.
-- Firebase나 외부 저장소에 남은 old key 데이터는 별도 migration 없이 거부된다.
-- fallback object key가 바뀌었으므로, 외부 문서나 수동 저장 JSON이 old key를 쓰면 불러오지 않는다.
-- broad rename 범위가 넓어서 실제 UI smoke QA가 필요하다.
+- Effect region 기록은 draw timing에 의존한다.
+- Effect와 body part renderer가 아직 같은 파일/entry point를 쓰지는 않는다.
+- Effect interaction을 켜도 active attack trail이 없으면 Runtime region은 생기지 않는다.
 
 ## 다음 Sprint 추천
 
-1. 실제 UI QA.
-   - Setup palette 4개 영역 선택.
-   - Action에서 `attackInteractionObject` 기본 공격 frame 확인.
-   - active/attack/hurt/collision/guard 토글 확인.
-   - resize/rotate/move/opacity 확인.
-2. old key migration 필요 여부 결정.
-   - clean init 유지면 migration 없음.
-   - 기존 저장 복구가 필요하면 별도 Sprint로 작성.
-3. fallback interaction object helper 정리.
-   - `tuningInteractionObjects.js`를 role definition 중심으로 축소.
-4. editable object definition 도입 여부 결정.
-   - 지금은 capability helper가 `tuningParts.js`에 모여 있다.
-   - 다음 단계에서 데이터 기반 definition으로 바꿀지 결정.
-5. Runtime collision/guard 고도화.
-   - push 방향/세기/guard blockPower 정의.
+1. Effect renderer 흡수.
+   - `actorEffectsRenderer`의 transform/region 기록을 더 공통 object render path로 이동.
+2. fallback interaction object helper 축소.
+   - role definition 기반으로 `tuningInteractionObjects.js` 단순화.
+3. 실제 UI QA.
+   - Effect Timeline에서 active/attack/hurt/collision/guard 토글 확인.
+   - Effect attack region과 hurt/collision/guard region 충돌 확인.
+4. object definition 도입 검토.
+   - field/capability/limits/role을 데이터 기반으로 묶을지 결정.
 
 ## 리팩토링 후보와 이유
 
-- `src/tuningInteractionObjects.js`
-  - fallback key helper와 role definition이 같이 있다.
+- `src/actorEffectsRenderer.js`
+  - Effect render와 region 기록이 남아 있는 별도 renderer.
 - `src/tuningFieldGroups.js`
-  - interaction field를 object definition 기반으로 생성할 수 있다.
+  - field group을 object definition 기반으로 바꿀 수 있음.
+- `src/tuningParts.js`
+  - capability/limits/part key 책임이 같이 있음.
 - `src/interactionRegionRuntime.js`
-  - fallback region 생성과 active object region 수집을 분리할 수 있다.
-- `src/tuningNormalize.js`
-  - 저장 schema normalize 책임이 계속 늘고 있다.
-- `src/puppetPlayerRenderer.js`
-  - image part와 image-less object render 흐름을 더 명확히 나눌 수 있다.
+  - fallback region과 recorded region 생성 책임을 더 나눌 수 있음.
 
 ## 파일 크기 또는 구조상 주의할 점
 
 - `src/tuningNormalize.js`: 500줄 근처. 저장 schema 변경 전 분리 검토 필요.
 - `src/puppetPlayerRenderer.js`: renderer/edit region 기록 책임 집중.
-- `src/tuningPanelPartController.js`: field 표시와 value routing 책임이 함께 있음.
+- `src/tuningEffectTimelineController.js`: 400줄 근처. Effect UI와 timeline mutation 연결 책임이 큼.

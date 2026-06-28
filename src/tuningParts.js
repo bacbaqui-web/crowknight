@@ -123,13 +123,8 @@ export function isParentSizedPart(partKey) {
 }
 
 export function poseFieldLimits(prop) {
-  if (prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard') {
-    return { min: 0, max: 1, step: 1 };
-  }
-  if (prop === 'stun') return { min: 0, max: 2, step: 0.01 };
-  if (prop === 'deathBurst') return { min: 0, max: 4, step: 0.01 };
-  if (prop === 'knockbackX' || prop === 'knockbackY') return { min: -1200, max: 1200 };
-  if (prop === 'pushPower') return { min: 0, max: 1200 };
+  const interactionLimits = interactionFieldLimits(prop);
+  if (interactionLimits) return interactionLimits;
   if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
   if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
   if (prop === 'rot') return { min: -36000, max: 36000 };
@@ -137,10 +132,23 @@ export function poseFieldLimits(prop) {
 }
 
 export function effectFieldLimits(prop) {
-  if (prop === 'opacity') return { min: 0, max: 1 };
+  const interactionLimits = interactionFieldLimits(prop);
+  if (interactionLimits) return interactionLimits;
+  if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
   if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
   if (prop === 'rot') return { min: -36000, max: 36000 };
   return { min: -260, max: 260 };
+}
+
+function interactionFieldLimits(prop) {
+  if (prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard') {
+    return { min: 0, max: 1, step: 1 };
+  }
+  if (prop === 'stun') return { min: 0, max: 2, step: 0.01 };
+  if (prop === 'deathBurst') return { min: 0, max: 4, step: 0.01 };
+  if (prop === 'knockbackX' || prop === 'knockbackY') return { min: -1200, max: 1200 };
+  if (prop === 'pushPower') return { min: 0, max: 1200 };
+  return null;
 }
 
 export function imagePartKeys() {

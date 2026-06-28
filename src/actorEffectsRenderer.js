@@ -1,5 +1,6 @@
 import { defaultEffectSize } from './animationFrames.js';
 import { createEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
+import { recordPuppetImageRegion } from './puppetPlayerEditRegions.js';
 import { isMasterPart } from './tuningLabels.js';
 import { effectFrameAt } from './tuningNormalize.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
@@ -55,9 +56,24 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
   ctx.scale(flip, 1);
   ctx.translate(transform.x, transform.y);
   ctx.rotate((transform.rot * Math.PI) / 180);
+  recordEffectRegion(player, ctx, effectKey, config, drawRect);
   ctx.globalAlpha = clamp(Number(config.opacity ?? 1), 0, 1);
   ctx.drawImage(asset, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   ctx.restore();
+}
+
+function recordEffectRegion(player, ctx, effectKey, config, drawRect) {
+  if (Number(config.active || 0) < 0.5) return;
+  const region = recordPuppetImageRegion(
+    player,
+    ctx,
+    `effect:${effectKey}`,
+    drawRect.x,
+    drawRect.y,
+    drawRect.w,
+    drawRect.h
+  );
+  if (region) region.interaction = config;
 }
 
 export function drawSelectedPartGlow(ctx, actor, selectedActor, activePartKeys) {

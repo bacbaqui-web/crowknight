@@ -1,14 +1,17 @@
 import { axisProps, isMasterPart } from './tuningLabels.js';
 import { isPartWithAnchor, isPartWithOpacity, isPartWithPrimarySizeLabel, isPartWithSize } from './tuningParts.js';
 
-export function effectPropertyGroups() {
-  return [
+export function effectPropertyGroups(frameValue = null) {
+  const groups = [
     { label: '기준', props: axisProps('ax', 'ay') },
     { label: '위치', props: axisProps('x', 'y') },
     { label: '크기', props: axisProps('w', 'h', 'W', 'H') },
     { label: '회전', props: [{ prop: 'rot', label: 'R' }] },
     { label: '투명', props: [{ prop: 'opacity', label: 'O' }] },
+    { label: '판정', props: [{ prop: 'active', label: 'ON' }] },
   ];
+  appendInteractionPropertyGroups(groups, frameValue);
+  return groups;
 }
 
 export function groupPosePropertyGroups() {
@@ -66,8 +69,12 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
   if (isEditableObjectPart(partKey)) {
     groups.push({ label: '판정', props: [{ prop: 'active', label: 'ON' }] });
   }
-  if (!isEditableObjectPart(partKey) || Number(frameValue?.active || 0) < 0.5) return groups;
+  if (isEditableObjectPart(partKey)) appendInteractionPropertyGroups(groups, frameValue);
+  return groups;
+}
 
+function appendInteractionPropertyGroups(groups, frameValue = null) {
+  if (Number(frameValue?.active || 0) < 0.5) return;
   groups.push({
     label: '상호작용',
     props: [
@@ -92,7 +99,6 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
   if (Number(frameValue?.collision || 0) >= 0.5) {
     groups.push({ label: '충돌', props: [{ prop: 'pushPower', label: 'P' }] });
   }
-  return groups;
 }
 
 function isEditableObjectPart(partKey) {

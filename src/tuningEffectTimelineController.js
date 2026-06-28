@@ -103,7 +103,13 @@ export function createEffectTimelineController({
     effectTimeline.ensureOffset();
     renderEffectImagePreview(effectImagePreview, effectTimeline.key(), effectAssets);
     effectFields.innerHTML = '';
-    renderScrubGroups(effectFields, effectPropertyGroups(), readDisplayValue, updateOffset, scrubCallbacks);
+    renderScrubGroups(
+      effectFields,
+      effectPropertyGroups(currentFrameValue()),
+      readDisplayValue,
+      updateOffset,
+      scrubCallbacks
+    );
   }
 
   function readDisplayValue(prop) {
@@ -121,6 +127,9 @@ export function createEffectTimelineController({
     writeFrameValue(prop, effectFrameValueFromInput(effectTimeline.key(), prop, value));
     syncPreview();
     applySelected();
+    if (prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard') {
+      renderFields();
+    }
     return readDisplayValue(prop);
   }
 

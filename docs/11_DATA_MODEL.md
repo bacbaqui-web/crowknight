@@ -133,6 +133,10 @@ Frame value:
 - `rot`
 - `opacity`
 - `image`
+- `active`
+- `attack`, `hurt`, `collision`, `guard`
+- `stun`, `knockbackX`, `knockbackY`, `deathBurst`
+- `pushPower`
 
 ## HUD
 

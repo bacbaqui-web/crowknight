@@ -73,8 +73,8 @@ export function createActiveInteractionRegions(player, role) {
 }
 
 export function createRecordedInteractionRegion(player, region, role) {
-  const offset = player.getPartOffset(region?.key);
-  if (Number(offset?.active || 0) < 0.5 || Number(offset?.[role] || 0) < 0.5) return null;
+  const interaction = region?.interaction || player.getPartOffset(region?.key);
+  if (Number(interaction?.active || 0) < 0.5 || Number(interaction?.[role] || 0) < 0.5) return null;
   const bounds = region.bounds || {};
   return {
     key: region.key,
@@ -85,7 +85,7 @@ export function createRecordedInteractionRegion(player, region, role) {
     w: bounds.w,
     h: bounds.h,
     points: region.points,
-    reaction: interactionReactionFromValue(offset),
+    reaction: interactionReactionFromValue(interaction),
   };
 }
 
