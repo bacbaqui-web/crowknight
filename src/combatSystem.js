@@ -1,6 +1,6 @@
 import { updatePostRollInvulnerability, resetPlayerActionState } from './actorState.js';
 import { getCameraX } from './cameraView.js';
-import { attackBoxOverlapsHitbox } from './combatGeometry.js';
+import { interactionRegionsOverlap } from './combatGeometry.js';
 
 export function updateBattleActorMotion({ actors, playerActor, keys, pressed, world, dt }) {
   updateActorCombatTimers(actors, dt);
@@ -20,13 +20,13 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
 export function resolveCombat({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill }) {
   actors.forEach((attacker) => {
     if (attacker.respawning) return;
-    const box = attacker.player.attackBox;
+    const box = attacker.player.attackInteractionRegion;
     if (!box) return;
 
     actors.forEach((target) => {
       if (shouldSkipTarget(attacker, target)) return;
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
-      if (!attackBoxOverlapsHitbox(box, target.player.hitbox)) return;
+      if (!interactionRegionsOverlap(box, target.player.hurtInteractionRegion)) return;
 
       const comboStep = attacker.player.comboStep || 1;
       target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
@@ -186,11 +186,16 @@ function applyHitReaction(attacker, target, comboStep, particleEffects) {
 }
 
 function attackReaction(attacker, comboStep) {
+  const effects = attacker.tuning.attackEffects || {};
   if (attacker.player.poseKey === 'roll' && attacker.player.canRollUseWeapon) {
-    return attacker.tuning.attackBoxes.roll || attacker.tuning.attackBoxes.attack1;
+    return effects.roll || effects.attack1 || fallbackAttackEffect();
   }
   const attackKey = attacker.player.poseKey === 'jumpAttack' ? 'jumpAttack' : `attack${comboStep}`;
-  return attacker.tuning.attackBoxes[attackKey] || attacker.tuning.attackBoxes.attack1;
+  return effects[attackKey] || effects.attack1 || fallbackAttackEffect();
+}
+
+function fallbackAttackEffect() {
+  return { stun: 0.22, knockbackX: 330, knockbackY: 110, deathBurst: 1 };
 }
 
 function queueEnemyRespawn(

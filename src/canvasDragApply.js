@@ -3,12 +3,14 @@ import {
   anchorScaleForPart,
   canvasSizeDelta,
   canvasSizePercentBase,
+  clampCanvasVisualSize,
   isGroupScalablePart,
   setCanvasVisualValue,
   setPartAnchorValue,
 } from './canvasVisualValues.js';
 import { defaultEffectSize } from './animationFrames.js';
 import { clampEffectFrameSize } from './effectVisualValues.js';
+import { isInteractionBoxPartKey } from './tuningInteractionBoxes.js';
 import { isMasterPart } from './tuningLabels.js';
 import { clamp } from './utils.js';
 
@@ -53,12 +55,12 @@ export function applyCanvasPartDrag(drag, dx, dy) {
   }
 
   if (drag.mode === 'width') {
-    setCanvasVisualValue(drag, 'w', drag.startVisual.w + canvasSizeDelta(drag, 'w', -handleLocalX));
+    setCanvasPartSizeValue(drag, 'w', drag.startVisual.w + canvasSizeDelta(drag, 'w', -handleLocalX));
     return;
   }
 
   if (drag.mode === 'height') {
-    setCanvasVisualValue(drag, 'h', drag.startVisual.h + canvasSizeDelta(drag, 'h', -handleLocalY));
+    setCanvasPartSizeValue(drag, 'h', drag.startVisual.h + canvasSizeDelta(drag, 'h', -handleLocalY));
     return;
   }
 
@@ -68,13 +70,32 @@ export function applyCanvasPartDrag(drag, dx, dy) {
     const deltaW = canvasSizeDelta(drag, 'w', handleLocalX);
     const deltaH = canvasSizeDelta(drag, 'h', handleLocalY);
     const sharedPercentDelta = (deltaW / baseW + deltaH / baseH) / 2;
-    setCanvasVisualValue(drag, 'w', drag.startVisual.w + baseW * sharedPercentDelta);
-    setCanvasVisualValue(drag, 'h', drag.startVisual.h + baseH * sharedPercentDelta);
+    setCanvasPartSizeValue(drag, 'w', drag.startVisual.w + baseW * sharedPercentDelta);
+    setCanvasPartSizeValue(drag, 'h', drag.startVisual.h + baseH * sharedPercentDelta);
     return;
   }
 
   setCanvasVisualValue(drag, 'x', drag.startVisual.x + moveLocalX);
   setCanvasVisualValue(drag, 'y', drag.startVisual.y + moveLocalY);
+}
+
+function setCanvasPartSizeValue(drag, prop, value) {
+  if (!isInteractionBoxPartKey(drag.part)) {
+    setCanvasVisualValue(drag, prop, value);
+    return;
+  }
+
+  const nextValue = clampCanvasVisualSize(drag, prop, value);
+  if (prop === 'w') {
+    const centerX = Number(drag.startVisual.x || 0) + Number(drag.startVisual.w || 0) / 2;
+    setCanvasVisualValue(drag, 'w', nextValue);
+    setCanvasVisualValue(drag, 'x', centerX - nextValue / 2);
+    return;
+  }
+
+  const centerY = Number(drag.startVisual.y || 0) + Number(drag.startVisual.h || 0) / 2;
+  setCanvasVisualValue(drag, 'h', nextValue);
+  setCanvasVisualValue(drag, 'y', centerY - nextValue / 2);
 }
 
 export function applyCanvasGroupDrag(drag, dx, dy, groupEditValues) {

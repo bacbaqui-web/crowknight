@@ -21,6 +21,7 @@ import {
 } from './canvasDragApply.js';
 import { currentCanvasSettingsEditContext } from './settingsPanelState.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
+import { syncRuntimeInteractionBoxesFromRig } from './tuningInteractionBoxes.js';
 
 export function createTuningPanelCanvasController({
   canvas,
@@ -128,6 +129,7 @@ export function createTuningPanelCanvasController({
       applyCanvasDrag,
       applySelectedImmediately: () => {
         const actor = getSelectedActor();
+        syncRuntimeInteractionBoxesFromRig(actor.tuning);
         actor.player.applyTuning(actor.tuning);
         saveState();
       },

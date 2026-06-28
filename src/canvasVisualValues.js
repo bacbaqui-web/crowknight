@@ -1,10 +1,16 @@
 import { isMasterPart } from './tuningLabels.js';
+import { interactionBoxParentPart, isInteractionBoxPartKey } from './tuningInteractionBoxes.js';
 import { partSizeFromPercent } from './tuningFieldValues.js';
 import { controlGroupPartKeys, imagePartKeys, partFieldLimits } from './tuningParts.js';
 import { clamp } from './utils.js';
 
 export function isGroupScalablePart(part) {
-  return imagePartKeys().includes(part) || controlGroupPartKeys().includes(part) || isMasterPart(part);
+  return (
+    imagePartKeys().includes(part) ||
+    controlGroupPartKeys().includes(part) ||
+    isInteractionBoxPartKey(part) ||
+    isMasterPart(part)
+  );
 }
 
 export function setCanvasVisualValue(drag, prop, value) {
@@ -28,11 +34,17 @@ export function setCanvasVisualValue(drag, prop, value) {
 
 export function canvasSizeDelta(drag, prop, delta) {
   const base = canvasSizePercentBase(drag, prop);
+  if (isInteractionBoxPartKey(drag.part)) return delta;
   if (isMasterPart(drag.part) || controlGroupPartKeys().includes(drag.part)) return (delta / 80) * base;
   return delta;
 }
 
 export function clampCanvasVisualSize(drag, prop, value) {
+  if (isInteractionBoxPartKey(drag.part)) {
+    const limits = partFieldLimits(prop, drag.part);
+    return clamp(Number(value), limits.min, limits.max);
+  }
+
   const base = canvasSizePercentBase(drag, prop);
   return clamp(Number(value), base * 0.05, base * 3);
 }
@@ -67,10 +79,12 @@ export function anchorScaleForPart(part, prop, partKey = '') {
   return Math.max(0.001, Number(part[sizeProp] || base) / base);
 }
 
-export function updateRigPartValue(part, partKey, prop, value) {
+export function updateRigPartValue(part, partKey, prop, value, tuning = null) {
   const limits = partFieldLimits(prop, partKey);
   const nextValue = clamp(Number(value), limits.min, limits.max);
-  if (prop === 'ax') {
+  if (isInteractionBoxPartKey(partKey)) {
+    updateInteractionBoxPartValue(part, partKey, prop, nextValue, tuning);
+  } else if (prop === 'ax') {
     setPartAnchorValue(part, 'ax', nextValue, partKey);
   } else if (prop === 'ay') {
     setPartAnchorValue(part, 'ay', nextValue, partKey);
@@ -79,4 +93,32 @@ export function updateRigPartValue(part, partKey, prop, value) {
   } else {
     part[prop] = nextValue;
   }
+}
+
+function updateInteractionBoxPartValue(part, partKey, prop, value, tuning) {
+  if (prop === 'w') {
+    const parentW = interactionBoxParentSize(tuning, partKey, 'w', part.w);
+    const nextW = Math.max(1, (parentW * value) / 100);
+    const centerX = Number(part.x || 0) + Number(part.w || parentW) / 2;
+    part.w = nextW;
+    part.x = centerX - nextW / 2;
+    return;
+  }
+
+  if (prop === 'h') {
+    const parentH = interactionBoxParentSize(tuning, partKey, 'h', part.h);
+    const nextH = Math.max(1, (parentH * value) / 100);
+    const centerY = Number(part.y || 0) + Number(part.h || parentH) / 2;
+    part.h = nextH;
+    part.y = centerY - nextH / 2;
+    return;
+  }
+
+  part[prop] = value;
+}
+
+function interactionBoxParentSize(tuning, partKey, prop, fallback) {
+  const parent = tuning ? interactionBoxParentPart(tuning, partKey) : null;
+  const baseProp = prop === 'w' ? 'baseW' : 'baseH';
+  return Math.max(1, Number(parent?.[prop] || parent?.[baseProp] || fallback || 1));
 }

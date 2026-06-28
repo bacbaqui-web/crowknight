@@ -3,7 +3,7 @@ import { groupPosePropertyGroups, partPropertyGroups, posePropertyGroups } from 
 import { readPartFieldDisplayValue } from './tuningFieldValues.js';
 import { emptyPartMessage, markPartPicker, renderPosePartHeader } from './tuningPanelDom.js';
 import { isMasterPart } from './tuningLabels.js';
-import { partPositionSources, poseMotionGroups } from './tuningParts.js';
+import { partEditSources, poseMotionGroups } from './tuningParts.js';
 import { posePartFocusAfterMultiSelect } from './panelEditState.js';
 import { updateRigPartValue } from './canvasVisualValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
@@ -81,6 +81,7 @@ export function createTuningPanelPartController({
   function openPartSection() {
     closeEditSection('pose');
     closeEditSection('effect');
+    if (!getActivePartKey()) selectRigBasis();
   }
 
   function openPoseSection() {
@@ -105,9 +106,8 @@ export function createTuningPanelPartController({
     else clearRigPartSelection();
 
     if (context === getEditFocusContext() && context !== 'pose') {
-      const activePosePartKey = getActivePosePartKey();
-      setEditFocusPartKey(activePosePartKey);
-      setEditFocusContext(activePosePartKey ? 'pose' : null);
+      setEditFocusPartKey(MASTER_PART_KEY);
+      setEditFocusContext('part');
     }
 
     clearInactiveEditHandleState();
@@ -127,9 +127,17 @@ export function createTuningPanelPartController({
   }
 
   function clearRigPartSelection() {
-    setActivePartKey(null);
-    setActivePartKeyGlobal(null);
-    partFields.innerHTML = emptyPartMessage('위치를 조절할 부위를 선택하세요.');
+    selectRigBasis();
+    renderPartFields();
+  }
+
+  function selectRigBasis() {
+    setEditContext('part');
+    setEditFocusContext('part');
+    setActivePartKey(MASTER_PART_KEY);
+    setActivePartKeyGlobal(MASTER_PART_KEY);
+    setEditFocusPartKey(MASTER_PART_KEY);
+    partSelect.value = MASTER_PART_KEY;
   }
 
   function clearInactiveEditHandleState() {
@@ -170,19 +178,15 @@ export function createTuningPanelPartController({
   }
 
   function renderPartFields() {
-    const activePartKey = getActivePartKey();
-    if (!activePartKey) {
-      partFields.innerHTML = emptyPartMessage('위치를 조절할 부위를 선택하세요.');
-      return;
-    }
+    const activePartKey = getActivePartKey() || MASTER_PART_KEY;
 
     partSelect.value = activePartKey;
-    const part = partPositionSources(getSelectedActor().tuning.rig)[activePartKey];
+    const part = partEditSources(getSelectedActor().tuning)[activePartKey];
     partFields.innerHTML = '';
     renderScrubGroups(
       partFields,
       partPropertyGroups(activePartKey),
-      (prop) => readPartFieldDisplayValue(activePartKey, part, prop),
+      (prop) => readPartFieldDisplayValue(activePartKey, part, prop, getSelectedActor().tuning),
       (prop, value) => updatePartValue(prop, value),
       scrubCallbacks
     );
@@ -250,11 +254,11 @@ export function createTuningPanelPartController({
 
   function updatePartValue(prop, value) {
     beginUndoSnapshot();
-    const activePartKey = getActivePartKey();
-    const part = partPositionSources(getSelectedActor().tuning.rig)[activePartKey];
-    updateRigPartValue(part, activePartKey, prop, value);
+    const activePartKey = getActivePartKey() || MASTER_PART_KEY;
+    const part = partEditSources(getSelectedActor().tuning)[activePartKey];
+    updateRigPartValue(part, activePartKey, prop, value, getSelectedActor().tuning);
     applySelected();
-    return readPartFieldDisplayValue(activePartKey, part, prop);
+    return readPartFieldDisplayValue(activePartKey, part, prop, getSelectedActor().tuning);
   }
 
   function syncMotionRows() {

@@ -111,67 +111,105 @@
           </div>
         </header>
 
-        <section class="setting-section" data-collapsible data-section="collision">
-          <button class="section-toggle" type="button">전체</button>
+        <section class="setting-section setup-section is-open" data-section="collision">
           <div class="section-content">
-            <label class="select-row">
-              <span>편집 대상</span>
-              <select id="actorSelect"></select>
-            </label>
-            <label class="select-row">
-              <span>이름</span>
-              <input id="actorName" type="text" maxlength="18" autocomplete="off" />
-            </label>
-            <label class="setting-row" data-field="maxHpPips">
-              <span>HP 칸</span>
-              <input type="range" min="1" max="20" step="1" />
-              <input type="number" min="1" max="20" step="1" />
-            </label>
+            <div class="setup-area">
+              <h2 class="setup-area-title">캐릭터</h2>
+              <div class="select-row character-select-row">
+                <span>선택</span>
+                <select id="actorSelect"></select>
+                <div class="section-action-row character-actions" aria-label="캐릭터 관리">
+                  <input id="characterPsdFile" class="hidden-file-input" type="file" accept=".psd" />
+                  <button
+                    id="characterPsdUpload"
+                    class="icon-button"
+                    type="button"
+                    aria-label="선택 캐릭터 PSD 파일 선택 및 업로드"
+                    title="선택 캐릭터 PSD 파일 선택 및 업로드"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <path d="M14 2v6h6"></path>
+                      <path d="M12 18v-7"></path>
+                      <path d="M8 15l4-4 4 4"></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="characterPsdRefresh"
+                    class="icon-button"
+                    type="button"
+                    aria-label="선택 캐릭터 PSD 새로고침"
+                    title="선택 캐릭터 PSD 새로고침"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
+                      <path d="M18 3v5h-5"></path>
+                      <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
+                      <path d="M6 21v-5h5"></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="characterPartReset"
+                    class="icon-button"
+                    type="button"
+                    aria-label="파츠 위치 초기화"
+                    title="파츠 위치 초기화"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
+                      <path d="M4 5v5h5"></path>
+                      <path d="M12 8v8"></path>
+                      <path d="M8 12h8"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <label class="select-row">
+                <span>이름</span>
+                <input id="actorName" type="text" maxlength="18" autocomplete="off" />
+              </label>
+              <label class="setting-row" data-field="maxHpPips">
+                <span>HP</span>
+                <input type="range" min="1" max="20" step="1" />
+                <input type="number" min="1" max="20" step="1" />
+              </label>
+              <label class="setting-row" data-field="actorScale">
+                <span>크기</span>
+                <input type="range" min="0.4" max="2.4" step="0.05" />
+                <input type="number" min="0.4" max="2.4" step="0.05" />
+              </label>
+              <label class="setting-row" data-field="hudOffsetY">
+                <span>HUD 높이</span>
+                <input type="range" min="-120" max="120" step="0.5" />
+                <input type="number" min="-120" max="120" step="0.5" />
+              </label>
+            </div>
             <div class="setting-divider"></div>
-            <label class="setting-row" data-field="actorScale">
-              <span>전체 크기</span>
-              <input type="range" min="0.4" max="2.4" step="0.05" />
-              <input type="number" min="0.4" max="2.4" step="0.05" />
-            </label>
-            <label class="setting-row" data-field="anchorX">
-              <span>기준 X</span>
-              <input type="range" min="-160" max="160" step="1" />
-              <input type="number" min="-160" max="160" step="1" />
-            </label>
-            <label class="setting-row" data-field="anchorY">
-              <span>기준 Y</span>
-              <input type="range" min="-180" max="180" step="1" />
-              <input type="number" min="-180" max="180" step="1" />
-            </label>
+            <div class="setup-area setup-subsection is-open" data-section="part">
+              <h2 class="setup-area-title">파츠 위치</h2>
+              <div class="part-position-layout">
+                <div class="part-position-assets">
+                  <div class="part-picker" data-picker="part" aria-label="파츠 위치와 히트박스 선택"></div>
+                  <label class="select-row native-part-select">
+                    <span>조절할 부위</span>
+                    <select id="partSelect"></select>
+                  </label>
+                </div>
+                <div id="partFields" class="part-fields part-position-fields"></div>
+              </div>
+            </div>
             <div class="setting-divider"></div>
-            <div class="field-grid">
-              <label data-field="hitboxX"
-                ><span>몸 X</span><input type="range" min="-120" max="80" step="1" /><input type="number" step="1"
-              /></label>
-              <label data-field="hitboxY"
-                ><span>몸 Y</span><input type="range" min="-180" max="20" step="1" /><input type="number" step="1"
-              /></label>
-              <label data-field="hitboxW"
-                ><span>몸 W</span><input type="range" min="10" max="160" step="1" /><input
-                  type="number"
-                  min="10"
-                  step="1"
-              /></label>
-              <label data-field="hitboxH"
-                ><span>몸 H</span><input type="range" min="10" max="220" step="1" /><input
-                  type="number"
-                  min="10"
-                  step="1"
-              /></label>
+            <div class="setup-area setup-subsection is-open" data-section="layer">
+              <h2 class="setup-area-title">레이어 순서</h2>
+              <div id="layerOrder" class="layer-order" role="listbox" tabindex="0" aria-label="부위 레이어 순서"></div>
             </div>
           </div>
         </section>
 
-        <section class="setting-section" data-collapsible data-section="pose">
-          <button class="section-toggle" type="button">동작</button>
+        <section class="setting-section" data-section="pose">
           <div class="section-content">
             <label class="select-row">
-              <span>동작</span>
+              <span>Action</span>
               <select id="poseSelect"></select>
             </label>
             <div class="pose-timeline-settings">
@@ -224,12 +262,7 @@
                   <path d="M14 11v6"></path>
                 </svg>
               </button>
-              <button
-                id="poseResetAnimation"
-                class="icon-button"
-                type="button"
-                aria-label="현재 동작 애니메이션 초기화"
-              >
+              <button id="poseResetAnimation" class="icon-button" type="button" aria-label="현재 Action 초기화">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
                   <path d="M4 5v5h5"></path>
@@ -243,10 +276,10 @@
               <input id="posePlaybackRateRange" type="range" min="0.1" max="4" step="0.05" />
               <input id="posePlaybackRate" type="number" min="0.1" max="4" step="0.05" />
             </label>
-            <div class="pose-timeline" aria-label="동작 키프레임 타임라인">
+            <div class="pose-timeline" aria-label="Action 키프레임 타임라인">
               <div id="poseTimelineTrack" class="pose-timeline-track"></div>
             </div>
-            <div class="part-picker" data-picker="pose" aria-label="동작 조절 부위 선택"></div>
+            <div class="part-picker" data-picker="pose" aria-label="Action 조절 부위 선택"></div>
             <label class="select-row native-part-select">
               <span>조절 부위</span>
               <select id="posePartSelect"></select>
@@ -437,78 +470,6 @@
         </section>
 
         <div id="stageRulesPanelMount"></div>
-
-        <section class="setting-section" data-collapsible data-section="part">
-          <button class="section-toggle" type="button">파츠 위치</button>
-          <div class="section-content">
-            <div class="part-position-layout">
-              <div class="part-position-assets">
-                <div class="part-picker" data-picker="part" aria-label="파츠 위치 조절 부위 선택"></div>
-                <div class="section-action-row part-asset-actions" aria-label="캐릭터 PSD 작업">
-                  <input id="characterPsdFile" class="hidden-file-input" type="file" accept=".psd" />
-                  <button
-                    id="characterPsdUpload"
-                    class="icon-button"
-                    type="button"
-                    aria-label="선택 캐릭터 PSD 파일 선택 및 업로드"
-                    title="선택 캐릭터 PSD 파일 선택 및 업로드"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <path d="M14 2v6h6"></path>
-                      <path d="M12 18v-7"></path>
-                      <path d="M8 15l4-4 4 4"></path>
-                    </svg>
-                  </button>
-                  <button
-                    id="characterPsdRefresh"
-                    class="icon-button"
-                    type="button"
-                    aria-label="선택 캐릭터 PSD 새로고침"
-                    title="선택 캐릭터 PSD 새로고침"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
-                      <path d="M18 3v5h-5"></path>
-                      <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
-                      <path d="M6 21v-5h5"></path>
-                    </svg>
-                  </button>
-                  <button
-                    id="characterPartReset"
-                    class="icon-button"
-                    type="button"
-                    aria-label="파츠 위치 초기화"
-                    title="파츠 위치 초기화"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                      <path d="M4 5v5h5"></path>
-                      <path d="M12 8v8"></path>
-                      <path d="M8 12h8"></path>
-                    </svg>
-                  </button>
-                </div>
-                <label class="select-row native-part-select">
-                  <span>조절할 부위</span>
-                  <select id="partSelect"></select>
-                </label>
-              </div>
-              <div id="partFields" class="part-fields part-position-fields"></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="setting-section" data-collapsible data-section="layer">
-          <button class="section-toggle" type="button">레이어 순서</button>
-          <div class="section-content">
-            <select id="layerOrder" class="layer-order" size="7" aria-label="부위 레이어 순서"></select>
-            <div class="layer-actions">
-              <button id="layerUp" type="button">위로</button>
-              <button id="layerDown" type="button">아래로</button>
-            </div>
-          </div>
-        </section>
       </aside>
     </main>
 

@@ -9,8 +9,23 @@ import {
 } from './animationFrames.js';
 import { EFFECT_KEYS, POSE_FRAME_KEYS, POSE_KEYS, POSE_PART_KEYS } from './gameConfig.js';
 import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
+import { normalizeCharacterHud } from './characterHudLayout.js';
 import { SPEED_VALUE_MAX, SPEED_VALUE_MIN } from './tuningControlValueTransforms.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
+import {
+  COLLISION_INTERACTION_BOX_KEY,
+  HURT_INTERACTION_BOX_KEY,
+  GUARD_INTERACTION_BOX_KEY,
+  ATTACK_INTERACTION_BOX_KEY,
+  INTERACTION_BOX_PART_TYPE,
+  LEGACY_ATTACK_BOX_MIRROR_KEY,
+  PRIMARY_ATTACK_INTERACTION_BOX_MIRROR_KEY,
+  RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY,
+  RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY,
+  RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY,
+  interactionBoxParentPartKey,
+  syncRuntimeInteractionBoxesFromRig,
+} from './tuningInteractionBoxes.js';
 import { clamp, clone } from './utils.js';
 
 export function mergeTuning(base, saved) {
@@ -24,6 +39,10 @@ export function mergeTuning(base, saved) {
     normalizeRigImageAnchors(fresh.rig);
     normalizeRigRotations(fresh.rig, base.rig);
     normalizeMovementScalars(fresh);
+    normalizeSetupInteractionBoxes(fresh, base);
+    normalizeRigInteractionBoxParts(fresh, base);
+    syncRuntimeInteractionBoxesFromRig(fresh);
+    normalizeSetupHudAnchors(fresh, base);
     return fresh;
   }
   const merged = clone(base);
@@ -37,9 +56,19 @@ export function mergeTuning(base, saved) {
     saved.effectSettings || merged.effectSettings,
     base.effectSettings || base.poseSettings
   );
-  merged.attackBoxes = normalizeAttackBoxes(
-    saved.attackBoxes || saved.attackBox || merged.attackBoxes,
-    base.attackBoxes,
+  merged[RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY] = normalizeAttackGeometryMirror(
+    saved[RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY] ||
+      saved[LEGACY_ATTACK_BOX_MIRROR_KEY] ||
+      merged[RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY],
+    base[RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY],
+    merged.rig
+  );
+  merged.attackEffects = normalizeAttackEffects(
+    saved.attackEffects ||
+      saved[RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY] ||
+      saved[LEGACY_ATTACK_BOX_MIRROR_KEY] ||
+      merged.attackEffects,
+    base.attackEffects,
     saved.hitReaction
   );
   merged.hitReaction = normalizeHitReaction(merged.hitReaction, base.hitReaction);
@@ -48,7 +77,121 @@ export function mergeTuning(base, saved) {
   normalizeRigRotations(merged.rig, base.rig);
   normalizeMotionSettings(merged.motion, base.motion);
   normalizeMovementScalars(merged);
+  normalizeSetupInteractionBoxes(merged, base);
+  normalizeRigInteractionBoxParts(merged, base, saved);
+  syncRuntimeInteractionBoxesFromRig(merged);
+  normalizeSetupHudAnchors(merged, base, saved.hudAnchors);
   return merged;
+}
+
+function normalizeRigInteractionBoxParts(tuning, base, saved = null) {
+  const rig = tuning.rig;
+  const runtimeSources = {
+    [COLLISION_INTERACTION_BOX_KEY]: saved?.collisionBox,
+    [HURT_INTERACTION_BOX_KEY]: saved?.[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY],
+    [ATTACK_INTERACTION_BOX_KEY]:
+      saved?.[RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY]?.[PRIMARY_ATTACK_INTERACTION_BOX_MIRROR_KEY] ||
+      saved?.[LEGACY_ATTACK_BOX_MIRROR_KEY],
+    [GUARD_INTERACTION_BOX_KEY]: saved?.[RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY],
+  };
+
+  [
+    COLLISION_INTERACTION_BOX_KEY,
+    HURT_INTERACTION_BOX_KEY,
+    ATTACK_INTERACTION_BOX_KEY,
+    GUARD_INTERACTION_BOX_KEY,
+  ].forEach((key) => {
+    const savedRigPart = saved?.rig?.[key];
+    const current = savedRigPart ? rig[key] : null;
+    rig[key] = normalizeRigInteractionBoxPart({
+      current,
+      fallback: base.rig?.[key],
+      parent: rig[interactionBoxParentPartKey(key)],
+      runtimeSource: runtimeSources[key],
+    });
+  });
+}
+
+function normalizeRigInteractionBoxPart({ current, fallback = {}, parent = {}, runtimeSource = {} }) {
+  const source = current || runtimeInteractionBoxToRigPart(runtimeSource, parent, fallback);
+  return {
+    type: INTERACTION_BOX_PART_TYPE,
+    parent: source.parent || fallback.parent || null,
+    x: Number(source.x ?? fallback.x ?? 0),
+    y: Number(source.y ?? fallback.y ?? 0),
+    w: Math.max(1, Number(source.w ?? fallback.w ?? parent.w ?? 1)),
+    h: Math.max(1, Number(source.h ?? fallback.h ?? parent.h ?? 1)),
+    baseW: Math.max(1, Number(source.baseW ?? fallback.baseW ?? parent.w ?? source.w ?? 1)),
+    baseH: Math.max(1, Number(source.baseH ?? fallback.baseH ?? parent.h ?? source.h ?? 1)),
+    rot: Number(source.rot ?? fallback.rot ?? 0),
+  };
+}
+
+function runtimeInteractionBoxToRigPart(runtimeSource = {}, parent = {}, fallback = {}) {
+  if (!runtimeSource || !Object.keys(runtimeSource).length) return fallback;
+  const isWeaponLocal = fallback.parent === 'weapon';
+  return {
+    ...fallback,
+    x: isWeaponLocal
+      ? Number(runtimeSource.x ?? fallback.x ?? 0)
+      : Number(runtimeSource.x ?? 0) - Number(parent.x || 0),
+    y: isWeaponLocal
+      ? Number(runtimeSource.y ?? fallback.y ?? 0)
+      : Number(runtimeSource.y ?? 0) - Number(parent.y || 0),
+    w: Math.max(1, Number(runtimeSource.w ?? fallback.w ?? parent.w ?? 1)),
+    h: Math.max(1, Number(runtimeSource.h ?? fallback.h ?? parent.h ?? 1)),
+    rot: Number(runtimeSource.rot ?? fallback.rot ?? 0),
+  };
+}
+
+function normalizeSetupInteractionBoxes(tuning, base) {
+  tuning.collisionBox = normalizeRectBox(
+    tuning.collisionBox,
+    setupInteractionBoxFallback(tuning, 'body', base.collisionBox)
+  );
+  tuning[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY] = normalizeRectBox(
+    tuning[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY],
+    setupInteractionBoxFallback(tuning, 'body', base[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY])
+  );
+  tuning[RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY] = normalizeRectBox(
+    tuning[RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY],
+    setupInteractionBoxFallback(
+      tuning,
+      'shield',
+      setupInteractionBoxFallback(
+        tuning,
+        'body',
+        base[RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY] || base[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY]
+      )
+    )
+  );
+}
+
+function setupInteractionBoxFallback(tuning, partKey, fallback = {}) {
+  const part = tuning.rig?.[partKey];
+  if (!part) return fallback || {};
+  return {
+    x: Number(fallback.x ?? 0),
+    y: Number(fallback.y ?? 0),
+    w: Math.max(1, Number(part.w ?? fallback.w ?? 1)),
+    h: Math.max(1, Number(part.h ?? fallback.h ?? 1)),
+    rot: Number(fallback.rot ?? 0),
+  };
+}
+
+function normalizeSetupHudAnchors(tuning, base, legacyHudAnchors = tuning.hudAnchors) {
+  tuning.hud = normalizeCharacterHud(tuning.hud, base.hud, legacyHudAnchors);
+  delete tuning.hudAnchors;
+}
+
+function normalizeRectBox(current = {}, fallback = {}) {
+  return {
+    x: Number(current.x ?? fallback.x ?? 0),
+    y: Number(current.y ?? fallback.y ?? 0),
+    w: Math.max(1, Number(current.w ?? fallback.w ?? 1)),
+    h: Math.max(1, Number(current.h ?? fallback.h ?? 1)),
+    rot: Number(current.rot ?? fallback.rot ?? 0),
+  };
 }
 
 function normalizeMovementScalars(tuning) {
@@ -58,15 +201,7 @@ function normalizeMovementScalars(tuning) {
 }
 
 function normalizeMotionSettings(motion, fallback) {
-  const fallbackIntensity = fallback.animationIntensity || {};
-  const current = motion.animationIntensity;
-  const shared = typeof current === 'number' ? current : null;
-  const source = typeof current === 'object' && current ? current : {};
-
-  motion.animationIntensity = {};
-  POSE_KEYS.forEach((key) => {
-    motion.animationIntensity[key] = Number(source[key] ?? shared ?? fallbackIntensity[key] ?? 1);
-  });
+  delete motion.animationIntensity;
   motion.rollIntensity = clamp(Number(motion.rollIntensity ?? fallback.rollIntensity ?? 1), 0, 4);
   motion.rollWeapon = Number(motion.rollWeapon ?? fallback.rollWeapon ?? 0) >= 0.5 ? 1 : 0;
   motion.rollGhostCount = Math.round(clamp(Number(motion.rollGhostCount ?? fallback.rollGhostCount ?? 5), 0, 8));
@@ -240,10 +375,23 @@ function normalizePoseOffsets(current = {}) {
     normalized[pose] = {};
     POSE_PART_KEYS.forEach((part) => {
       const value = current?.[pose]?.[part] ?? current?.[pose]?.[legacyPosePartKey(part)];
-      normalized[pose][part] = normalizePoseFrameValue(value);
+      normalized[pose][part] = normalizePoseFrameValue(poseFrameValueWithInteractionDefaults(pose, part, value));
     });
   });
   return normalized;
+}
+
+function poseFrameValueWithInteractionDefaults(pose, part, value) {
+  const fallback = DEFAULT_PLAYER_TUNING.poseOffsets?.[pose]?.[part];
+  if (part !== ATTACK_INTERACTION_BOX_KEY || !fallback || poseFrameHasProp(value, 'active')) return value;
+  return fallback;
+}
+
+function poseFrameHasProp(value, prop) {
+  if (!value) return false;
+  if (value[prop] !== undefined) return true;
+  if (value.start?.[prop] !== undefined || value.end?.[prop] !== undefined) return true;
+  return Array.isArray(value.keyframes) && value.keyframes.some((frame) => frame?.[prop] !== undefined);
 }
 
 function legacyPosePartKey(part) {
@@ -326,7 +474,33 @@ function normalizeLayerOrder(current, fallback) {
   return [...kept, ...missing];
 }
 
-function normalizeAttackBoxes(current, fallback, legacyReaction) {
+function normalizeAttackGeometryMirror(current, fallback, rig = null) {
+  const normalized = {};
+  const common = current && ('frontX' in current || 'x' in current) ? current : null;
+  ['attack1', 'attack2', 'attack3', 'jumpAttack', 'roll'].forEach((key) => {
+    const base =
+      key === 'attack1'
+        ? { ...fallback[key], ...setupInteractionBoxFallback({ rig }, 'weapon', fallback[key]) }
+        : fallback[key];
+    normalized[key] = {
+      ...base,
+      ...interactionBoxGeometryFields(common || current?.[key] || {}),
+    };
+  });
+  return normalized;
+}
+
+function interactionBoxGeometryFields(source = {}) {
+  return {
+    x: Number(source.x || 0),
+    y: Number(source.y || 0),
+    w: Math.max(1, Number(source.w || 1)),
+    h: Math.max(1, Number(source.h || 1)),
+    rot: Number(source.rot || 0),
+  };
+}
+
+function normalizeAttackEffects(current, fallback, legacyReaction) {
   const normalized = {};
   const common = current && 'frontX' in current ? current : null;
   ['attack1', 'attack2', 'attack3', 'jumpAttack', 'roll'].forEach((key) => {
@@ -339,10 +513,14 @@ function normalizeAttackBoxes(current, fallback, legacyReaction) {
             key === 'attack3' || key === 'jumpAttack' ? legacyReaction.heavyKnockbackY : legacyReaction.knockbackY,
         }
       : {};
+    const source = common || current?.[key] || {};
     normalized[key] = {
-      ...fallback[key],
+      ...(fallback[key] || {}),
       ...legacyHit,
-      ...(common || current?.[key] || {}),
+      stun: Number(source.stun ?? legacyHit.stun ?? fallback[key]?.stun ?? 0),
+      knockbackX: Number(source.knockbackX ?? legacyHit.knockbackX ?? fallback[key]?.knockbackX ?? 0),
+      knockbackY: Number(source.knockbackY ?? legacyHit.knockbackY ?? fallback[key]?.knockbackY ?? 0),
+      deathBurst: Number(source.deathBurst ?? fallback[key]?.deathBurst ?? 1),
     };
   });
   return normalized;

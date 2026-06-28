@@ -67,6 +67,7 @@ export function drawSelectedPartGlow(ctx, actor, selectedActor, activePartKeys) 
   if (!partKeys.length) return;
 
   ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.lineWidth = 2.4;
   ctx.strokeStyle = 'rgba(124, 195, 162, 0.98)';
   ctx.shadowColor = 'rgba(124, 195, 162, 0.95)';

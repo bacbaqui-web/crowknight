@@ -12,7 +12,7 @@ import { currentSettingsEditContext, isSettingsPanelOpen } from './settingsPanel
 import { drawTuningPanelDebugBoxes } from './tuningPanelDebugView.js';
 import { handlePanelKeyboardShortcut } from './tuningPanelShortcuts.js';
 import { bindTuningPanelAssetActions } from './tuningPanelAssetActions.js';
-import { moveSelectedTuningLayer } from './tuningPanelLayerOrder.js';
+import { reorderTuningLayer } from './tuningPanelLayerOrder.js';
 import { createTuningPanelBootstrap } from './tuningPanelBootstrap.js';
 import { createTuningPanelComposition } from './tuningPanelComposition.js';
 import { bindTuningPanelControls, openTuningPanelEffectSection } from './tuningPanelControlBindings.js';
@@ -22,6 +22,7 @@ import { createTuningPanelSelectionState } from './tuningPanelSelectionState.js'
 import { createTuningPanelSync } from './tuningPanelSync.js';
 import { createTuningPanelWorkflowController } from './tuningPanelWorkflowController.js';
 import { createTuningPanelWorkflowSessionState } from './tuningPanelWorkflowSessionState.js';
+import { syncRuntimeInteractionBoxesFromRig } from './tuningInteractionBoxes.js';
 
 export function createTuningPanel({
   canvas,
@@ -78,7 +79,10 @@ export function createTuningPanel({
   }
 
   function drawSettingsDebugBoxes() {
-    const nextDebugState = drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets);
+    const nextDebugState = drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets, {
+      activeSetupPartKey: selectionState.getActivePartKeyGlobal(),
+      activePosePartKey: selectionState.getActivePosePartKey(),
+    });
     if (nextDebugState.hasEffectHandleUpdate) effectEditHandle = nextDebugState.effectHandle;
   }
 
@@ -136,7 +140,7 @@ export function createTuningPanel({
       getGroupEditValues: groupEditState.getValues,
       setGroupEditValues: groupEditState.setValues,
       createDefaultGroupEditValues: groupEditState.createDefaultValues,
-      applyActorTuning: (actor) => actor.player.applyTuning(actor.tuning),
+      applyActorTuning,
       saveState,
       syncPanel,
       syncPoseToolbarButtons: () => poseTimeline?.syncToolbarButtons(),
@@ -257,7 +261,7 @@ export function createTuningPanel({
       effectTimeline,
       timelineFrameActions,
       canvasController,
-      moveSelectedLayer,
+      reorderSelectedLayer,
       undoTuningChange,
       setEditContext: selectionState.setEditContext,
       setEditFocusContext: editingState.setEditFocusContext,
@@ -287,13 +291,15 @@ export function createTuningPanel({
       );
     }
 
-    function moveSelectedLayer(direction) {
-      moveSelectedTuningLayer({
+    function reorderSelectedLayer(sourceLayer, targetLayer, placement) {
+      reorderTuningLayer({
         layerOrder,
         actor: selectedActor,
-        direction,
+        sourceLayer,
+        targetLayer,
+        placement,
         pushUndoSnapshot,
-        applyActorTuning: (actor) => actor.player.applyTuning(actor.tuning),
+        applyActorTuning,
         saveState,
       });
     }
@@ -303,8 +309,13 @@ export function createTuningPanel({
         selectedActor,
         Number(selectedActor.maxHpPips) !== Number(selectedActor.tuning.maxHpPips)
       );
-      selectedActor.player.applyTuning(selectedActor.tuning);
+      applyActorTuning(selectedActor);
       saveState();
+    }
+
+    function applyActorTuning(actor) {
+      syncRuntimeInteractionBoxesFromRig(actor.tuning);
+      actor.player.applyTuning(actor.tuning);
     }
 
     function syncPanel() {
@@ -326,6 +337,7 @@ export function createTuningPanel({
 
     function enterSetupWorkflowSession() {
       openWorkflowSection(panelElements.collisionSection);
+      openWorkflowSection(panelElements.partSection, partController.openPartSection);
       openWorkflowSection(panelElements.layerSection);
     }
 

@@ -47,6 +47,10 @@ export function effectFrameValue(value = {}, key = 'attack1') {
   };
 }
 
+function steppedFrameFlag(value) {
+  return Number(value || 0) >= 0.5 ? 1 : 0;
+}
+
 export function defaultEffectSize(key = 'attack1') {
   if (key === 'attack3') return { w: 176, h: 112 };
   if (key === 'jumpAttack') return { w: 154, h: 96 };
@@ -114,6 +118,7 @@ export function interpolateFrameValues(keyframes = [], t = 0) {
       opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, localT),
       anchorX: lerp(a.anchorX || 0, b.anchorX || 0, localT),
       anchorY: lerp(a.anchorY || 0, b.anchorY || 0, localT),
+      active: steppedFrameFlag(a.active),
     };
   }
 
@@ -130,5 +135,6 @@ export function frameValue(value = {}) {
     opacity: Number(value?.opacity ?? 1),
     anchorX: Number(value?.anchorX || 0),
     anchorY: Number(value?.anchorY || 0),
+    active: steppedFrameFlag(value?.active),
   };
 }

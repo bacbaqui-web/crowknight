@@ -2,16 +2,10 @@ export function rectsOverlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-export function attackBoxOverlapsHitbox(attackBox, hitbox) {
-  if (!attackBox?.points?.length) return rectsOverlap(attackBox, hitbox);
-  if (!rectsOverlap(attackBox, hitbox)) return false;
-  const hitboxPoints = [
-    { x: hitbox.x, y: hitbox.y },
-    { x: hitbox.x + hitbox.w, y: hitbox.y },
-    { x: hitbox.x + hitbox.w, y: hitbox.y + hitbox.h },
-    { x: hitbox.x, y: hitbox.y + hitbox.h },
-  ];
-  return convexPolygonsOverlap(attackBox.points, hitboxPoints);
+export function interactionRegionsOverlap(activeRegion, targetRegion) {
+  if (!activeRegion?.points?.length) return rectsOverlap(activeRegion, targetRegion);
+  if (!rectsOverlap(activeRegion, targetRegion)) return false;
+  return convexPolygonsOverlap(activeRegion.points, regionPoints(targetRegion));
 }
 
 function convexPolygonsOverlap(a, b) {
@@ -26,6 +20,16 @@ function convexPolygonsOverlap(a, b) {
     }
     return false;
   });
+}
+
+function regionPoints(region) {
+  if (region?.points?.length) return region.points;
+  return [
+    { x: region.x, y: region.y },
+    { x: region.x + region.w, y: region.y },
+    { x: region.x + region.w, y: region.y + region.h },
+    { x: region.x, y: region.y + region.h },
+  ];
 }
 
 function projectPolygon(points, axis) {

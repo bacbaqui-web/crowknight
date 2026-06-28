@@ -3,32 +3,21 @@ import { EFFECT_IMAGE_OPTIONS, EFFECT_KEYS, POSE_KEYS, POSE_PART_KEYS } from './
 import { getPath } from './utils.js';
 import { layerLabel, partLabel, poseLabel } from './tuningLabels.js';
 import { displayTuningControlValue } from './tuningControlValueTransforms.js';
-import { partPositionSources } from './tuningParts.js';
+import { partEditKeys } from './tuningParts.js';
+import { SELECTION_PALETTE_TARGETS } from './tuningSelectionPalette.js';
+import {
+  ATTACK_INTERACTION_BOX_KEY,
+  GUARD_INTERACTION_BOX_KEY,
+  HURT_INTERACTION_BOX_KEY,
+} from './tuningInteractionBoxes.js';
 import { populateMotionSettingRows } from './tuningMotionFieldRows.js';
 import { getTuningPanelWorkflowSections } from './tuningPanelWorkflow.js';
 
-const PART_PICKER_KEYS = [
-  'head',
-  'cape',
-  'shoulderL',
-  'shoulderR',
-  'body',
-  'upperArmL',
-  'lowerArmL',
-  'upperArmR',
-  'lowerArmR',
-  'hipL',
-  'hipR',
-  'shield',
-  'weapon',
-  'upperLegL',
-  'lowerLegL',
-  'upperLegR',
-  'lowerLegR',
-];
-
 const PART_PICKER_CLASS_BY_KEY = {
   cape: 'part-neck',
+  [HURT_INTERACTION_BOX_KEY]: 'part-hurt-interaction-box',
+  [ATTACK_INTERACTION_BOX_KEY]: 'part-attack-interaction-box',
+  [GUARD_INTERACTION_BOX_KEY]: 'part-guard-interaction-box',
 };
 
 export function getTuningPanelElements(panel) {
@@ -106,8 +95,6 @@ export function getTuningPanelElements(panel) {
     effectDeleteKeyframe: document.querySelector('#effectDeleteKeyframe'),
     effectResetAnimation: document.querySelector('#effectResetAnimation'),
     layerOrder: document.querySelector('#layerOrder'),
-    layerUp: document.querySelector('#layerUp'),
-    layerDown: document.querySelector('#layerDown'),
     motionRows: Array.from(panel.querySelectorAll('[data-motion-group]')),
   };
 }
@@ -153,12 +140,26 @@ export function syncNumericFields(fields, tuning) {
 }
 
 export function renderLayerSelectOptions(select, layers, selectedValue) {
-  replaceSelectOptions(
-    select,
-    layers.map((layer) => ({ value: layer, label: layerLabel(layer) }))
-  );
+  select.innerHTML = '';
+  const visualLayers = [...layers].reverse();
+  visualLayers.forEach((layer) => {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'layer-order-item';
+    option.draggable = true;
+    option.dataset.layer = layer;
+    option.setAttribute('role', 'option');
+    option.textContent = layerLabel(layer);
+    select.append(option);
+  });
 
   select.value = layers.includes(selectedValue) ? selectedValue : layers.at(-1);
+  select.dataset.value = select.value || '';
+  select.querySelectorAll('[data-layer]').forEach((option) => {
+    const selected = option.dataset.layer === select.value;
+    option.classList.toggle('is-selected', selected);
+    option.setAttribute('aria-selected', String(selected));
+  });
 }
 
 export function markPartPicker(picker, selectedKey, selectedKeys = null) {
@@ -219,11 +220,12 @@ export function bindPartPickerButtons(picker, onSelect) {
 export function populatePartPickerButtons(picker) {
   if (!picker || picker.children.length) return;
 
-  PART_PICKER_KEYS.forEach((partKey) => {
+  SELECTION_PALETTE_TARGETS.forEach(({ key: partKey, type }) => {
     const button = document.createElement('button');
     button.className = `part-pick ${PART_PICKER_CLASS_BY_KEY[partKey] || partPickerClassName(partKey)}`;
     button.type = 'button';
     button.dataset.part = partKey;
+    button.dataset.selectionType = type;
     button.textContent = partLabel(partKey);
     picker.append(button);
   });
@@ -236,7 +238,7 @@ function partPickerClassName(partKey) {
 export function syncActorSelectLabels(actorSelect, actors) {
   Array.from(actorSelect.options).forEach((option) => {
     const actor = actors.find((item) => item.id === option.value);
-    option.textContent = `${actor.label} - ${actor.name}`;
+    option.textContent = `${actorTypeLabel(actor)} - ${actor.name}`;
   });
 }
 
@@ -247,11 +249,11 @@ export function populateTuningPanelSelects(
 ) {
   replaceSelectOptions(
     actorSelect,
-    actors.map((actor) => ({ value: actor.id, label: actor.label }))
+    actors.map((actor) => ({ value: actor.id, label: actorTypeLabel(actor) }))
   );
   replaceSelectOptions(
     partSelect,
-    Object.keys(partPositionSources(rig)).map((key) => ({ value: key, label: partLabel(key) }))
+    partEditKeys(rig).map((key) => ({ value: key, label: partLabel(key) }))
   );
   replaceSelectOptions(
     poseSelect,
@@ -265,4 +267,8 @@ export function populateTuningPanelSelects(
     effectSelect,
     EFFECT_KEYS.map((key) => ({ value: key, label: poseLabel(key) }))
   );
+}
+
+function actorTypeLabel(actor) {
+  return actor?.id === 'player' ? 'player' : 'enemy';
 }

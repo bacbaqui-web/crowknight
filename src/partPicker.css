@@ -66,6 +66,38 @@
   border-radius: 14px;
 }
 
+.part-collision-box {
+  grid-column: 1;
+  grid-row: 1;
+  background: #69b7e5;
+}
+
+.part-hurt-interaction-box {
+  grid-column: 4;
+  grid-row: 1;
+  background: #ef4d49;
+}
+
+.part-attack-interaction-box {
+  grid-column: 1;
+  grid-row: 6;
+  background: #f0e936;
+}
+
+.part-guard-interaction-box {
+  grid-column: 4;
+  grid-row: 6;
+  background: #7ccf92;
+}
+
+.part-collision-box::after,
+.part-attack-interaction-box::after,
+.part-hurt-interaction-box::after,
+.part-guard-interaction-box::after {
+  content: '';
+  display: none;
+}
+
 .part-neck {
   grid-column: 2 / 4;
   grid-row: 2;
@@ -130,18 +162,15 @@
 
 .part-shield {
   grid-column: 4;
-  grid-row: 5 / 7;
-  border-radius: 3px 3px 8px 8px;
+  grid-row: 5;
+  border-radius: 10px;
   background: #8790a5;
-  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
 }
 
 .part-weapon {
   grid-column: 1;
-  grid-row: 5 / 7;
-  justify-self: center;
-  width: 16px;
-  border-radius: 999px;
+  grid-row: 5;
+  border-radius: 10px;
   transform: rotate(0deg);
   background: #c7cbd4;
 }

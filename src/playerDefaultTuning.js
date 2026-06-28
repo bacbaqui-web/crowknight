@@ -1,4 +1,10 @@
 import { DEFAULT_PLAYER_RIG } from './playerDefaultRig.js';
+import {
+  ATTACK_INTERACTION_BOX_KEY,
+  RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY,
+  RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY,
+  RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY,
+} from './tuningInteractionBoxes.js';
 
 export const DEFAULT_PLAYER_TUNING = {
   maxHpPips: 5,
@@ -14,21 +20,17 @@ export const DEFAULT_PLAYER_TUNING = {
   comboResetTime: 0.72,
   invulnerability: { hurt: 0.45, rollEnd: 0.18 },
   transform: { scale: 1, anchorX: 0, anchorY: 0 },
-  hitbox: { x: -24, y: -112, w: 48, h: 112 },
-  attackBox: { frontX: 26, backX: -96, y: -92, w: 70, h: 50 },
-  attackBoxes: {
+  hud: { offsetY: 0 },
+  collisionBox: { x: 0, y: 0, w: 64, h: 96, rot: 0 },
+  [RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY]: { x: 0, y: 0, w: 64, h: 96, rot: 0 },
+  [RUNTIME_GUARD_INTERACTION_BOX_MIRROR_KEY]: { x: 0, y: 0, w: 48, h: 72, rot: 0 },
+  [RUNTIME_ATTACK_INTERACTION_BOX_MIRROR_KEY]: {
     attack1: {
-      x: 8,
-      y: -12,
+      x: 0,
+      y: 0,
       w: 96,
-      h: 28,
+      h: 24,
       rot: 0,
-      frontX: 26,
-      backX: -96,
-      stun: 0.22,
-      knockbackX: 330,
-      knockbackY: 110,
-      deathBurst: 1,
     },
     attack2: {
       x: 8,
@@ -36,13 +38,6 @@ export const DEFAULT_PLAYER_TUNING = {
       w: 108,
       h: 30,
       rot: 0,
-      flipX: true,
-      frontX: 18,
-      backX: -88,
-      stun: 0.22,
-      knockbackX: 380,
-      knockbackY: 120,
-      deathBurst: 1.08,
     },
     attack3: {
       x: 6,
@@ -50,12 +45,6 @@ export const DEFAULT_PLAYER_TUNING = {
       w: 124,
       h: 34,
       rot: 0,
-      frontX: 22,
-      backX: -116,
-      stun: 0.28,
-      knockbackX: 520,
-      knockbackY: 190,
-      deathBurst: 1.28,
     },
     jumpAttack: {
       x: 6,
@@ -63,12 +52,6 @@ export const DEFAULT_PLAYER_TUNING = {
       w: 104,
       h: 32,
       rot: 0,
-      frontX: -36,
-      backX: -34,
-      stun: 0.26,
-      knockbackX: 220,
-      knockbackY: 260,
-      deathBurst: 1.18,
     },
     roll: {
       x: 8,
@@ -76,13 +59,14 @@ export const DEFAULT_PLAYER_TUNING = {
       w: 96,
       h: 30,
       rot: 0,
-      frontX: 20,
-      backX: -92,
-      stun: 0.2,
-      knockbackX: 300,
-      knockbackY: 90,
-      deathBurst: 1,
     },
+  },
+  attackEffects: {
+    attack1: { stun: 0.22, knockbackX: 330, knockbackY: 110, deathBurst: 1 },
+    attack2: { stun: 0.22, knockbackX: 380, knockbackY: 120, deathBurst: 1.08 },
+    attack3: { stun: 0.28, knockbackX: 520, knockbackY: 190, deathBurst: 1.28 },
+    jumpAttack: { stun: 0.26, knockbackX: 220, knockbackY: 260, deathBurst: 1.18 },
+    roll: { stun: 0.2, knockbackX: 300, knockbackY: 90, deathBurst: 1 },
   },
   effects: { hitShake: 1.6, hitSpark: 1 },
   effectOffsets: {
@@ -125,22 +109,6 @@ export const DEFAULT_PLAYER_TUNING = {
     heavyKnockbackY: 190,
   },
   motion: {
-    animationIntensity: {
-      idle: 1,
-      run: 1,
-      jump: 1,
-      fall: 1,
-      glide: 1,
-      roll: 1,
-      guard: 1,
-      guardBreak: 1,
-      hurt: 1,
-      death: 1,
-      jumpAttack: 1,
-      attack1: 1,
-      attack2: 1,
-      attack3: 1,
-    },
     walkBob: 5,
     rollIntensity: 1,
     rollWeapon: 0,
@@ -149,7 +117,7 @@ export const DEFAULT_PLAYER_TUNING = {
     rollGhostLife: 0.18,
     rollGhostOpacity: 1,
   },
-  layerOrder: ['leftLeg', 'body', 'head', 'cape', 'leftArm', 'rightLeg', 'rightArm', 'shield'],
+  layerOrder: ['leftLeg', 'body', 'head', 'cape', 'leftArm', 'rightLeg', 'rightArm', 'shield', 'weapon'],
   poseOffsets: {
     idle: {},
     run: {},
@@ -161,10 +129,10 @@ export const DEFAULT_PLAYER_TUNING = {
     guardBreak: {},
     hurt: {},
     death: {},
-    jumpAttack: {},
-    attack1: {},
-    attack2: {},
-    attack3: {},
+    jumpAttack: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.22, 0.58) },
+    attack1: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.24, 0.58) },
+    attack2: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.2, 0.62) },
+    attack3: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.18, 0.68) },
   },
   poseSettings: {
     idle: { duration: 0.8, playback: 'loop', playbackRate: 1 },
@@ -184,3 +152,16 @@ export const DEFAULT_PLAYER_TUNING = {
   },
   rig: DEFAULT_PLAYER_RIG,
 };
+
+function defaultAttackActiveFrames(activeAt, inactiveAt) {
+  return {
+    start: { active: 0 },
+    end: { active: 0 },
+    keyframes: [
+      { id: 'start', t: 0, active: 0 },
+      { id: 'active', t: activeAt, active: 1 },
+      { id: 'inactive', t: inactiveAt, active: 0 },
+      { id: 'end', t: 1, active: 0 },
+    ],
+  };
+}

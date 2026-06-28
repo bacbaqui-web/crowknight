@@ -11,8 +11,18 @@ import {
 } from './tuningPanelBindings.js';
 import { bindPartPickerButtons, populatePartPickerButtons, populateTuningPanelSelects } from './tuningPanelDom.js';
 import { displayTuningControlValue, storedTuningControlValue } from './tuningControlValueTransforms.js';
+import {
+  bindNumericInputUx,
+  formatNumericInputValue,
+  isNumericInputInProgress,
+  isNumericInputLocked,
+  isNumericValueInRange,
+  normalizeNumericInputValue,
+  parseNumericInputValue,
+  readNumericInputLimits,
+} from './tuningNumericInput.js';
 import { bindRunMotionLinkControl } from './tuningRunMotionLink.js';
-import { setPath } from './utils.js';
+import { getPath, setPath } from './utils.js';
 
 export function initializeTuningPanelControls({
   panel,
@@ -66,8 +76,7 @@ export function initializeTuningPanelControls({
     effectAddKeyframe,
     effectDeleteKeyframe,
     effectResetAnimation,
-    layerUp,
-    layerDown,
+    layerOrder,
   } = elements;
 
   populateTuningPanelSelects({ actorSelect, partSelect, poseSelect, posePartSelect, effectSelect }, actors, rig);
@@ -108,6 +117,7 @@ export function initializeTuningPanelControls({
 
   bindPartPickerButtons(partPicker, (partKey, append) => callbacks.selectPickerPart('part', partKey, append));
   bindPartPickerButtons(posePartPicker, (partKey, append) => callbacks.selectPickerPart('pose', partKey, append));
+  bindSectionToggle(elements.collisionSection, callbacks.openPartSection, callbacks.closePartSection);
   bindSectionToggle(partSection, callbacks.openPartSection, callbacks.closePartSection);
   bindSectionToggle(poseSection, callbacks.openPoseSection, callbacks.closePoseSection);
   bindSectionToggle(effectSection, callbacks.openEffectSection, callbacks.clearEffectSelection);
@@ -178,7 +188,7 @@ export function initializeTuningPanelControls({
     }
   );
 
-  bindLayerOrderControls(layerUp, layerDown, callbacks.moveSelectedLayer);
+  bindLayerOrderControls(layerOrder, callbacks.reorderSelectedLayer);
   bindPanelShellControls(
     { panel, openButton, closeButton, backdrop },
     { openPanel: callbacks.openPanel, closePanel: callbacks.closePanel }
@@ -216,21 +226,59 @@ function bindTuningNumericControl({
   const range = group.querySelector('input[type="range"]');
   const number = group.querySelector('input[type="number"]');
 
-  range.addEventListener('input', () => update(range.value, number, range));
-  number.addEventListener('input', () => update(number.value, range, number));
-  bindNumberDrag(number, range, update);
-  range.addEventListener('change', commitUndoSnapshot);
-  number.addEventListener('change', commitUndoSnapshot);
-  number.addEventListener('blur', commitUndoSnapshot);
+  const limits = readNumericInputLimits(number);
+  bindNumericInputUx({ number, range });
 
-  function update(value, peer, source = null) {
-    const storedValue = storedTuningControlValue(id, value);
-    const displayValue = displayTuningControlValue(id, storedValue);
+  range.addEventListener('input', () => {
+    if (isNumericInputLocked(number)) return;
+    applyDisplayValue(range.value, { peer: number, source: range, clampValue: false });
+  });
+  number.addEventListener('input', () => {
+    if (isNumericInputInProgress(number.value)) return;
+    const parsed = parseNumericInputValue(number.value);
+    if (parsed === null || !isNumericValueInRange(parsed, limits)) return;
+    applyDisplayValue(number.value, { peer: range });
+  });
+  bindNumberDrag(number, range, (value, peer) =>
+    applyDisplayValue(value, { peer, source: number, clampValue: false, formatInputs: true })
+  );
+  range.addEventListener('change', () => {
+    if (isNumericInputLocked(number)) return;
+    applyDisplayValue(range.value, { peer: number, source: range, clampValue: true, formatInputs: true });
+    commitUndoSnapshot();
+  });
+  number.addEventListener('change', commitNumberInput);
+  number.addEventListener('blur', commitNumberInput);
+  number.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    commitNumberInput();
+    number.blur();
+  });
+
+  function applyDisplayValue(value, { peer = null, source = null, clampValue = false, formatInputs = false } = {}) {
+    const displayInputValue = clampValue
+      ? normalizeNumericInputValue(value, limits, currentDisplayValue())
+      : Number(value);
+    if (!Number.isFinite(displayInputValue)) return;
+    const storedValue = storedTuningControlValue(id, displayInputValue);
+    const nextDisplayValue = displayTuningControlValue(id, storedValue);
+    const inputValue = formatInputs ? formatNumericInputValue(nextDisplayValue, limits.step) : nextDisplayValue;
     beginUndoSnapshot();
     setPath(getTuning(), path, storedValue);
-    peer.value = displayValue;
-    if (source) source.value = displayValue;
+    if (peer) peer.value = inputValue;
+    if (source) source.value = inputValue;
     afterUpdate?.(id, storedValue);
     applySelected();
+  }
+
+  function commitNumberInput() {
+    const normalizedValue = normalizeNumericInputValue(number.value, limits, currentDisplayValue());
+    applyDisplayValue(normalizedValue, { peer: range, source: number, clampValue: true, formatInputs: true });
+    commitUndoSnapshot();
+  }
+
+  function currentDisplayValue() {
+    return displayTuningControlValue(id, getPath(getTuning(), path));
   }
 }

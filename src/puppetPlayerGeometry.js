@@ -121,6 +121,7 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
       opacity: Number(frame.opacity ?? 1),
       anchorX: Number(frame.anchorX || 0),
       anchorY: Number(frame.anchorY || 0),
+      active: steppedFrameFlag(frame.active),
       t: clamp(Number(frame.t), 0, 1),
     }))
     .sort((a, b) => a.t - b.t);
@@ -143,8 +144,13 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
       opacity: lerp(a.opacity, b.opacity, localT),
       anchorX: lerp(a.anchorX, b.anchorX, localT),
       anchorY: lerp(a.anchorY, b.anchorY, localT),
+      active: steppedFrameFlag(a.active),
     };
   }
 
   return fallback;
+}
+
+function steppedFrameFlag(value) {
+  return Number(value || 0) >= 0.5 ? 1 : 0;
 }

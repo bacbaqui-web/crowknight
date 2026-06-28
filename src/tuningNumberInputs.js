@@ -1,3 +1,4 @@
+import { isNumericInputLocked } from './tuningNumericInput.js';
 import { clamp } from './utils.js';
 
 export function formatInputNumber(value, step) {
@@ -74,6 +75,7 @@ export function bindNumberDragInput(number, peer, updateValue, hooks = {}) {
 
   number.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
+    if (isNumericInputLocked(number)) return;
     drag = {
       pointerId: event.pointerId,
       startY: event.clientY,
@@ -86,6 +88,10 @@ export function bindNumberDragInput(number, peer, updateValue, hooks = {}) {
 
   number.addEventListener('pointermove', (event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
+    if (isNumericInputLocked(number)) {
+      drag = null;
+      return;
+    }
     const distance = drag.startY - event.clientY;
     if (!drag.moved && Math.abs(distance) < 4) return;
     event.preventDefault();

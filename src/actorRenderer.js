@@ -1,5 +1,7 @@
 import { drawHitFlash, drawSelectedPartGlow } from './actorEffectsRenderer.js';
+import { actorHudLayout } from './characterHudLayout.js';
 import { drawActorShadow, drawHealthMeter } from './actorHudRenderer.js';
+import { isSettingsPanelOpen } from './settingsPanelState.js';
 
 export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey, activeEditPartKeys }) {
   drawActorShadow(ctx, world, actor);
@@ -28,14 +30,13 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   if (actor.hurtCooldown > 0) ctx.restore();
   if (flicker) ctx.restore();
 
-  const x = actor.player.x;
-  const y = actor.player.hitbox.y - 24;
   const width = Math.max(72, actor.maxHpPips * 9);
+  const hud = actorHudLayout(actor, { useCustomOffset: actor === selectedActor && isSettingsPanelOpen() });
 
-  drawHealthMeter(ctx, actor, x, y - 16, width);
+  drawHealthMeter(ctx, actor, hud.hpBar.x, hud.hpBar.y, width);
   ctx.fillStyle = actor.hurtCooldown > 0 ? '#fff' : actor.tint;
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(actor.name, x, y - 22);
+  ctx.fillText(actor.name, hud.name.x, hud.name.y);
   ctx.textAlign = 'left';
 }

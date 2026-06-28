@@ -15,13 +15,13 @@ export function drawPuppetAnchorDot(ctx, x, y) {
 }
 
 export function drawPuppetDebug(ctx, player) {
-  const h = player.hitbox;
+  const h = player.hurtInteractionRegion;
   ctx.fillStyle = 'rgba(255,0,0,.18)';
   ctx.strokeStyle = 'red';
   ctx.fillRect(h.x, h.y, h.w, h.h);
   ctx.strokeRect(h.x, h.y, h.w, h.h);
 
-  const a = player.attackBox;
+  const a = player.attackInteractionRegion;
   if (!a) return;
 
   ctx.fillStyle = 'rgba(255,255,0,.2)';

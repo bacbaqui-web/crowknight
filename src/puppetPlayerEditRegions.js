@@ -1,7 +1,7 @@
 import { axisFromMatrix, transformPoint } from './puppetPlayerGeometry.js';
 
 export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
-  if (!key) return;
+  if (!key) return null;
 
   const matrix = ctx.getTransform();
   const points = [
@@ -12,7 +12,7 @@ export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
   ];
   const xs = points.map((point) => point.x);
   const ys = points.map((point) => point.y);
-  player.hitRegions.push({
+  const region = {
     key,
     points,
     bounds: {
@@ -21,11 +21,13 @@ export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
       w: Math.max(...xs) - Math.min(...xs),
       h: Math.max(...ys) - Math.min(...ys),
     },
-  });
+  };
+  player.hitRegions.push(region);
+  return region;
 }
 
 export function recordPuppetEditHandle(player, ctx, key, placementMatrix = null) {
-  if (!key) return;
+  if (!key) return null;
 
   const matrix = ctx.getTransform();
   const anchor = transformPoint(matrix, 0, 0);
@@ -34,7 +36,7 @@ export function recordPuppetEditHandle(player, ctx, key, placementMatrix = null)
   const partY = axisFromMatrix(matrix, anchor, 0, 1);
   const moveX = axisFromMatrix(placement, anchor, 1, 0);
   const moveY = axisFromMatrix(placement, anchor, 0, 1);
-  player.editHandles[key] = {
+  const handle = {
     key,
     anchor,
     xAxis: partX.axis,
@@ -46,6 +48,36 @@ export function recordPuppetEditHandle(player, ctx, key, placementMatrix = null)
     moveXUnit: moveX.unit,
     moveYUnit: moveY.unit,
   };
+  player.editHandles[key] = handle;
+  return handle;
+}
+
+export function recordPuppetRectPart(player, ctx, key, x, y, w, h, { rot = 0, type = 'part', source = null } = {}) {
+  if (!key) return null;
+
+  ctx.save();
+  ctx.translate(x + w / 2, y + h / 2);
+  const placementMatrix = ctx.getTransform();
+  ctx.rotate((Number(rot || 0) * Math.PI) / 180);
+  const region = recordPuppetImageRegion(player, ctx, key, -w / 2, -h / 2, w, h);
+  const handle = recordPuppetEditHandle(player, ctx, key, placementMatrix);
+  if (handle && region) {
+    handle.target = {
+      type,
+      key,
+      source,
+      center: { ...handle.anchor },
+      x: region.bounds.x,
+      y: region.bounds.y,
+      w: region.bounds.w,
+      h: region.bounds.h,
+      points: region.points,
+      bounds: region.bounds,
+    };
+  }
+  ctx.restore();
+
+  return handle;
 }
 
 export function recordPuppetJointRegion(player, ctx, key, x, y) {

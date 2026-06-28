@@ -186,15 +186,75 @@ export function bindPanelShellControls(elements, actions) {
 }
 
 export function bindSectionToggle(section, onOpen, onClose) {
+  if (!section) return;
   section.addEventListener('sectiontoggle', (event) => {
     if (event.detail.isOpen) onOpen();
     else onClose();
   });
 }
 
-export function bindLayerOrderControls(layerUp, layerDown, moveLayer) {
-  layerUp.addEventListener('click', () => moveLayer(1));
-  layerDown.addEventListener('click', () => moveLayer(-1));
+export function bindLayerOrderControls(layerOrder, reorderLayer) {
+  if (!layerOrder) return;
+  let draggedLayer = null;
+
+  layerOrder.addEventListener('click', (event) => {
+    const item = event.target.closest('[data-layer]');
+    if (!item) return;
+    layerOrder.value = item.dataset.layer;
+    layerOrder.dataset.value = item.dataset.layer;
+    layerOrder.querySelectorAll('[data-layer]').forEach((option) => {
+      const selected = option === item;
+      option.classList.toggle('is-selected', selected);
+      option.setAttribute('aria-selected', String(selected));
+    });
+  });
+
+  layerOrder.addEventListener('dragstart', (event) => {
+    const item = event.target.closest('[data-layer]');
+    if (!item) return;
+    draggedLayer = item.dataset.layer;
+    item.classList.add('is-dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', draggedLayer);
+  });
+
+  layerOrder.addEventListener('dragover', (event) => {
+    if (!draggedLayer) return;
+    const item = event.target.closest('[data-layer]');
+    if (!item || item.dataset.layer === draggedLayer) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const placement = layerDropPlacement(event, item);
+    layerOrder.querySelectorAll('[data-layer]').forEach((option) => {
+      option.classList.toggle('is-drop-before', option === item && placement === 'before');
+      option.classList.toggle('is-drop-after', option === item && placement === 'after');
+    });
+  });
+
+  layerOrder.addEventListener('drop', (event) => {
+    const item = event.target.closest('[data-layer]');
+    if (!item || !draggedLayer) return;
+    event.preventDefault();
+    reorderLayer(draggedLayer, item.dataset.layer, layerDropPlacement(event, item));
+    draggedLayer = null;
+    clearLayerDragState(layerOrder);
+  });
+
+  layerOrder.addEventListener('dragend', () => {
+    draggedLayer = null;
+    clearLayerDragState(layerOrder);
+  });
+}
+
+function clearLayerDragState(layerOrder) {
+  layerOrder.querySelectorAll('[data-layer]').forEach((item) => {
+    item.classList.remove('is-dragging', 'is-drop-before', 'is-drop-after');
+  });
+}
+
+function layerDropPlacement(event, item) {
+  const rect = item.getBoundingClientRect();
+  return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
 }
 
 export function bindCanvasDragControls(canvas, handlers) {

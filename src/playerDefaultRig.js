@@ -1,3 +1,11 @@
+import {
+  ATTACK_INTERACTION_BOX_KEY,
+  COLLISION_INTERACTION_BOX_KEY,
+  GUARD_INTERACTION_BOX_KEY,
+  HURT_INTERACTION_BOX_KEY,
+  INTERACTION_BOX_PART_TYPE,
+} from './tuningInteractionBoxes.js';
+
 export const DEFAULT_PLAYER_RIG = {
   body: {
     x: -32,
@@ -15,6 +23,28 @@ export const DEFAULT_PLAYER_RIG = {
     anchorOffsetX: 0,
     anchorOffsetY: 0,
     anchorMode: 'local',
+  },
+  [COLLISION_INTERACTION_BOX_KEY]: {
+    type: INTERACTION_BOX_PART_TYPE,
+    parent: 'body',
+    x: 0,
+    y: 0,
+    w: 64,
+    h: 96,
+    baseW: 64,
+    baseH: 96,
+    rot: 0,
+  },
+  [HURT_INTERACTION_BOX_KEY]: {
+    type: INTERACTION_BOX_PART_TYPE,
+    parent: 'body',
+    x: 0,
+    y: 0,
+    w: 64,
+    h: 96,
+    baseW: 64,
+    baseH: 96,
+    rot: 0,
   },
   head: {
     x: -32,
@@ -66,6 +96,17 @@ export const DEFAULT_PLAYER_RIG = {
     anchorOffsetX: 0,
     anchorOffsetY: 0,
     anchorMode: 'local',
+  },
+  [GUARD_INTERACTION_BOX_KEY]: {
+    type: INTERACTION_BOX_PART_TYPE,
+    parent: 'shield',
+    x: 0,
+    y: 0,
+    w: 48,
+    h: 72,
+    baseW: 48,
+    baseH: 72,
+    rot: 0,
   },
   upperArmL: {
     x: -14,
@@ -219,6 +260,17 @@ export const DEFAULT_PLAYER_RIG = {
     anchorOffsetX: 0,
     anchorOffsetY: 0,
     anchorMode: 'local',
+  },
+  [ATTACK_INTERACTION_BOX_KEY]: {
+    type: INTERACTION_BOX_PART_TYPE,
+    parent: 'weapon',
+    x: 0,
+    y: 0,
+    w: 96,
+    h: 24,
+    baseW: 96,
+    baseH: 24,
+    rot: 0,
   },
   neck: { x: 0, y: -82, rot: 0 },
   shoulderL: {

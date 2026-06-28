@@ -5,8 +5,10 @@ import {
   recordPuppetEditHandle,
   recordPuppetImageRegion,
   recordPuppetJointRegion,
+  recordPuppetRectPart,
 } from './puppetPlayerEditRegions.js';
 import { glowSilhouetteFor, groupAnchor, partHeight, partWidth, shouldGlowPartKey } from './puppetPlayerGeometry.js';
+import { INTERACTION_BOX_TARGET_TYPE, interactionBoxPartKeysForParent } from './tuningInteractionBoxes.js';
 
 export function drawPuppetPlayer(player, ctx) {
   const p = player.getPose();
@@ -38,7 +40,7 @@ export function drawPuppetPlayer(player, ctx) {
     player.anchorDebugPoints.forEach((point) => drawPuppetAnchorDot(ctx, point.x, point.y));
     ctx.restore();
   }
-  if (player.debugHitbox) drawPuppetDebug(ctx, player);
+  if (player.debugInteractionBoxes) drawPuppetDebug(ctx, player);
 }
 
 export function drawPuppetLayer(player, ctx, layer, pose, rig) {
@@ -139,13 +141,21 @@ export function drawPuppetLayer(player, ctx, layer, pose, rig) {
         pose.lowerArmR,
         'R',
         pose.weapon,
-        !player.isRolling || player.canRollUseWeapon,
+        !hasSeparateWeaponLayer(player) && (!player.isRolling || player.canRollUseWeapon),
         group
       );
+    },
+    weapon: () => {
+      if (player.isRolling && !player.canRollUseWeapon) return;
+      drawPuppetWeapon(player, ctx, pose, rig);
     },
   };
 
   layers[layer]?.();
+}
+
+function hasSeparateWeaponLayer(player) {
+  return player.layerOrder.includes('weapon');
 }
 
 export function puppetGroupControl(base = {}, offset = {}) {
@@ -203,6 +213,29 @@ export function drawPuppetArm(
   ctx.restore();
 }
 
+export function drawPuppetWeapon(player, ctx, pose, rig) {
+  const shoulder = player.getPartOffset('shoulderR');
+  const x = rig.shoulderR.x + shoulder.x;
+  const y = rig.shoulderR.y + shoulder.y;
+  const group = puppetGroupControl(rig.shoulderR, shoulder);
+
+  ctx.save();
+  ctx.globalAlpha *= clamp(group.opacity ?? 1, 0, 1);
+  ctx.translate(
+    x + Number(group.anchorOffsetX || 0) + Number(group.ax || 0),
+    y + Number(group.anchorOffsetY || 0) + Number(group.ay || 0)
+  );
+  ctx.scale(Math.max(0.05, group.w ?? 1), Math.max(0.05, group.h ?? 1));
+  ctx.rotate(pose.upperArmR + deg((rig.shoulderR.rot || 0) + (shoulder.rot || 0)));
+  ctx.translate(-Number(group.ax || 0), -Number(group.ay || 0));
+  ctx.translate(0, rig.upperArmR.h - 8);
+  ctx.rotate(pose.lowerArmR);
+  ctx.translate(0, rig.lowerArmR.h - 4);
+  ctx.rotate(pose.weapon);
+  drawPuppetImagePart(player, ctx, player.assets.weapon, rig.weapon, 0, 0, 0, 'weapon');
+  ctx.restore();
+}
+
 export function drawPuppetLeg(player, ctx, x, y, upperRotation, lowerRotation, side, group = {}) {
   const r = player.rig;
   const upperImage = side === 'L' ? player.assets.upperLegL : player.assets.upperLegR;
@@ -234,8 +267,7 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   const imageY = baseY + (part.y || 0) + (part.anchorOffsetY || 0) + offset.y;
   const referenceW = part.baseW || partWidth(image);
   const referenceH = part.baseH || partHeight(image);
-  const width = Math.max(1, (part.w || referenceW) + (offset.w || 0));
-  const height = Math.max(1, (part.h || referenceH) + (offset.h || 0));
+  const { width, height } = partRectSize(part, offset, referenceW, referenceH);
   const anchorLocalX = part.ax ?? part.ox;
   const anchorLocalY = part.ay ?? part.oy;
   const scaledAnchorX = anchorLocalX * (width / Math.max(1, referenceW));
@@ -246,9 +278,10 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   ctx.save();
   ctx.translate(anchorX, anchorY);
   const placementMatrix = ctx.getTransform();
-  ctx.rotate(rotation + deg((part.rot || 0) + (offset.rot || 0)));
+  ctx.rotate(rotation + deg(partRectRotation(part, offset)));
   recordPuppetImageRegion(player, ctx, key, -scaledAnchorX, -scaledAnchorY, width, height);
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
+  recordPuppetInteractionBoxes(player, ctx, key, -scaledAnchorX, -scaledAnchorY);
   ctx.globalAlpha *= clamp((part.opacity ?? 1) * (offset.opacity ?? 1), 0, 1);
   if (shouldGlowPartKey(key, player.glowPart, player.glowParts)) {
     drawPuppetImageGlow(ctx, image, -scaledAnchorX, -scaledAnchorY, width, height);
@@ -257,6 +290,47 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   ctx.restore();
 
   if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, anchorX, anchorY);
+}
+
+function recordPuppetInteractionBoxes(player, ctx, parentKey, parentX, parentY) {
+  interactionBoxPartKeysForParent(parentKey).forEach((boxKey) => {
+    const part = player.rig?.[boxKey];
+    if (!part) return;
+
+    const offset = player.getPartOffset(boxKey);
+    recordPuppetLocalRectPart(player, ctx, boxKey, part, offset, parentX, parentY, {
+      type: INTERACTION_BOX_TARGET_TYPE,
+    });
+  });
+}
+
+function recordPuppetLocalRectPart(player, ctx, key, part, offset, parentX, parentY, { type = 'part' } = {}) {
+  const { width, height } = partRectSize(part, offset, part.baseW || 1, part.baseH || 1);
+  recordPuppetRectPart(
+    player,
+    ctx,
+    key,
+    parentX + Number(part.x || 0) + Number(offset.x || 0),
+    parentY + Number(part.y || 0) + Number(offset.y || 0),
+    width,
+    height,
+    {
+      rot: partRectRotation(part, offset),
+      type,
+      source: part,
+    }
+  );
+}
+
+function partRectSize(part, offset, fallbackW = 1, fallbackH = 1) {
+  return {
+    width: Math.max(1, Number(part.w || fallbackW) + Number(offset.w || 0)),
+    height: Math.max(1, Number(part.h || fallbackH) + Number(offset.h || 0)),
+  };
+}
+
+function partRectRotation(part, offset) {
+  return Number(part.rot || 0) + Number(offset.rot || 0);
 }
 
 export function drawPuppetImageGlow(ctx, image, x, y, w, h) {

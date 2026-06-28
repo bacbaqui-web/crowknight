@@ -1,4 +1,10 @@
 import { MASTER_PART_KEY } from './gameConfig.js';
+import {
+  ATTACK_INTERACTION_BOX_KEY,
+  COLLISION_INTERACTION_BOX_KEY,
+  GUARD_INTERACTION_BOX_KEY,
+  HURT_INTERACTION_BOX_KEY,
+} from './tuningInteractionBoxes.js';
 
 export const isMasterPart = (partKey) => partKey === MASTER_PART_KEY;
 
@@ -12,25 +18,29 @@ export function axisProps(xProp, yProp, xLabel = 'X', yLabel = 'Y') {
 export function partLabel(key) {
   return (
     {
-      master: '마스터',
+      master: '기준',
       body: '몸통',
       head: '머리',
       cape: '망토',
       shield: '방패',
-      upperArmL: '오른쪽 윗팔',
-      lowerArmL: '오른쪽 아랫팔',
-      upperArmR: '왼쪽 윗팔',
-      lowerArmR: '왼쪽 아랫팔',
-      upperLegL: '오른쪽 윗다리',
-      lowerLegL: '오른쪽 아랫다리',
-      upperLegR: '왼쪽 윗다리',
-      lowerLegR: '왼쪽 아랫다리',
+      upperArmL: '왼팔 윗팔',
+      lowerArmL: '왼팔 아랫팔',
+      upperArmR: '오른팔 윗팔',
+      lowerArmR: '오른팔 아랫팔',
+      upperLegL: '왼다리 윗다리',
+      lowerLegL: '왼다리 아랫다리',
+      upperLegR: '오른다리 윗다리',
+      lowerLegR: '오른다리 아랫다리',
       weapon: '무기',
       neck: '목 위치',
-      shoulderL: '오른쪽 어깨',
-      shoulderR: '왼쪽 어깨',
-      hipL: '오른쪽 골반',
-      hipR: '왼쪽 골반',
+      shoulderL: '왼팔 어깨',
+      shoulderR: '오른팔 어깨',
+      hipL: '왼다리 골반',
+      hipR: '오른다리 골반',
+      [COLLISION_INTERACTION_BOX_KEY]: '충돌박스',
+      [ATTACK_INTERACTION_BOX_KEY]: '무기박스',
+      [HURT_INTERACTION_BOX_KEY]: '피격박스',
+      [GUARD_INTERACTION_BOX_KEY]: '방패박스',
     }[key] || key
   );
 }
@@ -59,14 +69,15 @@ export function poseLabel(key) {
 export function layerLabel(key) {
   return (
     {
-      leftLeg: '왼쪽 다리',
+      leftLeg: '왼다리 · 아랫다리 위 / 윗다리 아래',
       body: '몸통',
       head: '머리',
       cape: '망토',
       shield: '방패',
-      leftArm: '왼쪽 팔',
-      rightLeg: '오른쪽 다리',
-      rightArm: '오른쪽 팔',
+      leftArm: '왼팔 · 아랫팔 위 / 윗팔 아래',
+      rightLeg: '오른다리 · 아랫다리 위 / 윗다리 아래',
+      rightArm: '오른팔 · 아랫팔 위 / 윗팔 아래',
+      weapon: '무기',
     }[key] || key
   );
 }

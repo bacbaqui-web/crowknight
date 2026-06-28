@@ -2,7 +2,7 @@ export const TUNING_PANEL_WORKFLOW_SESSIONS = Object.freeze(['setup', 'animation
 export const DEFAULT_TUNING_PANEL_WORKFLOW_SESSION = 'setup';
 export const TUNING_PANEL_WORKFLOW_SESSION_LABELS = Object.freeze({
   setup: 'Setup',
-  animation: 'Animation',
+  animation: 'Action',
   effect: 'Effect',
   stage: 'Stage',
 });

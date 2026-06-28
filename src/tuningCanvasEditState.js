@@ -1,13 +1,13 @@
 import { pickDragValues, pickVisualValues } from './canvasDragState.js';
 import { isMasterPart } from './tuningLabels.js';
-import { partPositionSources } from './tuningParts.js';
+import { partEditSources } from './tuningParts.js';
 
 export function masterPartCanvasBase() {
   return { x: 0, y: 0, w: 1, h: 1, rot: 0, opacity: 1, anchorX: 0, anchorY: 0 };
 }
 
 export function canvasPartEditState({ part, context, tuning, poseValue }) {
-  const base = isMasterPart(part) ? masterPartCanvasBase() : partPositionSources(tuning.rig)[part];
+  const base = isMasterPart(part) ? masterPartCanvasBase() : partEditSources(tuning)[part];
   return {
     context,
     part,

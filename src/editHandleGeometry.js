@@ -7,6 +7,7 @@ import {
 } from './screenGeometry.js';
 import { ANCHOR_HANDLE_RADIUS, MOVE_HANDLE_RADIUS, handleLineStart } from './editHandleDrawing.js';
 import { isMasterPart } from './tuningLabels.js';
+import { INTERACTION_BOX_TARGET_TYPE, LEGACY_INTERACTION_BOX_TARGET_TYPE } from './tuningInteractionBoxes.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 
 export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, poseFrameSelectionActive }) {
@@ -14,8 +15,11 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
 
   const info = editHandleInfo;
   const isImagePart = imagePartKeys().includes(editFocusPartKey);
+  const isInteractionBoxPart =
+    info.target?.type === INTERACTION_BOX_TARGET_TYPE || info.target?.type === LEGACY_INTERACTION_BOX_TARGET_TYPE;
   const isMaster = isMasterPart(editFocusPartKey);
-  const isScalablePart = isMaster || isImagePart || controlGroupPartKeys().includes(editFocusPartKey);
+  const isScalablePart =
+    isMaster || isImagePart || isInteractionBoxPart || controlGroupPartKeys().includes(editFocusPartKey);
   const anchor = info.anchor;
   const xAxis = info.xAxis;
   const yAxis = info.yAxis;
@@ -34,15 +38,19 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
   }
 
   if (isScalablePart && (!isMaster || poseFrameSelectionActive)) {
-    handles.width = { mode: 'width', point: addScreenVector(anchor, left, 70), radius: 18 };
-    handles.height = { mode: 'height', point: addScreenVector(anchor, up, 70), radius: 18 };
-    handles.size = { mode: 'size', point: addScreenVector(anchor, sizeDir, 78), radius: 18 };
-    handles.opacity = { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 };
+    const boundaryHandles = targetBoundaryHandles(anchor, info.target);
+    handles.width = { mode: 'width', point: boundaryHandles?.width || addScreenVector(anchor, left, 70), radius: 18 };
+    handles.height = { mode: 'height', point: boundaryHandles?.height || addScreenVector(anchor, up, 70), radius: 18 };
+    handles.size = { mode: 'size', point: boundaryHandles?.size || addScreenVector(anchor, sizeDir, 78), radius: 18 };
+    if (boundaryHandles?.rotate) handles.rotate = { mode: 'rotate', point: boundaryHandles.rotate, radius: 17 };
+    if (!isInteractionBoxPart)
+      handles.opacity = { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 };
   }
 
   if (
-    (isMaster && !poseFrameSelectionActive) ||
-    (!isMaster && (isImagePart || controlGroupPartKeys().includes(editFocusPartKey)))
+    !isInteractionBoxPart &&
+    ((isMaster && !poseFrameSelectionActive) ||
+      (!isMaster && (isImagePart || controlGroupPartKeys().includes(editFocusPartKey))))
   ) {
     handles.anchor = { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS };
   }
@@ -58,9 +66,41 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
     moveXUnit: info.moveXUnit || info.xUnit || 1,
     moveYUnit: info.moveYUnit || info.yUnit || 1,
     isImagePart,
+    isInteractionBoxPart,
     isMaster,
     isScalablePart,
     handles,
+  };
+}
+
+function targetBoundaryHandles(anchor, target) {
+  if (!target?.points || target.points.length < 4) return null;
+
+  const [topLeft, topRight, bottomRight, bottomLeft] = target.points;
+  const topMid = midpoint(topLeft, topRight);
+  const leftMid = midpoint(topLeft, bottomLeft);
+  const topRightOut = vectorFromPoints(bottomRight, topRight);
+  const rotateOffset = normalizeScreenVector(topRightOut.x, topRightOut.y);
+
+  return {
+    width: leftMid,
+    height: topMid,
+    size: bottomRight,
+    rotate: addScreenVector(topRight, rotateOffset, 34),
+  };
+}
+
+function midpoint(a, b) {
+  return {
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  };
+}
+
+function vectorFromPoints(from, to) {
+  return {
+    x: to.x - from.x,
+    y: to.y - from.y,
   };
 }
 

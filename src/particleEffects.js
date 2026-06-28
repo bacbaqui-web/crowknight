@@ -103,7 +103,7 @@ export function createParticleEffects({ actors, world, ctx }) {
   }
 
   function triggerHitImpact(attacker, target, comboStep, defeated = false) {
-    const box = attacker.player.attackBox;
+    const box = attacker.player.attackInteractionRegion;
     const hitX = box ? box.x + box.w * (attacker.player.facing === 1 ? 0.68 : 0.32) : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 70;
     const effects = attacker.tuning.effects || {};
@@ -115,7 +115,7 @@ export function createParticleEffects({ actors, world, ctx }) {
   }
 
   function triggerGuardImpact(attacker, target, broken = false) {
-    const box = attacker.player.attackBox;
+    const box = attacker.player.attackInteractionRegion;
     const hitX = box ? box.x + box.w * 0.5 : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 72;
     const effects = target.tuning.effects || {};

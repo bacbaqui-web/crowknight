@@ -5,7 +5,7 @@ export function createPuppetPose(player) {
   const idle = Math.sin(t * 3) * 3;
   const previewPose = player.posePreview?.pose;
   const state = previewPose?.startsWith('attack') ? 'attack' : previewPose || player.state;
-  const intensityKey = previewPose || player.poseKey;
+  const actionKey = previewPose || player.poseKey;
   const p = createBasePose();
 
   if (state === 'idle') {
@@ -61,7 +61,7 @@ export function createPuppetPose(player) {
   }
 
   if (state === 'attack') {
-    const attackKey = intensityKey?.startsWith('attack') ? intensityKey : `attack${player.comboStep || 1}`;
+    const attackKey = actionKey?.startsWith('attack') ? actionKey : `attack${player.comboStep || 1}`;
     applyAttackPose(p, attackKey, player.getPoseFrameProgress());
   }
 
@@ -149,7 +149,7 @@ export function createPuppetPose(player) {
     p.weapon = deg(-48 + fall * 24);
   }
 
-  return applyAnimationIntensity(p, intensityKey, player.motion.animationIntensity);
+  return p;
 }
 
 function applyAttackPose(p, key, t) {
@@ -202,17 +202,6 @@ function applyAttackPose(p, key, t) {
   p.upperLegR = deg(-10);
   p.lowerLegR = deg(24);
   p.weapon = deg(82 - swing * 148);
-}
-
-function applyAnimationIntensity(p, key, intensityConfig) {
-  const value = typeof intensityConfig === 'object' ? intensityConfig?.[key] : intensityConfig;
-  const intensity = Math.max(0, Number(value ?? 1));
-  const base = createBasePose();
-
-  Object.keys(base).forEach((key) => {
-    p[key] = base[key] + (p[key] - base[key]) * intensity;
-  });
-  return p;
 }
 
 function createBasePose() {

@@ -1,5 +1,7 @@
 import { clamp, clone, deg, lerp } from './utils.js';
 import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
+import { ATTACK_INTERACTION_BOX_KEY, RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY } from './tuningInteractionBoxes.js';
+import { createAttackInteractionRegion } from './interactionBoxRuntime.js';
 import {
   drawPuppetArm,
   drawPuppetImageGlow,
@@ -28,7 +30,6 @@ import {
   pingPongProgress,
   rotationMatrix,
   scaleMatrix,
-  transformMatrixPoint,
   translationMatrix,
 } from './puppetPlayerGeometry.js';
 import { createPuppetPose } from './puppetPlayerPose.js';
@@ -72,7 +73,7 @@ export class PuppetPlayer {
     this.guardBreakTime = 0;
     this.guardLockedUntilRelease = false;
     this.dead = false;
-    this.debugHitbox = false;
+    this.debugInteractionBoxes = false;
     this.aiTimer = 0;
     this.aiDir = Math.random() > 0.5 ? 1 : -1;
     this.applyTuning(DEFAULT_PLAYER_TUNING);
@@ -92,9 +93,7 @@ export class PuppetPlayer {
     this.comboResetTime = next.comboResetTime;
     this.invulnerability = next.invulnerability;
     this.transform = next.transform;
-    this.hitboxConfig = next.hitbox;
-    this.attackBoxConfig = next.attackBox;
-    this.attackBoxesConfig = next.attackBoxes;
+    this.hurtInteractionRegionConfig = next[RUNTIME_HURT_INTERACTION_BOX_MIRROR_KEY];
     this.effects = next.effects;
     this.hitReaction = next.hitReaction;
     this.motion = next.motion;
@@ -104,27 +103,22 @@ export class PuppetPlayer {
     this.rig = next.rig;
   }
 
-  get hitbox() {
-    const h = this.hitboxConfig;
+  get hurtInteractionRegion() {
+    const h = this.hurtInteractionRegionConfig;
     return { x: this.x + h.x, y: this.y + h.y, w: h.w, h: h.h };
   }
 
-  get attackBox() {
+  get attackInteractionRegion() {
     if (this.jumpAttackTime > 0 && this.isJumpAttackStrikeActive()) {
-      const a = this.attackBoxesConfig?.jumpAttack || this.attackBoxConfig;
-      return this.weaponAttackBox(a);
+      return this.activeAttackInteractionRegion();
     }
     if (this.isRolling && this.canRollUseWeapon) {
-      return this.weaponAttackBox(
-        this.attackBoxesConfig?.roll || this.attackBoxesConfig?.attack1 || this.attackBoxConfig
-      );
+      return this.activeAttackInteractionRegion();
     }
     if (this.attackTime <= 0 || this.isRolling) return null;
     if (!this.isAttackStrikeActive()) return null;
 
-    const key = `attack${this.comboStep || 1}`;
-    const a = this.attackBoxesConfig?.[key] || this.attackBoxConfig;
-    return this.weaponAttackBox(a);
+    return this.activeAttackInteractionRegion();
   }
 
   get isRolling() {
@@ -139,33 +133,10 @@ export class PuppetPlayer {
     return this.attackTime > 0 || this.jumpAttackTime > 0;
   }
 
-  weaponAttackBox(config = {}) {
-    const transform = this.weaponAnchorTransform();
-    if (!transform) return null;
-
-    const x = Number(config.x ?? 0);
-    const y = Number(config.y ?? -12);
-    const w = Math.max(1, Number(config.w ?? 96));
-    const h = Math.max(1, Number(config.h ?? 28));
-    const rot = deg(Number(config.rot || 0));
-    const localX = config.flipX ? -x - w : x;
-    const local = [
-      { x: localX, y },
-      { x: localX + w, y },
-      { x: localX + w, y: y + h },
-      { x: localX, y: y + h },
-    ];
-    const matrix = multiplyMatrix(transform, rotationMatrix(rot));
-    const points = local.map((point) => transformMatrixPoint(matrix, point.x, point.y));
-    const xs = points.map((point) => point.x);
-    const ys = points.map((point) => point.y);
-    return {
-      x: Math.min(...xs),
-      y: Math.min(...ys),
-      w: Math.max(...xs) - Math.min(...xs),
-      h: Math.max(...ys) - Math.min(...ys),
-      points,
-    };
+  activeAttackInteractionRegion() {
+    const offset = this.getPartOffset(ATTACK_INTERACTION_BOX_KEY);
+    if (Number(offset.active || 0) < 0.5) return null;
+    return createAttackInteractionRegion(this, offset);
   }
 
   weaponAnchorTransform() {
@@ -321,6 +292,7 @@ export class PuppetPlayer {
       opacity: 1,
       anchorX: 0,
       anchorY: 0,
+      active: 0,
     };
     if (!value) return empty;
     if (Array.isArray(value.keyframes) && value.keyframes.length) {
@@ -340,6 +312,7 @@ export class PuppetPlayer {
       opacity: lerp(start.opacity, end.opacity, t),
       anchorX: Number(value.anchorX || 0),
       anchorY: Number(value.anchorY || 0),
+      active: Number(start.active || 0) >= 0.5 ? 1 : 0,
     };
   }
 
