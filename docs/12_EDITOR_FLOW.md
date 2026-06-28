@@ -44,7 +44,8 @@ Handle 생성:
 
 ```text
 drawPuppetImagePart(parent)
-→ recordPuppetInteractionBoxes()
+→ drawPuppetImageLessChildParts()
+→ drawPuppetImageLessRectPart()
 → recordPuppetRectPart()
 → player.editHandles[boxKey]
 → tuningEditHandleGeometry()

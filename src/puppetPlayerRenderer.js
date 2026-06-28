@@ -281,7 +281,7 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   ctx.rotate(rotation + deg(partRectRotation(part, offset)));
   recordPuppetImageRegion(player, ctx, key, -scaledAnchorX, -scaledAnchorY, width, height);
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
-  recordPuppetInteractionBoxes(player, ctx, key, -scaledAnchorX, -scaledAnchorY);
+  drawPuppetImageLessChildParts(player, ctx, key, -scaledAnchorX, -scaledAnchorY);
   ctx.globalAlpha *= clamp((part.opacity ?? 1) * (offset.opacity ?? 1), 0, 1);
   if (shouldGlowPartKey(key, player.glowPart, player.glowParts)) {
     drawPuppetImageGlow(ctx, image, -scaledAnchorX, -scaledAnchorY, width, height);
@@ -292,19 +292,26 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, anchorX, anchorY);
 }
 
-function recordPuppetInteractionBoxes(player, ctx, parentKey, parentX, parentY) {
-  interactionBoxPartKeysForParent(parentKey).forEach((boxKey) => {
-    const part = player.rig?.[boxKey];
+function drawPuppetImageLessChildParts(player, ctx, parentKey, parentX, parentY) {
+  imageLessChildPartsForParent(parentKey).forEach(({ key: partKey, type }) => {
+    const part = player.rig?.[partKey];
     if (!part) return;
 
-    const offset = player.getPartOffset(boxKey);
-    recordPuppetLocalRectPart(player, ctx, boxKey, part, offset, parentX, parentY, {
-      type: INTERACTION_BOX_TARGET_TYPE,
+    drawPuppetImageLessRectPart(player, ctx, partKey, part, parentX, parentY, {
+      type,
     });
   });
 }
 
-function recordPuppetLocalRectPart(player, ctx, key, part, offset, parentX, parentY, { type = 'part' } = {}) {
+function imageLessChildPartsForParent(parentKey) {
+  return interactionBoxPartKeysForParent(parentKey).map((key) => ({
+    key,
+    type: INTERACTION_BOX_TARGET_TYPE,
+  }));
+}
+
+function drawPuppetImageLessRectPart(player, ctx, key, part, parentX, parentY, { type = 'part' } = {}) {
+  const offset = player.getPartOffset(key);
   const { width, height } = partRectSize(part, offset, part.baseW || 1, part.baseH || 1);
   recordPuppetRectPart(
     player,
