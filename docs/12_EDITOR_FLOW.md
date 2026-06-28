@@ -2,6 +2,15 @@
 
 이 문서는 사용자 행동이 어떤 JS를 거쳐 어디에 저장되는지만 설명한다.
 
+Transform 기준:
+
+```text
+After Effects Transform model
+→ translate(x, y)
+→ rotate(rot)
+→ drawRect(-ax, -ay, w, h)
+```
+
 ## Setup Part 편집
 
 ```text

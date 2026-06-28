@@ -58,6 +58,14 @@
 - 이유: 공격 ON/OFF, 방어, 피격 가능 여부 같은 판정 상태는 동작 프레임과 함께 제작되어야 한다.
 - 대체안: Runtime 판정 박스가 별도 위치/크기를 갖고 Action과 따로 움직이는 방식은 채택하지 않는다.
 
+## Editable Transform Model
+
+- 결정: 모든 editable object는 After Effects Transform 모델을 따른다.
+- 규칙: `x/y`는 Position, `ax/ay`는 Anchor Point, `w/h`는 Size, `rot`는 Anchor 기준 Rotation이다.
+- 계산: `translate(x, y) → rotate(rot) → drawRect(-ax, -ay, w, h)`.
+- 이유: Setup, Action, Effect, Stage, InteractionBox가 같은 좌표/핸들/resize 규칙을 공유해야 한다.
+- 대체안: 대상별로 `x/y` 의미와 resize 계산을 다르게 유지하는 방식은 채택하지 않는다.
+
 ## Editor와 Runtime 분리
 
 - 결정: Editor 원본 데이터와 Runtime 실행 데이터를 분리한다.

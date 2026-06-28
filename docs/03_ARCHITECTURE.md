@@ -41,11 +41,30 @@
 - Drag는 move, resize, rotate, opacity 같은 편집 동작으로 변환된다.
 - 편집 결과는 현재 context의 저장 대상에 기록된다.
 
+## Editable Transform
+
+모든 editable object는 After Effects Transform 모델을 목표 규칙으로 사용한다.
+
+- `x/y`: 부모 좌표계에서 anchor point의 위치.
+- `ax/ay`: 객체 local rect 안에서 anchor point의 위치.
+- `w/h`: 객체 local rect의 크기.
+- `rot`: anchor point 기준 회전.
+
+Render formula:
+
+```text
+translate(x, y)
+rotate(rot)
+drawRect(-ax, -ay, w, h)
+```
+
+이 규칙은 Setup, Action, Effect, Stage, InteractionBox에 동일하게 적용한다.
+
 ## Runtime
 
 - Runtime은 제작툴 데이터를 읽어 실행 상태로 변환한다.
 - 캐릭터 렌더링, 행동 상태, 효과, 전투 판정, HUD, 배경을 실행 화면에서 처리한다.
-- Runtime에서 필요한 호환 데이터는 Editor 원본에서 전달받는다.
+- Runtime 판정 데이터는 Editor 원본에서 실행 중 계산한다.
 
 ## Save / Assets
 
