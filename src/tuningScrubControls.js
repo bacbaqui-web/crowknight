@@ -242,7 +242,7 @@ function formatPartValue(value, prop) {
   if (prop === 'opacity') {
     return number > 0 ? '보임' : '숨김';
   }
-  if (prop === 'active') {
+  if (isToggleProp(prop)) {
     return number > 0 ? '켜짐' : '꺼짐';
   }
   if (prop === 'stun' || prop === 'deathBurst') return formatDecimalValue(number, 2);
@@ -250,7 +250,14 @@ function formatPartValue(value, prop) {
 }
 
 function isToggleProp(prop) {
-  return prop === 'opacity' || prop === 'active';
+  return (
+    prop === 'opacity' ||
+    prop === 'active' ||
+    prop === 'attack' ||
+    prop === 'hurt' ||
+    prop === 'collision' ||
+    prop === 'guard'
+  );
 }
 
 function isTogglePropOff(prop, value) {

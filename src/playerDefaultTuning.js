@@ -106,13 +106,13 @@ export const DEFAULT_PLAYER_TUNING = {
 
 function defaultAttackActiveFrames(activeAt, inactiveAt, reaction) {
   return {
-    start: { active: 0, ...reaction },
-    end: { active: 0, ...reaction },
+    start: { active: 0, attack: 1, ...reaction },
+    end: { active: 0, attack: 1, ...reaction },
     keyframes: [
-      { id: 'start', t: 0, active: 0, ...reaction },
-      { id: 'active', t: activeAt, active: 1, ...reaction },
-      { id: 'inactive', t: inactiveAt, active: 0, ...reaction },
-      { id: 'end', t: 1, active: 0, ...reaction },
+      { id: 'start', t: 0, active: 0, attack: 1, ...reaction },
+      { id: 'active', t: activeAt, active: 1, attack: 1, ...reaction },
+      { id: 'inactive', t: inactiveAt, active: 0, attack: 1, ...reaction },
+      { id: 'end', t: 1, active: 0, attack: 1, ...reaction },
     ],
   };
 }

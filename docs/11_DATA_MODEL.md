@@ -53,16 +53,17 @@ Runtime/Combat 계산값이다.
 Runtime 피격 판정 geometry:
 
 ```text
-tuning.rig.hurtInteractionBox
-→ actor.player.hurtInteractionRegion
+active + hurt object recorded region
+→ actor.player.hurtInteractionRegions
+→ fallback: tuning.rig.hurtInteractionBox
 ```
 
 Runtime 공격 판정 geometry:
 
 ```text
-tuning.rig.attackInteractionBox
-+ tuning.poseOffsets[poseKey].attackInteractionBox.active
-→ actor.player.attackInteractionRegion
+active + attack object recorded region
+→ actor.player.attackInteractionRegions
+→ fallback: tuning.rig.attackInteractionBox
 ```
 
 Runtime 공격 효과:
@@ -101,7 +102,9 @@ Frame value:
 - `rot`
 - `opacity`
 - `active` (common interaction state)
-- `stun`, `knockbackX`, `knockbackY`, `deathBurst` (common interaction settings)
+- `attack`, `hurt`, `collision`, `guard` (interaction role switches)
+- `stun`, `knockbackX`, `knockbackY`, `deathBurst` (attack reaction settings)
+- `pushPower` (collision push setting)
 - root anchor field 일부
 
 ## `effectOffsets`

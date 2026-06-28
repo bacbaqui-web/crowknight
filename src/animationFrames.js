@@ -123,10 +123,15 @@ export function interpolateFrameValues(keyframes = [], t = 0) {
       anchorX: lerp(a.anchorX || 0, b.anchorX || 0, localT),
       anchorY: lerp(a.anchorY || 0, b.anchorY || 0, localT),
       active: steppedFrameFlag(a.active),
+      attack: steppedFrameFlag(a.attack),
+      hurt: steppedFrameFlag(a.hurt),
+      collision: steppedFrameFlag(a.collision),
+      guard: steppedFrameFlag(a.guard),
       stun: lerp(a.stun || 0, b.stun || 0, localT),
       knockbackX: lerp(a.knockbackX || 0, b.knockbackX || 0, localT),
       knockbackY: lerp(a.knockbackY || 0, b.knockbackY || 0, localT),
       deathBurst: lerp(a.deathBurst ?? 1, b.deathBurst ?? 1, localT),
+      pushPower: lerp(a.pushPower || 0, b.pushPower || 0, localT),
     };
   }
 
@@ -146,9 +151,14 @@ export function frameValue(value = {}) {
     anchorX: Number(value?.anchorX || 0),
     anchorY: Number(value?.anchorY || 0),
     active: steppedFrameFlag(value?.active),
+    attack: steppedFrameFlag(value?.attack),
+    hurt: steppedFrameFlag(value?.hurt),
+    collision: steppedFrameFlag(value?.collision),
+    guard: steppedFrameFlag(value?.guard),
     stun: Number(value?.stun || 0),
     knockbackX: Number(value?.knockbackX || 0),
     knockbackY: Number(value?.knockbackY || 0),
     deathBurst: Number(value?.deathBurst ?? 1),
+    pushPower: Number(value?.pushPower || 0),
   };
 }

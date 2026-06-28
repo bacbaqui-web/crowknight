@@ -32,9 +32,9 @@
 
 ## Puppet Player / Runtime Geometry
 
-- `src/puppetPlayer.js`: player Runtime state. 수정: tuning 적용, Runtime action state. 같이: `combatSystem.js`, `puppetPlayerPose.js`, `interactionBoxRuntime.js`. 위험: 높음.
-- `src/interactionBoxRuntime.js`: InteractionBox Runtime region 계산. 수정: 판정 geometry 계산, role별 region 확장. 같이: `puppetPlayer.js`, `combatSystem.js`. 위험: 높음.
-- `src/tuningInteractionBoxes.js`: InteractionBox key/role/parent helper. 수정: Editor/Runtime box source 경계. 같이: `tuningNormalize.js`, `interactionBoxRuntime.js`. 위험: 높음.
+- `src/puppetPlayer.js`: player Runtime state. 수정: tuning 적용, Runtime action state. 같이: `combatSystem.js`, `puppetPlayerPose.js`, `interactionRegionRuntime.js`. 위험: 높음.
+- `src/interactionRegionRuntime.js`: editable object Runtime region 계산. 수정: 판정 geometry 계산, role별 region 확장. 같이: `puppetPlayer.js`, `combatSystem.js`. 위험: 높음.
+- `src/tuningInteractionBoxes.js`: InteractionBox key/role/parent helper. 수정: Editor/Runtime box source 경계. 같이: `tuningNormalize.js`, `interactionRegionRuntime.js`. 위험: 높음.
 - `src/puppetPlayerActions.js`: action 전환. 수정: Runtime action rules. 같이: `inputControls.js`, `gameConfig.js`. 위험: 중간.
 - `src/puppetPlayerPose.js`: pose transform 계산. 수정: Setup base + Action keyframe 합성. 같이: `poseTimelineAdapter.js`, `animationFrames.js`. 위험: 높음.
 - `src/puppetPlayerRenderer.js`: rig part 렌더와 edit region 기록. 수정: part/InteractionBox render/edit region. 같이: `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`. 위험: 높음.
@@ -112,7 +112,7 @@
 - `src/tuningPanelAssetActions.js`: asset actions. 수정: upload/download. 같이: asset runtime, project state. 위험: 중간.
 - `src/tuningPanelShortcuts.js`: shortcuts. 수정: keyboard shortcut. 같이: timeline/selection controllers. 위험: 중간.
 - `src/tuningPanelDebugView.js`: debug view. 수정: setting debug UI. 같이: settings debug renderer. 위험: 낮음.
-- `src/settingsDebugRenderer.js`: setting debug draw. 수정: InteractionBox/attack debug 표시. 같이: `tuningInteractionBoxes.js`, `interactionBoxRuntime.js`. 위험: 중간.
+- `src/settingsDebugRenderer.js`: setting debug draw. 수정: InteractionBox/attack debug 표시. 같이: `tuningInteractionBoxes.js`, `interactionRegionRuntime.js`. 위험: 중간.
 - `src/settingsPanelState.js`: panel section state helper. 수정: open section/edit context 판단. 같이: workflow controller. 위험: 중간.
 
 ## Panel State / Workflow

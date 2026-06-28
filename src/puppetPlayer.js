@@ -1,7 +1,11 @@
 import { clamp, clone, deg, lerp } from './utils.js';
 import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
-import { ATTACK_INTERACTION_BOX_KEY } from './tuningInteractionBoxes.js';
-import { createAttackInteractionRegion, createHurtInteractionRegion } from './interactionBoxRuntime.js';
+import {
+  createAttackInteractionRegions,
+  createCollisionInteractionRegions,
+  createGuardInteractionRegions,
+  createHurtInteractionRegions,
+} from './interactionRegionRuntime.js';
 import {
   drawPuppetArm,
   drawPuppetImageGlow,
@@ -102,20 +106,36 @@ export class PuppetPlayer {
   }
 
   get hurtInteractionRegion() {
-    return createHurtInteractionRegion(this) || { x: this.x, y: this.y, w: 1, h: 1 };
+    return this.hurtInteractionRegions[0] || { x: this.x, y: this.y, w: 1, h: 1 };
+  }
+
+  get hurtInteractionRegions() {
+    return createHurtInteractionRegions(this);
+  }
+
+  get collisionInteractionRegions() {
+    return createCollisionInteractionRegions(this);
+  }
+
+  get guardInteractionRegions() {
+    return createGuardInteractionRegions(this);
   }
 
   get attackInteractionRegion() {
+    return this.attackInteractionRegions[0] || null;
+  }
+
+  get attackInteractionRegions() {
     if (this.jumpAttackTime > 0 && this.isJumpAttackStrikeActive()) {
-      return this.activeAttackInteractionRegion();
+      return this.activeAttackInteractionRegions();
     }
     if (this.isRolling && this.canRollUseWeapon) {
-      return this.activeAttackInteractionRegion();
+      return this.activeAttackInteractionRegions();
     }
-    if (this.attackTime <= 0 || this.isRolling) return null;
-    if (!this.isAttackStrikeActive()) return null;
+    if (this.attackTime <= 0 || this.isRolling) return [];
+    if (!this.isAttackStrikeActive()) return [];
 
-    return this.activeAttackInteractionRegion();
+    return this.activeAttackInteractionRegions();
   }
 
   get isRolling() {
@@ -130,10 +150,8 @@ export class PuppetPlayer {
     return this.attackTime > 0 || this.jumpAttackTime > 0;
   }
 
-  activeAttackInteractionRegion() {
-    const offset = this.getPartOffset(ATTACK_INTERACTION_BOX_KEY);
-    if (Number(offset.active || 0) < 0.5) return null;
-    return createAttackInteractionRegion(this, offset);
+  activeAttackInteractionRegions() {
+    return createAttackInteractionRegions(this);
   }
 
   weaponAnchorTransform() {
@@ -292,10 +310,15 @@ export class PuppetPlayer {
       anchorX: 0,
       anchorY: 0,
       active: 0,
+      attack: 0,
+      hurt: 0,
+      collision: 0,
+      guard: 0,
       stun: 0,
       knockbackX: 0,
       knockbackY: 0,
       deathBurst: 1,
+      pushPower: 0,
     };
     if (!value) return empty;
     if (Array.isArray(value.keyframes) && value.keyframes.length) {
@@ -318,10 +341,15 @@ export class PuppetPlayer {
       anchorX: Number(value.anchorX || 0),
       anchorY: Number(value.anchorY || 0),
       active: Number(start.active || 0) >= 0.5 ? 1 : 0,
+      attack: Number(start.attack || 0) >= 0.5 ? 1 : 0,
+      hurt: Number(start.hurt || 0) >= 0.5 ? 1 : 0,
+      collision: Number(start.collision || 0) >= 0.5 ? 1 : 0,
+      guard: Number(start.guard || 0) >= 0.5 ? 1 : 0,
       stun: lerp(start.stun, end.stun, t),
       knockbackX: lerp(start.knockbackX, end.knockbackX, t),
       knockbackY: lerp(start.knockbackY, end.knockbackY, t),
       deathBurst: lerp(start.deathBurst, end.deathBurst, t),
+      pushPower: lerp(start.pushPower, end.pushPower, t),
     };
   }
 

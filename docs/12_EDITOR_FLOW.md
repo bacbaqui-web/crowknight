@@ -68,7 +68,7 @@ drawPuppetImagePart(parent)
 canvas/property edit
 → tuning.rig[boxKey]
 → actor.player.applyTuning(actor.tuning)
-→ interactionBoxRuntime
+→ interactionRegionRuntime
 → saveState
 ```
 
@@ -120,15 +120,27 @@ Runtime attack:
 
 ```text
 combatSystem
-→ attacker.player.attackInteractionRegion
-→ attackInteractionBox.active 확인
-→ interactionBoxRuntime.createAttackInteractionRegion()
-→ interactionBoxRuntime.createInteractionRegion()
-→ weapon parent transform + tuning.rig.attackInteractionBox + pose offset
-→ Runtime attack region
+→ attacker.player.attackInteractionRegions
+→ interactionRegionRuntime.createActiveInteractionRegions(player, 'attack')
+→ active + attack object의 recorded region
+→ Runtime attack regions
 → combatGeometry.interactionRegionsOverlap()
 → attackInteractionRegion.reaction
 → combatSystem.applyHitReaction()
+```
+
+Runtime collision / guard:
+
+```text
+active + collision object
+→ player.collisionInteractionRegions
+→ combatSystem resolveCollisionInteractions()
+```
+
+```text
+active + guard object
+→ player.guardInteractionRegions
+→ attack region overlap 시 guard block
 ```
 
 Canvas drag:

@@ -124,10 +124,15 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
       anchorX: Number(frame.anchorX || 0),
       anchorY: Number(frame.anchorY || 0),
       active: steppedFrameFlag(frame.active),
+      attack: steppedFrameFlag(frame.attack),
+      hurt: steppedFrameFlag(frame.hurt),
+      collision: steppedFrameFlag(frame.collision),
+      guard: steppedFrameFlag(frame.guard),
       stun: Number(frame.stun || 0),
       knockbackX: Number(frame.knockbackX || 0),
       knockbackY: Number(frame.knockbackY || 0),
       deathBurst: Number(frame.deathBurst ?? 1),
+      pushPower: Number(frame.pushPower || 0),
       t: clamp(Number(frame.t), 0, 1),
     }))
     .sort((a, b) => a.t - b.t);
@@ -153,10 +158,15 @@ export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
       anchorX: lerp(a.anchorX, b.anchorX, localT),
       anchorY: lerp(a.anchorY, b.anchorY, localT),
       active: steppedFrameFlag(a.active),
+      attack: steppedFrameFlag(a.attack),
+      hurt: steppedFrameFlag(a.hurt),
+      collision: steppedFrameFlag(a.collision),
+      guard: steppedFrameFlag(a.guard),
       stun: lerp(a.stun, b.stun, localT),
       knockbackX: lerp(a.knockbackX, b.knockbackX, localT),
       knockbackY: lerp(a.knockbackY, b.knockbackY, localT),
       deathBurst: lerp(a.deathBurst, b.deathBurst, localT),
+      pushPower: lerp(a.pushPower, b.pushPower, localT),
     };
   }
 

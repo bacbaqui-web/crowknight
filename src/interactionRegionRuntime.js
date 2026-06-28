@@ -2,6 +2,8 @@ import {
   INTERACTION_BOX_ROLES,
   ATTACK_INTERACTION_BOX_KEY,
   HURT_INTERACTION_BOX_KEY,
+  COLLISION_INTERACTION_BOX_KEY,
+  GUARD_INTERACTION_BOX_KEY,
 } from './tuningInteractionBoxes.js';
 import { scaledEditableAnchor } from './editableObjectModel.js';
 import { deg } from './utils.js';
@@ -60,6 +62,30 @@ export function interactionReactionFromValue(value = {}) {
     knockbackX: Number(value?.knockbackX || 0),
     knockbackY: Number(value?.knockbackY || 0),
     deathBurst: Math.max(0, Number(value?.deathBurst ?? 1)),
+    pushPower: Math.max(0, Number(value?.pushPower || 0)),
+  };
+}
+
+export function createActiveInteractionRegions(player, role) {
+  return (player.hitRegions || [])
+    .map((region) => createRecordedInteractionRegion(player, region, role))
+    .filter(Boolean);
+}
+
+export function createRecordedInteractionRegion(player, region, role) {
+  const offset = player.getPartOffset(region?.key);
+  if (Number(offset?.active || 0) < 0.5 || Number(offset?.[role] || 0) < 0.5) return null;
+  const bounds = region.bounds || {};
+  return {
+    key: region.key,
+    role,
+    active: true,
+    x: bounds.x,
+    y: bounds.y,
+    w: bounds.w,
+    h: bounds.h,
+    points: region.points,
+    reaction: interactionReactionFromValue(offset),
   };
 }
 
@@ -118,8 +144,50 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
   });
 }
 
+export function createAttackInteractionRegions(player) {
+  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.ATTACK);
+  if (regions.length) return regions;
+
+  const offset = player.getPartOffset(ATTACK_INTERACTION_BOX_KEY);
+  if (Number(offset.active || 0) < 0.5 || Number(offset.attack || 0) < 0.5) return [];
+  const fallback = createAttackInteractionRegion(player, offset);
+  return fallback ? [fallback] : [];
+}
+
 export function createHurtInteractionRegion(player) {
   return createParentedInteractionRegion(player, HURT_INTERACTION_BOX_KEY, INTERACTION_BOX_ROLES.HURT);
+}
+
+export function createHurtInteractionRegions(player) {
+  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.HURT);
+  if (regions.length) return regions;
+
+  const fallback = createHurtInteractionRegion(player);
+  return fallback ? [fallback] : [];
+}
+
+export function createCollisionInteractionRegions(player) {
+  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.COLLISION);
+  if (regions.length) return regions;
+
+  const offset = player.getPartOffset(COLLISION_INTERACTION_BOX_KEY);
+  if (Number(offset.active || 0) < 0.5 || Number(offset.collision || 0) < 0.5) return [];
+  const fallback = createParentedInteractionRegion(
+    player,
+    COLLISION_INTERACTION_BOX_KEY,
+    INTERACTION_BOX_ROLES.COLLISION
+  );
+  return fallback ? [fallback] : [];
+}
+
+export function createGuardInteractionRegions(player) {
+  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.GUARD);
+  if (regions.length) return regions;
+
+  const offset = player.getPartOffset(GUARD_INTERACTION_BOX_KEY);
+  if (Number(offset.active || 0) < 0.5 || Number(offset.guard || 0) < 0.5) return [];
+  const fallback = createParentedInteractionRegion(player, GUARD_INTERACTION_BOX_KEY, INTERACTION_BOX_ROLES.GUARD);
+  return fallback ? [fallback] : [];
 }
 
 function createParentedInteractionRegion(player, boxKey, role) {

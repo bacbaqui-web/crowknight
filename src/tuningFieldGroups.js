@@ -92,9 +92,21 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
   if (isEditableObjectPart(partKey)) {
     groups.push({ label: '판정', props: [{ prop: 'active', label: 'ON' }] });
   }
-  if (isEditableObjectPart(partKey) && Number(frameValue?.active || 0) >= 0.5) {
+  if (!isEditableObjectPart(partKey) || Number(frameValue?.active || 0) < 0.5) return groups;
+
+  groups.push({
+    label: '상호작용',
+    props: [
+      { prop: 'attack', label: 'AT' },
+      { prop: 'hurt', label: 'HT' },
+      { prop: 'collision', label: 'CL' },
+      { prop: 'guard', label: 'GD' },
+    ],
+  });
+
+  if (Number(frameValue?.attack || 0) >= 0.5) {
     groups.push({
-      label: '판정 설정',
+      label: '공격',
       props: [
         { prop: 'stun', label: 'ST' },
         { prop: 'knockbackX', label: 'KX' },
@@ -102,6 +114,9 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
         { prop: 'deathBurst', label: 'DB' },
       ],
     });
+  }
+  if (Number(frameValue?.collision || 0) >= 0.5) {
+    groups.push({ label: '충돌', props: [{ prop: 'pushPower', label: 'P' }] });
   }
   return groups;
 }

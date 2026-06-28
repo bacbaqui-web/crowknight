@@ -95,10 +95,13 @@ export function partFieldLimits(prop, partKey = '') {
 }
 
 export function poseFieldLimits(prop) {
-  if (prop === 'active') return { min: 0, max: 1, step: 1 };
+  if (prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard') {
+    return { min: 0, max: 1, step: 1 };
+  }
   if (prop === 'stun') return { min: 0, max: 2, step: 0.01 };
   if (prop === 'deathBurst') return { min: 0, max: 4, step: 0.01 };
   if (prop === 'knockbackX' || prop === 'knockbackY') return { min: -1200, max: 1200 };
+  if (prop === 'pushPower') return { min: 0, max: 1200 };
   if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
   if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
   if (prop === 'rot') return { min: -36000, max: 36000 };

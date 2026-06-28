@@ -235,8 +235,12 @@ export function createTuningPanelPartController({
 
   function updatePosePartValue(prop, value) {
     const nextValue = poseTimeline.updateOffset(prop, value);
-    if (prop === 'active') renderPosePartFields();
+    if (isInteractionToggleProp(prop)) renderPosePartFields();
     return nextValue;
+  }
+
+  function isInteractionToggleProp(prop) {
+    return prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard';
   }
 
   function updateGroupPoseValue(prop, value) {

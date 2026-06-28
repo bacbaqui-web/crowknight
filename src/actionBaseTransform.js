@@ -11,10 +11,15 @@ export const ACTION_BASE_TRANSFORM_DISPLAY = {
   h: 100,
   rot: 0,
   active: 0,
+  attack: 0,
+  hurt: 0,
+  collision: 0,
+  guard: 0,
   stun: 0,
   knockbackX: 0,
   knockbackY: 0,
   deathBurst: 1,
+  pushPower: 0,
 };
 
 export function readActionBaseTransformDisplayValue(partKey, frameValue, prop, basePart) {
@@ -25,9 +30,13 @@ export function readActionBaseTransformDisplayValue(partKey, frameValue, prop, b
 export function actionBaseTransformValueFromInput(partKey, prop, value, basePart) {
   const limits = poseFieldLimits(prop, partKey);
   const nextValue = clamp(Number(value), limits.min, limits.max);
-  if (prop === 'active') return nextValue >= 0.5 ? 1 : 0;
+  if (isActionToggleProp(prop)) return nextValue >= 0.5 ? 1 : 0;
   if (prop === 'w' || prop === 'h') return actionPartSizeOffsetFromPercent(partKey, prop, nextValue, basePart);
   return nextValue;
+}
+
+function isActionToggleProp(prop) {
+  return prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard';
 }
 
 export function actionPartSizeToPercent(partKey, frameValue, prop, basePart) {

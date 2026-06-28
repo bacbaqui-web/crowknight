@@ -18,19 +18,22 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
 }
 
 export function resolveCombat({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill }) {
+  resolveCollisionInteractions(actors, world);
+
   actors.forEach((attacker) => {
     if (attacker.respawning) return;
-    const box = attacker.player.attackInteractionRegion;
-    if (!box) return;
+    const attackRegions = attacker.player.attackInteractionRegions || [];
+    if (!attackRegions.length) return;
 
     actors.forEach((target) => {
       if (shouldSkipTarget(attacker, target)) return;
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
-      if (!interactionRegionsOverlap(box, target.player.hurtInteractionRegion)) return;
+      const attackRegion = overlappingAttackRegion(attackRegions, target.player.hurtInteractionRegions);
+      if (!attackRegion) return;
 
       const comboStep = attacker.player.comboStep || 1;
       target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
-      if (target.player.isGuarding) {
+      if (isGuardingAttack(target, attackRegion)) {
         const broken = target.player.registerGuardBlock();
         particleEffects.triggerGuardImpact(attacker, target, broken);
         return;
@@ -39,7 +42,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       const removed = applyHitDamage({
         attacker,
         target,
-        attackRegion: box,
+        attackRegion,
         comboStep,
         playerActor,
         world,
@@ -49,9 +52,63 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       });
       if (removed) return;
 
-      applyHitReaction(attacker, target, box, comboStep, particleEffects);
+      applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects);
     });
   });
+}
+
+function overlappingAttackRegion(attackRegions, hurtRegions) {
+  return attackRegions.find((attackRegion) =>
+    (hurtRegions || []).some((hurtRegion) => interactionRegionsOverlap(attackRegion, hurtRegion))
+  );
+}
+
+function isGuardingAttack(target, attackRegion) {
+  if (!target.player.isGuarding) return false;
+  const guardRegions = target.player.guardInteractionRegions || [];
+  if (!guardRegions.length) return true;
+  return guardRegions.some((guardRegion) => interactionRegionsOverlap(attackRegion, guardRegion));
+}
+
+function resolveCollisionInteractions(actors, world) {
+  for (let leftIndex = 0; leftIndex < actors.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < actors.length; rightIndex += 1) {
+      resolveActorCollision(actors[leftIndex], actors[rightIndex], world);
+    }
+  }
+}
+
+function resolveActorCollision(left, right, world) {
+  if (left.respawning || right.respawning) return;
+  const leftRegion = overlappingCollisionRegion(
+    left.player.collisionInteractionRegions,
+    right.player.collisionInteractionRegions
+  );
+  if (!leftRegion) return;
+
+  const direction = Math.sign((right.player.x || 0) - (left.player.x || 0)) || 1;
+  const push = collisionPushAmount(leftRegion.a, leftRegion.b);
+  if (push <= 0) return;
+
+  left.player.x = clampWorldX((left.player.x || 0) - direction * push, world);
+  right.player.x = clampWorldX((right.player.x || 0) + direction * push, world);
+}
+
+function overlappingCollisionRegion(leftRegions = [], rightRegions = []) {
+  for (const leftRegion of leftRegions) {
+    const rightRegion = rightRegions.find((region) => interactionRegionsOverlap(leftRegion, region));
+    if (rightRegion) return { a: leftRegion, b: rightRegion };
+  }
+  return null;
+}
+
+function collisionPushAmount(a, b) {
+  const power = Math.max(Number(a?.reaction?.pushPower || 0), Number(b?.reaction?.pushPower || 0));
+  return Math.min(12, power / 60);
+}
+
+function clampWorldX(value, world) {
+  return Math.max(world.minX, Math.min(world.maxX, value));
 }
 
 export function maintainEnemyFlow({ actors, playerActor, world, particleEffects }) {

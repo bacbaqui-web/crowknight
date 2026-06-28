@@ -322,10 +322,15 @@ function withInteractionFrameDefault(frame = {}, fallback = {}) {
   return {
     ...frame,
     active: frame.active ?? fallback.active ?? 0,
+    attack: frame.attack ?? fallback.attack ?? 0,
+    hurt: frame.hurt ?? fallback.hurt ?? 0,
+    collision: frame.collision ?? fallback.collision ?? 0,
+    guard: frame.guard ?? fallback.guard ?? 0,
     stun: frame.stun ?? fallback.stun ?? 0,
     knockbackX: frame.knockbackX ?? fallback.knockbackX ?? 0,
     knockbackY: frame.knockbackY ?? fallback.knockbackY ?? 0,
     deathBurst: frame.deathBurst ?? fallback.deathBurst ?? 1,
+    pushPower: frame.pushPower ?? fallback.pushPower ?? 0,
   };
 }
 
