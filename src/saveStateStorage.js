@@ -1,4 +1,4 @@
-import { STORAGE_KEY } from './gameConfig.js';
+import { OBSOLETE_STORAGE_KEYS, STORAGE_KEY } from './gameConfig.js';
 import {
   DEFAULT_SCENE_SESSION_ID,
   normalizeSceneSession,
@@ -10,6 +10,8 @@ import { loadRemoteProjectState, saveRemoteProjectState } from './firebaseProjec
 const PROJECT_DEFAULT_STATE_URL = './runtime/project-default-state.json';
 
 export async function loadSavedState() {
+  removeObsoleteLocalTuningState();
+
   let localState = null;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -126,5 +128,10 @@ function stampSavedState(state) {
 }
 
 function saveLocalState(state) {
+  removeObsoleteLocalTuningState();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function removeObsoleteLocalTuningState() {
+  OBSOLETE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
 }

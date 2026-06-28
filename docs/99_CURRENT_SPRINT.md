@@ -26,6 +26,7 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
   - `interactionBox` → `interactionObject`
 - 관련 constant/helper 이름을 `INTERACTION_OBJECT_*`, `isInteractionObjectPartKey()` 계열로 변경.
 - local tuning storage key를 `crowKnight.actorTuning.v2`로 변경.
+- obsolete local tuning key `crowKnight.actorTuning.v1` 삭제 처리 추가.
 - old top-left interaction object normalize 보정 제거.
 - debug flag를 `debugInteractionObjects`로 변경.
 - palette CSS class를 `part-*-interaction-object`로 변경.
@@ -40,6 +41,9 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
 - `src/gameConfig.js`
   - `POSE_PART_KEYS`가 새 object key를 사용.
   - local storage key를 v2로 변경.
+  - obsolete local storage key 목록 추가.
+- `src/saveStateStorage.js`
+  - load/save 시 obsolete local tuning key 삭제.
 - `src/playerDefaultRig.js`
   - 기본 rig 저장 key와 type을 InteractionObject로 변경.
 - `src/playerDefaultTuning.js`
@@ -105,6 +109,7 @@ No active object region
 - `interactionBox` type string 제거.
 - `...InteractionBox` 저장 key 제거.
 - old top-left interaction object normalize 보정 제거.
+- obsolete local tuning v1 삭제 처리 추가.
 - `debugInteractionBoxes` 이름 제거.
 - palette `*-interaction-box` CSS class 제거.
 - 코드와 일반 문서에서 `InteractionBox`, `interactionBox`, `INTERACTION_BOX` 검색 결과 제거.
@@ -149,7 +154,7 @@ No active object region
 
 ## 알려진 위험 요소
 
-- local tuning storage key가 v2로 변경되어 기존 local tuning 저장값은 자동으로 이어지지 않는다.
+- local tuning storage key가 v2로 변경되어 기존 local tuning v1 저장값은 삭제된다.
 - Firebase나 외부 저장소에 남은 v1 데이터는 별도 migration 없이 새 key와 맞지 않을 수 있다.
 - fallback object key가 바뀌었으므로, 외부 문서나 수동 저장 JSON이 old key를 쓰면 무시된다.
 - broad rename 범위가 넓어서 실제 UI smoke QA가 필요하다.

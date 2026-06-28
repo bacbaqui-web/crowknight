@@ -1,6 +1,7 @@
 import { INTERACTION_OBJECT_PART_KEYS } from './tuningInteractionObjects.js';
 
 export const STORAGE_KEY = 'crowKnight.actorTuning.v2';
+export const OBSOLETE_STORAGE_KEYS = ['crowKnight.actorTuning.v1'];
 export const RANKING_KEY = 'crowKnight.rankings.v1';
 export const SURVIVAL_SCORE_PER_SECOND = 10;
 export const KILL_SCORE = 1000;
