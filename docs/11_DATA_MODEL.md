@@ -22,7 +22,7 @@ Setup에서 직접 편집하는 base rig다.
 
 - image part: `body`, `head`, `cape`, `shield`, `weapon`, arm/leg parts.
 - control part: `neck`, `shoulderL`, `shoulderR`, `hipL`, `hipR`.
-- interaction box: `collisionBox`, `hurtHitbox`, `weaponHitbox`, `shieldHitbox`.
+- interaction box: `collisionInteractionBox`, `hurtInteractionBox`, `attackInteractionBox`, `guardInteractionBox`.
 
 일반 part 주요 필드:
 
@@ -37,14 +37,14 @@ Setup에서 직접 편집하는 base rig다.
 
 Editor 기준 판정 박스 저장 위치다.
 
-| Key            | Role        | Parent   | 저장 필드                                                     |
-| -------------- | ----------- | -------- | ------------------------------------------------------------- |
-| `collisionBox` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
-| `hurtHitbox`   | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
-| `weaponHitbox` | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
-| `shieldHitbox` | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
+| Key                       | Role        | Parent   | 저장 필드                                                     |
+| ------------------------- | ----------- | -------- | ------------------------------------------------------------- |
+| `collisionInteractionBox` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
+| `hurtInteractionBox`      | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
+| `attackInteractionBox`    | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
+| `guardInteractionBox`     | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `w`, `h`, `baseW`, `baseH`, `rot` |
 
-현재 저장 key는 호환을 위해 유지한다.
+저장 key는 InteractionBox 용어를 사용한다.
 
 ## Runtime InteractionRegion
 
@@ -56,15 +56,15 @@ Runtime/Combat 계산값이다.
 Runtime 피격 판정 geometry:
 
 ```text
-tuning.rig.hurtHitbox
+tuning.rig.hurtInteractionBox
 → actor.player.hurtInteractionRegion
 ```
 
 Runtime 공격 판정 geometry:
 
 ```text
-tuning.rig.weaponHitbox
-+ tuning.poseOffsets[poseKey].weaponHitbox.active
+tuning.rig.attackInteractionBox
++ tuning.poseOffsets[poseKey].attackInteractionBox.active
 → actor.player.attackInteractionRegion
 ```
 

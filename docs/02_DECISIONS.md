@@ -50,13 +50,13 @@
 
 - 결정: 충돌/피격/공격/방어 박스는 `InteractionBox` 계열로 다룬다.
 - 이유: 네 박스는 모두 parent part에 붙은 판정 geometry와 Runtime role을 가진다.
-- 대체안: `hitbox`, `attackBox`, `collisionBox`를 별도 편집/preview/source로 유지하는 방식은 채택하지 않는다.
+- 대체안: 판정 박스별 별도 편집/preview/source를 유지하는 방식은 채택하지 않는다.
 
 ## InteractionBox Timeline State
 
 - 결정: 전투/방어/충돌 규칙은 Action Timeline에서 frame value로 조정할 수 있게 한다.
 - 이유: 공격 ON/OFF, 방어, 피격 가능 여부 같은 판정 상태는 동작 프레임과 함께 제작되어야 한다.
-- 대체안: Runtime attackBox가 별도 위치/크기를 갖고 Action과 따로 움직이는 방식은 채택하지 않는다.
+- 대체안: Runtime 판정 박스가 별도 위치/크기를 갖고 Action과 따로 움직이는 방식은 채택하지 않는다.
 
 ## Editor와 Runtime 분리
 

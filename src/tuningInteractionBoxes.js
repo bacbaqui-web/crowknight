@@ -1,7 +1,7 @@
-export const COLLISION_INTERACTION_BOX_KEY = 'collisionBox';
-export const ATTACK_INTERACTION_BOX_KEY = 'weaponHitbox';
-export const HURT_INTERACTION_BOX_KEY = 'hurtHitbox';
-export const GUARD_INTERACTION_BOX_KEY = 'shieldHitbox';
+export const COLLISION_INTERACTION_BOX_KEY = 'collisionInteractionBox';
+export const ATTACK_INTERACTION_BOX_KEY = 'attackInteractionBox';
+export const HURT_INTERACTION_BOX_KEY = 'hurtInteractionBox';
+export const GUARD_INTERACTION_BOX_KEY = 'guardInteractionBox';
 export const INTERACTION_BOX_PART_TYPE = 'interactionBox';
 export const INTERACTION_BOX_TARGET_TYPE = INTERACTION_BOX_PART_TYPE;
 

@@ -109,10 +109,10 @@ Runtime attack:
 ```text
 combatSystem
 → attacker.player.attackInteractionRegion
-→ weaponHitbox.active 확인
+→ attackInteractionBox.active 확인
 → interactionBoxRuntime.createAttackInteractionRegion()
 → interactionBoxRuntime.createInteractionRegion()
-→ weapon parent transform + tuning.rig.weaponHitbox + pose offset
+→ weapon parent transform + tuning.rig.attackInteractionBox + pose offset
 → Runtime attack region
 → combatGeometry.interactionRegionsOverlap()
 → combatSystem.attackReaction()
@@ -178,8 +178,8 @@ Action select
 activeAttackSettingsKey()
 → tuningPanelDebugView.drawTuningPanelDebugBoxes()
 → settingsDebugRenderer.drawAttackInteractionBoxPreview()
-→ player.editHandles.weaponHitbox.target
-→ actor.player.getPartOffset('weaponHitbox').active
+→ player.editHandles.attackInteractionBox.target
+→ actor.player.getPartOffset('attackInteractionBox').active
 ```
 
 주의:
