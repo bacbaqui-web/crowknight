@@ -1,4 +1,4 @@
-import { OBSOLETE_STORAGE_KEYS, STORAGE_KEY } from './gameConfig.js';
+import { OBSOLETE_STORAGE_KEYS, OBSOLETE_TUNING_KEYS, STORAGE_KEY } from './gameConfig.js';
 import {
   DEFAULT_SCENE_SESSION_ID,
   normalizeSceneSession,
@@ -16,7 +16,12 @@ export async function loadSavedState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      localState = normalizeSavedState(JSON.parse(saved));
+      const parsedState = JSON.parse(saved);
+      if (hasObsoleteTuningKeys(parsedState)) {
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        localState = normalizeSavedState(parsedState);
+      }
     }
   } catch {
     // Ignore broken browser storage and fall back to the project default.
@@ -33,9 +38,12 @@ export async function loadSavedState() {
   try {
     const response = await window.fetch(`${PROJECT_DEFAULT_STATE_URL}?t=${Date.now()}`, { cache: 'no-store' });
     if (response.ok) {
-      const projectState = normalizeSavedState(await response.json());
-      saveLocalState(projectState);
-      return projectState;
+      const projectState = await response.json();
+      if (!hasObsoleteTuningKeys(projectState)) {
+        const normalizedProjectState = normalizeSavedState(projectState);
+        saveLocalState(normalizedProjectState);
+        return normalizedProjectState;
+      }
     }
   } catch {
     // The project default file is optional.
@@ -113,7 +121,8 @@ function normalizeSavedState(saved) {
 }
 
 function normalizeNullableSavedState(saved) {
-  return saved ? normalizeSavedState(saved) : null;
+  if (!saved || hasObsoleteTuningKeys(saved)) return null;
+  return normalizeSavedState(saved);
 }
 
 function newestSavedState(...states) {
@@ -129,9 +138,23 @@ function stampSavedState(state) {
 
 function saveLocalState(state) {
   removeObsoleteLocalTuningState();
+  if (hasObsoleteTuningKeys(state)) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function removeObsoleteLocalTuningState() {
   OBSOLETE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+}
+
+function hasObsoleteTuningKeys(saved) {
+  return Object.values(saved?.actors || {}).some((actorState) => {
+    const tuning = actorState?.tuning || {};
+    if (containsObsoleteKey(tuning.rig)) return true;
+    return Object.values(tuning.poseOffsets || {}).some((poseOffset) => containsObsoleteKey(poseOffset));
+  });
+}
+
+function containsObsoleteKey(source) {
+  if (!source) return false;
+  return OBSOLETE_TUNING_KEYS.some((key) => Object.hasOwn(source, key));
 }

@@ -27,6 +27,7 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
 - 관련 constant/helper 이름을 `INTERACTION_OBJECT_*`, `isInteractionObjectPartKey()` 계열로 변경.
 - local tuning storage key를 `crowKnight.actorTuning.v2`로 변경.
 - obsolete local tuning key `crowKnight.actorTuning.v1` 삭제 처리 추가.
+- saved state에 old `...InteractionBox` key가 있으면 local/Firebase/default 모두 불러오지 않도록 차단.
 - old top-left interaction object normalize 보정 제거.
 - debug flag를 `debugInteractionObjects`로 변경.
 - palette CSS class를 `part-*-interaction-object`로 변경.
@@ -44,6 +45,7 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
   - obsolete local storage key 목록 추가.
 - `src/saveStateStorage.js`
   - load/save 시 obsolete local tuning key 삭제.
+  - old `...InteractionBox` key가 포함된 saved state 거부.
 - `src/playerDefaultRig.js`
   - 기본 rig 저장 key와 type을 InteractionObject로 변경.
 - `src/playerDefaultTuning.js`
@@ -110,6 +112,7 @@ No active object region
 - `...InteractionBox` 저장 key 제거.
 - old top-left interaction object normalize 보정 제거.
 - obsolete local tuning v1 삭제 처리 추가.
+- old `...InteractionBox` key가 포함된 saved state load/save 차단.
 - `debugInteractionBoxes` 이름 제거.
 - palette `*-interaction-box` CSS class 제거.
 - 코드와 일반 문서에서 `InteractionBox`, `interactionBox`, `INTERACTION_BOX` 검색 결과 제거.
@@ -125,6 +128,7 @@ No active object region
 - Runtime `InteractionRegion` 이름 유지.
 - Background/HUD/Effect 저장 구조는 변경하지 않음.
 - Firebase remote data migration은 추가하지 않음.
+- Firebase remote data에 old key가 있으면 불러오지 않음.
 
 ## 아직 남아있는 예외 처리
 
@@ -139,6 +143,10 @@ No active object region
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
+- 통과: obsolete saved state smoke test.
+  - `crowKnight.actorTuning.v1` 삭제 확인.
+  - `crowKnight.actorTuning.v2`에 old `attackInteractionBox` key가 있으면 저장값 제거 확인.
+  - clean `attackInteractionObject` key 저장값은 유지 확인.
 - 통과: `http://127.0.0.1:5514/setting.html` HTTP 200.
 - 통과: `src/tuningInteractionObjects.js` HTTP 200.
 - 통과: old `src/tuningInteractionBoxes.js` HTTP 404.
@@ -155,8 +163,8 @@ No active object region
 ## 알려진 위험 요소
 
 - local tuning storage key가 v2로 변경되어 기존 local tuning v1 저장값은 삭제된다.
-- Firebase나 외부 저장소에 남은 v1 데이터는 별도 migration 없이 새 key와 맞지 않을 수 있다.
-- fallback object key가 바뀌었으므로, 외부 문서나 수동 저장 JSON이 old key를 쓰면 무시된다.
+- Firebase나 외부 저장소에 남은 old key 데이터는 별도 migration 없이 거부된다.
+- fallback object key가 바뀌었으므로, 외부 문서나 수동 저장 JSON이 old key를 쓰면 불러오지 않는다.
 - broad rename 범위가 넓어서 실제 UI smoke QA가 필요하다.
 
 ## 다음 Sprint 추천
