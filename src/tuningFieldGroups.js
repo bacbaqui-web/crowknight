@@ -1,6 +1,5 @@
 import { axisProps, isMasterPart } from './tuningLabels.js';
-import { isInteractionObjectPartKey } from './tuningInteractionObjects.js';
-import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
+import { isPartWithAnchor, isPartWithOpacity, isPartWithPrimarySizeLabel, isPartWithSize } from './tuningParts.js';
 
 export function effectPropertyGroups() {
   return [
@@ -26,29 +25,19 @@ export function partPropertyGroups(partKey) {
     return [{ label: '기준', props: axisProps('anchorX', 'anchorY', 'X', 'Y') }];
   }
 
-  if (isInteractionObjectPartKey(partKey)) {
-    return [
-      { label: '기준', props: axisProps('ax', 'ay') },
-      { label: '위치', props: axisProps('x', 'y') },
-      { label: '크기', props: axisProps('w', 'h', 'W', 'H') },
-      { label: '회전', props: [{ prop: 'rot', label: 'R' }] },
-      { label: '투명', props: [{ prop: 'opacity', label: 'O' }] },
-    ];
-  }
-
   const groups = [];
-  if (imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
+  if (isPartWithAnchor(partKey)) {
     groups.push({ label: '기준', props: axisProps('ax', 'ay') });
   }
   groups.push({ label: '위치', props: axisProps('x', 'y') });
-  if (imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
+  if (isPartWithSize(partKey)) {
     groups.push({
-      label: imagePartKeys().includes(partKey) ? '크기' : '그룹 크기',
+      label: isPartWithPrimarySizeLabel(partKey) ? '크기' : '그룹 크기',
       props: axisProps('w', 'h', 'W', 'H'),
     });
   }
   groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
-  if (imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
+  if (isPartWithOpacity(partKey)) {
     groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
   }
   return groups;
@@ -60,33 +49,18 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
     groups.push({ label: '기준', props: axisProps('anchorX', 'anchorY', 'X', 'Y') });
     return groups;
   }
-  if (
-    imagePartKeys().includes(partKey) ||
-    controlGroupPartKeys().includes(partKey) ||
-    isInteractionObjectPartKey(partKey)
-  ) {
+  if (isPartWithAnchor(partKey)) {
     groups.push({ label: '기준', props: axisProps('ax', 'ay') });
   }
   groups.push({ label: '위치', props: axisProps('x', 'y') });
-  if (
-    isMasterPart(partKey) ||
-    imagePartKeys().includes(partKey) ||
-    controlGroupPartKeys().includes(partKey) ||
-    isInteractionObjectPartKey(partKey)
-  ) {
+  if (isMasterPart(partKey) || isPartWithSize(partKey)) {
     groups.push({
-      label:
-        isMasterPart(partKey) || imagePartKeys().includes(partKey) || isInteractionObjectPartKey(partKey)
-          ? '크기'
-          : '그룹 크기',
+      label: isMasterPart(partKey) || isPartWithPrimarySizeLabel(partKey) ? '크기' : '그룹 크기',
       props: axisProps('w', 'h', 'W', 'H'),
     });
   }
   groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
-  if (isMasterPart(partKey) || imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
-    groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
-  }
-  if (isInteractionObjectPartKey(partKey)) {
+  if (isMasterPart(partKey) || isPartWithOpacity(partKey)) {
     groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
   }
   if (isEditableObjectPart(partKey)) {

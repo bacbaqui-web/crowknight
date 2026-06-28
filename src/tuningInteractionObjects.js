@@ -63,6 +63,11 @@ export function interactionObjectPartKeysForParent(parentKey) {
   return INTERACTION_OBJECT_PART_KEYS.filter((partKey) => interactionObjectParentPartKey(partKey) === parentKey);
 }
 
+export function interactionObjectPartKeysForEditFocus(partKey) {
+  if (isInteractionObjectPartKey(partKey)) return [partKey];
+  return interactionObjectPartKeysForParent(partKey);
+}
+
 export function interactionObjectParentPart(tuning, partKey) {
   const parentKey = interactionObjectParentPartKey(partKey);
   return parentKey ? tuning.rig?.[parentKey] : null;

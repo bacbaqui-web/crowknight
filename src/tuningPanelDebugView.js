@@ -11,8 +11,7 @@ import {
   HURT_INTERACTION_OBJECT_KEY,
   GUARD_INTERACTION_OBJECT_KEY,
   ATTACK_INTERACTION_OBJECT_KEY,
-  interactionObjectPartKeysForParent,
-  isInteractionObjectPartKey,
+  interactionObjectPartKeysForEditFocus,
 } from './tuningInteractionObjects.js';
 
 export function drawTuningPanelDebugBoxes(
@@ -47,8 +46,7 @@ export function drawTuningPanelDebugBoxes(
 }
 
 function editHandleFallbackInteractionKeysForPosePart(partKey) {
-  if (isInteractionObjectPartKey(partKey)) return [partKey];
-  return interactionObjectPartKeysForParent(partKey);
+  return interactionObjectPartKeysForEditFocus(partKey);
 }
 
 function drawSetupFallbackInteractionPreview(ctx, actor, activeSetupPartKey) {

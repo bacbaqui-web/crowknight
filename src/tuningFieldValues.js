@@ -6,15 +6,16 @@ import {
   setupPartSizeFromPercent,
   setupPartSizeToPercent,
 } from './actionBaseTransform.js';
-import { interactionObjectParentPart, isInteractionObjectPartKey } from './tuningInteractionObjects.js';
+import { interactionObjectParentPart } from './tuningInteractionObjects.js';
+import { isParentSizedPart } from './tuningParts.js';
 
 export function readPartFieldDisplayValue(partKey, part, prop, tuning = null) {
-  if (isInteractionObjectPartKey(partKey)) return readInteractionObjectFieldDisplayValue(partKey, part, prop, tuning);
+  if (isParentSizedPart(partKey)) return readParentSizedPartFieldDisplayValue(partKey, part, prop, tuning);
   if (prop === 'w' || prop === 'h') return partSizeToPercent(partKey, part, prop);
   return part[prop];
 }
 
-function readInteractionObjectFieldDisplayValue(partKey, part, prop, tuning) {
+function readParentSizedPartFieldDisplayValue(partKey, part, prop, tuning) {
   if (prop !== 'w' && prop !== 'h') return part?.[prop] ?? 0;
   const parent = tuning ? interactionObjectParentPart(tuning, partKey) : null;
   const parentSize = Math.max(

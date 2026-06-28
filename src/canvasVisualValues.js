@@ -1,14 +1,14 @@
 import { isMasterPart } from './tuningLabels.js';
-import { interactionObjectParentPart, isInteractionObjectPartKey } from './tuningInteractionObjects.js';
+import { interactionObjectParentPart } from './tuningInteractionObjects.js';
 import { partSizeFromPercent } from './tuningFieldValues.js';
-import { controlGroupPartKeys, imagePartKeys, partFieldLimits } from './tuningParts.js';
+import { controlGroupPartKeys, imagePartKeys, isParentSizedPart, partFieldLimits } from './tuningParts.js';
 import { clamp } from './utils.js';
 
 export function isGroupScalablePart(part) {
   return (
     imagePartKeys().includes(part) ||
     controlGroupPartKeys().includes(part) ||
-    isInteractionObjectPartKey(part) ||
+    isParentSizedPart(part) ||
     isMasterPart(part)
   );
 }
@@ -34,13 +34,13 @@ export function setCanvasVisualValue(drag, prop, value) {
 
 export function canvasSizeDelta(drag, prop, delta) {
   const base = canvasSizePercentBase(drag, prop);
-  if (isInteractionObjectPartKey(drag.part)) return delta;
+  if (isParentSizedPart(drag.part)) return delta;
   if (isMasterPart(drag.part) || controlGroupPartKeys().includes(drag.part)) return (delta / 80) * base;
   return delta;
 }
 
 export function clampCanvasVisualSize(drag, prop, value) {
-  if (isInteractionObjectPartKey(drag.part)) {
+  if (isParentSizedPart(drag.part)) {
     const limits = partFieldLimits(prop, drag.part);
     return clamp(Number(value), limits.min, limits.max);
   }
@@ -82,8 +82,8 @@ export function anchorScaleForPart(part, prop, partKey = '') {
 export function updateRigPartValue(part, partKey, prop, value, tuning = null) {
   const limits = partFieldLimits(prop, partKey);
   const nextValue = clamp(Number(value), limits.min, limits.max);
-  if (isInteractionObjectPartKey(partKey)) {
-    updateInteractionObjectPartValue(part, partKey, prop, nextValue, tuning);
+  if (isParentSizedPart(partKey)) {
+    updateParentSizedPartValue(part, partKey, prop, nextValue, tuning);
   } else if (prop === 'ax') {
     setPartAnchorValue(part, 'ax', nextValue, partKey);
   } else if (prop === 'ay') {
@@ -95,7 +95,7 @@ export function updateRigPartValue(part, partKey, prop, value, tuning = null) {
   }
 }
 
-function updateInteractionObjectPartValue(part, partKey, prop, value, tuning) {
+function updateParentSizedPartValue(part, partKey, prop, value, tuning) {
   if (prop === 'w') {
     const parentW = interactionObjectParentSize(tuning, partKey, 'w', part.w);
     part.w = Math.max(1, (parentW * value) / 100);

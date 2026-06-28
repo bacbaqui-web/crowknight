@@ -29,6 +29,14 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
 - obsolete local tuning key `crowKnight.actorTuning.v1` 삭제 처리 추가.
 - saved state에 old `...InteractionBox` key가 있으면 local/Firebase/default 모두 불러오지 않도록 차단.
 - old top-left interaction object normalize 보정 제거.
+- part capability helper 추가:
+  - `isPartWithAnchor()`
+  - `isPartWithSize()`
+  - `isPartWithOpacity()`
+  - `isParentSizedPart()`
+- field group이 InteractionObject 여부를 직접 묻지 않고 capability helper를 사용하도록 변경.
+- canvas/store value 변환에서 InteractionObject 직접 분기를 `parentSizedPart` 역할로 변경.
+- debug preview의 fallback object key 계산을 `interactionObjectPartKeysForEditFocus()`로 이동.
 - debug flag를 `debugInteractionObjects`로 변경.
 - palette CSS class를 `part-*-interaction-object`로 변경.
 - UI aria label과 part label을 `히트박스/박스` 대신 `판정 영역/영역` 기준으로 변경.
@@ -56,17 +64,23 @@ Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어�
 - `src/interactionRegionRuntime.js`
   - fallback key 참조를 새 object key로 변경.
 - `src/tuningParts.js`
+  - editable part capability helper 추가.
 - `src/tuningSelectionPalette.js`
 - `src/tuningPanelDom.js`
 - `src/tuningLabels.js`
 - `src/tuningFieldGroups.js`
+  - InteractionObject 직접 field group 분기 제거.
 - `src/tuningFieldValues.js`
+  - parent-sized part display value helper 사용.
 - `src/canvasVisualValues.js`
+  - parent-sized part 저장 변환 helper 사용.
 - `src/editHandleGeometry.js`
 - `src/puppetPlayerRenderer.js`
 - `src/settingsDebugRenderer.js`
 - `src/tuningPanelDebugView.js`
   - import/helper/type 이름을 InteractionObject 기준으로 변경.
+- `src/tuningInteractionObjects.js`
+  - edit focus 기준 fallback object key helper 추가.
 - `src/partPicker.css`
   - palette class 이름을 InteractionObject 기준으로 변경.
 - `setting.html`
@@ -113,6 +127,8 @@ No active object region
 - old top-left interaction object normalize 보정 제거.
 - obsolete local tuning v1 삭제 처리 추가.
 - old `...InteractionBox` key가 포함된 saved state load/save 차단.
+- `tuningFieldGroups.js`의 InteractionObject 전용 property group 분기 제거.
+- canvas/display value 코드의 InteractionObject 직접 분기 일부를 parent-sized capability로 이동.
 - `debugInteractionBoxes` 이름 제거.
 - palette `*-interaction-box` CSS class 제거.
 - 코드와 일반 문서에서 `InteractionBox`, `interactionBox`, `INTERACTION_BOX` 검색 결과 제거.
@@ -133,7 +149,10 @@ No active object region
 ## 아직 남아있는 예외 처리
 
 - fallback interaction object 4개는 아직 별도 helper 파일을 가진다.
-- `isInteractionObjectPartKey()` 분기는 아직 남아 있다.
+- `isInteractionObjectPartKey()` 분기는 경계 파일에만 남아 있다.
+  - `tuningInteractionObjects.js`
+  - `tuningParts.js`
+  - `tuningSelectionPalette.js`
 - Runtime active object region은 renderer가 기록한 `hitRegions`를 사용한다.
 - active object region이 없으면 fallback object region을 사용한다.
 - collision push는 X축 최소 분리만 처리한다.
@@ -147,6 +166,9 @@ No active object region
   - `crowKnight.actorTuning.v1` 삭제 확인.
   - `crowKnight.actorTuning.v2`에 old `attackInteractionBox` key가 있으면 저장값 제거 확인.
   - clean `attackInteractionObject` key 저장값은 유지 확인.
+- 통과: field capability smoke test.
+  - Setup `attackInteractionObject`에 기준/크기/투명 group 유지.
+  - Action active+attack frame에 상호작용/공격 group 유지.
 - 통과: `http://127.0.0.1:5514/setting.html` HTTP 200.
 - 통과: `src/tuningInteractionObjects.js` HTTP 200.
 - 통과: old `src/tuningInteractionBoxes.js` HTTP 404.
@@ -177,10 +199,11 @@ No active object region
 2. old key migration 필요 여부 결정.
    - clean init 유지면 migration 없음.
    - 기존 저장 복구가 필요하면 별도 Sprint로 작성.
-3. `isInteractionObjectPartKey()` 분기 축소.
-   - fallback object도 일반 editable object definition으로 흡수.
-4. fallback interaction object helper 정리.
+3. fallback interaction object helper 정리.
    - `tuningInteractionObjects.js`를 role definition 중심으로 축소.
+4. editable object definition 도입 여부 결정.
+   - 지금은 capability helper가 `tuningParts.js`에 모여 있다.
+   - 다음 단계에서 데이터 기반 definition으로 바꿀지 결정.
 5. Runtime collision/guard 고도화.
    - push 방향/세기/guard blockPower 정의.
 

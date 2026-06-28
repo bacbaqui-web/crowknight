@@ -94,6 +94,34 @@ export function partFieldLimits(prop, partKey = '') {
   return { min: -180, max: 180 };
 }
 
+export function isImagePartKey(partKey) {
+  return imagePartKeys().includes(partKey);
+}
+
+export function isControlGroupPartKey(partKey) {
+  return controlGroupPartKeys().includes(partKey);
+}
+
+export function isPartWithAnchor(partKey) {
+  return isImagePartKey(partKey) || isControlGroupPartKey(partKey) || isInteractionObjectPartKey(partKey);
+}
+
+export function isPartWithSize(partKey) {
+  return isImagePartKey(partKey) || isControlGroupPartKey(partKey) || isInteractionObjectPartKey(partKey);
+}
+
+export function isPartWithOpacity(partKey) {
+  return isImagePartKey(partKey) || isControlGroupPartKey(partKey) || isInteractionObjectPartKey(partKey);
+}
+
+export function isPartWithPrimarySizeLabel(partKey) {
+  return isImagePartKey(partKey) || isInteractionObjectPartKey(partKey);
+}
+
+export function isParentSizedPart(partKey) {
+  return isInteractionObjectPartKey(partKey);
+}
+
 export function poseFieldLimits(prop) {
   if (prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard') {
     return { min: 0, max: 1, step: 1 };
