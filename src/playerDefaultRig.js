@@ -1,10 +1,10 @@
 import {
-  ATTACK_INTERACTION_BOX_KEY,
-  COLLISION_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-  INTERACTION_BOX_PART_TYPE,
-} from './tuningInteractionBoxes.js';
+  ATTACK_INTERACTION_OBJECT_KEY,
+  COLLISION_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+  INTERACTION_OBJECT_PART_TYPE,
+} from './tuningInteractionObjects.js';
 
 export const DEFAULT_PLAYER_RIG = {
   body: {
@@ -24,8 +24,8 @@ export const DEFAULT_PLAYER_RIG = {
     anchorOffsetY: 0,
     anchorMode: 'local',
   },
-  [COLLISION_INTERACTION_BOX_KEY]: {
-    type: INTERACTION_BOX_PART_TYPE,
+  [COLLISION_INTERACTION_OBJECT_KEY]: {
+    type: INTERACTION_OBJECT_PART_TYPE,
     parent: 'body',
     x: 32,
     y: 48,
@@ -38,8 +38,8 @@ export const DEFAULT_PLAYER_RIG = {
     rot: 0,
     opacity: 1,
   },
-  [HURT_INTERACTION_BOX_KEY]: {
-    type: INTERACTION_BOX_PART_TYPE,
+  [HURT_INTERACTION_OBJECT_KEY]: {
+    type: INTERACTION_OBJECT_PART_TYPE,
     parent: 'body',
     x: 32,
     y: 48,
@@ -103,8 +103,8 @@ export const DEFAULT_PLAYER_RIG = {
     anchorOffsetY: 0,
     anchorMode: 'local',
   },
-  [GUARD_INTERACTION_BOX_KEY]: {
-    type: INTERACTION_BOX_PART_TYPE,
+  [GUARD_INTERACTION_OBJECT_KEY]: {
+    type: INTERACTION_OBJECT_PART_TYPE,
     parent: 'shield',
     x: 24,
     y: 36,
@@ -270,8 +270,8 @@ export const DEFAULT_PLAYER_RIG = {
     anchorOffsetY: 0,
     anchorMode: 'local',
   },
-  [ATTACK_INTERACTION_BOX_KEY]: {
-    type: INTERACTION_BOX_PART_TYPE,
+  [ATTACK_INTERACTION_OBJECT_KEY]: {
+    type: INTERACTION_OBJECT_PART_TYPE,
     parent: 'weapon',
     x: 48,
     y: 12,

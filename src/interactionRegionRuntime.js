@@ -1,10 +1,10 @@
 import {
-  INTERACTION_BOX_ROLES,
-  ATTACK_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-  COLLISION_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-} from './tuningInteractionBoxes.js';
+  INTERACTION_OBJECT_ROLES,
+  ATTACK_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+  COLLISION_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+} from './tuningInteractionObjects.js';
 import { scaledEditableAnchor } from './editableObjectModel.js';
 import { deg } from './utils.js';
 import {
@@ -100,9 +100,9 @@ function boundsFromPoints(points) {
   };
 }
 
-export function createAttackInteractionRegion(player, offset = player.getPartOffset(ATTACK_INTERACTION_BOX_KEY)) {
+export function createAttackInteractionRegion(player, offset = player.getPartOffset(ATTACK_INTERACTION_OBJECT_KEY)) {
   const transform = player.weaponAnchorTransform();
-  const attackPart = player.rig?.[ATTACK_INTERACTION_BOX_KEY];
+  const attackPart = player.rig?.[ATTACK_INTERACTION_OBJECT_KEY];
   const weapon = player.rig?.weapon;
   if (!transform || !attackPart || !weapon) return null;
 
@@ -129,8 +129,8 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
   });
   const rot = Number(attackPart.rot || 0) + Number(offset.rot || 0);
   return createInteractionRegion({
-    key: ATTACK_INTERACTION_BOX_KEY,
-    role: INTERACTION_BOX_ROLES.ATTACK,
+    key: ATTACK_INTERACTION_OBJECT_KEY,
+    role: INTERACTION_OBJECT_ROLES.ATTACK,
     active: true,
     matrix: transform,
     x,
@@ -145,21 +145,21 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
 }
 
 export function createAttackInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.ATTACK);
+  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.ATTACK);
   if (regions.length) return regions;
 
-  const offset = player.getPartOffset(ATTACK_INTERACTION_BOX_KEY);
+  const offset = player.getPartOffset(ATTACK_INTERACTION_OBJECT_KEY);
   if (Number(offset.active || 0) < 0.5 || Number(offset.attack || 0) < 0.5) return [];
   const fallback = createAttackInteractionRegion(player, offset);
   return fallback ? [fallback] : [];
 }
 
 export function createHurtInteractionRegion(player) {
-  return createParentedInteractionRegion(player, HURT_INTERACTION_BOX_KEY, INTERACTION_BOX_ROLES.HURT);
+  return createParentedInteractionRegion(player, HURT_INTERACTION_OBJECT_KEY, INTERACTION_OBJECT_ROLES.HURT);
 }
 
 export function createHurtInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.HURT);
+  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.HURT);
   if (regions.length) return regions;
 
   const fallback = createHurtInteractionRegion(player);
@@ -167,26 +167,30 @@ export function createHurtInteractionRegions(player) {
 }
 
 export function createCollisionInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.COLLISION);
+  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.COLLISION);
   if (regions.length) return regions;
 
-  const offset = player.getPartOffset(COLLISION_INTERACTION_BOX_KEY);
+  const offset = player.getPartOffset(COLLISION_INTERACTION_OBJECT_KEY);
   if (Number(offset.active || 0) < 0.5 || Number(offset.collision || 0) < 0.5) return [];
   const fallback = createParentedInteractionRegion(
     player,
-    COLLISION_INTERACTION_BOX_KEY,
-    INTERACTION_BOX_ROLES.COLLISION
+    COLLISION_INTERACTION_OBJECT_KEY,
+    INTERACTION_OBJECT_ROLES.COLLISION
   );
   return fallback ? [fallback] : [];
 }
 
 export function createGuardInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_BOX_ROLES.GUARD);
+  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.GUARD);
   if (regions.length) return regions;
 
-  const offset = player.getPartOffset(GUARD_INTERACTION_BOX_KEY);
+  const offset = player.getPartOffset(GUARD_INTERACTION_OBJECT_KEY);
   if (Number(offset.active || 0) < 0.5 || Number(offset.guard || 0) < 0.5) return [];
-  const fallback = createParentedInteractionRegion(player, GUARD_INTERACTION_BOX_KEY, INTERACTION_BOX_ROLES.GUARD);
+  const fallback = createParentedInteractionRegion(
+    player,
+    GUARD_INTERACTION_OBJECT_KEY,
+    INTERACTION_OBJECT_ROLES.GUARD
+  );
   return fallback ? [fallback] : [];
 }
 

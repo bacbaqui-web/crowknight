@@ -14,7 +14,7 @@ import {
   recordPuppetRectPart,
 } from './puppetPlayerEditRegions.js';
 import { glowSilhouetteFor, groupAnchor, partHeight, partWidth, shouldGlowPartKey } from './puppetPlayerGeometry.js';
-import { INTERACTION_BOX_TARGET_TYPE, interactionBoxPartKeysForParent } from './tuningInteractionBoxes.js';
+import { INTERACTION_OBJECT_TARGET_TYPE, interactionObjectPartKeysForParent } from './tuningInteractionObjects.js';
 
 export function drawPuppetPlayer(player, ctx) {
   const p = player.getPose();
@@ -46,7 +46,7 @@ export function drawPuppetPlayer(player, ctx) {
     player.anchorDebugPoints.forEach((point) => drawPuppetAnchorDot(ctx, point.x, point.y));
     ctx.restore();
   }
-  if (player.debugInteractionBoxes) drawPuppetDebug(ctx, player);
+  if (player.debugInteractionObjects) drawPuppetDebug(ctx, player);
 }
 
 export function drawPuppetLayer(player, ctx, layer, pose, rig) {
@@ -318,9 +318,9 @@ function drawPuppetImageLessChildParts(player, ctx, parentKey, parentX, parentY)
 }
 
 function imageLessChildPartsForParent(parentKey) {
-  return interactionBoxPartKeysForParent(parentKey).map((key) => ({
+  return interactionObjectPartKeysForParent(parentKey).map((key) => ({
     key,
-    type: INTERACTION_BOX_TARGET_TYPE,
+    type: INTERACTION_OBJECT_TARGET_TYPE,
   }));
 }
 

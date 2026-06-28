@@ -58,7 +58,7 @@ rotate(rot)
 drawRect(-ax, -ay, w, h)
 ```
 
-이 규칙은 Setup, Action, Effect, Stage, InteractionBox에 동일하게 적용한다.
+이 규칙은 Setup, Action, Effect, Stage, interaction object에 동일하게 적용한다.
 
 ## Runtime
 

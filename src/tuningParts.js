@@ -1,10 +1,10 @@
 import {
-  ATTACK_INTERACTION_BOX_KEY,
-  COLLISION_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-  isInteractionBoxPartKey,
-} from './tuningInteractionBoxes.js';
+  ATTACK_INTERACTION_OBJECT_KEY,
+  COLLISION_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+  isInteractionObjectPartKey,
+} from './tuningInteractionObjects.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
 import { selectionPaletteKeys } from './tuningSelectionPalette.js';
 
@@ -27,12 +27,12 @@ export function poseMotionGroups(key) {
 export function partPositionSources(rig) {
   return {
     body: rig.body,
-    [COLLISION_INTERACTION_BOX_KEY]: rig[COLLISION_INTERACTION_BOX_KEY],
-    [HURT_INTERACTION_BOX_KEY]: rig[HURT_INTERACTION_BOX_KEY],
+    [COLLISION_INTERACTION_OBJECT_KEY]: rig[COLLISION_INTERACTION_OBJECT_KEY],
+    [HURT_INTERACTION_OBJECT_KEY]: rig[HURT_INTERACTION_OBJECT_KEY],
     head: rig.head,
     cape: rig.cape,
     shield: rig.shield,
-    [GUARD_INTERACTION_BOX_KEY]: rig[GUARD_INTERACTION_BOX_KEY],
+    [GUARD_INTERACTION_OBJECT_KEY]: rig[GUARD_INTERACTION_OBJECT_KEY],
     upperArmL: rig.upperArmL,
     lowerArmL: rig.lowerArmL,
     upperArmR: rig.upperArmR,
@@ -42,7 +42,7 @@ export function partPositionSources(rig) {
     upperLegR: rig.upperLegR,
     lowerLegR: rig.lowerLegR,
     weapon: rig.weapon,
-    [ATTACK_INTERACTION_BOX_KEY]: rig[ATTACK_INTERACTION_BOX_KEY],
+    [ATTACK_INTERACTION_OBJECT_KEY]: rig[ATTACK_INTERACTION_OBJECT_KEY],
     neck: rig.neck,
     shoulderL: rig.shoulderL,
     shoulderR: rig.shoulderR,
@@ -82,7 +82,7 @@ function characterBasisSource(tuning) {
 }
 
 export function partFieldLimits(prop, partKey = '') {
-  if (isInteractionBoxPartKey(partKey)) {
+  if (isInteractionObjectPartKey(partKey)) {
     if (prop === 'w' || prop === 'h') return { min: 1, max: 320 };
     if (prop === 'rot') return { min: -360, max: 360 };
     return { min: -260, max: 260 };

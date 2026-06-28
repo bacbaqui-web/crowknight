@@ -13,13 +13,13 @@ import { normalizeCharacterHud } from './characterHudLayout.js';
 import { SPEED_VALUE_MAX, SPEED_VALUE_MIN } from './tuningControlValueTransforms.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 import {
-  COLLISION_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  ATTACK_INTERACTION_BOX_KEY,
-  INTERACTION_BOX_PART_TYPE,
-  interactionBoxParentPartKey,
-} from './tuningInteractionBoxes.js';
+  COLLISION_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  ATTACK_INTERACTION_OBJECT_KEY,
+  INTERACTION_OBJECT_PART_TYPE,
+  interactionObjectParentPartKey,
+} from './tuningInteractionObjects.js';
 import { clamp, clone, lerp } from './utils.js';
 
 export function mergeTuning(base, saved) {
@@ -33,7 +33,7 @@ export function mergeTuning(base, saved) {
     normalizeRigImageAnchors(fresh.rig);
     normalizeRigRotations(fresh.rig, base.rig);
     normalizeMovementScalars(fresh);
-    normalizeRigInteractionBoxParts(fresh, base);
+    normalizeRigInteractionObjectParts(fresh, base);
     normalizeSetupHudAnchors(fresh, base);
     return fresh;
   }
@@ -53,51 +53,44 @@ export function mergeTuning(base, saved) {
   normalizeRigRotations(merged.rig, base.rig);
   normalizeMotionSettings(merged.motion, base.motion);
   normalizeMovementScalars(merged);
-  normalizeRigInteractionBoxParts(merged, base, saved);
+  normalizeRigInteractionObjectParts(merged, base, saved);
   normalizeSetupHudAnchors(merged, base, saved.hudAnchors);
   return merged;
 }
 
-function normalizeRigInteractionBoxParts(tuning, base, saved = null) {
+function normalizeRigInteractionObjectParts(tuning, base, saved = null) {
   const rig = tuning.rig;
   [
-    COLLISION_INTERACTION_BOX_KEY,
-    HURT_INTERACTION_BOX_KEY,
-    ATTACK_INTERACTION_BOX_KEY,
-    GUARD_INTERACTION_BOX_KEY,
+    COLLISION_INTERACTION_OBJECT_KEY,
+    HURT_INTERACTION_OBJECT_KEY,
+    ATTACK_INTERACTION_OBJECT_KEY,
+    GUARD_INTERACTION_OBJECT_KEY,
   ].forEach((key) => {
     const savedRigPart = saved?.rig?.[key];
     const current = savedRigPart ? rig[key] : null;
-    rig[key] = normalizeRigInteractionBoxPart({
+    rig[key] = normalizeRigInteractionObjectPart({
       current,
       fallback: base.rig?.[key],
-      parent: rig[interactionBoxParentPartKey(key)],
-      legacyTopLeft: Boolean(
-        savedRigPart &&
-        savedRigPart.ax === undefined &&
-        savedRigPart.ay === undefined &&
-        (savedRigPart.x !== undefined || savedRigPart.y !== undefined)
-      ),
+      parent: rig[interactionObjectParentPartKey(key)],
     });
   });
 }
 
-function normalizeRigInteractionBoxPart({ current, fallback = {}, parent = {}, legacyTopLeft = false }) {
+function normalizeRigInteractionObjectPart({ current, fallback = {}, parent = {} }) {
   const source = current || fallback;
   const width = Math.max(1, Number(source.w ?? fallback.w ?? parent.w ?? 1));
   const height = Math.max(1, Number(source.h ?? fallback.h ?? parent.h ?? 1));
   const baseW = Math.max(1, Number(source.baseW ?? fallback.baseW ?? parent.w ?? source.w ?? 1));
   const baseH = Math.max(1, Number(source.baseH ?? fallback.baseH ?? parent.h ?? source.h ?? 1));
-  const hasAnchor = !legacyTopLeft && (source.ax !== undefined || source.ay !== undefined);
   const fallbackAx = Number(fallback.ax ?? width / 2);
   const fallbackAy = Number(fallback.ay ?? height / 2);
   const ax = Number(source.ax ?? fallbackAx);
   const ay = Number(source.ay ?? fallbackAy);
   return {
-    type: INTERACTION_BOX_PART_TYPE,
+    type: INTERACTION_OBJECT_PART_TYPE,
     parent: source.parent || fallback.parent || null,
-    x: Number(source.x ?? fallback.x ?? 0) + (hasAnchor ? 0 : ax),
-    y: Number(source.y ?? fallback.y ?? 0) + (hasAnchor ? 0 : ay),
+    x: Number(source.x ?? fallback.x ?? 0),
+    y: Number(source.y ?? fallback.y ?? 0),
     ax,
     ay,
     w: width,
@@ -303,7 +296,7 @@ function normalizePoseOffsets(current = {}) {
 
 function poseFrameValueWithInteractionDefaults(pose, part, value) {
   const fallback = DEFAULT_PLAYER_TUNING.poseOffsets?.[pose]?.[part];
-  if (part !== ATTACK_INTERACTION_BOX_KEY || !fallback) return value;
+  if (part !== ATTACK_INTERACTION_OBJECT_KEY || !fallback) return value;
   if (!value) return fallback;
   return withInteractionFrameDefaults(value, fallback);
 }

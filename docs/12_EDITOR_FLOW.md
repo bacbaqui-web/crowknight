@@ -40,10 +40,10 @@ pointerdown
 → applySelected
 ```
 
-## Setup InteractionBox 편집
+## Setup fallback interaction object 편집
 
 ```text
-Selection Palette interaction box click
+Selection Palette fallback interaction object click
 → tuningPanelPartController.selectPickerPart('part', boxKey)
 → tuningParts.partEditSources(tuning)
 → tuning.rig[boxKey]
@@ -176,15 +176,15 @@ input or pointer drag
 → applySelected
 ```
 
-## Action InteractionBox Keyframe 편집
+## Action Object Interaction 편집
 
 ```text
 Action select
 → Timeline frame select
-→ interaction box select
+→ editable object select
 → canvas/property edit
-→ poseTimeline.writeFrameValue(boxKey, prop, value)
-→ tuning.poseOffsets[poseKey][boxKey]
+→ poseTimeline.writeFrameValue(partKey, prop, value)
+→ tuning.poseOffsets[poseKey][partKey]
 ```
 
 연결 지점:
@@ -196,14 +196,14 @@ Action select
 - `tuningFieldGroups.posePropertyGroups()`
 - `tuningEditHandleGeometry`
 
-## Attack InteractionBox Preview
+## Fallback Attack Region Preview
 
 ```text
 activeAttackSettingsKey()
 → tuningPanelDebugView.drawTuningPanelDebugBoxes()
-→ settingsDebugRenderer.drawAttackInteractionBoxPreview()
-→ player.editHandles.attackInteractionBox.target
-→ actor.player.getPartOffset('attackInteractionBox').active
+→ settingsDebugRenderer.drawFallbackAttackRegionPreview()
+→ player.editHandles.attackInteractionObject.target
+→ actor.player.getPartOffset('attackInteractionObject').active
 ```
 
 주의:
@@ -231,7 +231,7 @@ pointer event
 Target data:
 
 - Setup part: `tuning.rig[partKey]`
-- Setup interaction box: `tuning.rig[boxKey]`
+- Setup fallback interaction object: `tuning.rig[boxKey]`
 - Action part: `tuning.poseOffsets[poseKey][partKey]`
 - Effect: `tuning.effectOffsets[effectKey]`
 

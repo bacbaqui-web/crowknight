@@ -7,7 +7,7 @@ import {
 } from './screenGeometry.js';
 import { ANCHOR_HANDLE_RADIUS, MOVE_HANDLE_RADIUS, handleLineStart } from './editHandleDrawing.js';
 import { isMasterPart } from './tuningLabels.js';
-import { INTERACTION_BOX_TARGET_TYPE } from './tuningInteractionBoxes.js';
+import { INTERACTION_OBJECT_TARGET_TYPE } from './tuningInteractionObjects.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 
 export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, poseFrameSelectionActive }) {
@@ -15,10 +15,10 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
 
   const info = editHandleInfo;
   const isImagePart = imagePartKeys().includes(editFocusPartKey);
-  const isInteractionBoxPart = info.target?.type === INTERACTION_BOX_TARGET_TYPE;
+  const isInteractionObjectPart = info.target?.type === INTERACTION_OBJECT_TARGET_TYPE;
   const isMaster = isMasterPart(editFocusPartKey);
   const isScalablePart =
-    isMaster || isImagePart || isInteractionBoxPart || controlGroupPartKeys().includes(editFocusPartKey);
+    isMaster || isImagePart || isInteractionObjectPart || controlGroupPartKeys().includes(editFocusPartKey);
   const anchor = info.anchor;
   const xAxis = info.xAxis;
   const yAxis = info.yAxis;
@@ -42,12 +42,12 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
     handles.height = { mode: 'height', point: boundaryHandles?.height || addScreenVector(anchor, up, 70), radius: 18 };
     handles.size = { mode: 'size', point: boundaryHandles?.size || addScreenVector(anchor, sizeDir, 78), radius: 18 };
     if (boundaryHandles?.rotate) handles.rotate = { mode: 'rotate', point: boundaryHandles.rotate, radius: 17 };
-    if (!isInteractionBoxPart)
+    if (!isInteractionObjectPart)
       handles.opacity = { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 78), radius: 17 };
   }
 
   if (
-    !isInteractionBoxPart &&
+    !isInteractionObjectPart &&
     ((isMaster && !poseFrameSelectionActive) ||
       (!isMaster && (isImagePart || controlGroupPartKeys().includes(editFocusPartKey))))
   ) {
@@ -65,7 +65,7 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
     moveXUnit: info.moveXUnit || info.xUnit || 1,
     moveYUnit: info.moveYUnit || info.yUnit || 1,
     isImagePart,
-    isInteractionBoxPart,
+    isInteractionObjectPart,
     isMaster,
     isScalablePart,
     handles,

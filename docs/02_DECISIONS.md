@@ -46,24 +46,24 @@
 - 이유: 행동과 시각 효과의 타이밍을 같은 방식으로 다룰 수 있어야 한다.
 - 대체안: 효과만 별도 timing 시스템으로 편집하는 방식은 채택하지 않는다.
 
-## InteractionBox
+## Editable Object Interaction
 
-- 결정: 충돌/피격/공격/방어 박스는 `InteractionBox` 계열로 다룬다.
-- 이유: 네 박스는 모두 parent part에 붙은 판정 geometry와 Runtime role을 가진다.
-- 대체안: 판정 박스별 별도 편집/preview/source를 유지하는 방식은 채택하지 않는다.
+- 결정: 모든 editable object는 Action frame에서 interaction state를 가질 수 있다.
+- 이유: 무기, 방패, 피격, 충돌은 객체 종류가 아니라 `active/attack/hurt/collision/guard` 설정의 조합이어야 한다.
+- 대체안: 판정 영역별 별도 편집/preview/source를 유지하는 방식은 채택하지 않는다.
 
-## InteractionBox Timeline State
+## Interaction Timeline State
 
-- 결정: 전투/방어/충돌 규칙은 Action Timeline에서 frame value로 조정할 수 있게 한다.
+- 결정: 전투/방어/충돌 규칙은 Action Timeline에서 object frame value로 조정한다.
 - 이유: 공격 ON/OFF, 방어, 피격 가능 여부 같은 판정 상태는 동작 프레임과 함께 제작되어야 한다.
-- 대체안: Runtime 판정 박스가 별도 위치/크기를 갖고 Action과 따로 움직이는 방식은 채택하지 않는다.
+- 대체안: Runtime 판정 영역이 별도 위치/크기를 갖고 Action과 따로 움직이는 방식은 채택하지 않는다.
 
 ## Editable Transform Model
 
 - 결정: 모든 editable object는 After Effects Transform 모델을 따른다.
 - 규칙: `x/y`는 Position, `ax/ay`는 Anchor Point, `w/h`는 Size, `rot`는 Anchor 기준 Rotation이다.
 - 계산: `translate(x, y) → rotate(rot) → drawRect(-ax, -ay, w, h)`.
-- 이유: Setup, Action, Effect, Stage, InteractionBox가 같은 좌표/핸들/resize 규칙을 공유해야 한다.
+- 이유: Setup, Action, Effect, Stage, interaction object가 같은 좌표/핸들/resize 규칙을 공유해야 한다.
 - 대체안: 대상별로 `x/y` 의미와 resize 계산을 다르게 유지하는 방식은 채택하지 않는다.
 
 ## Editor와 Runtime 분리
@@ -87,8 +87,8 @@
 ## Selection Palette
 
 - 결정: Setup의 선택 UI는 편집 대상 선택 surface다.
-- 이유: 기준, 파츠, 판정 박스를 같은 방식으로 선택해야 한다.
-- 대체안: 파츠 선택과 판정 박스 선택을 별도 패널로 나누는 방식은 채택하지 않는다.
+- 이유: 기준, 파츠, 판정 영역을 같은 방식으로 선택해야 한다.
+- 대체안: 파츠 선택과 판정 영역 선택을 별도 패널로 나누는 방식은 채택하지 않는다.
 
 ## 공통 Numeric Input
 

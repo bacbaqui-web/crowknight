@@ -2,239 +2,190 @@
 
 ## Sprint 목표
 
-Editable Object Model 전환.
+InteractionBox legacy naming 제거.
 
-InteractionBox를 특수 투명 박스가 아니라 공통 editable object로 정착시킨다.
+Interaction system을 `InteractionObject` + Runtime `InteractionRegion` 용어로 정리한다.
 
 ## 핵심 원칙
 
-- `x/y` = anchor position.
-- `ax/ay` = local anchor point.
-- `w/h` = size.
-- `rot` = anchor 기준 rotation.
-- `opacity` = appearance.
-- `active` = interaction state.
-- Setup은 base rig.
-- Action은 base rig 위 pose offset.
-- Runtime mirror는 만들지 않는다.
-- 커밋은 큰 단위가 안정화될 때만 한다.
+- 모든 editable object는 interaction state를 가질 수 있다.
+- fallback interaction target도 editable object다.
+- 저장 key는 `...InteractionObject`를 사용한다.
+- Runtime combat 계산값은 `InteractionRegion`이다.
+- 과거 `InteractionBox` 저장값은 호환하지 않는 clean init 방향이다.
 
 ## 완료한 작업
 
-- `editableTransform.js`를 `editableObjectModel.js`로 전환.
-- transform/appearance/interaction helper 추가.
-- InteractionBox rig에 `ax/ay/opacity` 추가.
-- InteractionBox `x/y` 의미를 top-left에서 anchor position으로 정리.
-- old top-left InteractionBox 저장값 normalize 보정 추가.
-- image-less rect render/edit target이 `x/y/ax/ay/w/h/rot/opacity`를 사용하도록 변경.
-- Runtime InteractionRegion이 `x/y/ax/ay/w/h/rot`와 pose offset `ax/ay`를 반영하도록 변경.
-- InteractionBox resize 시 `x/y`를 같이 바꾸던 보정 제거.
-- Part/InteractionBox/Effect resize 계산을 `editableObjectModel.js` helper로 이동.
-- Action pose frame value와 interpolation에 `ax/ay` 추가.
-- image part/control group/InteractionBox 렌더가 pose offset `ax/ay`를 반영하도록 변경.
-- Effect preview/runtime render가 `centerOffsetEditableTransform()`을 사용하도록 변경.
-- InteractionBox Setup/Action property에 `ax/ay`, `opacity` 표시.
-- Action의 모든 editable object에 `판정` ON/OFF 표시.
-- `active`가 켜진 모든 editable object에서 `판정 설정` 그룹 표시.
-- `판정 설정` 그룹은 `poseOffsets[poseKey][partKey]`의 `stun/knockbackX/knockbackY/deathBurst`를 읽고 쓴다.
-- `active`를 켜거나 끄면 Action property field가 다시 렌더되어 판정 설정이 보이거나 숨는다.
-- `active` scrub control을 숫자 편집이 아니라 클릭 ON/OFF 토글로 변경.
-- Runtime combat reaction이 `attackEffects` 대신 `attackInteractionRegion.reaction`을 사용하도록 변경.
-- `attackEffects` 저장 구조와 static tuning field 제거.
-- 기본 공격 반응값을 `attackInteractionBox` pose frame default로 이동.
-- `interactionBoxRuntime.js`를 `interactionRegionRuntime.js`로 rename.
-- Action frame에 `attack/hurt/collision/guard/pushPower` 추가.
-- Runtime attack/hurt 판정이 active object region 목록을 우선 사용하도록 변경.
-- Runtime collision region 간 push 처리 추가.
-- Runtime guard region이 있으면 해당 region과 겹친 공격만 방어하도록 변경.
-- 기존 `attackInteractionBox`/`hurtInteractionBox` runtime geometry는 fallback으로 유지.
+- `src/tuningInteractionBoxes.js`를 `src/tuningInteractionObjects.js`로 rename.
+- fallback 저장 key 변경:
+  - `collisionInteractionBox` → `collisionInteractionObject`
+  - `hurtInteractionBox` → `hurtInteractionObject`
+  - `attackInteractionBox` → `attackInteractionObject`
+  - `guardInteractionBox` → `guardInteractionObject`
+- type/target type 변경:
+  - `interactionBox` → `interactionObject`
+- 관련 constant/helper 이름을 `INTERACTION_OBJECT_*`, `isInteractionObjectPartKey()` 계열로 변경.
+- local tuning storage key를 `crowKnight.actorTuning.v2`로 변경.
+- old top-left interaction object normalize 보정 제거.
+- debug flag를 `debugInteractionObjects`로 변경.
+- palette CSS class를 `part-*-interaction-object`로 변경.
+- UI aria label과 part label을 `히트박스/박스` 대신 `판정 영역/영역` 기준으로 변경.
+- debug preview 함수 이름을 box 중심에서 target/region 중심으로 변경.
+- 문서의 InteractionBox 중심 설명을 InteractionObject/InteractionRegion 기준으로 갱신.
 
-## 변경한 파일과 이유
+## 변경한 파일과 변경 이유
 
-- `src/editableObjectModel.js`
-  - editable object transform/appearance/interaction 공통 helper.
+- `src/tuningInteractionObjects.js`
+  - fallback interaction object key/role/parent helper의 기준 파일.
+- `src/gameConfig.js`
+  - `POSE_PART_KEYS`가 새 object key를 사용.
+  - local storage key를 v2로 변경.
 - `src/playerDefaultRig.js`
-  - InteractionBox 기본값을 anchor/opacity 모델로 변경.
-- `src/tuningNormalize.js`
-  - old InteractionBox 저장값과 pose active 기본값 normalize.
-- `src/puppetPlayerRenderer.js`
-  - image/image-less part 렌더가 `ax/ay/opacity`를 반영.
-- `src/puppetPlayerEditRegions.js`
-  - edit handle target에 `ax/ay/opacity` 기록.
-- `src/interactionRegionRuntime.js`
-  - Runtime region geometry가 anchor 모델을 사용.
-  - Runtime region에 공통 `reaction` 값 기록.
-  - recorded editable object region에서 active interaction regions 생성.
-- `src/combatSystem.js`
-  - 공격 region 목록과 피격 region 목록을 비교.
-  - 피격 반응값을 `attackEffects`가 아니라 충돌한 region의 `reaction`에서 읽도록 변경.
-  - collision region 간 push 처리 추가.
-  - guard region이 있으면 attack과 guard overlap 기준으로 방어 처리.
+  - 기본 rig 저장 key와 type을 InteractionObject로 변경.
 - `src/playerDefaultTuning.js`
-  - 기본 공격 반응값을 저장 구조가 아닌 pose frame default에 주입.
-- `src/canvasDragApply.js`
-  - resize 결과 계산을 공통 helper로 통합.
-- `src/canvasVisualValues.js`
-  - InteractionBox W/H 변경 시 X/Y 보정 제거.
-- `src/animationFrames.js`
-- `src/puppetPlayer.js`
-- `src/puppetPlayerGeometry.js`
-- `src/canvasDragState.js`
-- `src/actionBaseTransform.js`
-  - Action pose `ax/ay/active/attack/hurt/collision/guard/stun/knockbackX/knockbackY/deathBurst/pushPower` 흐름 추가.
-- `src/settingsDebugRenderer.js`
-  - InteractionBox preview opacity 반영.
-- `src/settingsEffectPreviewRenderer.js`
-- `src/actorEffectsRenderer.js`
-  - Effect render/resize 계산을 editable object helper로 정렬.
+  - 기본 attack frame value가 `attackInteractionObject`에 연결.
+- `src/tuningNormalize.js`
+  - 새 key normalize.
+  - 과거 top-left 보정 제거.
+- `src/interactionRegionRuntime.js`
+  - fallback key 참조를 새 object key로 변경.
+- `src/tuningParts.js`
+- `src/tuningSelectionPalette.js`
+- `src/tuningPanelDom.js`
+- `src/tuningLabels.js`
 - `src/tuningFieldGroups.js`
-  - Action editable object에 공통 `판정` 표시.
-  - active object에서 `상호작용` 역할 스위치 표시.
-  - attack/collision ON 상태에 맞는 세부 설정 표시.
-- `src/tuningPanelPartController.js`
-  - 판정 설정 field를 pose frame value로 직접 라우팅.
-- `src/tuningScrubControls.js`
-  - `active`를 클릭 토글로 변경.
-  - `stun/deathBurst` 소수 표시와 scrub step 보정.
+- `src/tuningFieldValues.js`
+- `src/canvasVisualValues.js`
+- `src/editHandleGeometry.js`
+- `src/puppetPlayerRenderer.js`
+- `src/settingsDebugRenderer.js`
+- `src/tuningPanelDebugView.js`
+  - import/helper/type 이름을 InteractionObject 기준으로 변경.
+- `src/partPicker.css`
+  - palette class 이름을 InteractionObject 기준으로 변경.
+- `setting.html`
+  - palette aria label 용어 정리.
+- `docs/00_MANIFEST.md`
+- `docs/02_DECISIONS.md`
+- `docs/03_ARCHITECTURE.md`
 - `docs/10_SRC_MAP.md`
 - `docs/11_DATA_MODEL.md`
 - `docs/12_EDITOR_FLOW.md`
 - `docs/99_CURRENT_SPRINT.md`
-  - 변경 구조 기록.
+  - 현재 구조와 용어 반영.
 
 ## 변경된 데이터 흐름
 
 ```text
-Setup InteractionBox
-→ tuning.rig[boxKey].x/y/ax/ay/w/h/rot/opacity
+Setup fallback interaction object
+→ tuning.rig[interactionObjectKey]
 → puppetPlayerRenderer image-less rect
-→ recordPuppetRectPart()
-→ player.editHandles[boxKey]
+→ player.editHandles[interactionObjectKey]
 → handle/debug preview
 ```
 
 ```text
 Action editable object
-→ tuning.poseOffsets[poseKey][partKey].x/y/ax/ay/w/h/rot/opacity/active
-→ tuning.poseOffsets[poseKey][partKey].attack/hurt/collision/guard
-→ tuning.poseOffsets[poseKey][partKey].stun/knockbackX/knockbackY/deathBurst
-→ tuning.poseOffsets[poseKey][partKey].pushPower
-→ timeline interpolation
-→ player.getPartOffset(partKey)
-→ renderer / editor preview
+→ tuning.poseOffsets[poseKey][partKey]
+→ active/attack/hurt/collision/guard/reaction settings
+→ renderer records active object regions
+→ interactionRegionRuntime
+→ combatSystem
 ```
 
 ```text
-판정 설정
-→ editable object active >= 0.5
-→ Action property에 attack/hurt/collision/guard 표시
-→ attack ON이면 공격 설정 표시
-→ collision ON이면 충돌 설정 표시
-→ tuning.poseOffsets[poseKey][partKey].stun/knockbackX/knockbackY/deathBurst
-→ interactionRegionRuntime.createActiveInteractionRegions()
-→ attackInteractionRegion.reaction
-→ combatSystem.applyHitReaction()
+No active object region
+→ fallback tuning.rig.attackInteractionObject / hurtInteractionObject / collisionInteractionObject / guardInteractionObject
+→ Runtime InteractionRegion
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- InteractionBox resize 시 center 기준으로 `x/y`를 재계산하던 예외 제거.
-- Runtime InteractionRegion의 고정 center 계산 제거.
-- Effect render/resize의 직접 draw rect 산식 일부 제거.
-- InteractionBox opacity 없는 특수 객체 예외 제거.
-- `combatSystem`의 `attackEffects` 조회 제거.
-- `gameConfig.TUNING_FIELDS`의 attackEffects static field 제거.
-- `tuningNormalize`의 attackEffects normalize 제거.
-- `interactionBoxRuntime.js` 파일명 제거.
+- `InteractionBox` module/file name 제거.
+- `interactionBox` type string 제거.
+- `...InteractionBox` 저장 key 제거.
+- old top-left interaction object normalize 보정 제거.
+- `debugInteractionBoxes` 이름 제거.
+- palette `*-interaction-box` CSS class 제거.
+- 코드와 일반 문서에서 `InteractionBox`, `interactionBox`, `INTERACTION_BOX` 검색 결과 제거.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
-- InteractionBox key 유지.
-- `tuning.rig[boxKey]` 저장 위치 유지.
-- `tuning.poseOffsets[poseKey][boxKey]` 저장 위치 유지.
-- `attackInteractionBox`/`hurtInteractionBox`는 Runtime fallback으로 유지.
-- Background/HUD 구조 미수정.
-- 기준 커밋 있음: `74dd3aa Refactor interaction boxes into editable objects`.
-- 이후 `interactionRegionRuntime` 공통화 변경은 아직 미커밋.
+- fallback interaction object 4개는 유지.
+- fallback object의 parent mapping 유지:
+  - collision/hurt → body
+  - attack → weapon
+  - guard → shield
+- Runtime combat system의 attack/hurt/collision/guard 동작은 변경하지 않음.
+- Runtime `InteractionRegion` 이름 유지.
+- Background/HUD/Effect 저장 구조는 변경하지 않음.
+- Firebase remote data migration은 추가하지 않음.
 
 ## 아직 남아있는 예외 처리
 
-- Effect 저장 필드는 아직 `anchorX/Y`다.
-- Runtime active object region은 renderer가 직전 frame에 기록한 `hitRegions`를 사용한다.
-- 첫 frame 또는 기록이 없는 경우 `attackInteractionBox`/`hurtInteractionBox` fallback을 사용한다.
-- collision push는 actor 간 X축 분리만 처리한다.
+- fallback interaction object 4개는 아직 별도 helper 파일을 가진다.
+- `isInteractionObjectPartKey()` 분기는 아직 남아 있다.
+- Runtime active object region은 renderer가 기록한 `hitRegions`를 사용한다.
+- active object region이 없으면 fallback object region을 사용한다.
+- collision push는 X축 최소 분리만 처리한다.
 - guard region이 없으면 기존 `isGuarding` 방어 동작을 유지한다.
-- Browser 기반 실제 클릭/드래그 QA는 아직 못 했다.
 
 ## 검증 방법 및 결과
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: dev server `http://127.0.0.1:5514/setting.html` HTTP 200.
-- 통과: `src/interactionRegionRuntime.js` HTTP module 응답.
-- 통과: old `src/interactionBoxRuntime.js` HTTP 404.
-- 통과: `posePropertyGroups()` smoke test.
-  - 일반 `weapon/body`도 `판정` 그룹 표시.
-  - `active = 0`이면 역할 스위치 숨김.
-  - `active = 1`이면 attack/hurt/collision/guard 표시.
-  - `attack = 1`이면 공격 설정 표시.
-  - `collision = 1`이면 충돌 설정 표시.
-  - `master` basis에는 판정 그룹 미표시.
-- 통과: 이전 스모크 테스트.
-  - InteractionBox normalize.
-  - resize helper.
-  - Runtime InteractionRegion bounds.
-  - pose `ax/ay` interpolation.
-  - Effect draw/resize adapter.
-- 통과: `attackEffects` 제거 smoke test.
-  - 기본 tuning/normalize 결과에 `attackEffects` 없음.
-  - 기본 공격 반응값이 `attackInteractionBox` pose frame에 존재.
-- 통과: Runtime region `reaction` smoke test.
-- 통과: active object region smoke test.
-- 통과: collision active object region smoke test.
-- 제한: 실제 `setting.html` UI 드래그 QA 미수행.
+- 통과: `http://127.0.0.1:5514/setting.html` HTTP 200.
+- 통과: `src/tuningInteractionObjects.js` HTTP 200.
+- 통과: old `src/tuningInteractionBoxes.js` HTTP 404.
+- 통과: legacy 용어 검색. 단, 변경 전 이름을 기록한 이 보고서는 제외.
+  - `InteractionBox`
+  - `interactionBox`
+  - `INTERACTION_BOX`
+  - `interaction-box`
+  - `tuningInteractionBoxes`
+  - `collision-box`
+  - `히트박스`
+- 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 이번 단계에서 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- 저장된 InteractionBox의 `x/y` 의미가 normalize 후 anchor position으로 바뀐다.
-- Action `ax/ay`는 데이터 흐름에 연결됐지만 실제 UX 확인이 필요하다.
-- `opacity = 0`이어도 combat `active`는 별도다.
-- Runtime combat reaction source는 pose frame으로 이동했다.
-- Runtime attack/hurt geometry source는 active object regions 우선, 기존 box fallback이다.
-- collision runtime은 최소 push 처리만 있다.
-- guard runtime은 attack overlap filter만 있다.
+- local tuning storage key가 v2로 변경되어 기존 local tuning 저장값은 자동으로 이어지지 않는다.
+- Firebase나 외부 저장소에 남은 v1 데이터는 별도 migration 없이 새 key와 맞지 않을 수 있다.
+- fallback object key가 바뀌었으므로, 외부 문서나 수동 저장 JSON이 old key를 쓰면 무시된다.
+- broad rename 범위가 넓어서 실제 UI smoke QA가 필요하다.
 
 ## 다음 Sprint 추천
 
 1. 실제 UI QA.
-   - Setup/Action에서 4개 InteractionBox move/resize/rotate/opacity 확인.
-   - 일반 part/InteractionBox에서 `active` ON/OFF field 표시 확인.
-   - 일반 part/InteractionBox에서 판정 설정 표시 확인.
-2. Interaction Definition 확장.
-   - collision/hurt/guard에 필요한 runtime option 정의.
-   - active/role/settings를 object definition 기반으로 정리.
-3. Runtime collision/guard 고도화.
-   - push 방향/세기/마찰 UX 조정.
-   - guard blockPower 등 추가 설정 여부 결정.
-4. Effect 저장 모델 정리.
-   - `anchorX/Y` 유지 또는 `ax/ay` 전환 결정.
-5. Group resize 계산 공통화.
+   - Setup palette 4개 영역 선택.
+   - Action에서 `attackInteractionObject` 기본 공격 frame 확인.
+   - active/attack/hurt/collision/guard 토글 확인.
+   - resize/rotate/move/opacity 확인.
+2. old key migration 필요 여부 결정.
+   - clean init 유지면 migration 없음.
+   - 기존 저장 복구가 필요하면 별도 Sprint로 작성.
+3. `isInteractionObjectPartKey()` 분기 축소.
+   - fallback object도 일반 editable object definition으로 흡수.
+4. fallback interaction object helper 정리.
+   - `tuningInteractionObjects.js`를 role definition 중심으로 축소.
+5. Runtime collision/guard 고도화.
+   - push 방향/세기/guard blockPower 정의.
 
 ## 리팩토링 후보와 이유
 
+- `src/tuningInteractionObjects.js`
+  - fallback key helper와 role definition이 같이 있다.
 - `src/tuningFieldGroups.js`
-  - object definition 기반 field 생성으로 통합 가능.
-- `src/tuningPanelPartController.js`
-  - pose field rendering 책임 분리 가능.
-- `src/canvasDragApply.js`
-  - transform drag result를 더 작게 분리 가능.
+  - interaction field를 object definition 기반으로 생성할 수 있다.
 - `src/interactionRegionRuntime.js`
-  - parent transform 계산과 region 계산 분리 가능.
+  - fallback region 생성과 active object region 수집을 분리할 수 있다.
+- `src/tuningNormalize.js`
+  - 저장 schema normalize 책임이 계속 늘고 있다.
 - `src/puppetPlayerRenderer.js`
-  - image part와 image-less rect part transform helper 분리 가능.
+  - image part와 image-less object render 흐름을 더 명확히 나눌 수 있다.
 
 ## 파일 크기 또는 구조상 주의할 점
 
-- `src/tuningNormalize.js`: 500줄 근처. normalize 책임이 계속 늘고 있다.
-- `src/puppetPlayerRenderer.js`: transform 책임 집중.
-- `src/tuningPanelPartController.js`: field 표시와 값 라우팅이 함께 있어 다음 분리 후보.
+- `src/tuningNormalize.js`: 500줄 근처. 저장 schema 변경 전 분리 검토 필요.
+- `src/puppetPlayerRenderer.js`: renderer/edit region 기록 책임 집중.
+- `src/tuningPanelPartController.js`: field 표시와 value routing 책임이 함께 있음.

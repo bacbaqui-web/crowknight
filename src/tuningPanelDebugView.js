@@ -4,16 +4,16 @@ import {
   isCollisionSectionOpen,
   isSettingsPanelOpen,
 } from './settingsPanelState.js';
-import { drawAttackInteractionBoxPreview, drawEditableInteractionBoxTarget } from './settingsDebugRenderer.js';
+import { drawEditableInteractionTarget, drawFallbackAttackRegionPreview } from './settingsDebugRenderer.js';
 import { drawEffectSettingsPreview } from './settingsEffectPreviewRenderer.js';
 import {
-  COLLISION_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  ATTACK_INTERACTION_BOX_KEY,
-  interactionBoxPartKeysForParent,
-  isInteractionBoxPartKey,
-} from './tuningInteractionBoxes.js';
+  COLLISION_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  ATTACK_INTERACTION_OBJECT_KEY,
+  interactionObjectPartKeysForParent,
+  isInteractionObjectPartKey,
+} from './tuningInteractionObjects.js';
 
 export function drawTuningPanelDebugBoxes(
   ctx,
@@ -24,15 +24,17 @@ export function drawTuningPanelDebugBoxes(
   if (!isSettingsPanelOpen()) return { hasEffectHandleUpdate: false, effectHandle: null };
 
   if (isCollisionSectionOpen()) {
-    drawSetupInteractionBoxPreview(ctx, selectedActor, activeSetupPartKey);
+    drawSetupFallbackInteractionPreview(ctx, selectedActor, activeSetupPartKey);
   }
 
-  const activePoseInteractionBoxKeys = editHandleInteractionBoxKeysForPosePart(activePosePartKey);
-  activePoseInteractionBoxKeys.forEach((boxKey) => drawSetupInteractionBoxPreview(ctx, selectedActor, boxKey));
+  const activePoseFallbackInteractionKeys = editHandleFallbackInteractionKeysForPosePart(activePosePartKey);
+  activePoseFallbackInteractionKeys.forEach((boxKey) =>
+    drawSetupFallbackInteractionPreview(ctx, selectedActor, boxKey)
+  );
 
   const attackKey = activeAttackSettingsKey();
-  if (attackKey && !activePoseInteractionBoxKeys.length) {
-    drawAttackInteractionBoxPreview(ctx, selectedActor, attackKey);
+  if (attackKey && !activePoseFallbackInteractionKeys.length) {
+    drawFallbackAttackRegionPreview(ctx, selectedActor, attackKey);
   }
 
   const effectKey = activeEffectSettingsKey();
@@ -44,29 +46,29 @@ export function drawTuningPanelDebugBoxes(
   };
 }
 
-function editHandleInteractionBoxKeysForPosePart(partKey) {
-  if (isInteractionBoxPartKey(partKey)) return [partKey];
-  return interactionBoxPartKeysForParent(partKey);
+function editHandleFallbackInteractionKeysForPosePart(partKey) {
+  if (isInteractionObjectPartKey(partKey)) return [partKey];
+  return interactionObjectPartKeysForParent(partKey);
 }
 
-function drawSetupInteractionBoxPreview(ctx, actor, activeSetupPartKey) {
-  if (activeSetupPartKey === COLLISION_INTERACTION_BOX_KEY) {
-    drawEditableInteractionBoxTarget(ctx, actor, activeSetupPartKey, {
+function drawSetupFallbackInteractionPreview(ctx, actor, activeSetupPartKey) {
+  if (activeSetupPartKey === COLLISION_INTERACTION_OBJECT_KEY) {
+    drawEditableInteractionTarget(ctx, actor, activeSetupPartKey, {
       fill: 'rgba(105, 183, 229, 0.16)',
       stroke: 'rgba(105, 183, 229, 0.96)',
     });
-  } else if (activeSetupPartKey === HURT_INTERACTION_BOX_KEY) {
-    drawEditableInteractionBoxTarget(ctx, actor, activeSetupPartKey, {
+  } else if (activeSetupPartKey === HURT_INTERACTION_OBJECT_KEY) {
+    drawEditableInteractionTarget(ctx, actor, activeSetupPartKey, {
       fill: 'rgba(255, 64, 64, 0.16)',
       stroke: 'rgba(255, 92, 92, 0.95)',
     });
-  } else if (activeSetupPartKey === ATTACK_INTERACTION_BOX_KEY) {
-    drawEditableInteractionBoxTarget(ctx, actor, activeSetupPartKey, {
+  } else if (activeSetupPartKey === ATTACK_INTERACTION_OBJECT_KEY) {
+    drawEditableInteractionTarget(ctx, actor, activeSetupPartKey, {
       fill: 'rgba(255, 224, 72, 0.18)',
       stroke: 'rgba(255, 224, 72, 0.95)',
     });
-  } else if (activeSetupPartKey === GUARD_INTERACTION_BOX_KEY) {
-    drawEditableInteractionBoxTarget(ctx, actor, activeSetupPartKey, {
+  } else if (activeSetupPartKey === GUARD_INTERACTION_OBJECT_KEY) {
+    drawEditableInteractionTarget(ctx, actor, activeSetupPartKey, {
       fill: 'rgba(124, 207, 146, 0.16)',
       stroke: 'rgba(124, 207, 146, 0.96)',
     });

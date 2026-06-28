@@ -22,7 +22,7 @@ Setup에서 직접 편집하는 base rig다.
 
 - image part: `body`, `head`, `cape`, `shield`, `weapon`, arm/leg parts.
 - control part: `neck`, `shoulderL`, `shoulderR`, `hipL`, `hipR`.
-- interaction box: `collisionInteractionBox`, `hurtInteractionBox`, `attackInteractionBox`, `guardInteractionBox`.
+- fallback interaction object: `collisionInteractionObject`, `hurtInteractionObject`, `attackInteractionObject`, `guardInteractionObject`.
 
 일반 part 주요 필드:
 
@@ -33,18 +33,18 @@ Setup에서 직접 편집하는 base rig다.
 - `rot`
 - `opacity`
 
-## InteractionBox
+## Fallback Interaction Objects
 
-Editor 기준 판정 박스 저장 위치다.
+Editor 기준 fallback interaction object 저장 위치다.
 
-| Key                       | Role        | Parent   | 저장 필드                                                                            |
-| ------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------ |
-| `collisionInteractionBox` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
-| `hurtInteractionBox`      | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
-| `attackInteractionBox`    | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
-| `guardInteractionBox`     | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| Key                          | Role        | Parent   | 저장 필드                                                                            |
+| ---------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------ |
+| `collisionInteractionObject` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| `hurtInteractionObject`      | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| `attackInteractionObject`    | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| `guardInteractionObject`     | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
 
-저장 key는 InteractionBox 용어를 사용한다.
+저장 key는 InteractionObject 용어를 사용한다.
 
 ## Runtime InteractionRegion
 
@@ -55,7 +55,7 @@ Runtime 피격 판정 geometry:
 ```text
 active + hurt object recorded region
 → actor.player.hurtInteractionRegions
-→ fallback: tuning.rig.hurtInteractionBox
+→ fallback: tuning.rig.hurtInteractionObject
 ```
 
 Runtime 공격 판정 geometry:
@@ -63,7 +63,7 @@ Runtime 공격 판정 geometry:
 ```text
 active + attack object recorded region
 → actor.player.attackInteractionRegions
-→ fallback: tuning.rig.attackInteractionBox
+→ fallback: tuning.rig.attackInteractionObject
 ```
 
 Runtime 공격 효과:

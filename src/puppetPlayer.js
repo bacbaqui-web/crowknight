@@ -77,7 +77,7 @@ export class PuppetPlayer {
     this.guardBreakTime = 0;
     this.guardLockedUntilRelease = false;
     this.dead = false;
-    this.debugInteractionBoxes = false;
+    this.debugInteractionObjects = false;
     this.aiTimer = 0;
     this.aiDir = Math.random() > 0.5 ? 1 : -1;
     this.applyTuning(DEFAULT_PLAYER_TUNING);

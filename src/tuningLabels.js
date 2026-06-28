@@ -1,10 +1,10 @@
 import { MASTER_PART_KEY } from './gameConfig.js';
 import {
-  ATTACK_INTERACTION_BOX_KEY,
-  COLLISION_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-} from './tuningInteractionBoxes.js';
+  ATTACK_INTERACTION_OBJECT_KEY,
+  COLLISION_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+} from './tuningInteractionObjects.js';
 
 export const isMasterPart = (partKey) => partKey === MASTER_PART_KEY;
 
@@ -37,10 +37,10 @@ export function partLabel(key) {
       shoulderR: '오른팔 어깨',
       hipL: '왼다리 골반',
       hipR: '오른다리 골반',
-      [COLLISION_INTERACTION_BOX_KEY]: '충돌박스',
-      [ATTACK_INTERACTION_BOX_KEY]: '무기박스',
-      [HURT_INTERACTION_BOX_KEY]: '피격박스',
-      [GUARD_INTERACTION_BOX_KEY]: '방패박스',
+      [COLLISION_INTERACTION_OBJECT_KEY]: '충돌영역',
+      [ATTACK_INTERACTION_OBJECT_KEY]: '공격영역',
+      [HURT_INTERACTION_OBJECT_KEY]: '피격영역',
+      [GUARD_INTERACTION_OBJECT_KEY]: '방어영역',
     }[key] || key
   );
 }

@@ -6,18 +6,20 @@ import { displayTuningControlValue } from './tuningControlValueTransforms.js';
 import { partEditKeys } from './tuningParts.js';
 import { SELECTION_PALETTE_TARGETS } from './tuningSelectionPalette.js';
 import {
-  ATTACK_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-} from './tuningInteractionBoxes.js';
+  ATTACK_INTERACTION_OBJECT_KEY,
+  COLLISION_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+} from './tuningInteractionObjects.js';
 import { populateMotionSettingRows } from './tuningMotionFieldRows.js';
 import { getTuningPanelWorkflowSections } from './tuningPanelWorkflow.js';
 
 const PART_PICKER_CLASS_BY_KEY = {
   cape: 'part-neck',
-  [HURT_INTERACTION_BOX_KEY]: 'part-hurt-interaction-box',
-  [ATTACK_INTERACTION_BOX_KEY]: 'part-attack-interaction-box',
-  [GUARD_INTERACTION_BOX_KEY]: 'part-guard-interaction-box',
+  [COLLISION_INTERACTION_OBJECT_KEY]: 'part-collision-interaction-object',
+  [HURT_INTERACTION_OBJECT_KEY]: 'part-hurt-interaction-object',
+  [ATTACK_INTERACTION_OBJECT_KEY]: 'part-attack-interaction-object',
+  [GUARD_INTERACTION_OBJECT_KEY]: 'part-guard-interaction-object',
 };
 
 export function getTuningPanelElements(panel) {

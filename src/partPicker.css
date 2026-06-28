@@ -66,34 +66,34 @@
   border-radius: 14px;
 }
 
-.part-collision-box {
+.part-collision-interaction-object {
   grid-column: 1;
   grid-row: 1;
   background: #69b7e5;
 }
 
-.part-hurt-interaction-box {
+.part-hurt-interaction-object {
   grid-column: 4;
   grid-row: 1;
   background: #ef4d49;
 }
 
-.part-attack-interaction-box {
+.part-attack-interaction-object {
   grid-column: 1;
   grid-row: 6;
   background: #f0e936;
 }
 
-.part-guard-interaction-box {
+.part-guard-interaction-object {
   grid-column: 4;
   grid-row: 6;
   background: #7ccf92;
 }
 
-.part-collision-box::after,
-.part-attack-interaction-box::after,
-.part-hurt-interaction-box::after,
-.part-guard-interaction-box::after {
+.part-collision-interaction-object::after,
+.part-attack-interaction-object::after,
+.part-hurt-interaction-object::after,
+.part-guard-interaction-object::after {
   content: '';
   display: none;
 }

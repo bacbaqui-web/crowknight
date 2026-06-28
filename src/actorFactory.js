@@ -30,7 +30,7 @@ export async function createActors(saved, world) {
 
     actor.name = saved?.actors?.[def.id]?.name || def.name;
     actor.player.applyTuning(actor.tuning);
-    actor.player.debugInteractionBoxes = false;
+    actor.player.debugInteractionObjects = false;
     created.push(actor);
   }
 

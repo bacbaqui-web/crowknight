@@ -61,7 +61,7 @@ Crow Knight는 횡스크롤 액션 로그라이트를 만들기 위한 프로젝
 - Action은 Timeline이다.
 - Effect는 Timeline이다.
 - Stage는 World다.
-- InteractionBox도 Editor 편집 대상이다.
+- 모든 editable object는 interaction 대상이 될 수 있다.
 - Editor와 Runtime은 분리한다.
 - Runtime은 Editor 원본을 직접 수정하지 않는다.
 - Runtime 데이터는 Editor 원본에서 실행 중 계산한다.

@@ -1,5 +1,5 @@
 import { axisProps, isMasterPart } from './tuningLabels.js';
-import { isInteractionBoxPartKey } from './tuningInteractionBoxes.js';
+import { isInteractionObjectPartKey } from './tuningInteractionObjects.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 
 export function effectPropertyGroups() {
@@ -26,7 +26,7 @@ export function partPropertyGroups(partKey) {
     return [{ label: '기준', props: axisProps('anchorX', 'anchorY', 'X', 'Y') }];
   }
 
-  if (isInteractionBoxPartKey(partKey)) {
+  if (isInteractionObjectPartKey(partKey)) {
     return [
       { label: '기준', props: axisProps('ax', 'ay') },
       { label: '위치', props: axisProps('x', 'y') },
@@ -63,7 +63,7 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
   if (
     imagePartKeys().includes(partKey) ||
     controlGroupPartKeys().includes(partKey) ||
-    isInteractionBoxPartKey(partKey)
+    isInteractionObjectPartKey(partKey)
   ) {
     groups.push({ label: '기준', props: axisProps('ax', 'ay') });
   }
@@ -72,11 +72,11 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
     isMasterPart(partKey) ||
     imagePartKeys().includes(partKey) ||
     controlGroupPartKeys().includes(partKey) ||
-    isInteractionBoxPartKey(partKey)
+    isInteractionObjectPartKey(partKey)
   ) {
     groups.push({
       label:
-        isMasterPart(partKey) || imagePartKeys().includes(partKey) || isInteractionBoxPartKey(partKey)
+        isMasterPart(partKey) || imagePartKeys().includes(partKey) || isInteractionObjectPartKey(partKey)
           ? '크기'
           : '그룹 크기',
       props: axisProps('w', 'h', 'W', 'H'),
@@ -86,7 +86,7 @@ export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null
   if (isMasterPart(partKey) || imagePartKeys().includes(partKey) || controlGroupPartKeys().includes(partKey)) {
     groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
   }
-  if (isInteractionBoxPartKey(partKey)) {
+  if (isInteractionObjectPartKey(partKey)) {
     groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
   }
   if (isEditableObjectPart(partKey)) {

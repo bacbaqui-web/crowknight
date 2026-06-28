@@ -1,16 +1,16 @@
 import {
-  COLLISION_INTERACTION_BOX_KEY,
-  HURT_INTERACTION_BOX_KEY,
-  GUARD_INTERACTION_BOX_KEY,
-  ATTACK_INTERACTION_BOX_KEY,
-  INTERACTION_BOX_TARGET_TYPE,
-  isInteractionBoxPartKey,
-} from './tuningInteractionBoxes.js';
+  COLLISION_INTERACTION_OBJECT_KEY,
+  HURT_INTERACTION_OBJECT_KEY,
+  GUARD_INTERACTION_OBJECT_KEY,
+  ATTACK_INTERACTION_OBJECT_KEY,
+  INTERACTION_OBJECT_TARGET_TYPE,
+  isInteractionObjectPartKey,
+} from './tuningInteractionObjects.js';
 
 export const SELECTION_PALETTE_TARGETS = Object.freeze([
-  { type: INTERACTION_BOX_TARGET_TYPE, key: COLLISION_INTERACTION_BOX_KEY },
+  { type: INTERACTION_OBJECT_TARGET_TYPE, key: COLLISION_INTERACTION_OBJECT_KEY },
   { type: 'part', key: 'head' },
-  { type: INTERACTION_BOX_TARGET_TYPE, key: HURT_INTERACTION_BOX_KEY },
+  { type: INTERACTION_OBJECT_TARGET_TYPE, key: HURT_INTERACTION_OBJECT_KEY },
   { type: 'part', key: 'cape' },
   { type: 'part', key: 'shoulderL' },
   { type: 'part', key: 'shoulderR' },
@@ -27,8 +27,8 @@ export const SELECTION_PALETTE_TARGETS = Object.freeze([
   { type: 'part', key: 'lowerLegL' },
   { type: 'part', key: 'upperLegR' },
   { type: 'part', key: 'lowerLegR' },
-  { type: INTERACTION_BOX_TARGET_TYPE, key: ATTACK_INTERACTION_BOX_KEY },
-  { type: INTERACTION_BOX_TARGET_TYPE, key: GUARD_INTERACTION_BOX_KEY },
+  { type: INTERACTION_OBJECT_TARGET_TYPE, key: ATTACK_INTERACTION_OBJECT_KEY },
+  { type: INTERACTION_OBJECT_TARGET_TYPE, key: GUARD_INTERACTION_OBJECT_KEY },
 ]);
 
 export function selectionPaletteKeys() {
@@ -38,7 +38,7 @@ export function selectionPaletteKeys() {
 export function selectionPaletteTargetFor(key) {
   return (
     SELECTION_PALETTE_TARGETS.find((target) => target.key === key) || {
-      type: isInteractionBoxPartKey(key) ? INTERACTION_BOX_TARGET_TYPE : 'part',
+      type: isInteractionObjectPartKey(key) ? INTERACTION_OBJECT_TARGET_TYPE : 'part',
       key,
     }
   );

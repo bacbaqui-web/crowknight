@@ -1,6 +1,6 @@
-import { HURT_INTERACTION_BOX_KEY, INTERACTION_BOX_PART_KEYS } from './tuningInteractionBoxes.js';
+import { INTERACTION_OBJECT_PART_KEYS } from './tuningInteractionObjects.js';
 
-export const STORAGE_KEY = 'crowKnight.actorTuning.v1';
+export const STORAGE_KEY = 'crowKnight.actorTuning.v2';
 export const RANKING_KEY = 'crowKnight.rankings.v1';
 export const SURVIVAL_SCORE_PER_SECOND = 10;
 export const KILL_SCORE = 1000;
@@ -55,7 +55,7 @@ export const POSE_PART_KEYS = [
   'shoulderR',
   'hipL',
   'hipR',
-  ...INTERACTION_BOX_PART_KEYS,
+  ...INTERACTION_OBJECT_PART_KEYS,
 ];
 export const POSE_FRAME_KEYS = ['start', 'end'];
 export const POSE_FPS = 10;
@@ -87,10 +87,6 @@ export const TUNING_FIELDS = [
   ['hudOffsetY', ['hud', 'offsetY']],
   ['anchorX', ['transform', 'anchorX']],
   ['anchorY', ['transform', 'anchorY']],
-  ['hurtInteractionBoxX', ['rig', HURT_INTERACTION_BOX_KEY, 'x']],
-  ['hurtInteractionBoxY', ['rig', HURT_INTERACTION_BOX_KEY, 'y']],
-  ['hurtInteractionBoxW', ['rig', HURT_INTERACTION_BOX_KEY, 'w']],
-  ['hurtInteractionBoxH', ['rig', HURT_INTERACTION_BOX_KEY, 'h']],
   ['walkBob', ['motion', 'walkBob']],
   ['rollIntensity', ['motion', 'rollIntensity']],
   ['rollWeapon', ['motion', 'rollWeapon']],

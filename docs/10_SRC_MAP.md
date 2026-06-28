@@ -7,7 +7,7 @@
 ★★★★★
 
 - `src/tuningPanel.js`: Tool shell과 apply/save bridge.
-- `src/tuningParts.js`: editable part source와 InteractionBox limits.
+- `src/tuningParts.js`: editable part source와 InteractionObject limits.
 - `src/tuningPanelPartController.js`: Setup/Action selection과 property write.
 - `src/canvasVisualValues.js`: canvas/property 표시값을 저장값으로 변환.
 - `src/tuningNormalize.js`: tuning schema normalize.
@@ -34,10 +34,10 @@
 
 - `src/puppetPlayer.js`: player Runtime state. 수정: tuning 적용, Runtime action state. 같이: `combatSystem.js`, `puppetPlayerPose.js`, `interactionRegionRuntime.js`. 위험: 높음.
 - `src/interactionRegionRuntime.js`: editable object Runtime region 계산. 수정: 판정 geometry 계산, role별 region 확장. 같이: `puppetPlayer.js`, `combatSystem.js`. 위험: 높음.
-- `src/tuningInteractionBoxes.js`: InteractionBox key/role/parent helper. 수정: Editor/Runtime box source 경계. 같이: `tuningNormalize.js`, `interactionRegionRuntime.js`. 위험: 높음.
+- `src/tuningInteractionObjects.js`: InteractionObject key/role/parent helper. 수정: fallback interaction source 경계. 같이: `tuningNormalize.js`, `interactionRegionRuntime.js`. 위험: 높음.
 - `src/puppetPlayerActions.js`: action 전환. 수정: Runtime action rules. 같이: `inputControls.js`, `gameConfig.js`. 위험: 중간.
 - `src/puppetPlayerPose.js`: pose transform 계산. 수정: Setup base + Action keyframe 합성. 같이: `poseTimelineAdapter.js`, `animationFrames.js`. 위험: 높음.
-- `src/puppetPlayerRenderer.js`: rig part 렌더와 edit region 기록. 수정: part/InteractionBox render/edit region. 같이: `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`. 위험: 높음.
+- `src/puppetPlayerRenderer.js`: rig part 렌더와 edit region 기록. 수정: part/InteractionObject render/edit region. 같이: `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`. 위험: 높음.
 - `src/puppetPlayerGeometry.js`: part geometry 계산. 수정: 좌표계/anchor/quad 계산. 같이: `puppetPlayerRenderer.js`, `editHandleGeometry.js`. 위험: 높음.
 - `src/puppetPlayerEditRegions.js`: editor hit region 기록. 수정: image-less part region 추가. 같이: `puppetPlayerRenderer.js`, `tuningEditHandleGeometry.js`. 위험: 높음.
 - `src/puppetPlayerDebug.js`: player debug helper. 수정: debug 표시. 같이: `settingsDebugRenderer.js`. 위험: 낮음.
@@ -80,7 +80,7 @@
 ## Defaults / Normalize / Data
 
 - `src/playerDefaultTuning.js`: tuning defaults. 수정: actor 기본 schema. 같이: `tuningNormalize.js`, `playerDefaultRig.js`. 위험: 높음.
-- `src/playerDefaultRig.js`: rig defaults. 수정: 기본 part/InteractionBox 배치. 같이: `tuningParts.js`, `tuningNormalize.js`. 위험: 높음.
+- `src/playerDefaultRig.js`: rig defaults. 수정: 기본 part/InteractionObject 배치. 같이: `tuningParts.js`, `tuningNormalize.js`. 위험: 높음.
 - `src/tuningNormalize.js`: tuning normalize. 수정: 저장 schema 보정. 같이: defaults, timeline adapters. 위험: 높음.
 - `src/animationFrames.js`: frame defaults/interpolation. 수정: pose/effect frame schema. 같이: timeline mutation/read files. 위험: 높음.
 - `src/characterHudLayout.js`: HUD layout. 수정: 이름/HP 위치 계산. 같이: `actorHudRenderer.js`, setup controls. 위험: 중간.
@@ -88,7 +88,7 @@
 
 ## Setup / Fields / Selection
 
-- `src/tuningParts.js`: editable part source. 수정: part/InteractionBox source/limits. 같이: `tuningInteractionBoxes.js`, field files. 위험: 높음.
+- `src/tuningParts.js`: editable part source. 수정: part/InteractionObject source/limits. 같이: `tuningInteractionObjects.js`, field files. 위험: 높음.
 - `src/tuningSelectionPalette.js`: Setup palette definitions. 수정: 선택 대상/배치. 같이: labels, part controller. 위험: 중간.
 - `src/tuningLabels.js`: UI labels. 수정: 표시명 변경. 같이: palette/field views. 위험: 낮음.
 - `src/tuningFieldGroups.js`: property group definitions. 수정: property field 추가/제거. 같이: field values, controllers. 위험: 중간.
@@ -112,7 +112,7 @@
 - `src/tuningPanelAssetActions.js`: asset actions. 수정: upload/download. 같이: asset runtime, project state. 위험: 중간.
 - `src/tuningPanelShortcuts.js`: shortcuts. 수정: keyboard shortcut. 같이: timeline/selection controllers. 위험: 중간.
 - `src/tuningPanelDebugView.js`: debug view. 수정: setting debug UI. 같이: settings debug renderer. 위험: 낮음.
-- `src/settingsDebugRenderer.js`: setting debug draw. 수정: InteractionBox/attack debug 표시. 같이: `tuningInteractionBoxes.js`, `interactionRegionRuntime.js`. 위험: 중간.
+- `src/settingsDebugRenderer.js`: setting debug draw. 수정: InteractionObject/attack debug 표시. 같이: `tuningInteractionObjects.js`, `interactionRegionRuntime.js`. 위험: 중간.
 - `src/settingsPanelState.js`: panel section state helper. 수정: open section/edit context 판단. 같이: workflow controller. 위험: 중간.
 
 ## Panel State / Workflow
@@ -143,7 +143,7 @@
 - `src/canvasLayout.js`: canvas layout. 수정: canvas size/layout. 같이: main/settings canvas code. 위험: 낮음.
 - `src/canvasVisualValues.js`: canvas value write. 수정: visual value → 저장값. 같이: field values, part sources. 위험: 높음.
 - `src/editHandleGeometry.js`: handle geometry. 수정: handle 위치/크기/hit test. 같이: tuning handle geometry. 위험: 높음.
-- `src/tuningEditHandleGeometry.js`: current handle source. 수정: focus별 handle source 선택. 같이: InteractionBox parts, edit handle geometry. 위험: 높음.
+- `src/tuningEditHandleGeometry.js`: current handle source. 수정: focus별 handle source 선택. 같이: InteractionObject parts, edit handle geometry. 위험: 높음.
 - `src/editHandleDrawing.js`: handle draw style. 수정: cursor/style. 같이: handle renderer. 위험: 낮음.
 - `src/editHandleRenderer.js`: handle render. 수정: canvas handle 표시. 같이: handle geometry. 위험: 중간.
 - `src/panelEditState.js`: selection helper. 수정: focus transition helper. 같이: part controller. 위험: 낮음.

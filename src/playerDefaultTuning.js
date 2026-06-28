@@ -1,5 +1,5 @@
 import { DEFAULT_PLAYER_RIG } from './playerDefaultRig.js';
-import { ATTACK_INTERACTION_BOX_KEY } from './tuningInteractionBoxes.js';
+import { ATTACK_INTERACTION_OBJECT_KEY } from './tuningInteractionObjects.js';
 
 const DEFAULT_ATTACK_REACTIONS = {
   attack1: { stun: 0.22, knockbackX: 330, knockbackY: 110, deathBurst: 1 },
@@ -79,11 +79,17 @@ export const DEFAULT_PLAYER_TUNING = {
     hurt: {},
     death: {},
     jumpAttack: {
-      [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.22, 0.58, DEFAULT_ATTACK_REACTIONS.jumpAttack),
+      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.22, 0.58, DEFAULT_ATTACK_REACTIONS.jumpAttack),
     },
-    attack1: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.24, 0.58, DEFAULT_ATTACK_REACTIONS.attack1) },
-    attack2: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.2, 0.62, DEFAULT_ATTACK_REACTIONS.attack2) },
-    attack3: { [ATTACK_INTERACTION_BOX_KEY]: defaultAttackActiveFrames(0.18, 0.68, DEFAULT_ATTACK_REACTIONS.attack3) },
+    attack1: {
+      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.24, 0.58, DEFAULT_ATTACK_REACTIONS.attack1),
+    },
+    attack2: {
+      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.2, 0.62, DEFAULT_ATTACK_REACTIONS.attack2),
+    },
+    attack3: {
+      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.18, 0.68, DEFAULT_ATTACK_REACTIONS.attack3),
+    },
   },
   poseSettings: {
     idle: { duration: 0.8, playback: 'loop', playbackRate: 1 },
