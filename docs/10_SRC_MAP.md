@@ -153,7 +153,6 @@
 - `src/tuningPoseTimelinePanelView.js`: Action timeline view. 수정: toolbar/settings UI. 같이: pose controller. 위험: 중간.
 - `src/tuningGroupPoseEdit.js`: group pose edit. 수정: multi-part Action transform. 같이: canvas controller, group state. 위험: 중간.
 - `src/tuningPanelTimelines.js`: timeline composition. 수정: pose/effect timeline 생성. 같이: timeline controllers. 위험: 중간.
-- `src/tuningTimelineAccessors.js`: timeline accessors. 수정: timeline bridge 값. 같이: panel/timeline controllers. 위험: 낮음.
 - `src/tuningTimelineDom.js`: timeline DOM helper. 수정: timeline DOM query/render helper. 같이: timeline renderer. 위험: 낮음.
 - `src/tuningTimelinePanelSync.js`: timeline panel sync. 수정: timeline UI sync. 같이: timeline controllers. 위험: 중간.
 - `src/tuningTimelinePlaybackControls.js`: playback controls. 수정: play/stop controls. 같이: timeline preview. 위험: 중간.
@@ -165,7 +164,6 @@
 - `src/timelineControllerActions.js`: timeline mutation actions. 수정: add/delete/move flow. 같이: mutations, undo. 위험: 높음.
 - `src/timelineControllerSelectionControls.js`: timeline selection. 수정: frame/keyframe selection. 같이: timeline state/view. 위험: 중간.
 - `src/timelineControllerClipboardControls.js`: timeline clipboard controls. 수정: copy/paste flow. 같이: frame clipboard. 위험: 중간.
-- `src/timelineControllerContract.js`: controller contract. 수정: controller API 검증. 같이: timeline controller. 위험: 높음.
 - `src/timelineControllerView.js`: timeline view binding. 수정: timeline DOM events. 같이: renderer, drag controls. 위험: 중간.
 - `src/timelineDragControls.js`: keyframe drag. 수정: timeline keyframe drag UX. 같이: controller view/actions. 위험: 중간.
 - `src/timelineFrameClipboard.js`: frame clipboard. 수정: pose/effect copy/paste payload. 같이: mutations/adapters. 위험: 중간.

@@ -4,37 +4,36 @@
 
 JS 파일 수를 줄인다.
 
-Tuning Panel에서만 쓰는 작은 state owner 파일을 `tuningPanel.js` 내부로 흡수한다.
+Timeline controller에서만 쓰는 작은 helper 파일을 controller 파일에 흡수한다.
 
 ## 핵심 원칙
 
 - 새 구조를 만들지 않는다.
-- 한 곳에서만 쓰이는 state helper부터 줄인다.
-- Tuning Panel 동작은 유지한다.
+- 한 곳에서만 쓰이는 Timeline helper부터 줄인다.
+- Timeline controller 동작은 유지한다.
 - 저장 구조는 변경하지 않는다.
 - Runtime combat 규칙은 변경하지 않는다.
 
 ## 완료한 작업
 
-- `src/tuningPanelEditingState.js` 제거.
-- Edit focus state owner를 `src/tuningPanel.js` local factory로 이동.
-- `src/tuningPanelWorkflowSessionState.js` 제거.
-- Workflow session state owner를 `src/tuningPanel.js` local factory로 이동.
+- `src/tuningTimelineAccessors.js` 제거.
+- Timeline accessor factory를 `src/timelineControllerCore.js` local helper로 이동.
+- `src/timelineControllerContract.js` 제거.
+- Timeline controller contract check를 `src/timelineController.js` local helper로 이동.
 - `docs/10_SRC_MAP.md`에서 삭제된 파일 항목 제거.
-- `docs/12_EDITOR_FLOW.md`에서 삭제된 파일명 참조 제거.
 
 ## 변경한 파일과 변경 이유
 
-- `src/tuningPanel.js`
-  - 패널 내부에서만 쓰는 editing/workflow session state factory 흡수.
-- `src/tuningPanelEditingState.js`
-  - 삭제. `tuningPanel.js` 단일 호출자였음.
-- `src/tuningPanelWorkflowSessionState.js`
-  - 삭제. `tuningPanel.js` 단일 호출자였음.
+- `src/timelineControllerCore.js`
+  - 단일 호출자였던 timeline accessor factory 흡수.
+- `src/timelineController.js`
+  - 단일 호출자였던 controller contract helper 흡수.
+- `src/tuningTimelineAccessors.js`
+  - 삭제. `timelineControllerCore.js` 단일 호출자였음.
+- `src/timelineControllerContract.js`
+  - 삭제. `timelineController.js` 단일 호출자였음.
 - `docs/10_SRC_MAP.md`
   - 삭제된 파일 항목 제거.
-- `docs/12_EDITOR_FLOW.md`
-  - Setup selection flow의 삭제 파일명 참조 갱신.
 - `docs/99_CURRENT_SPRINT.md`
   - 이번 Sprint 결과 기록.
 
@@ -43,37 +42,37 @@ Tuning Panel에서만 쓰는 작은 state owner 파일을 `tuningPanel.js` 내�
 Before:
 
 ```text
-tuningPanel
-→ tuningPanelEditingState
-→ edit focus state
+timelineControllerCore
+→ tuningTimelineAccessors
+→ timelineState
 
-tuningPanel
-→ tuningPanelWorkflowSessionState
-→ workflow session state
+timelineController
+→ timelineControllerContract
+→ controller API 검증
 ```
 
 After:
 
 ```text
-tuningPanel
-→ local editing state
+timelineControllerCore
+→ timelineState
 
-tuningPanel
-→ local workflow session state
+timelineController
+→ local controller API 검증
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- Tuning Panel 단일 호출 state owner 파일 2개 제거.
-- Panel state 초기화 호출 경로 1단계 축소.
-- JS 파일 수: `src` 기준 150개 → 148개.
+- Timeline 단일 호출 helper 파일 2개 제거.
+- Timeline controller helper 호출 경로 1단계 축소.
+- JS 파일 수: `src` 기준 148개 → 146개.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
-- Selection state file은 유지.
-- Group edit state file은 유지.
-- Workflow controller 구조는 유지.
-- Panel composition/controller 구조는 유지.
+- Timeline frame/slot 계산 함수는 `timelineState.js` 유지.
+- Timeline controller core API는 유지.
+- Timeline common method contract 검증은 유지.
+- Pose/Effect timeline controller 구조는 유지.
 - 저장 구조는 변경하지 않음.
 - Runtime combat system은 변경하지 않음.
 
@@ -89,17 +88,19 @@ tuningPanel
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: `tuningPanel.js` import smoke test.
+- 통과: `timelineController.js` import smoke test.
+- 통과: `timelineControllerCore.js` import smoke test.
 - 통과: 삭제 파일 import 검색.
-  - `src`에서 `tuningPanelEditingState` 참조 없음.
-  - `src`에서 `tuningPanelWorkflowSessionState` 참조 없음.
-- 통과: `src` 파일 수 148개 확인.
+  - `src`에서 `tuningTimelineAccessors` 참조 없음.
+  - `src`에서 `timelineControllerContract` 참조 없음.
+- 통과: `src` 파일 수 146개 확인.
 - 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 아직 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- `tuningPanel.js`가 editing/workflow session state factory를 직접 포함한다.
-- `tuningPanel.js`는 이미 큰 파일이므로 추가 흡수는 신중해야 한다.
+- `timelineControllerCore.js`가 accessor factory를 직접 포함한다.
+- `timelineController.js`가 contract helper를 직접 포함한다.
+- Timeline helper는 controller 내부 개념이라 현재 파일 크기 위험은 낮음.
 
 ## 다음 Sprint 추천
 
@@ -120,21 +121,23 @@ tuningPanel
 
 ## 리팩토링 후보와 이유
 
-- `src/tuningPanel.js`
-  - 이번 Sprint에서 state owner 2개를 흡수함. 추가 흡수 시 파일 비대화 주의.
+- `src/timelineControllerCore.js`
+  - 이번 Sprint에서 accessor helper를 흡수함.
+- `src/timelineController.js`
+  - 이번 Sprint에서 contract helper를 흡수함.
 - `src/actorEffectsRenderer.js`
   - Runtime Effect render entry가 아직 별도.
 - `src/editableObjectModel.js`
   - 미사용 export 후보가 남아 있음.
 - `src/tuningInteractionObjects.js`
   - 미사용 source helper 후보가 남아 있음.
-- `src/tuningCanvasEditState.js`
-  - Part/Effect edit state가 같은 파일 안에서 더 공통화될 수 있음.
 
 ## 파일 크기 또는 구조상 주의할 점
 
 - `src/tuningNormalize.js`: 465줄. 저장 schema 책임 집중.
 - `src/puppetPlayer.js`: 440줄. Runtime state/helper 책임 집중.
-- `src/tuningPanel.js`: 421줄. 이번 Sprint에서 state owner 2개를 흡수함.
+- `src/tuningPanel.js`: 421줄. 추가 흡수 시 파일 비대화 주의.
 - `src/tuningEffectTimelineController.js`: 398줄. Effect UI/timeline 책임 집중.
 - `src/puppetPlayerRenderer.js`: 394줄. render/edit region 기록 책임 집중.
+- `src/timelineControllerCore.js`: 209줄. 이번 Sprint에서 accessor helper를 흡수함.
+- `src/timelineController.js`: 50줄. 이번 Sprint에서 contract helper를 흡수함.

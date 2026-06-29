@@ -1,6 +1,5 @@
 import { createControllerTimelineRenderer } from './timelineControllerView.js';
 import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
-import { createTimelineAccessors } from './tuningTimelineAccessors.js';
 import { createTimelineSelectionControls } from './timelineControllerSelectionControls.js';
 import { createTimelineClipboardControls } from './timelineControllerClipboardControls.js';
 import {
@@ -9,6 +8,13 @@ import {
   resetTimelineAnimationAction,
   updateTimelineSettingAction,
 } from './timelineControllerActions.js';
+import {
+  timelineFrameCountFor,
+  timelineLastSlot,
+  timelineSlotLeft,
+  timelineSlotToValue,
+  timelineValueToSlot,
+} from './timelineState.js';
 
 export function createTimelineControllerCore({
   timeline,
@@ -183,5 +189,21 @@ export function createTimelineControllerCommonMethods({
     togglePlaybackMode: playbackControls.togglePlaybackMode,
     updatePlaybackRate: playbackControls.updatePlaybackRate,
     updateSetting,
+  };
+}
+
+function createTimelineAccessors({ ensureSettings, settingsByKey, key }) {
+  const frameCount = () => {
+    ensureSettings();
+    return timelineFrameCountFor(settingsByKey(), key());
+  };
+  const lastSlot = () => timelineLastSlot(frameCount());
+
+  return {
+    frameCount,
+    lastSlot,
+    toSlot: (t) => timelineValueToSlot(t, frameCount()),
+    slotToValue: (slot) => timelineSlotToValue(slot, frameCount()),
+    slotToLeft: (slot) => timelineSlotLeft(slot, frameCount()),
   };
 }

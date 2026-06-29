@@ -1,4 +1,3 @@
-import { defineTimelineController } from './timelineControllerContract.js';
 import { createTimelineControllerCommonMethods, createTimelineControllerCore } from './timelineControllerCore.js';
 
 export function createTimelineController({ name, core }) {
@@ -17,4 +16,35 @@ export function createTimelineController({ name, core }) {
     ...coreApi,
     defineController,
   };
+}
+
+const COMMON_TIMELINE_CONTROLLER_METHODS = [
+  'addKeyframe',
+  'copyFrame',
+  'deleteKeyframe',
+  'hasFrameSelection',
+  'pasteFrame',
+  'resetAnimation',
+  'resetSelectionState',
+  'stepDuration',
+  'stopPreview',
+  'syncPreview',
+  'togglePlayback',
+  'togglePlaybackMode',
+  'updatePlaybackRate',
+  'updateSetting',
+];
+
+function defineTimelineController(name, commonMethods, extensionMethods = {}) {
+  return assertTimelineControllerContract(name, {
+    ...commonMethods,
+    ...extensionMethods,
+  });
+}
+
+function assertTimelineControllerContract(name, controller) {
+  const missing = COMMON_TIMELINE_CONTROLLER_METHODS.filter((method) => typeof controller?.[method] !== 'function');
+  if (!missing.length) return controller;
+
+  throw new Error(`${name} timeline controller is missing methods: ${missing.join(', ')}`);
 }
