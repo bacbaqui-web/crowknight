@@ -28,7 +28,7 @@
 - `src/actorTuning.js`: actor tuning helper. 수정: tuning 복제/초기화 변경. 같이: `playerDefaultTuning.js`, `tuningNormalize.js`. 위험: 중간.
 - `src/actorFrameState.js`: frame별 actor state. 수정: Runtime frame 계산 변경. 같이: `actorRenderer.js`. 위험: 중간.
 - `src/actorPlacement.js`: actor 위치 배치. 수정: spawn/preview 위치 변경. 같이: `actorFactory.js`. 위험: 중간.
-- `src/actorRenderer.js`: actor render 조립. 수정: actor draw 순서 변경. 같이: `puppetPlayerRenderer.js`, `actorHudRenderer.js`. 위험: 중간.
+- `src/actorRenderer.js`: actor render 조립. 수정: actor draw/HUD 순서 변경. 같이: `puppetPlayerRenderer.js`, HUD layout. 위험: 중간.
 
 ## Puppet Player / Runtime Geometry
 
@@ -49,7 +49,6 @@
 - `src/cameraView.js`: camera transform. 수정: screen/world 좌표계. 같이: `worldRenderer.js`. 위험: 중간.
 - `src/screenGeometry.js`: screen geometry helper. 수정: 순수 geometry helper. 같이: 호출 파일. 위험: 낮음.
 - `src/actorEffectsRenderer.js`: actor effect draw. 수정: Runtime effect 표시. 같이: `effectTimelineAdapter.js`. 위험: 중간.
-- `src/actorHudRenderer.js`: actor HUD draw. 수정: 이름/HP 표시. 같이: `characterHudLayout.js`. 위험: 중간.
 - `src/runHud.js`: game HUD. 수정: Runtime HUD/score UI. 같이: `scoreFormat.js`. 위험: 낮음.
 - `src/runSpeedMotion.js`: speed motion helper. 수정: Runtime speed visual. 같이: `puppetPlayerPose.js`. 위험: 중간.
 - `src/rollGhosts.js`: roll ghost visual. 수정: 구르기 잔상. 같이: `puppetPlayerActions.js`. 위험: 낮음.
@@ -80,7 +79,7 @@
 - `src/playerDefaultRig.js`: rig defaults. 수정: 기본 part/InteractionObject 배치. 같이: `tuningParts.js`, `tuningNormalize.js`. 위험: 높음.
 - `src/tuningNormalize.js`: tuning normalize. 수정: 저장 schema 보정. 같이: defaults, timeline adapters. 위험: 높음.
 - `src/animationFrames.js`: frame defaults/interpolation. 수정: pose/effect frame schema. 같이: timeline mutation/read files. 위험: 높음.
-- `src/characterHudLayout.js`: HUD layout. 수정: 이름/HP 위치 계산. 같이: `actorHudRenderer.js`, setup controls. 위험: 중간.
+- `src/characterHudLayout.js`: HUD layout. 수정: 이름/HP 위치 계산. 같이: actor renderer, setup controls. 위험: 중간.
 - `src/sceneSession.js`: scene session data. 수정: background/stage session schema. 같이: stage/background files. 위험: 중간.
 
 ## Setup / Fields / Selection
