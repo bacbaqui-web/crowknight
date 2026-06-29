@@ -73,10 +73,11 @@ tuningFieldValues
 
 ## 검증 방법 및 결과
 
-- 예정: `npm run check`.
-- 예정: `git diff --check`.
+- 통과: `npm run check`.
+- 통과: `git diff --check`.
 - 완료: `tuningFieldValues.js` import smoke test.
-- 예정: 삭제 파일 import 검색.
+- 통과: 삭제 파일 import 검색.
+  - `src`에서 `actionBaseTransform` 파일 import 없음.
 - 완료: `src` 파일 수 133개 확인.
 - 제한: 실제 Setup/Action/Effect field 입력 QA는 아직 수행하지 않음.
 
@@ -117,4 +118,8 @@ tuningFieldValues
 
 `tuningFieldValues.js`가 138줄이므로 관리 가능하다.
 
-하지만 남은 단일 소비자 후보 대부분은 중심 파일을 키운다. 다음부터는 실제 QA와 큰 파일 분해 기준 수립을 우선해야 한다.
+하지만 남은 단일 소비자 후보 대부분은 중심 파일을 키운다.
+
+추가 파일 수 감소는 여기서 멈추는 것이 맞다.
+
+다음부터는 실제 QA와 큰 파일 분해 기준 수립을 우선해야 한다.
