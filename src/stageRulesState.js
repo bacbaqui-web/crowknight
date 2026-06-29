@@ -4,7 +4,7 @@ import {
   KILL_SCORE_WEIGHT,
   SURVIVAL_SCORE_PER_SECOND,
   SURVIVAL_SCORE_WEIGHT,
-} from './gameConfig.js';
+} from './game_config.js';
 
 export const STAGE_RULES_VERSION = 1;
 

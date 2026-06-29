@@ -1,5 +1,5 @@
-import { GAME_KEYS } from './gameConfig.js';
-import { isTextInput } from './tuningPanelBindings.js';
+import { GAME_KEYS } from './game_config.js';
+import { isTextInput } from './editor_shortcut_helper.js';
 
 export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
   addEventListener(

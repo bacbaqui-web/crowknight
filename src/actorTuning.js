@@ -1,5 +1,5 @@
-import { ACTOR_DEFS } from './gameConfig.js';
-import { DEFAULT_PLAYER_TUNING } from './playerDefaultTuning.js';
+import { ACTOR_DEFS } from './game_config.js';
+import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import { clamp, clone } from './utils.js';
 
 export function defaultTuningFor(def) {

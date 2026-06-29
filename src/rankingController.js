@@ -1,4 +1,4 @@
-import { addRemoteRankingEntry, deleteRemoteRankingEntry, loadRemoteRankings } from './firebaseRankings.js';
+import { addRemoteRankingEntry, deleteRemoteRankingEntry, loadRemoteRankings } from './firebase_ranking_storage.js';
 import {
   bindResultScreen as bindResultScreenControls,
   bindSettingsRankingToggle,

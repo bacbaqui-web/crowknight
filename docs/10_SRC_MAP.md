@@ -1,183 +1,247 @@
 # 10_SRC_MAP.md
 
-이 문서는 어느 파일을 수정해야 하는지 찾기 위한 지도다.
+목적: AI와 사람이 필요한 JS만 빠르게 찾는 프로젝트 인덱스.
 
-## 가장 자주 수정하는 파일
+SRC_MAP은 설명서가 아니다.
 
-★★★★★
+목표:
 
-- `src/tuningPanel.js`: Tool shell과 apply/save bridge.
-- `src/tuningParts.js`: editable part source와 InteractionObject limits.
-- `src/tuningPanelPartController.js`: Setup/Action selection과 property write.
-- `src/canvasVisualValues.js`: canvas/property 표시값을 저장값으로 변환.
-- `src/tuningNormalize.js`: tuning schema normalize.
-- `src/tuningPanelCanvasController.js`: canvas pointer/edit/apply flow.
+- Codex/GPT가 전체 `src`를 읽지 않고 필요한 그룹만 읽게 한다.
+- 사람이 파일명, 기능명, 관련 JS를 빠르게 찾게 한다.
+- 토큰을 아낀다.
 
-## App / Runtime Entry
+## 네이밍 규칙
 
-- `src/main.js`: 게임 루프 조립. 수정: Runtime flow 변경. 같이: `actorFactory.js`, `worldRenderer.js`, `combatSystem.js`. 위험: 높음.
-- `src/mainDomElements.js`: Runtime DOM 조회. 수정: `index.html` id 변경. 같이: `main.js`. 위험: 낮음.
-- `src/gameConfig.js`: key/constant/path 정의. 수정: action/part/tuning field 추가. 같이: normalize, timeline, save. 위험: 높음.
-- `src/inputControls.js`: Runtime input state. 수정: 조작키 변경. 같이: `main.js`, `puppetPlayerActions.js`. 위험: 중간.
-- `src/utils.js`: 공통 helper. 수정: 작은 순수 helper 추가. 같이: 호출 파일. 위험: 중간.
+- `_engine`: 핵심 규칙 / 계산.
+- `_helper`: 기능 하나 담당.
+- `_adapter`: Action / Effect / Part 차이 연결.
+- `_controller`: 사용자 입력 연결.
+- `_renderer`: 화면 출력.
+- `_view`: 화면 구성.
+- `_state`: 현재 상태.
+- `_data`: 기본 데이터 / 저장 데이터 / 설정 데이터.
+- `_factory`: 객체 생성.
+- `_reader`: 값 읽기.
+- Value Helper: 값 변환 / clamp / base 계산 / write 보조.
 
-## Actor / Runtime State
+## 프로젝트 그룹
 
-- `src/actorFactory.js`: actor 생성. 수정: actor 초기화/apply 변경. 같이: `actorState.js`, `tuningNormalize.js`. 위험: 높음.
-- `src/actorState.js`: actor collection state. 수정: actor 목록/선택 구조 변경. 같이: `actorFactory.js`. 위험: 중간.
-- `src/actorTuning.js`: actor tuning helper. 수정: tuning 복제/초기화 변경. 같이: `playerDefaultTuning.js`, `tuningNormalize.js`. 위험: 중간.
-- `src/actorFrameState.js`: frame별 actor state. 수정: Runtime frame 계산 변경. 같이: `actorRenderer.js`. 위험: 중간.
-- `src/actorPlacement.js`: actor 위치 배치. 수정: spawn/preview 위치 변경. 같이: `actorFactory.js`. 위험: 중간.
-- `src/actorRenderer.js`: actor render 조립. 수정: actor draw/HUD/effect 순서 변경. 같이: `puppetPlayerRenderer.js`, HUD layout. 위험: 중간.
+```text
+Entry
+├─ main.js
 
-## Puppet Player / Runtime Geometry
+Editor
+├─ editor_panel.js
+├─ editor_panel_composition.js
+├─ part_editor_controller.js
+├─ transform_editor_controller.js
+├─ editor_control_setup.js
+├─ editor_panel_sync.js
+└─ editor_workflow_controller.js
 
-- `src/puppetPlayer.js`: player Runtime state. 수정: tuning 적용, Runtime action state. 같이: `combatSystem.js`, `puppetPlayerPose.js`, `interactionRegionRuntime.js`. 위험: 높음.
-- `src/interactionRegionRuntime.js`: editable object Runtime region 계산. 수정: 판정 geometry 계산, role별 region 확장. 같이: `puppetPlayer.js`, `combatSystem.js`. 위험: 높음.
-- `src/tuningInteractionObjects.js`: InteractionObject key/role/parent helper. 수정: fallback interaction source 경계. 같이: `tuningNormalize.js`, `interactionRegionRuntime.js`. 위험: 높음.
-- `src/puppetPlayerActions.js`: action 전환. 수정: Runtime action rules. 같이: `inputControls.js`, `gameConfig.js`. 위험: 중간.
-- `src/puppetPlayerPose.js`: pose transform 계산. 수정: Setup base + Action keyframe 합성. 같이: `poseTimelineAdapter.js`, `animationFrames.js`. 위험: 높음.
-- `src/puppetPlayerRenderer.js`: rig part 렌더와 edit region 기록. 수정: part/InteractionObject render/edit region. 같이: `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`. 위험: 높음.
-- `src/puppetPlayerGeometry.js`: part geometry 계산. 수정: 좌표계/anchor/quad 계산. 같이: `puppetPlayerRenderer.js`, `editHandleGeometry.js`. 위험: 높음.
-- `src/puppetPlayerEditRegions.js`: editor hit region 기록. 수정: image-less part region 추가. 같이: `puppetPlayerRenderer.js`, `tuningEditHandleGeometry.js`. 위험: 높음.
-- `src/puppetPlayerDebug.js`: player debug helper. 수정: debug 표시. 같이: puppet renderer. 위험: 낮음.
+Runtime
+├─ actor_factory.js
+├─ actor_runtime_engine.js
+├─ actor_pose_helper.js
+├─ actor_renderer.js
+├─ actor_action_helper.js
+├─ actor_canvas_renderer.js
+├─ combat_engine.js
+└─ world_renderer.js
 
-## Rendering / World
+Timeline
+├─ Engine
+│  ├─ timeline_controller.js
+│  └─ timeline_engine.js
+├─ Helper
+│  ├─ timeline_command_helper.js
+│  ├─ timeline_drag_helper.js
+│  ├─ timeline_selection_helper.js
+│  ├─ timeline_preview_helper.js
+│  ├─ timeline_action_helper.js
+│  ├─ timeline_control_helper.js
+│  ├─ timeline_drag_control_helper.js
+│  ├─ timeline_clipboard_helper.js
+│  ├─ timeline_settings_helper.js
+│  ├─ timeline_panel_sync_helper.js
+│  └─ timeline_playback_helper.js
+├─ Adapter
+│  ├─ timeline_adapter_contract.js
+│  ├─ timeline_pose_adapter.js
+│  └─ timeline_effect_adapter.js
+├─ Controller
+│  ├─ timeline_pose_controller.js
+│  └─ timeline_effect_controller.js
+├─ View
+│  ├─ timeline_view.js
+│  ├─ timeline_dom_helper.js
+│  ├─ timeline_pose_panel_view.js
+│  ├─ timeline_effect_panel_view.js
+│  └─ timeline_renderer.js
+├─ State
+│  └─ timeline_state.js
+├─ Reader
+│  └─ timeline_frame_reader.js
+└─ timeline_keyframe_helper.js
 
-- `src/worldRenderer.js`: world draw 조립. 수정: Runtime draw pipeline. 같이: `backgroundRenderer.js`, `actorRenderer.js`. 위험: 중간.
-- `src/backgroundRenderer.js`: background draw. 수정: 배경 렌더/transform. 같이: `backgroundPanelController.js`, `psdBackgroundRuntime.js`. 위험: 중간.
-- `src/cameraView.js`: camera transform. 수정: screen/world 좌표계. 같이: `worldRenderer.js`. 위험: 중간.
-- `src/runHud.js`: game HUD. 수정: Runtime HUD/score UI. 같이: `scoreFormat.js`. 위험: 낮음.
-- `src/runSpeedMotion.js`: speed motion helper. 수정: Runtime speed visual. 같이: `puppetPlayerPose.js`. 위험: 중간.
-- `src/rollGhosts.js`: roll ghost visual. 수정: 구르기 잔상. 같이: `puppetPlayerActions.js`. 위험: 낮음.
-- `src/particleEffects.js`: particle Runtime. 수정: particle 효과. 같이: main render. 위험: 중간.
+Save
+├─ project_state_controller.js
+├─ project_storage_helper.js
+├─ firebase_asset_storage.js
+└─ firebase_ranking_storage.js
 
-## Combat / Ranking
+Assets
+├─ asset_loader_helper.js
+├─ asset_refresh_helper.js
+├─ psd_background_helper.js
+└─ background_renderer.js
 
-- `src/combatSystem.js`: Runtime combat. 수정: damage/overlap/reaction geometry. 같이: `puppetPlayer.js`. 위험: 높음.
-- `src/scoreFormat.js`: score formatting. 수정: score text. 같이: `runHud.js`, ranking UI. 위험: 낮음.
-- `src/rankingController.js`: ranking flow. 수정: ranking load/save. 같이: `firebaseRankings.js`, `rankingUi.js`. 위험: 중간.
-- `src/rankingUi.js`: ranking UI. 수정: ranking DOM/canvas 표시. 같이: `rankingController.js`, main render. 위험: 중간.
+Data
+├─ game_config.js
+├─ player_default_rig_data.js
+├─ player_default_tuning_data.js
+├─ project_data_normalizer.js
+├─ animation_frame_data.js
+└─ stageRulesState.js
+```
 
-## Assets / Save / Firebase
+## 기능 그룹
 
-- `src/assetLoaders.js`: asset load helper. 수정: 이미지/PSD 로딩. 같이: asset runtime files. 위험: 중간.
-- `src/assetRefreshRuntime.js`: editor asset refresh/upload. 수정: 캐릭터 PSD/Effect asset 처리. 같이: `tuningPanelAssetActions.js`. 위험: 중간.
-- `src/psdBackgroundRuntime.js`: background PSD asset. 수정: 배경 PSD 처리. 같이: `backgroundPanelController.js`. 위험: 중간.
-- `src/saveStateStorage.js`: local save. 수정: local 저장 키/형식. 같이: `projectStateController.js`. 위험: 높음.
-- `src/projectStateController.js`: project save/load. 수정: 저장/불러오기 흐름. 같이: Firebase/storage files. 위험: 높음.
-- `src/firebaseConfig.js`: Firebase config. 수정: Firebase 설정. 같이: Firebase files. 위험: 중간.
-- `src/firebaseStorageAssets.js`: Firebase asset storage. 수정: asset upload/download. 같이: asset runtime files. 위험: 중간.
-- `src/firebaseRankings.js`: Firebase rankings. 수정: ranking remote sync. 같이: `rankingController.js`. 위험: 낮음.
+### Selection
 
-## Defaults / Normalize / Data
+- 역할: 현재 편집 대상을 결정.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `selection_palette.js`, `part_editor_controller.js`, `selection_state.js`, `panel_edit_state.js`.
+- 주의: Selection과 EditTarget이 달라지면 Handle이 틀어진다.
 
-- `src/playerDefaultTuning.js`: tuning defaults. 수정: actor 기본 schema. 같이: `tuningNormalize.js`, `playerDefaultRig.js`. 위험: 높음.
-- `src/playerDefaultRig.js`: rig defaults. 수정: 기본 part/InteractionObject 배치. 같이: `tuningParts.js`, `tuningNormalize.js`. 위험: 높음.
-- `src/tuningNormalize.js`: tuning normalize. 수정: 저장 schema 보정. 같이: defaults, timeline adapters. 위험: 높음.
-- `src/animationFrames.js`: frame defaults/interpolation. 수정: pose/effect frame schema. 같이: timeline mutation/read files. 위험: 높음.
-- `src/characterHudLayout.js`: HUD layout. 수정: 이름/HP 위치 계산. 같이: actor renderer, setup controls. 위험: 중간.
-- `src/sceneSession.js`: scene session data. 수정: background/stage session schema. 같이: stage/background files. 위험: 중간.
+### Transform Editor (구 Canvas)
 
-## Setup / Fields / Selection
+- 역할: 화면에서 editable object의 transform drag를 처리.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `transform_editor_controller.js`, `transform_edit_state.js`, `transform_drag_helper.js`, `transform_drag_factory.js`, `transform_refresh_helper.js`, `transform_drag_apply_helper.js`, `transform_value_helper.js`.
+- 주의: Property와 같은 저장 규칙을 사용한다.
 
-- `src/tuningParts.js`: editable part source. 수정: part/InteractionObject source/limits. 같이: `tuningInteractionObjects.js`, field files. 위험: 높음.
-- `src/tuningSelectionPalette.js`: Setup palette definitions. 수정: 선택 대상/배치. 같이: labels, part controller. 위험: 중간.
-- `src/tuningLabels.js`: UI labels. 수정: 표시명 변경. 같이: palette/field views. 위험: 낮음.
-- `src/tuningFieldGroups.js`: property group definitions. 수정: property field 추가/제거. 같이: field values, controllers. 위험: 중간.
-- `src/tuningFieldValues.js`: property display/store 변환. 수정: Part/Pose/Effect 숫자 표시값/저장값. 같이: canvas visual values. 위험: 높음.
-- `src/tuningControlValueTransforms.js`: control clamp/transform. 수정: scalar 입력 범위. 같이: control setup. 위험: 중간.
-- `src/tuningNumberInputs.js`: legacy numeric helper. 수정: 기존 number input. 같이: `tuningNumericInput.js`. 위험: 중간.
-- `src/tuningNumericInput.js`: range/number UX. 수정: 공통 numeric input. 같이: setup controls, scrub controls. 위험: 중간.
-- `src/tuningMotionFieldRows.js`: motion row definitions. 수정: Action motion fields. 같이: pose controller/settings. 위험: 중간.
-- `src/tuningScrubControls.js`: scrub property inputs. 수정: property input UI. 같이: numeric helper, field groups. 위험: 중간.
+### Property
 
-## Tool Shell / Panel
+- 역할: 선택 대상의 입력값 표시와 저장.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `property_field_groups.js`, `property_value_helper.js`, `property_scrub_helper.js`, `property_numeric_input_helper.js`.
+- 주의: 표시값과 저장값이 어긋나면 Transform Editor 결과와 달라진다.
 
-- `src/tuningPanel.js`: Tool shell. 수정: 최상위 조립/apply/save bridge. 같이: composition, sync, controllers. 위험: 높음.
-- `src/tuningPanelBootstrap.js`: panel bootstrap. 수정: panel open/close. 같이: `tuningPanel.js`. 위험: 낮음.
-- `src/tuningPanelComposition.js`: controller composition. 수정: controller 생성/연결. 같이: 각 controller. 위험: 중간.
-- `src/tuningPanelDom.js`: panel DOM helpers. 수정: `setting.html` id/class. 같이: views/controllers. 위험: 중간.
-- `src/tuningPanelBindings.js`: panel binding wrapper. 수정: high-level event binding. 같이: control bindings. 위험: 중간.
-- `src/tuningPanelControlBindings.js`: control events. 수정: 버튼/입력 event 연결. 같이: control setup, controllers. 위험: 중간.
-- `src/tuningPanelControlSetup.js`: setup controls. 수정: 캐릭터/HP/scale/HUD controls. 같이: numeric input, field paths. 위험: 중간.
-- `src/tuningPanelAssetActions.js`: asset actions. 수정: upload/download. 같이: asset runtime, project state. 위험: 중간.
-- `src/tuningPanelShortcuts.js`: shortcuts. 수정: keyboard shortcut. 같이: timeline/selection controllers. 위험: 중간.
-- `src/tuningPanelDebugView.js`: debug view. 수정: setting debug UI. 같이: settings debug renderer. 위험: 낮음.
-- `src/settingsPanelState.js`: panel section state helper. 수정: open section/edit context 판단. 같이: workflow controller. 위험: 중간.
+### Handle
 
-## Panel State / Workflow
+- 역할: Move/Resize/Rotate handle 위치와 표시.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `transform_handle_geometry.js`, `edit_handle_geometry_helper.js`, `edit_handle_renderer.js`, `edit_handle_drawing_helper.js`.
+- 주의: Handle source와 render source가 같아야 한다.
 
-- `src/tuningPanelSelectionState.js`: selection state owner. 수정: active selection 값. 같이: part controller. 위험: 중간.
-- `src/tuningPanelGroupEditState.js`: group edit state. 수정: multi-part edit values. 같이: group pose edit. 위험: 중간.
-- `src/tuningPanelUndoState.js`: undo state. 수정: undo snapshot 경계. 같이: apply/save controllers. 위험: 높음.
-- `src/tuningPanelWorkflow.js`: workflow metadata. 수정: session/section mapping. 같이: workflow controller/navigation. 위험: 중간.
-- `src/tuningPanelWorkflowNavigation.js`: session nav. 수정: workflow navigation UI. 같이: workflow metadata. 위험: 중간.
-- `src/tuningPanelWorkflowController.js`: workflow lifecycle. 수정: session enter/exit/filter/sync. 같이: panel sync. 위험: 중간.
-- `src/tuningPanelSync.js`: panel sync. 수정: actor/tuning UI sync. 같이: controllers/views. 위험: 높음.
-- `src/tuningPanelLifecycleController.js`: actor lifecycle. 수정: actor select/add/delete/name. 같이: actor state, apply/save. 위험: 중간.
+### Transform
 
-## Canvas / Edit Handles
+- 역할: x/y, ax/ay, w/h, rot 공통 규칙.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `editable_object_model_helper.js`, `transform_drag_apply_helper.js`, `transform_value_helper.js`, `property_value_helper.js`.
+- 주의: 모든 editable object가 같은 transform 의미를 써야 한다.
 
-- `src/editableObjectModel.js`: editable object 순수 계산. 수정: transform/appearance/interaction 계산. 같이: handle, renderer, drag apply. 위험: 중간.
-- `src/tuningPanelPartController.js`: part/property controller. 수정: Setup/Action selection/property write. 같이: field groups/values, timeline. 위험: 높음.
-- `src/tuningPanelLayerOrder.js`: layer order UI. 수정: layer drag reorder. 같이: rig/layer data. 위험: 중간.
-- `src/tuningPanelCanvasController.js`: canvas controller. 수정: pointer/edit/apply flow. 같이: canvas drag files, handle geometry. 위험: 높음.
-- `src/tuningCanvasEditState.js`: edit target state. 수정: drag target/base 선택. 같이: part sources, timeline. 위험: 높음.
-- `src/tuningCanvasDragFactory.js`: drag object factory. 수정: drag state shape. 같이: pointer drag, drag apply. 위험: 중간.
-- `src/tuningCanvasPointerDrag.js`: pointer drag lifecycle. 수정: pointer UX/release. 같이: canvas controller, drag apply. 위험: 높음.
-- `src/canvasDragApply.js`: drag delta apply. 수정: move/resize/rotate 계산. 같이: canvas values, drag math. 위험: 높음.
-- `src/canvasDragMath.js`: drag math. 수정: 좌표/벡터 math. 같이: drag apply. 위험: 중간.
-- `src/canvasDragState.js`: drag start values. 수정: start visual/store pick. 같이: canvas values. 위험: 중간.
-- `src/canvasLayout.js`: canvas layout. 수정: canvas size/layout. 같이: main/settings canvas code. 위험: 낮음.
-- `src/canvasVisualValues.js`: canvas value write. 수정: visual value → 저장값. 같이: field values, part sources. 위험: 높음.
-- `src/editHandleGeometry.js`: handle geometry. 수정: handle 위치/크기/hit test. 같이: tuning handle geometry. 위험: 높음.
-- `src/tuningEditHandleGeometry.js`: current handle source. 수정: focus별 handle source 선택. 같이: InteractionObject parts, edit handle geometry. 위험: 높음.
-- `src/editHandleDrawing.js`: handle draw style. 수정: cursor/style. 같이: handle renderer. 위험: 낮음.
-- `src/editHandleRenderer.js`: handle render. 수정: canvas handle 표시. 같이: handle geometry. 위험: 중간.
-- `src/panelEditState.js`: selection helper. 수정: focus transition helper. 같이: part controller. 위험: 낮음.
+### Timeline
 
-## Action / Timeline
+- 역할: 시간에 따른 값 저장.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `timeline_controller.js`, `timeline_engine.js`, `timeline_state.js`, `timeline_command_helper.js`, `timeline_drag_helper.js`, `timeline_selection_helper.js`, `timeline_preview_helper.js`, `timeline_pose_adapter.js`, `timeline_effect_adapter.js`, `timeline_pose_controller.js`, `timeline_effect_controller.js`, `timeline_view.js`, `timeline_renderer.js`, `timeline_frame_reader.js`, `timeline_keyframe_helper.js`.
+- 주의: Action/Effect 모두 영향. 공통 engine에 전용 예외를 넣지 않는다.
 
-- `src/tuningPoseTimelineController.js`: Action timeline controller. 수정: Action Timeline UX/property. 같이: pose adapter, timeline core. 위험: 높음.
-- `src/poseTimelineAdapter.js`: poseOffsets adapter. 수정: Action data read/write. 같이: timeline mutations/read, game config. 위험: 높음.
-- `src/tuningPoseTimelinePanelView.js`: Action timeline view. 수정: toolbar/settings UI. 같이: pose controller. 위험: 중간.
-- `src/tuningGroupPoseEdit.js`: group pose edit. 수정: multi-part Action transform. 같이: canvas controller, group state. 위험: 중간.
-- `src/tuningPanelTimelines.js`: timeline composition. 수정: pose/effect timeline 생성. 같이: timeline controllers. 위험: 중간.
-- `src/tuningTimelineDom.js`: timeline DOM helper. 수정: timeline DOM query/render helper. 같이: timeline renderer. 위험: 낮음.
-- `src/tuningTimelinePanelSync.js`: timeline panel sync. 수정: timeline UI sync. 같이: timeline controllers. 위험: 중간.
-- `src/timelineControllerControls.js`: timeline controller controls. 수정: selection/clipboard/playback controls. 같이: controller core/actions. 위험: 중간.
-- `src/tuningTimelinePreview.js`: timeline preview. 수정: Action/Effect preview clock. 같이: pose/effect controllers. 위험: 중간.
-- `src/tuningTimelineSettings.js`: timeline settings write. 수정: duration/playback settings. 같이: adapters/normalize. 위험: 중간.
-- `src/timelineAdapterContract.js`: adapter contract. 수정: common timeline API. 같이: pose/effect adapters. 위험: 높음.
-- `src/timelineController.js`: timeline factory. 수정: common timeline behavior. 같이: all timeline files. 위험: 높음.
-- `src/timelineControllerCore.js`: timeline core wrapper. 수정: core state/action wrapper. 같이: timeline controller. 위험: 높음.
-- `src/timelineControllerActions.js`: timeline mutation actions. 수정: add/delete/move flow. 같이: mutations, undo. 위험: 높음.
-- `src/timelineControllerView.js`: timeline view binding. 수정: timeline DOM events. 같이: renderer, drag controls. 위험: 중간.
-- `src/timelineDragControls.js`: keyframe drag. 수정: timeline keyframe drag UX. 같이: controller view/actions. 위험: 중간.
-- `src/timelineFrameClipboard.js`: frame clipboard. 수정: pose/effect copy/paste payload. 같이: mutations/adapters. 위험: 중간.
-- `src/timelineFrameRead.js`: frame read. 수정: current/interpolated frame read. 같이: animation frames. 위험: 높음.
-- `src/timelineKeyframeMutations.js`: keyframe mutations. 수정: keyframe write/reset schema. 같이: adapters/normalize. 위험: 높음.
-- `src/timelineRenderer.js`: timeline render. 수정: track/keyframe DOM. 같이: controller view. 위험: 중간.
-- `src/timelineState.js`: timeline state. 수정: selection/playhead state. 같이: timeline core. 위험: 중간.
+### InteractionObject
 
-## Effect Editor
+- 역할: 공격/피격/충돌/방어 같은 상호작용 영역.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `interaction_object_editor.js`, `interaction_region_engine.js`, `combat_engine.js`, `editable_object_model_helper.js`.
+- 주의: Runtime 계산값을 Editor source처럼 쓰지 않는다.
 
-- `src/tuningEffectTimelineController.js`: Effect timeline controller. 수정: Effect UX/property. 같이: effect adapter/view/assets. 위험: 높음.
-- `src/effectTimelineAdapter.js`: effectOffsets adapter. 수정: Effect data read/write. 같이: mutations/read. 위험: 높음.
-- `src/tuningEffectTimelinePanelView.js`: Effect view. 수정: Effect toolbar/settings/image UI. 같이: effect controller. 위험: 중간.
+### Save
 
-## Background / Stage
+- 역할: 프로젝트 저장/불러오기.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `project_state_controller.js`, `project_storage_helper.js`, `firebase_asset_storage.js`, `firebase_ranking_storage.js`.
+- 주의: Project save와 asset refresh를 섞지 않는다.
 
-- `src/backgroundPanelController.js`: Background panel. 수정: background edit/upload. 같이: scene session, background view. 위험: 중간.
-- `src/backgroundPanelView.js`: Background view. 수정: background DOM. 같이: background controller. 위험: 낮음.
-- `src/stageRulesState.js`: StageRules state/schema. 수정: StageRules defaults/normalize. 같이: selectors/controller. 위험: 중간.
-- `src/stageRulesController.js`: StageRules controller. 수정: Editor API/read helpers. 같이: state/panel controller. 위험: 중간.
-- `src/stageRulesPanelRenderer.js`: Stage panel renderer. 수정: Stage panel definitions/render. 같이: controller. 위험: 중간.
-- `src/stageRulesPanelController.js`: Stage panel binding. 수정: rendered panel event binding. 같이: controller/definitions. 위험: 중간.
+### Runtime
 
-## Preview / Playback
+- 역할: Editor 데이터를 게임 실행 결과로 계산.
+- 공통 여부: 🟦 공통 경계.
+- 관련 JS: `main.js`, `actor_factory.js`, `actor_runtime_engine.js`, `actor_pose_helper.js`, `actor_renderer.js`, `actor_canvas_renderer.js`, `combat_engine.js`.
+- 주의: Runtime은 Editor 원본을 직접 수정하지 않는다.
 
-- `src/previewState.js`: preview object. 수정: preview state shape. 같이: timeline preview. 위험: 낮음.
-- `src/tuningPlayback.js`: tuning playback helper. 수정: tool playback behavior. 같이: timeline preview. 위험: 중간.
-- `src/tuningRunMotionLink.js`: run motion link. 수정: tuning motion → Runtime motion bridge. 같이: motion fields, runtime motion. 위험: 중간.
+### Data
+
+- 역할: 기본값, normalize, schema, frame data.
+- 공통 여부: 🟦 공통 경계.
+- 관련 JS: `game_config.js`, `player_default_rig_data.js`, `player_default_tuning_data.js`, `project_data_normalizer.js`, `animation_frame_data.js`.
+- 주의: 저장 구조 변경은 별도 Sprint에서만 한다.
+
+### Stage
+
+- 역할: Stage 편집.
+- 공통 여부: 🟨 전용 구현.
+- 관련 JS: `stageRulesController.js`, `stageRulesPanelController.js`, `stageRulesPanelRenderer.js`, `stageRulesState.js`.
+- 주의: 아직 Common Editing에 흡수 안 됨.
+
+### HUD
+
+- 역할: Runtime HUD와 이름/HP 표시.
+- 공통 여부: 🟨 전용 구현.
+- 관련 JS: `characterHudLayout.js`, `runHud.js`, `rankingUi.js`, `rankingController.js`.
+- 주의: editable object 규칙과 완전히 통합되지 않았다.
+
+### Background
+
+- 역할: 배경 편집과 렌더.
+- 공통 여부: 🟨 전용 구현.
+- 관련 JS: `background_panel_controller.js`, `background_panel_view.js`, `background_renderer.js`, `psd_background_helper.js`.
+- 주의: Stage/Asset 흐름과 연결되어 있어 공통화 전 설계 필요.
+
+### Group Edit
+
+- 역할: 여러 파츠를 함께 편집.
+- 공통 여부: 🟨 전용 구현.
+- 관련 JS: `group_pose_editor.js`, `group_edit_state.js`.
+- 주의: screen-space 예외가 남아 있다.
+
+## 큰 파일
+
+| 파일                            | 줄 수 | 중심               | 주의                          |
+| ------------------------------- | ----: | ------------------ | ----------------------------- |
+| `background_renderer.js`        |   482 | Background render  | 더 흡수 금지                  |
+| `project_data_normalizer.js`    |   465 | Normalize          | 저장 구조 변경 주의           |
+| `actor_runtime_engine.js`       |   440 | Runtime player     | 더 흡수 금지                  |
+| `editor_panel.js`               |   421 | Editor shell       | controller 연결만 유지        |
+| `actor_renderer.js`             |   394 | Runtime render     | Editor target 기록 경계 주의  |
+| `main.js`                       |   380 | Entry / loop       | 책임 추가 금지                |
+| `timeline_effect_controller.js` |   341 | Effect timeline    | 추가 흡수보다 helper 분리     |
+| `player_default_rig_data.js`    |   336 | Default rig        | 저장 구조 변경 시 별도 Sprint |
+| `part_editor_controller.js`     |   332 | Selection/Property | 무리한 추가 금지              |
+| `combat_engine.js`              |   330 | Runtime combat     | Editor source와 분리          |
+| `timeline_pose_controller.js`   |   320 | Action timeline    | 추가 흡수보다 helper 분리     |
+
+## 보류 파일
+
+이번 마지막 Rename 정리 Sprint에서 보류한 파일.
+
+- Stage: `stageRulesController.js`, `stageRulesPanelController.js`, `stageRulesPanelRenderer.js`, `stageRulesState.js`
+  - 이유: Stage는 사용자 지시에 따라 마지막 단계에서 다룬다.
+- HUD/Ranking: `characterHudLayout.js`, `runHud.js`, `rankingUi.js`, `rankingController.js`
+  - 이유: HUD는 이번 rename 범위에서 제외.
+- Runtime 보조: `actorFrameState.js`, `actorPlacement.js`, `actorState.js`, `actorTuning.js`, `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`, `puppetPlayerDebug.js`
+  - 이유: 역할 재분류가 필요하다. Runtime 동작 민감 파일은 별도 작은 Sprint에서 검토.
+- Canvas/DOM 보조: `canvasDragMath.js`, `canvasDragState.js`, `canvasLayout.js`, `cameraView.js`, `inputControls.js`, `mainDomElements.js`
+  - 이유: 이번 Sprint 후보가 아니며 함수/DOM 이름과 같이 검토해야 한다.
+- 기타 전용 파일: `particleEffects.js`, `runSpeedMotion.js`, `rollGhosts.js`, `scoreFormat.js`, `firebaseConfig.js`
+  - 이유: 현재 기능별 전용 구현. 무리하게 suffix를 붙이지 않는다.
+
+## 검색 힌트
+
+- `transform_value_helper`: Transform Editor 저장값 변환.
+- `transform_refresh_helper`: Transform Editor drag 후 context별 반영/렌더 갱신.
+- `timeline_frame_reader`: 현재 frame 읽기.
+- `property_value_helper`: Property 표시값/저장값 변환.
+- `edit_handle_geometry_helper`: Handle 위치 계산.
+- `interaction_region_engine`: Runtime 상호작용 영역 계산.
+- `project_data_normalizer`: 저장 데이터 normalize.

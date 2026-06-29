@@ -1,4 +1,4 @@
-import { KILL_SCORE, KILL_SCORE_WEIGHT, SURVIVAL_SCORE_PER_SECOND, SURVIVAL_SCORE_WEIGHT } from './gameConfig.js';
+import { KILL_SCORE, KILL_SCORE_WEIGHT, SURVIVAL_SCORE_PER_SECOND, SURVIVAL_SCORE_WEIGHT } from './game_config.js';
 import { formatSurvivalTime } from './scoreFormat.js';
 
 export function getRunScore(survivalTime, kills) {

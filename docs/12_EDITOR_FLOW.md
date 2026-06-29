@@ -15,13 +15,13 @@ After Effects Transform model
 
 ```text
 Selection Palette click
-→ tuningPanelPartController.selectPickerPart('part', partKey)
-→ tuningPanelSelectionState / tuningPanel local editing state
-→ tuningPanelPartController.renderPartFields()
-→ tuningParts.partEditSources(tuning)
-→ canvasVisualValues.updateRigPartValue()
+→ part_editor_controller.selectPickerPart('part', partKey)
+→ selection_state / editor_panel local editing state
+→ part_editor_controller.renderPartFields()
+→ part_source_registry.partEditSources(tuning)
+→ transform_value_helper.updateRigPartValue()
 → tuning.rig[partKey]
-→ tuningPanel.applySelected()
+→ editor_panel.applySelected()
 → actor.player.applyTuning(actor.tuning)
 → saveState
 ```
@@ -30,12 +30,12 @@ Canvas drag:
 
 ```text
 pointerdown
-→ tuningPanelCanvasController
-→ tuningCanvasPointerDrag
-→ tuningCanvasEditState.canvasPartEditState()
-→ tuningCanvasDragFactory.createCanvasPartDrag()
-→ canvasDragApply.applyCanvasPartDrag()
-→ canvasVisualValues.setCanvasVisualValue()
+→ transform_editor_controller
+→ transform_drag_helper
+→ transform_edit_state.canvasPartEditState()
+→ transform_drag_factory.createCanvasPartDrag()
+→ transform_drag_apply_helper.applyCanvasPartDrag()
+→ transform_value_helper.setCanvasVisualValue()
 → tuning.rig[partKey]
 → applySelected
 ```
@@ -44,8 +44,8 @@ pointerdown
 
 ```text
 Selection Palette fallback interaction object click
-→ tuningPanelPartController.selectPickerPart('part', boxKey)
-→ tuningParts.partEditSources(tuning)
+→ part_editor_controller.selectPickerPart('part', boxKey)
+→ part_source_registry.partEditSources(tuning)
 → tuning.rig[boxKey]
 ```
 
@@ -57,9 +57,9 @@ drawPuppetImagePart(parent)
 → drawPuppetImageLessRectPart()
 → recordPuppetRectPart()
 → player.editHandles[boxKey]
-→ tuningEditHandleGeometry()
-→ editHandleGeometry.createPartEditHandleGeometry()
-→ editHandleRenderer
+→ transform_handle_geometry()
+→ edit_handle_geometry_helper.createPartEditHandleGeometry()
+→ edit_handle_renderer
 ```
 
 저장/Runtime 계산:
@@ -68,7 +68,7 @@ drawPuppetImagePart(parent)
 canvas/property edit
 → tuning.rig[boxKey]
 → actor.player.applyTuning(actor.tuning)
-→ interactionRegionRuntime
+→ interaction_region_engine
 → saveState
 ```
 
@@ -76,19 +76,19 @@ canvas/property edit
 
 ```text
 Action select
-→ tuningPanelPartController.handlePoseChange()
-→ tuningPoseTimelineController
-→ poseTimelineAdapter
+→ part_editor_controller.handlePoseChange()
+→ timeline_pose_controller
+→ timeline_pose_adapter
 ```
 
 Frame 선택:
 
 ```text
 Timeline click
-→ timelineController
-→ timelineState
-→ poseTimelineAdapter.currentFrameValue()
-→ timelineFrameRead.currentPoseTimelineFrame()
+→ timeline_controller
+→ timeline_state
+→ timeline_pose_adapter.currentFrameValue()
+→ timeline_frame_reader.currentPoseTimelineFrame()
 → tuning.poseOffsets[poseKey][partKey]
 ```
 
@@ -96,10 +96,10 @@ Property edit:
 
 ```text
 property input
-→ tuningPoseTimelineController.updateOffset()
-→ tuningFieldValues.poseFrameValueFromInput()
-→ poseTimelineAdapter.writeFrameValue()
-→ timelineKeyframeMutations.writePoseTimelineFrameValue()
+→ timeline_pose_controller.updateOffset()
+→ property_value_helper.poseFrameValueFromInput()
+→ timeline_pose_adapter.writeFrameValue()
+→ timeline_keyframe_helper.writePoseTimelineFrameValue()
 → tuning.poseOffsets[poseKey][partKey]
 → applySelected
 ```
@@ -112,21 +112,21 @@ Action object select
 → poseTimeline.writeFrameValue(partKey, 'active', value)
 → poseTimeline.writeFrameValue(partKey, interaction setting, value)
 → tuning.poseOffsets[poseKey][partKey]
-→ animationFrames / puppetPlayerGeometry stepped frame value
+→ animation_frame_data / puppetPlayerGeometry stepped frame value
 → actor.player.getPartOffset(partKey)
 ```
 
 Runtime attack:
 
 ```text
-combatSystem
+combat_engine
 → attacker.player.attackInteractionRegions
-→ interactionRegionRuntime.createActiveInteractionRegions(player, 'attack')
+→ interaction_region_engine.createActiveInteractionRegions(player, 'attack')
 → active + attack object의 recorded region
 → Runtime attack regions
-→ combatSystem.interactionRegionsOverlap()
+→ combat_engine.interactionRegionsOverlap()
 → attackInteractionRegion.reaction
-→ combatSystem.applyHitReaction()
+→ combat_engine.applyHitReaction()
 ```
 
 Runtime collision / guard:
@@ -134,7 +134,7 @@ Runtime collision / guard:
 ```text
 active + collision object
 → player.collisionInteractionRegions
-→ combatSystem resolveCollisionInteractions()
+→ combat_engine resolveCollisionInteractions()
 ```
 
 ```text
@@ -147,10 +147,10 @@ Canvas drag:
 
 ```text
 pointer drag
-→ tuningPanelCanvasController
-→ tuningCanvasEditState.canvasPartEditState(context: 'pose')
-→ canvasDragApply
-→ canvasVisualValues.setCanvasVisualValue()
+→ transform_editor_controller
+→ transform_edit_state.canvasPartEditState(context: 'pose')
+→ transform_drag_apply_helper
+→ transform_value_helper.setCanvasVisualValue()
 → poseTimeline.writeFrameValue()
 → tuning.poseOffsets[poseKey][partKey]
 ```
@@ -159,9 +159,9 @@ pointer drag
 
 ```text
 Effect select / Timeline click
-→ tuningEffectTimelineController
-→ effectTimelineAdapter
-→ timelineFrameRead.currentEffectTimelineFrame()
+→ timeline_effect_controller
+→ timeline_effect_adapter
+→ timeline_frame_reader.currentEffectTimelineFrame()
 → tuning.effectOffsets[effectKey]
 ```
 
@@ -169,9 +169,9 @@ Property/canvas edit:
 
 ```text
 input or pointer drag
-→ tuningEffectTimelineController.writeFrameValue()
-→ effectTimelineAdapter.writeFrameValue()
-→ timelineKeyframeMutations.writeEffectTimelineFrameValue()
+→ timeline_effect_controller.writeFrameValue()
+→ timeline_effect_adapter.writeFrameValue()
+→ timeline_keyframe_helper.writeEffectTimelineFrameValue()
 → tuning.effectOffsets[effectKey]
 → applySelected
 ```
@@ -180,10 +180,10 @@ Effect interaction:
 
 ```text
 tuning.effectOffsets[effectKey].active / attack / hurt / collision / guard
-→ actorRenderer.drawAttackTrail()
+→ actor_canvas_renderer.drawAttackTrail()
 → player.hitRegions[effect:effectKey].interaction
-→ interactionRegionRuntime.createActiveInteractionRegions()
-→ combatSystem
+→ interaction_region_engine.createActiveInteractionRegions()
+→ combat_engine
 ```
 
 ## Action Object Interaction 편집
@@ -199,19 +199,19 @@ Action select
 
 연결 지점:
 
-- `gameConfig.POSE_PART_KEYS`
-- `tuningNormalize.normalizePoseOffsets()`
-- `poseTimelineAdapter.source(part)`
-- `timelineKeyframeMutations`
-- `tuningFieldGroups.posePropertyGroups()`
-- `tuningEditHandleGeometry`
+- `game_config.POSE_PART_KEYS`
+- `project_data_normalizer.normalizePoseOffsets()`
+- `timeline_pose_adapter.source(part)`
+- `timeline_keyframe_helper`
+- `property_field_groups.posePropertyGroups()`
+- `transform_handle_geometry`
 
 ## Fallback Attack Region Preview
 
 ```text
 activeAttackSettingsKey()
-→ tuningPanelDebugView.drawTuningPanelDebugBoxes()
-→ tuningPanelDebugView.drawFallbackAttackRegionPreview()
+→ editor_debug_view.drawTuningPanelDebugBoxes()
+→ editor_debug_view.drawFallbackAttackRegionPreview()
 → player.editHandles.attackInteractionObject.target
 → actor.player.getPartOffset('attackInteractionObject').active
 ```
@@ -227,12 +227,12 @@ activeAttackSettingsKey()
 
 ```text
 pointer event
-→ tuningPanelCanvasController
-→ tuningCanvasPointerDrag
-→ tuningCanvasEditState
-→ tuningCanvasDragFactory
-→ canvasDragApply
-→ canvasVisualValues
+→ transform_editor_controller
+→ transform_drag_helper
+→ transform_edit_state
+→ transform_drag_factory
+→ transform_drag_apply_helper
+→ transform_value_helper
 → target data
 → applySelected
 → saveState

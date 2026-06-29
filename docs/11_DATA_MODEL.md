@@ -71,7 +71,7 @@ Runtime 공격 효과:
 ```text
 tuning.poseOffsets[poseKey][partKey].stun/knockbackX/knockbackY/deathBurst
 → actor.player.attackInteractionRegion.reaction
-→ combatSystem.applyHitReaction()
+→ combat_engine.applyHitReaction()
 ```
 
 Runtime mirror field는 저장하지 않는다.

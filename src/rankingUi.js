@@ -1,4 +1,4 @@
-import { RANKING_KEY } from './gameConfig.js';
+import { RANKING_KEY } from './game_config.js';
 import { formatSurvivalTime } from './scoreFormat.js';
 
 export function drawRankingHud(ctx, { rankings, battleActive, lastRecordedScore }) {

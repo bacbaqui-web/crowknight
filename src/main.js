@@ -1,30 +1,30 @@
 import { captureActorMotionStart, updatePausedActors } from './actorFrameState.js';
-import { drawActor, drawAttackTrail } from './actorRenderer.js';
+import { drawActor, drawAttackTrail } from './actor_canvas_renderer.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
-import { loadEffectAssets } from './assetLoaders.js';
+import { loadEffectAssets } from './asset_loader_helper.js';
 import {
   bindBattleControls,
   bindCollapsibleSections,
   bindKeyboardControls,
   bindTouchControls,
 } from './inputControls.js';
-import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combatSystem.js';
+import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combat_engine.js';
 import { drawRankingHud } from './rankingUi.js';
 import { createRankingController } from './rankingController.js';
 import { createParticleEffects } from './particleEffects.js';
 import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
 import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
-import { loadSavedState as loadStoredSavedState } from './saveStateStorage.js';
-import { applyWorldView, drawWorld } from './worldRenderer.js';
+import { loadSavedState as loadStoredSavedState } from './project_storage_helper.js';
+import { applyWorldView, drawWorld } from './world_renderer.js';
 import { getViewTransform } from './cameraView.js';
-import { isSettingsPanelOpen } from './settingsPanelState.js';
-import { createTuningPanel } from './tuningPanel.js';
-import { createActors } from './actorFactory.js';
+import { isSettingsPanelOpen } from './settings_panel_state.js';
+import { createTuningPanel } from './editor_panel.js';
+import { createActors } from './actor_factory.js';
 import { syncCanvasToLayout } from './canvasLayout.js';
-import { DEATH_RESULT_DELAY } from './gameConfig.js';
-import { drawSceneForeground, preloadSceneBackground } from './backgroundRenderer.js';
-import { createWorldFromSceneSession } from './sceneSession.js';
-import { createProjectStateController } from './projectStateController.js';
+import { DEATH_RESULT_DELAY } from './game_config.js';
+import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
+import { createWorldFromSceneSession } from './scene_session_data.js';
+import { createProjectStateController } from './project_state_controller.js';
 import { getMainDomElements } from './mainDomElements.js';
 
 const {

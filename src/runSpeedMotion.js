@@ -1,4 +1,4 @@
-import { speedValueToLevel } from './tuningControlValueTransforms.js';
+import { speedValueToLevel } from './control_value_transform_helper.js';
 import { clamp, lerp } from './utils.js';
 
 const RUN_SPEED_MIN = 1;

@@ -1,5 +1,5 @@
 import { axisFromMatrix, transformPoint } from './puppetPlayerGeometry.js';
-import { createEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
+import { createEditableTransform, editableTransformDrawRect } from './editable_object_model_helper.js';
 
 export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
   if (!key) return null;
