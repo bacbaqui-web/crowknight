@@ -10,7 +10,7 @@ import {
   bindTouchControls,
 } from './inputControls.js';
 import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combatSystem.js';
-import { drawRankingHud } from './rankingCanvas.js';
+import { drawRankingHud } from './rankingUi.js';
 import { createRankingController } from './rankingController.js';
 import { createParticleEffects } from './particleEffects.js';
 import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
