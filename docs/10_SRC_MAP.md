@@ -72,7 +72,6 @@
 - `src/saveStateStorage.js`: local save. 수정: local 저장 키/형식. 같이: `projectStateController.js`. 위험: 높음.
 - `src/projectStateController.js`: project save/load. 수정: 저장/불러오기 흐름. 같이: Firebase/storage files. 위험: 높음.
 - `src/firebaseConfig.js`: Firebase config. 수정: Firebase 설정. 같이: Firebase files. 위험: 중간.
-- `src/firebaseProjectState.js`: Firebase project state. 수정: remote project save/load. 같이: `projectStateController.js`. 위험: 높음.
 - `src/firebaseStorageAssets.js`: Firebase asset storage. 수정: asset upload/download. 같이: asset runtime files. 위험: 중간.
 - `src/firebaseRankings.js`: Firebase rankings. 수정: ranking remote sync. 같이: `rankingController.js`. 위험: 낮음.
 
