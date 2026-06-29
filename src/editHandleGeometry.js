@@ -11,6 +11,7 @@ import { INTERACTION_OBJECT_TARGET_TYPE } from './tuningInteractionObjects.js';
 import { controlGroupPartKeys, imagePartKeys } from './tuningParts.js';
 
 export const EFFECT_TARGET_TYPE = 'effect';
+export const EFFECT_EDIT_HANDLE_KEY = 'effect';
 
 export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, poseFrameSelectionActive }) {
   if (!editFocusPartKey || !editHandleInfo) return null;

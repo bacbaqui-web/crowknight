@@ -55,7 +55,6 @@ export function createTuningPanel({
   let poseFramePasteGlobal = null;
   let poseFrameSelectionActive = false;
   let frameSelectionCheckGlobal = () => poseFrameSelectionActive;
-  let effectEditHandle = null;
 
   function activeEditPartKey() {
     return activeEditPartKeyForContext(currentOpenEditContext(), editingState.getEditFocusPartKey());
@@ -78,18 +77,16 @@ export function createTuningPanel({
   }
 
   function drawSettingsDebugBoxes() {
-    const nextDebugState = drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets, {
+    drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets, {
       activeSetupPartKey: selectionState.getActivePartKeyGlobal(),
       activePosePartKey: selectionState.getActivePosePartKey(),
     });
-    if (nextDebugState.hasEffectHandleUpdate) effectEditHandle = nextDebugState.effectHandle;
   }
 
   function getEditHandleGeometry() {
     return tuningEditHandleGeometry({
       isPanelOpen: isSettingsPanelOpen(),
       openEditContext: currentOpenEditContext(),
-      effectEditHandle,
       editFocusPartKey: editingState.getEditFocusPartKey(),
       selectedActor,
       poseFrameSelectionActive,

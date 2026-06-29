@@ -1,10 +1,14 @@
-import { createGroupEditHandleGeometry, createPartEditHandleGeometry, findEditHandleAt } from './editHandleGeometry.js';
+import {
+  EFFECT_EDIT_HANDLE_KEY,
+  createGroupEditHandleGeometry,
+  createPartEditHandleGeometry,
+  findEditHandleAt,
+} from './editHandleGeometry.js';
 import { MASTER_PART_KEY } from './gameConfig.js';
 
 export function tuningEditHandleGeometry({
   isPanelOpen,
   openEditContext,
-  effectEditHandle,
   editFocusPartKey,
   selectedActor,
   poseFrameSelectionActive,
@@ -14,10 +18,10 @@ export function tuningEditHandleGeometry({
 }) {
   if (!isPanelOpen) return null;
 
-  const effectGeometry = tuningEffectEditHandleGeometry({ openEditContext, effectEditHandle });
-  if (effectGeometry) return effectGeometry;
-
-  const focusPartKey = editFocusPartKey || (openEditContext === 'pose' ? MASTER_PART_KEY : null);
+  const focusPartKey =
+    editFocusPartKey ||
+    (openEditContext === 'pose' ? MASTER_PART_KEY : null) ||
+    (openEditContext === 'effect' ? EFFECT_EDIT_HANDLE_KEY : null);
   if (!focusPartKey) return null;
 
   const groupGeometry = tuningGroupEditHandleGeometry({
@@ -33,15 +37,6 @@ export function tuningEditHandleGeometry({
     editFocusPartKey: focusPartKey,
     editHandleInfo: selectedActor.player.editHandles?.[focusPartKey],
     poseFrameSelectionActive,
-  });
-}
-
-export function tuningEffectEditHandleGeometry({ openEditContext, effectEditHandle }) {
-  if (openEditContext !== 'effect' || !effectEditHandle) return null;
-  return createPartEditHandleGeometry({
-    editFocusPartKey: effectEditHandle.key,
-    editHandleInfo: effectEditHandle,
-    poseFrameSelectionActive: true,
   });
 }
 

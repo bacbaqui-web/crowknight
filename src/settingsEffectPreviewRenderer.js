@@ -1,5 +1,5 @@
 import { defaultEffectSize } from './animationFrames.js';
-import { createEffectEditHandleInfo } from './editHandleGeometry.js';
+import { EFFECT_EDIT_HANDLE_KEY, createEffectEditHandleInfo } from './editHandleGeometry.js';
 import { createEditableTransform, editableTransformDrawRect } from './editableObjectModel.js';
 import { drawEffectPreviewBounds } from './settingsDebugRenderer.js';
 import { effectFrameAt } from './tuningNormalize.js';
@@ -18,7 +18,8 @@ export function drawEffectSettingsPreview(ctx, actor, key, effectAssets) {
   ctx.translate(transform.x, transform.y);
   const placementMatrix = ctx.getTransform();
   ctx.rotate((transform.rot * Math.PI) / 180);
-  const editHandle = createEffectEditHandleInfo(ctx, frame, key, placementMatrix, drawRect);
+  const editHandle = createEffectEditHandleInfo(ctx, frame, EFFECT_EDIT_HANDLE_KEY, placementMatrix, drawRect);
+  if (actor.player?.editHandles) actor.player.editHandles[EFFECT_EDIT_HANDLE_KEY] = editHandle;
   ctx.globalAlpha = clamp(Number(frame.opacity ?? 1), 0, 1) * 0.88;
   if (asset) {
     ctx.drawImage(asset, drawRect.x, drawRect.y, drawRect.w, drawRect.h);

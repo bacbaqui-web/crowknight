@@ -20,7 +20,7 @@ export function drawTuningPanelDebugBoxes(
   effectAssets,
   { activeSetupPartKey = null, activePosePartKey = null } = {}
 ) {
-  if (!isSettingsPanelOpen()) return { hasEffectHandleUpdate: false, effectHandle: null };
+  if (!isSettingsPanelOpen()) return;
 
   if (isCollisionSectionOpen()) {
     drawSetupFallbackInteractionPreview(ctx, selectedActor, activeSetupPartKey);
@@ -37,12 +37,9 @@ export function drawTuningPanelDebugBoxes(
   }
 
   const effectKey = activeEffectSettingsKey();
-  if (!effectKey) return { hasEffectHandleUpdate: false, effectHandle: null };
+  if (!effectKey) return;
 
-  return {
-    hasEffectHandleUpdate: true,
-    effectHandle: drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets),
-  };
+  drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
 }
 
 function editHandleFallbackInteractionKeysForPosePart(partKey) {

@@ -2,39 +2,43 @@
 
 ## Sprint 목표
 
-Effect handle pointer down을 공통 handle 입력 흐름에 흡수한다.
+Effect handle source를 공통 `player.editHandles` 흐름에 흡수한다.
 
-모든 editable object handle은 같은 pointer down → drag 생성 → drag apply 흐름을 사용해야 한다.
+문서에는 공통 기능 원칙을 추가한다.
 
 ## 핵심 원칙
 
-- 같은 handle은 같은 입력 시스템을 사용한다.
-- Effect 전용 pointer down 함수를 남기지 않는다.
+- 새 편집 기능은 하나의 공통 경로로 만든다.
+- 같은 handle은 같은 source와 같은 입력 시스템을 사용한다.
+- 특정 영역 전용 구현은 마지막 선택이다.
 - 저장 위치는 변경하지 않는다.
 - Runtime combat 규칙은 변경하지 않는다.
 
 ## 완료한 작업
 
-- Effect 전용 pointer down 함수 제거.
-- Effect 전용 drag 시작 함수 제거.
-- `handleCanvasPointerDown()`이 Effect도 직접 처리하도록 변경.
-- Effect edit state를 `canvasEffectEditState()`로 분리.
-- Effect opacity handle도 공통 pointer down에서 처리.
-- Effect move/resize/rotate/anchor handle도 공통 `beginCanvasPartPointerDrag()`를 통해 drag 생성.
-- Effect 저장은 generic `writeValue`로 `effectTimeline.writeFrameValue()`에 연결.
+- `00_MANIFEST.md`에 공통 편집 기능 원칙 추가.
+- `02_DECISIONS.md`에 Common Editor Feature Path 결정 추가.
+- Effect preview handle을 `selectedActor.player.editHandles.effect`에 기록하도록 변경.
+- `effectEditHandle` 별도 상태 전달 제거.
+- `tuningEditHandleGeometry()`가 Effect도 `selectedActor.player.editHandles[focusPartKey]`에서 읽도록 변경.
+- `drawTuningPanelDebugBoxes()`의 Effect handle 반환값 제거.
 
 ## 변경한 파일과 변경 이유
 
-- `src/tuningCanvasPointerDrag.js`
-  - `handleEffectCanvasPointerDown()` 제거.
-  - `beginCanvasEffectPointerDrag()` 제거.
-  - Effect도 `handleCanvasPointerDown()`에서 처리.
-- `src/tuningPanelCanvasController.js`
-  - Effect pointer down 별도 라우팅 제거.
-  - Effect context active part를 `effect`로 제공.
-  - Effect edit state를 공통 pointer down에 제공.
-- `src/tuningCanvasEditState.js`
-  - `canvasEffectEditState()` 추가.
+- `docs/00_MANIFEST.md`
+  - 공통 기능 우선 원칙 추가.
+- `docs/02_DECISIONS.md`
+  - 영역별 전용 구현을 피하는 구조 결정 추가.
+- `src/editHandleGeometry.js`
+  - Effect synthetic handle key 상수 추가.
+- `src/settingsEffectPreviewRenderer.js`
+  - Effect handle info를 `player.editHandles.effect`에 기록.
+- `src/tuningEditHandleGeometry.js`
+  - Effect handle geometry도 공통 editHandles lookup 사용.
+- `src/tuningPanel.js`
+  - `effectEditHandle` 상태 제거.
+- `src/tuningPanelDebugView.js`
+  - Effect handle 반환 프로토콜 제거.
 - `docs/99_CURRENT_SPRINT.md`
   - 이번 Sprint 결과 기록.
 
@@ -43,58 +47,55 @@ Effect handle pointer down을 공통 handle 입력 흐름에 흡수한다.
 Before:
 
 ```text
-Effect handle pointer down
-→ handleEffectCanvasPointerDown()
-→ beginCanvasEffectPointerDrag()
-→ createCanvasPartDrag()
+drawEffectSettingsPreview()
+→ return effectEditHandle
+→ tuningPanel local effectEditHandle state
+→ tuningEditHandleGeometry(effectEditHandle)
 ```
 
 After:
 
 ```text
-Any editable handle pointer down
-→ handleCanvasPointerDown()
-→ canvasEditState()
-→ beginCanvasPartPointerDrag()
-→ createCanvasPartDrag()
+drawEffectSettingsPreview()
+→ selectedActor.player.editHandles.effect
+→ tuningEditHandleGeometry()
+→ selectedActor.player.editHandles[focusPartKey]
 ```
 
-Effect write path:
+Effect handle input:
 
 ```text
-Effect handle drag
+player.editHandles.effect
+→ createPartEditHandleGeometry()
+→ handleCanvasPointerDown()
+→ createCanvasPartDrag()
 → applyCanvasPartDrag()
-→ setCanvasVisualValue()
-→ editState.writeValue()
-→ effectTimeline.writeFrameValue()
-→ tuning.effectOffsets[effectKey]
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- `handleEffectCanvasPointerDown()` 제거.
-- `beginCanvasEffectPointerDrag()` 제거.
-- `handleEffectPointerDown` callback 제거.
-- Effect opacity handle 전용 처리 제거.
-- Effect drag 시작 전용 처리 제거.
+- `effectEditHandle` local state 제거.
+- Effect handle 반환용 `hasEffectHandleUpdate/effectHandle` protocol 제거.
+- `tuningEffectEditHandleGeometry()` 제거.
+- Effect handle source가 Part처럼 `player.editHandles`에 들어가도록 통합.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
 - Effect 저장 위치는 `tuning.effectOffsets` 유지.
-- Effect timeline controller는 유지.
 - Effect preview/render entry는 유지.
+- Effect value adapter는 유지.
 - Runtime combat system은 변경하지 않음.
 - Master/root handle 정책은 유지.
 - Group edit handle 정책은 유지.
 
 ## 아직 남아있는 예외 처리
 
-- Effect handle geometry source는 아직 `effectEditHandle`로 전달된다.
 - Effect preview/render entry는 아직 별도다.
   - `settingsEffectPreviewRenderer.js`
   - `actorEffectsRenderer.js`
 - Effect value adapter는 아직 별도다.
   - `effectVisualValues.js`
+- Effect context active key는 synthetic key `effect`를 사용한다.
 - Master/root는 아직 `anchorX/anchorY` 기반이다.
 - Group edit는 screen-space group transform이다.
 - Background/Stage/HUD는 아직 editable object handle 시스템에 흡수되지 않았다.
@@ -103,33 +104,29 @@ Effect handle drag
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: legacy Effect pointer/drag 함수 검색.
-  - `handleEffectCanvasPointerDown`
-  - `beginCanvasEffectPointerDrag`
-  - `handleEffectPointerDown`
-  - `createCanvasEffectDrag`
-  - `applyEffectCanvasDrag`
-- 통과: Effect opacity common pointer down smoke test.
-  - 공통 `handleCanvasPointerDown()`이 Effect opacity를 `writeValue`로 기록.
-- 통과: Effect drag common pointer down smoke test.
-  - 공통 `handleCanvasPointerDown()`이 Effect drag를 `createCanvasPartDrag()`로 생성.
+- 통과: legacy Effect handle state/function 검색.
+  - `effectEditHandle`
+  - `tuningEffectEditHandleGeometry`
+  - `hasEffectHandleUpdate`
+- 통과: Effect handle geometry common lookup smoke test.
+  - `player.editHandles.effect`를 읽어 `createPartEditHandleGeometry()`로 geometry 생성 확인.
 - 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- Effect context에서 `activePart`는 synthetic key `effect`를 사용한다.
-- Effect handle source는 아직 `player.editHandles`가 아니라 preview renderer의 `effectEditHandle`이다.
-- 실제 UI에서 Effect opacity/anchor/move/resize/rotate drag QA가 필요하다.
+- Effect handle은 preview draw 이후 `player.editHandles.effect`에 기록된다.
+- Effect preview가 그려지지 않는 조건에서는 Effect handle도 없다.
+- 실제 UI에서 Effect handle 표시와 드래그 QA가 필요하다.
 
 ## 다음 Sprint 추천
 
 1. 실제 UI QA.
    - Effect opacity/anchor/move/resize/rotate handle.
    - Part/InteractionObject handle regressions.
-2. Effect handle source 통합.
-   - `effectEditHandle` 전달을 줄이고 공통 editable target source로 연결.
-3. Effect value adapter 통합.
+2. Effect value adapter 통합.
    - `effectVisualValues.js`를 common editable value adapter로 합치기.
+3. Effect preview/render entry 통합.
+   - Effect preview target 생성을 더 공통 editable renderer/source로 이동.
 4. Master/root transform 정리 설계.
    - `anchorX/anchorY`를 editable transform 규칙에 맞출지 결정.
 5. Group edit 규칙 정리 설계.
@@ -137,14 +134,14 @@ Effect handle drag
 
 ## 리팩토링 후보와 이유
 
-- `src/tuningEditHandleGeometry.js`
-  - Effect context routing이 남아 있음.
 - `src/settingsEffectPreviewRenderer.js`
-  - Effect preview target 생성이 별도.
+  - Effect preview target 생성이 아직 별도.
 - `src/effectVisualValues.js`
   - Effect display/input 변환만 별도.
 - `src/tuningCanvasEditState.js`
   - Part/Effect edit state가 같은 파일 안에서 더 공통화될 수 있음.
+- `src/tuningEditHandleGeometry.js`
+  - Group routing과 single-object routing을 더 단순화할 수 있음.
 
 ## 파일 크기 또는 구조상 주의할 점
 

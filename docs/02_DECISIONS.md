@@ -66,6 +66,12 @@
 - 이유: Setup, Action, Effect, Stage, interaction object가 같은 좌표/핸들/resize 규칙을 공유해야 한다.
 - 대체안: 대상별로 `x/y` 의미와 resize 계산을 다르게 유지하는 방식은 채택하지 않는다.
 
+## Common Editor Feature Path
+
+- 결정: 새 편집 기능은 하나의 공통 경로로 만들고 모든 editable object에 적용한다.
+- 이유: 영역별 전용 구현은 handle, preview, field, drag, save 흐름을 갈라서 같은 UX의 동작 차이를 만든다.
+- 대체안: Setup/Action/Effect마다 같은 기능을 별도 파일과 별도 로직으로 구현하는 방식은 채택하지 않는다.
+
 ## Editor와 Runtime 분리
 
 - 결정: Editor 원본 데이터와 Runtime 실행 데이터를 분리한다.
