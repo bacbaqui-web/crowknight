@@ -47,7 +47,6 @@
 - `src/worldRenderer.js`: world draw 조립. 수정: Runtime draw pipeline. 같이: `backgroundRenderer.js`, `actorRenderer.js`. 위험: 중간.
 - `src/backgroundRenderer.js`: background draw. 수정: 배경 렌더/transform. 같이: `backgroundPanelController.js`, `psdBackgroundRuntime.js`. 위험: 중간.
 - `src/cameraView.js`: camera transform. 수정: screen/world 좌표계. 같이: `worldRenderer.js`. 위험: 중간.
-- `src/screenGeometry.js`: screen geometry helper. 수정: 순수 geometry helper. 같이: 호출 파일. 위험: 낮음.
 - `src/runHud.js`: game HUD. 수정: Runtime HUD/score UI. 같이: `scoreFormat.js`. 위험: 낮음.
 - `src/runSpeedMotion.js`: speed motion helper. 수정: Runtime speed visual. 같이: `puppetPlayerPose.js`. 위험: 중간.
 - `src/rollGhosts.js`: roll ghost visual. 수정: 구르기 잔상. 같이: `puppetPlayerActions.js`. 위험: 낮음.
