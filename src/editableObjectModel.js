@@ -16,57 +16,6 @@ export function createEditableAppearance({ opacity = 1 } = {}) {
   };
 }
 
-export function createEditableInteraction({ active = 0, role = null } = {}) {
-  return {
-    active: Number(active || 0) >= 0.5 ? 1 : 0,
-    role,
-  };
-}
-
-export function createEditableObject({ transform = {}, appearance = {}, interaction = null } = {}) {
-  return {
-    transform: createEditableTransform(transform),
-    appearance: createEditableAppearance(appearance),
-    interaction: interaction ? createEditableInteraction(interaction) : null,
-  };
-}
-
-export function centeredEditableTransform({ x = 0, y = 0, w = 1, h = 1, rot = 0 } = {}) {
-  const width = Math.max(0, finiteNumber(w, 1));
-  const height = Math.max(0, finiteNumber(h, 1));
-  return createEditableTransform({
-    x: finiteNumber(x, 0) + width / 2,
-    y: finiteNumber(y, 0) + height / 2,
-    w: width,
-    h: height,
-    ax: width / 2,
-    ay: height / 2,
-    rot,
-  });
-}
-
-export function centerOffsetEditableTransform({
-  x = 0,
-  y = 0,
-  w = 1,
-  h = 1,
-  anchorOffsetX = 0,
-  anchorOffsetY = 0,
-  rot = 0,
-} = {}) {
-  const width = Math.max(0, finiteNumber(w, 1));
-  const height = Math.max(0, finiteNumber(h, 1));
-  return createEditableTransform({
-    x,
-    y,
-    w: width,
-    h: height,
-    ax: width / 2 + finiteNumber(anchorOffsetX, 0),
-    ay: height / 2 + finiteNumber(anchorOffsetY, 0),
-    rot,
-  });
-}
-
 export function editableTransformDrawRect(transform) {
   const rect = createEditableTransform(transform);
   return {
@@ -124,39 +73,6 @@ export function resizeEditableTransformFromHandle({
   }
 
   return rect;
-}
-
-export function editableTransformLocalPoints(transform) {
-  const drawRect = editableTransformDrawRect(transform);
-  return [
-    { x: drawRect.x, y: drawRect.y },
-    { x: drawRect.x + drawRect.w, y: drawRect.y },
-    { x: drawRect.x + drawRect.w, y: drawRect.y + drawRect.h },
-    { x: drawRect.x, y: drawRect.y + drawRect.h },
-  ];
-}
-
-export function editableTransformPoints(transform) {
-  const rect = createEditableTransform(transform);
-  const radians = (rect.rot * Math.PI) / 180;
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-  return editableTransformLocalPoints(rect).map((point) => ({
-    x: rect.x + point.x * cos - point.y * sin,
-    y: rect.y + point.x * sin + point.y * cos,
-  }));
-}
-
-export function editableTransformBounds(transform) {
-  const points = editableTransformPoints(transform);
-  const xs = points.map((point) => point.x);
-  const ys = points.map((point) => point.y);
-  return {
-    x: Math.min(...xs),
-    y: Math.min(...ys),
-    w: Math.max(...xs) - Math.min(...xs),
-    h: Math.max(...ys) - Math.min(...ys),
-  };
 }
 
 function clampUnit(value) {

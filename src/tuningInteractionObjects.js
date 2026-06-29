@@ -46,15 +46,6 @@ export function isInteractionObjectPartKey(partKey) {
   return INTERACTION_OBJECT_PART_KEYS.includes(partKey);
 }
 
-export function interactionObjectPartSources(tuning) {
-  return {
-    [COLLISION_INTERACTION_OBJECT_KEY]: tuning.rig?.[COLLISION_INTERACTION_OBJECT_KEY],
-    [ATTACK_INTERACTION_OBJECT_KEY]: tuning.rig?.[ATTACK_INTERACTION_OBJECT_KEY],
-    [HURT_INTERACTION_OBJECT_KEY]: tuning.rig?.[HURT_INTERACTION_OBJECT_KEY],
-    [GUARD_INTERACTION_OBJECT_KEY]: tuning.rig?.[GUARD_INTERACTION_OBJECT_KEY],
-  };
-}
-
 export function interactionObjectParentPartKey(partKey) {
   return INTERACTION_OBJECT_DEFS[partKey]?.parent || null;
 }
