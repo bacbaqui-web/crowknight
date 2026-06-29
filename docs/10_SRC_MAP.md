@@ -92,7 +92,7 @@
 - `src/tuningSelectionPalette.js`: Setup palette definitions. 수정: 선택 대상/배치. 같이: labels, part controller. 위험: 중간.
 - `src/tuningLabels.js`: UI labels. 수정: 표시명 변경. 같이: palette/field views. 위험: 낮음.
 - `src/tuningFieldGroups.js`: property group definitions. 수정: property field 추가/제거. 같이: field values, controllers. 위험: 중간.
-- `src/tuningFieldValues.js`: property display/store 변환. 수정: 숫자 표시값/저장값. 같이: `actionBaseTransform.js`, `canvasVisualValues.js`. 위험: 높음.
+- `src/tuningFieldValues.js`: property display/store 변환. 수정: Part/Pose/Effect 숫자 표시값/저장값. 같이: `actionBaseTransform.js`, `canvasVisualValues.js`. 위험: 높음.
 - `src/tuningControlValueTransforms.js`: control clamp/transform. 수정: scalar 입력 범위. 같이: control setup. 위험: 중간.
 - `src/tuningNumberInputs.js`: legacy numeric helper. 수정: 기존 number input. 같이: `tuningNumericInput.js`. 위험: 중간.
 - `src/tuningNumericInput.js`: range/number UX. 수정: 공통 numeric input. 같이: setup controls, scrub controls. 위험: 중간.
@@ -183,7 +183,6 @@
 - `src/tuningEffectTimelineController.js`: Effect timeline controller. 수정: Effect UX/property. 같이: effect adapter/view/assets. 위험: 높음.
 - `src/effectTimelineAdapter.js`: effectOffsets adapter. 수정: Effect data read/write. 같이: mutations/read. 위험: 높음.
 - `src/tuningEffectTimelinePanelView.js`: Effect view. 수정: Effect toolbar/settings/image UI. 같이: effect controller. 위험: 중간.
-- `src/effectVisualValues.js`: Effect value transform. 수정: Effect display/store values. 같이: effect controller. 위험: 중간.
 - `src/settingsEffectPreviewRenderer.js`: setting effect preview. 수정: Effect preview draw. 같이: effect renderer/controller. 위험: 중간.
 
 ## Background / Stage

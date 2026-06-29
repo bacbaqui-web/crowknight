@@ -6,7 +6,7 @@ import { bindControllerKeyframeDrag } from './timelineControllerView.js';
 import { finishTimelineMutationAction, moveTimelineKeyframeWithPreviewAction } from './timelineControllerActions.js';
 import { createTimelineSelectionState } from './timelineState.js';
 import { clearActorEffectPreviews } from './previewState.js';
-import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './effectVisualValues.js';
+import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './tuningFieldValues.js';
 import { renderScrubGroups } from './tuningScrubControls.js';
 import { startTimelinePreview, stopTimelinePreview, syncEffectTimelinePreview } from './tuningTimelinePreview.js';
 import { renderEffectTimelineSettingsView } from './tuningEffectTimelinePanelView.js';

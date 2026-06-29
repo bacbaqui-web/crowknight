@@ -2,43 +2,36 @@
 
 ## Sprint 목표
 
-Effect handle source를 공통 `player.editHandles` 흐름에 흡수한다.
+JS 파일 수를 줄인다.
 
-문서에는 공통 기능 원칙을 추가한다.
+Effect 전용 value transform 파일을 공통 field value 흐름에 흡수한다.
 
 ## 핵심 원칙
 
-- 새 편집 기능은 하나의 공통 경로로 만든다.
-- 같은 handle은 같은 source와 같은 입력 시스템을 사용한다.
-- 특정 영역 전용 구현은 마지막 선택이다.
-- 저장 위치는 변경하지 않는다.
+- 새 파일보다 기존 공통 파일을 우선한다.
+- 같은 field display/store 변환은 같은 모듈에서 처리한다.
+- 특정 영역 전용 value adapter는 마지막 선택이다.
+- 저장 구조는 변경하지 않는다.
 - Runtime combat 규칙은 변경하지 않는다.
 
 ## 완료한 작업
 
-- `00_MANIFEST.md`에 공통 편집 기능 원칙 추가.
-- `02_DECISIONS.md`에 Common Editor Feature Path 결정 추가.
-- Effect preview handle을 `selectedActor.player.editHandles.effect`에 기록하도록 변경.
-- `effectEditHandle` 별도 상태 전달 제거.
-- `tuningEditHandleGeometry()`가 Effect도 `selectedActor.player.editHandles[focusPartKey]`에서 읽도록 변경.
-- `drawTuningPanelDebugBoxes()`의 Effect handle 반환값 제거.
+- `src/effectVisualValues.js` 제거.
+- Effect display/store value 함수를 `src/tuningFieldValues.js`로 이동.
+- Effect Timeline controller import를 `tuningFieldValues.js`로 변경.
+- `docs/10_SRC_MAP.md`에서 삭제된 파일 항목 제거.
+- `docs/10_SRC_MAP.md`의 `tuningFieldValues.js` 설명을 Part/Pose/Effect 공통 value 변환으로 갱신.
 
 ## 변경한 파일과 변경 이유
 
-- `docs/00_MANIFEST.md`
-  - 공통 기능 우선 원칙 추가.
-- `docs/02_DECISIONS.md`
-  - 영역별 전용 구현을 피하는 구조 결정 추가.
-- `src/editHandleGeometry.js`
-  - Effect synthetic handle key 상수 추가.
-- `src/settingsEffectPreviewRenderer.js`
-  - Effect handle info를 `player.editHandles.effect`에 기록.
-- `src/tuningEditHandleGeometry.js`
-  - Effect handle geometry도 공통 editHandles lookup 사용.
-- `src/tuningPanel.js`
-  - `effectEditHandle` 상태 제거.
-- `src/tuningPanelDebugView.js`
-  - Effect handle 반환 프로토콜 제거.
+- `src/tuningFieldValues.js`
+  - Effect field display/store value 변환 흡수.
+- `src/tuningEffectTimelineController.js`
+  - Effect value 변환 import 경로 변경.
+- `src/effectVisualValues.js`
+  - 삭제. 기능은 `tuningFieldValues.js`로 이동.
+- `docs/10_SRC_MAP.md`
+  - 소스 지도에서 삭제된 파일 제거.
 - `docs/99_CURRENT_SPRINT.md`
   - 이번 Sprint 결과 기록.
 
@@ -47,43 +40,30 @@ Effect handle source를 공통 `player.editHandles` 흐름에 흡수한다.
 Before:
 
 ```text
-drawEffectSettingsPreview()
-→ return effectEditHandle
-→ tuningPanel local effectEditHandle state
-→ tuningEditHandleGeometry(effectEditHandle)
+Effect property input/display
+→ effectVisualValues.js
+→ tuning.effectOffsets[effectKey]
 ```
 
 After:
 
 ```text
-drawEffectSettingsPreview()
-→ selectedActor.player.editHandles.effect
-→ tuningEditHandleGeometry()
-→ selectedActor.player.editHandles[focusPartKey]
-```
-
-Effect handle input:
-
-```text
-player.editHandles.effect
-→ createPartEditHandleGeometry()
-→ handleCanvasPointerDown()
-→ createCanvasPartDrag()
-→ applyCanvasPartDrag()
+Effect property input/display
+→ tuningFieldValues.js
+→ tuning.effectOffsets[effectKey]
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- `effectEditHandle` local state 제거.
-- Effect handle 반환용 `hasEffectHandleUpdate/effectHandle` protocol 제거.
-- `tuningEffectEditHandleGeometry()` 제거.
-- Effect handle source가 Part처럼 `player.editHandles`에 들어가도록 통합.
+- Effect 전용 value transform 파일 제거.
+- Effect field value 변환이 Part/Pose field value 변환 파일로 합쳐짐.
+- JS 파일 수: `src` 기준 155개 → 154개.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
 - Effect 저장 위치는 `tuning.effectOffsets` 유지.
+- Effect Timeline controller 구조는 유지.
 - Effect preview/render entry는 유지.
-- Effect value adapter는 유지.
 - Runtime combat system은 변경하지 않음.
 - Master/root handle 정책은 유지.
 - Group edit handle 정책은 유지.
@@ -93,8 +73,6 @@ player.editHandles.effect
 - Effect preview/render entry는 아직 별도다.
   - `settingsEffectPreviewRenderer.js`
   - `actorEffectsRenderer.js`
-- Effect value adapter는 아직 별도다.
-  - `effectVisualValues.js`
 - Effect context active key는 synthetic key `effect`를 사용한다.
 - Master/root는 아직 `anchorX/anchorY` 기반이다.
 - Group edit는 screen-space group transform이다.
@@ -104,44 +82,44 @@ player.editHandles.effect
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: legacy Effect handle state/function 검색.
-  - `effectEditHandle`
-  - `tuningEffectEditHandleGeometry`
-  - `hasEffectHandleUpdate`
-- 통과: Effect handle geometry common lookup smoke test.
-  - `player.editHandles.effect`를 읽어 `createPartEditHandleGeometry()`로 geometry 생성 확인.
+- 통과: Effect field value smoke test.
+  - Effect size percent display/store 변환 확인.
+  - Effect toggle/limit clamp 확인.
+- 통과: 삭제 파일 import 검색.
+  - `src/effectVisualValues.js` 삭제 확인.
+  - `src` 파일 수 154개 확인.
 - 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- Effect handle은 preview draw 이후 `player.editHandles.effect`에 기록된다.
-- Effect preview가 그려지지 않는 조건에서는 Effect handle도 없다.
-- 실제 UI에서 Effect handle 표시와 드래그 QA가 필요하다.
+- `tuningFieldValues.js`가 Part/Pose/Effect value 변환을 함께 맡아 책임이 커졌다.
+- 다음에 Background/Stage value 변환까지 무작정 넣으면 이 파일이 커질 수 있다.
 
 ## 다음 Sprint 추천
 
-1. 실제 UI QA.
-   - Effect opacity/anchor/move/resize/rotate handle.
-   - Part/InteractionObject handle regressions.
-2. Effect value adapter 통합.
-   - `effectVisualValues.js`를 common editable value adapter로 합치기.
-3. Effect preview/render entry 통합.
-   - Effect preview target 생성을 더 공통 editable renderer/source로 이동.
-4. Master/root transform 정리 설계.
+1. Effect preview/render entry 통합 검토.
+   - `settingsEffectPreviewRenderer.js`와 `actorEffectsRenderer.js`를 공통 editable render/source로 줄일 수 있는지 확인.
+2. 미사용 export 정리.
+   - `interactionObjectPartSources()`
+   - `createEditableObject()`
+   - `centeredEditableTransform()`
+   - `centerOffsetEditableTransform()`
+   - `editableTransformBounds()`
+3. Master/root transform 정리 설계.
    - `anchorX/anchorY`를 editable transform 규칙에 맞출지 결정.
-5. Group edit 규칙 정리 설계.
+4. Group edit 규칙 정리 설계.
    - Group도 같은 handle set/drag entry를 유지할지 결정.
 
 ## 리팩토링 후보와 이유
 
 - `src/settingsEffectPreviewRenderer.js`
   - Effect preview target 생성이 아직 별도.
-- `src/effectVisualValues.js`
-  - Effect display/input 변환만 별도.
+- `src/actorEffectsRenderer.js`
+  - Runtime Effect render entry가 별도.
+- `src/tuningFieldValues.js`
+  - 공통 value 변환이 모이고 있어 책임 경계 관리 필요.
 - `src/tuningCanvasEditState.js`
   - Part/Effect edit state가 같은 파일 안에서 더 공통화될 수 있음.
-- `src/tuningEditHandleGeometry.js`
-  - Group routing과 single-object routing을 더 단순화할 수 있음.
 
 ## 파일 크기 또는 구조상 주의할 점
 
@@ -149,3 +127,4 @@ player.editHandles.effect
 - `src/puppetPlayer.js`: 440줄. Runtime state/helper 책임 집중.
 - `src/tuningEffectTimelineController.js`: 398줄. Effect UI/timeline 책임 집중.
 - `src/puppetPlayerRenderer.js`: 394줄. render/edit region 기록 책임 집중.
+- `src/tuningFieldValues.js`: 이번 Sprint에서 Effect value 변환을 흡수함. 계속 커지면 분리 기준 재검토.

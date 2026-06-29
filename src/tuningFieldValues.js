@@ -6,8 +6,10 @@ import {
   setupPartSizeFromPercent,
   setupPartSizeToPercent,
 } from './actionBaseTransform.js';
+import { defaultEffectSize } from './animationFrames.js';
 import { interactionObjectParentPart } from './tuningInteractionObjects.js';
-import { isParentSizedPart } from './tuningParts.js';
+import { effectFieldLimits, isParentSizedPart } from './tuningParts.js';
+import { clamp } from './utils.js';
 
 export function readPartFieldDisplayValue(partKey, part, prop, tuning = null) {
   if (isParentSizedPart(partKey)) return readParentSizedPartFieldDisplayValue(partKey, part, prop, tuning);
@@ -47,4 +49,30 @@ export function poseSizeToPercent(partKey, offset, prop, basePart) {
 
 export function poseSizeOffsetFromPercent(partKey, prop, percent, basePart) {
   return actionPartSizeOffsetFromPercent(partKey, prop, percent, basePart);
+}
+
+export function readEffectFrameDisplayValue(effectKey, frame, prop) {
+  if (prop === 'w' || prop === 'h') return effectSizePercent(effectKey, frame, prop);
+  return frame[prop];
+}
+
+export function effectFrameValueFromInput(effectKey, prop, value) {
+  if (prop === 'w' || prop === 'h') return effectSizeFromPercent(effectKey, prop, value);
+
+  const limits = effectFieldLimits(prop);
+  return clamp(Number(value), limits.min, limits.max);
+}
+
+export function effectSizeBase(effectKey, prop) {
+  const base = defaultEffectSize(effectKey);
+  return prop === 'w' ? base.w : base.h;
+}
+
+export function effectSizePercent(effectKey, frame, prop) {
+  const baseValue = effectSizeBase(effectKey, prop);
+  return Math.round((Number(frame[prop] || baseValue) / baseValue) * 1000) / 10;
+}
+
+export function effectSizeFromPercent(effectKey, prop, percent) {
+  return effectSizeBase(effectKey, prop) * (clamp(Number(percent), 5, 300) / 100);
 }
