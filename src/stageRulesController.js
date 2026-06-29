@@ -1,19 +1,4 @@
-import { createStageRulesState } from './stageRulesState.js';
-import {
-  getEnemyGrowthRules as selectEnemyGrowthRules,
-  getEnemyPatternRules as selectEnemyPatternRules,
-  getEnemyPool as selectEnemyPool,
-  getEnemyRules as selectEnemyRules,
-  getEnemySpawnRule as selectEnemySpawnRule,
-  getProgressionRules as selectProgressionRules,
-  getRewardCardPool as selectRewardCardPool,
-  getRewardDropRules as selectRewardDropRules,
-  getRewardRules as selectRewardRules,
-  getScoreKillRules as selectScoreKillRules,
-  getScoreRules as selectScoreRules,
-  getScoreSurvivalRules as selectScoreSurvivalRules,
-  selectStageRules,
-} from './stageRulesSelectors.js';
+import { createStageRulesState, normalizeStageRules } from './stageRulesState.js';
 
 export function createStageRulesController({ stageRulesState = null, initialRules = null, onChange = null } = {}) {
   const state = stageRulesState || createStageRulesState(initialRules);
@@ -100,4 +85,62 @@ function mergePlainObject(currentValue, nextValue) {
 
 function isPlainObject(value) {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function selectStageRules(source) {
+  return normalizeStageRules(resolveStageRulesSource(source));
+}
+
+function selectProgressionRules(source) {
+  return selectStageRules(source).progression;
+}
+
+function selectEnemyRules(source) {
+  return selectStageRules(source).enemy;
+}
+
+function selectEnemyPool(source) {
+  return selectEnemyRules(source).pool;
+}
+
+function selectEnemySpawnRule(source) {
+  return selectEnemyRules(source).spawnRule;
+}
+
+function selectEnemyGrowthRules(source) {
+  return selectEnemyRules(source).growth;
+}
+
+function selectEnemyPatternRules(source) {
+  return selectEnemyRules(source).pattern;
+}
+
+function selectRewardRules(source) {
+  return selectStageRules(source).reward;
+}
+
+function selectRewardCardPool(source) {
+  return selectRewardRules(source).cardPool;
+}
+
+function selectRewardDropRules(source) {
+  return selectRewardRules(source).dropRules;
+}
+
+function selectScoreRules(source) {
+  return selectStageRules(source).score;
+}
+
+function selectScoreSurvivalRules(source) {
+  return selectScoreRules(source).survival;
+}
+
+function selectScoreKillRules(source) {
+  return selectScoreRules(source).kill;
+}
+
+function resolveStageRulesSource(source) {
+  if (!source || typeof source !== 'object') return null;
+  if ('stageRules' in source) return source.stageRules;
+  return source;
 }

@@ -181,8 +181,7 @@
 - `src/backgroundPanelController.js`: Background panel. 수정: background edit/upload. 같이: scene session, background view. 위험: 중간.
 - `src/backgroundPanelView.js`: Background view. 수정: background DOM. 같이: background controller. 위험: 낮음.
 - `src/stageRulesState.js`: StageRules state/schema. 수정: StageRules defaults/normalize. 같이: selectors/controller. 위험: 중간.
-- `src/stageRulesSelectors.js`: StageRules selectors. 수정: read-only rule access. 같이: state/controller. 위험: 낮음.
-- `src/stageRulesController.js`: StageRules controller. 수정: Editor API for StageRules. 같이: state/selectors/panel controller. 위험: 중간.
+- `src/stageRulesController.js`: StageRules controller. 수정: Editor API/read helpers. 같이: state/panel controller. 위험: 중간.
 - `src/stageRulesPanelRenderer.js`: Stage panel renderer. 수정: Stage panel definitions/render. 같이: controller. 위험: 중간.
 - `src/stageRulesPanelController.js`: Stage panel binding. 수정: rendered panel event binding. 같이: controller/definitions. 위험: 중간.
 
