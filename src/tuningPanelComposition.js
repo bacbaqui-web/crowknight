@@ -4,7 +4,6 @@ import { createStageRulesPanelController } from './stageRulesPanelController.js'
 import { createTuningPanelCanvasController } from './tuningPanelCanvasController.js';
 import { createTuningPanelLifecycleController } from './tuningPanelLifecycleController.js';
 import { createTuningPanelPartController } from './tuningPanelPartController.js';
-import { createTuningPanelTimelineFrameActions } from './tuningPanelTimelineFrameActions.js';
 import { createTuningPanelTimelines } from './tuningPanelTimelines.js';
 
 export function createTuningPanelComposition({
@@ -197,5 +196,23 @@ export function createTuningPanelComposition({
     stageRulesController,
     stageRulesPanelController,
     timelineFrameActions,
+  };
+}
+
+function createTuningPanelTimelineFrameActions({ getOpenEditContext, getPoseTimeline, getEffectTimeline }) {
+  function activeTimelineController() {
+    return getOpenEditContext() === 'effect' ? getEffectTimeline() : getPoseTimeline();
+  }
+
+  return {
+    copyCurrentFrame() {
+      activeTimelineController().copyFrame();
+    },
+    pasteCurrentFrame() {
+      activeTimelineController().pasteFrame();
+    },
+    hasCurrentFrameSelection() {
+      return Boolean(activeTimelineController().hasFrameSelection?.());
+    },
   };
 }

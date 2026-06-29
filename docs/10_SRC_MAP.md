@@ -108,7 +108,6 @@
 - `src/tuningPanelBindings.js`: panel binding wrapper. 수정: high-level event binding. 같이: control bindings. 위험: 중간.
 - `src/tuningPanelControlBindings.js`: control events. 수정: 버튼/입력 event 연결. 같이: control setup, controllers. 위험: 중간.
 - `src/tuningPanelControlSetup.js`: setup controls. 수정: 캐릭터/HP/scale/HUD controls. 같이: numeric input, field paths. 위험: 중간.
-- `src/tuningPanelButtonAction.js`: button helper. 수정: 단순 button action. 같이: bindings. 위험: 낮음.
 - `src/tuningPanelAssetActions.js`: asset actions. 수정: upload/download. 같이: asset runtime, project state. 위험: 중간.
 - `src/tuningPanelShortcuts.js`: shortcuts. 수정: keyboard shortcut. 같이: timeline/selection controllers. 위험: 중간.
 - `src/tuningPanelDebugView.js`: debug view. 수정: setting debug UI. 같이: settings debug renderer. 위험: 낮음.
@@ -155,7 +154,6 @@
 - `src/poseTimelineAdapter.js`: poseOffsets adapter. 수정: Action data read/write. 같이: timeline mutations/read, game config. 위험: 높음.
 - `src/tuningPoseTimelinePanelView.js`: Action timeline view. 수정: toolbar/settings UI. 같이: pose controller. 위험: 중간.
 - `src/tuningGroupPoseEdit.js`: group pose edit. 수정: multi-part Action transform. 같이: canvas controller, group state. 위험: 중간.
-- `src/tuningPanelTimelineFrameActions.js`: timeline action wiring. 수정: panel-level frame actions. 같이: timeline controllers. 위험: 낮음.
 - `src/tuningPanelTimelines.js`: timeline composition. 수정: pose/effect timeline 생성. 같이: timeline controllers. 위험: 중간.
 - `src/tuningTimelineAccessors.js`: timeline accessors. 수정: timeline bridge 값. 같이: panel/timeline controllers. 위험: 낮음.
 - `src/tuningTimelineDom.js`: timeline DOM helper. 수정: timeline DOM query/render helper. 같이: timeline renderer. 위험: 낮음.

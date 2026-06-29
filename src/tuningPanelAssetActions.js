@@ -1,7 +1,6 @@
 import { defaultTuningFor } from './actorTuning.js';
 import { refreshCharacterPsdAssets } from './characterPsdRuntime.js';
 import { refreshEffectAsset } from './effectAssetRuntime.js';
-import { runPanelButtonAction } from './tuningPanelButtonAction.js';
 import { clone } from './utils.js';
 
 export function bindTuningPanelAssetActions({
@@ -102,4 +101,31 @@ async function refreshCurrentEffectAsset({ effectAssets, effectKey, effectFile =
   effectTimeline?.renderFields();
   effectTimeline?.syncPreview();
   return true;
+}
+
+async function runPanelButtonAction(button, label, action) {
+  if (!button || !action || button.disabled) return;
+
+  button.disabled = true;
+  button.classList.add('is-working');
+  button.classList.remove('is-success', 'is-error');
+  button.setAttribute('aria-label', `${label} 처리중`);
+
+  let ok;
+  try {
+    ok = await action();
+  } catch {
+    ok = false;
+  }
+
+  button.classList.remove('is-working');
+  button.classList.toggle('is-success', Boolean(ok));
+  button.classList.toggle('is-error', !ok);
+  button.setAttribute('aria-label', `${label} ${ok ? '완료' : '실패'}`);
+
+  window.setTimeout(() => {
+    button.classList.remove('is-success', 'is-error');
+    button.setAttribute('aria-label', label);
+    button.disabled = false;
+  }, 1200);
 }
