@@ -1,7 +1,9 @@
 import { createControllerTimelineRenderer } from './timelineControllerView.js';
-import { createTimelinePlaybackControls } from './tuningTimelinePlaybackControls.js';
-import { createTimelineSelectionControls } from './timelineControllerSelectionControls.js';
-import { createTimelineClipboardControls } from './timelineControllerClipboardControls.js';
+import {
+  createTimelineClipboardControls,
+  createTimelinePlaybackControls,
+  createTimelineSelectionControls,
+} from './timelineControllerControls.js';
 import {
   addTimelineKeyframeAction,
   deleteTimelineKeyframeAction,

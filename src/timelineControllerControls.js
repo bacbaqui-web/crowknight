@@ -1,7 +1,8 @@
-import { markActiveKeyframeButton } from './timelineDragControls.js';
-import { hasTimelineSelection } from './timelineState.js';
+import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './gameConfig.js';
 import {
   applyTimelineSelectionAction,
+  copyTimelineFrameAction,
+  pasteTimelineFrameAction,
   refreshTimelineFrameSelectionAction,
   resetTimelineSelectionAction,
   selectTimelineKeyframeAction,
@@ -9,6 +10,10 @@ import {
   selectTimelineSlotAction,
   setFixedTimelineFrameSelectionAction,
 } from './timelineControllerActions.js';
+import { markActiveKeyframeButton } from './timelineDragControls.js';
+import { hasTimelineSelection } from './timelineState.js';
+import { clampPlaybackRateInput } from './tuningNumberInputs.js';
+import { nextTimelineFrameCount } from './tuningTimelineSettings.js';
 
 export function createTimelineSelectionControls({
   selection,
@@ -101,4 +106,79 @@ export function createTimelineSelectionControls({
     selectSlot,
     setFixedFrame,
   };
+}
+
+export function createTimelineClipboardControls({ isOpen, beginUndo, commitUndo }) {
+  const copyFrame = ({ copyFrame, setCopiedFrame, afterCopy }) =>
+    copyTimelineFrameAction({
+      copyFrame,
+      setCopiedFrame,
+      afterCopy,
+    });
+
+  const pasteFrame = ({ copiedFrame, pasteTargetFrameId, pasteFrameCopy, finish }) =>
+    pasteTimelineFrameAction({
+      copiedFrame,
+      isOpen: isOpen(),
+      beginUndo,
+      commitUndo,
+      pasteTargetFrameId,
+      pasteFrameCopy,
+      finish,
+    });
+
+  return {
+    copyFrame,
+    pasteFrame,
+  };
+}
+
+export function createTimelinePlaybackControls({
+  getFrameCount,
+  durationInput,
+  beginUndo,
+  commitUndo,
+  updateSetting,
+  isPlaying,
+  stopPreview,
+  syncPreview,
+  playPreview,
+  settings,
+}) {
+  return {
+    updatePlaybackRate: (value, peer) => updateTimelinePlaybackRate(value, peer, updateSetting),
+    stepDuration: (delta, snapToTen = false) =>
+      stepTimelineDuration(getFrameCount(), delta, snapToTen, durationInput, beginUndo, updateSetting, commitUndo),
+    togglePlayback: () => toggleTimelinePlayback(isPlaying, stopPreview, syncPreview, playPreview),
+    togglePlaybackMode: () => toggleTimelinePlaybackMode(settings, beginUndo, updateSetting, commitUndo),
+  };
+}
+
+function updateTimelinePlaybackRate(value, peer, updateSetting) {
+  const next = clampPlaybackRateInput(value, peer);
+  if (next === null) return;
+  updateSetting('playbackRate', next);
+}
+
+function stepTimelineDuration(frameCount, delta, snapToTen, durationInput, beginUndo, updateSetting, commitUndo) {
+  beginUndo();
+  const next = nextTimelineFrameCount(frameCount, delta, snapToTen, POSE_MIN_FRAMES, POSE_MAX_FRAMES);
+  durationInput.value = next;
+  updateSetting('duration', next);
+  commitUndo();
+}
+
+function toggleTimelinePlayback(isPlaying, stopPreview, syncPreview, playPreview) {
+  if (isPlaying()) {
+    stopPreview();
+    syncPreview();
+    return;
+  }
+  playPreview();
+}
+
+function toggleTimelinePlaybackMode(settings, beginUndo, updateSetting, commitUndo) {
+  beginUndo();
+  updateSetting('playback', settings().playback === 'loop' ? 'once' : 'loop');
+  commitUndo();
 }
