@@ -2,43 +2,40 @@
 
 ## Sprint 목표
 
-큰 파일을 키우지 않고 미사용 public helper를 제거한다.
+큰 파일을 키우지 않는 범위에서 Actor render 책임을 통합한다.
 
-파일 수를 억지로 줄이는 단계는 잠시 멈추고, 실제로 더 이상 쓰이지 않는 API 표면을 줄인다.
+`actorEffectsRenderer.js`가 actor render 계열의 단일 보조 파일로 남아 있어, actor body/HUD/effect draw 책임을 `actorRenderer.js`로 모은다.
 
 ## 핵심 원칙
 
-- 사용하지 않는 export는 남기지 않는다.
-- 큰 파일에 기능을 흡수하지 않는다.
-- 같은 기능으로 착각될 수 있는 죽은 helper를 제거한다.
+- 큰 파일에 무작정 흡수하지 않는다.
+- 같은 Actor render 책임은 같은 파일로 모은다.
+- Render 순서는 유지한다.
 - 저장 구조는 변경하지 않는다.
 - Runtime combat 규칙은 변경하지 않는다.
 
 ## 완료한 작업
 
-- `src/editableObjectModel.js`에서 미사용 export 제거.
-  - `createEditableInteraction()`
-  - `createEditableObject()`
-  - `centeredEditableTransform()`
-  - `centerOffsetEditableTransform()`
-  - `editableTransformLocalPoints()`
-  - `editableTransformPoints()`
-  - `editableTransformBounds()`
-- `src/tuningInteractionObjects.js`에서 미사용 export 제거.
-  - `interactionObjectPartSources()`
-- 기존 사용 중인 editable transform helper는 유지.
-  - `createEditableTransform()`
-  - `createEditableAppearance()`
-  - `editableTransformDrawRect()`
-  - `scaledEditableAnchor()`
-  - `resizeEditableTransformFromHandle()`
+- `src/actorEffectsRenderer.js` 제거.
+- `drawAttackTrail()`을 `src/actorRenderer.js`로 이동.
+- `drawSelectedPartGlow()`를 `src/actorRenderer.js` local helper로 이동.
+- `drawHitFlash()`를 `src/actorRenderer.js` local helper로 이동.
+- `src/main.js`의 `drawAttackTrail()` import를 `actorRenderer.js`로 변경.
+- `docs/10_SRC_MAP.md`에서 삭제/갱신 파일 항목 반영.
+- `docs/12_EDITOR_FLOW.md`에서 Effect runtime draw 참조 갱신.
 
 ## 변경한 파일과 변경 이유
 
-- `src/editableObjectModel.js`
-  - 사용되지 않는 object factory/center/bounds helper 제거.
-- `src/tuningInteractionObjects.js`
-  - Editor source 단일화 이후 사용되지 않는 interaction object source helper 제거.
+- `src/actorRenderer.js`
+  - Actor body/HUD/effect/shadow draw 책임을 한 파일로 통합.
+- `src/main.js`
+  - `drawAttackTrail()` import 경로 변경.
+- `src/actorEffectsRenderer.js`
+  - 삭제. 기능은 `actorRenderer.js`로 이동.
+- `docs/10_SRC_MAP.md`
+  - 소스 지도 갱신.
+- `docs/12_EDITOR_FLOW.md`
+  - Effect runtime draw 경로 갱신.
 - `docs/99_CURRENT_SPRINT.md`
   - 이번 Sprint 결과 기록.
 
@@ -47,44 +44,41 @@
 Before:
 
 ```text
-editableObjectModel
-→ 실제 사용 helper + 미사용 helper 혼재
+main
+→ actorEffectsRenderer.drawAttackTrail
 
-tuningInteractionObjects
-→ interaction object key/parent helper + 미사용 source helper 혼재
+actorRenderer
+→ actorEffectsRenderer.drawSelectedPartGlow / drawHitFlash
 ```
 
 After:
 
 ```text
-editableObjectModel
-→ 실제 사용 중인 transform/appearance/resize helper만 유지
+main
+→ actorRenderer.drawAttackTrail
 
-tuningInteractionObjects
-→ 실제 사용 중인 key/parent/focus helper만 유지
+actorRenderer
+→ local drawSelectedPartGlow / drawHitFlash
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- 호출되지 않는 editable object factory 제거.
-- 호출되지 않는 center transform helper 제거.
-- 호출되지 않는 bounds/points helper 제거.
-- 호출되지 않는 interaction object source helper 제거.
-- JS 파일 수 변화 없음: `src` 기준 138개 유지.
+- Actor render 계열이 `actorRenderer.js`와 `actorEffectsRenderer.js`로 나뉘어 있던 구조 제거.
+- Main actor effect import 경로 제거.
+- JS 파일 수: `src` 기준 138개 → 137개.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
-- Editable Transform 규칙은 유지.
-- InteractionBox 저장 구조는 유지.
-- Interaction runtime 계산은 변경하지 않음.
-- Canvas drag resize 흐름은 유지.
-- Renderer/edit handle 흐름은 유지.
+- Main render order는 유지.
+  - Actor draw 후 hit/death particle 후 attack trail.
+- Effect frame 읽기는 `effectFrameAt()` 유지.
+- Effect region record는 `recordPuppetImageRegion()` 유지.
+- Actor HUD layout은 `characterHudLayout.js` 유지.
+- 저장 구조는 변경하지 않음.
 - Runtime combat system은 변경하지 않음.
 
 ## 아직 남아있는 예외 처리
 
-- `actorEffectsRenderer.js`
-  - Effect/hit flash/selection glow renderer가 별도.
 - Effect context active key는 synthetic key `effect`를 사용한다.
 - Master/root는 아직 `anchorX/anchorY` 기반이다.
 - Group edit는 screen-space group transform이다.
@@ -94,44 +88,45 @@ tuningInteractionObjects
 
 - 예정: `npm run check`.
 - 예정: `git diff --check`.
-- 예정: 삭제 export 이름 검색.
-- 예정: `src` 파일 수 138개 확인.
-- 제한: 실제 브라우저 시각 QA는 아직 수행하지 않음.
+- 예정: `actorRenderer.js` import smoke test.
+- 예정: 삭제 파일 import 검색.
+- 예정: `src` 파일 수 137개 확인.
+- 제한: 실제 브라우저 canvas render QA는 아직 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- 삭제한 helper가 외부 문서나 미래 계획에서만 참조될 가능성은 낮다.
-- 현재 기준 `src` 참조가 없는 helper만 삭제했다.
-- 향후 필요하면 실제 사용 흐름이 생길 때 다시 추가한다.
+- `actorRenderer.js`가 actor body/HUD/shadow/effect draw를 함께 가진다.
+- 현재 209줄이라 파일 크기 위험은 낮음.
+- Actor render가 300줄 이상 커지면 effect/HUD 경계를 재검토한다.
 
 ## 다음 Sprint 추천
 
-1. Effect renderer 공통화 검토.
-   - `actorEffectsRenderer.js`가 actor/effect/editable render 흐름과 통합 가능한지 확인.
+1. 실제 화면 QA.
+   - Actor HUD/shadow.
+   - Hit flash.
+   - Selected part glow.
+   - Attack trail effect.
 2. 큰 파일 분해 기준 수립.
    - `tuningNormalize.js`, `puppetPlayer.js`, `tuningPanel.js`는 추가 흡수보다 책임 분리가 우선.
-3. 실제 화면 QA.
-   - Ranking HUD.
-   - Actor HUD/shadow.
-   - StageRules panel render.
-   - Asset refresh buttons.
-   - Timeline selection/copy/playback.
+3. 더 줄일 후보는 신중히 선별.
+   - 중심 파일을 키우는 통합은 중단.
+   - 같은 책임의 작은 파일 통합만 허용.
 
 ## 리팩토링 후보와 이유
 
-- `src/actorEffectsRenderer.js`
-  - Actor render 계열과 책임 경계 재검토 가능.
 - `src/tuningNormalize.js`
   - 465줄. 저장 schema 책임 집중.
 - `src/puppetPlayer.js`
   - 440줄. Runtime helper 책임 집중.
 - `src/tuningPanel.js`
   - 421줄. 추가 흡수보다 분리 기준 검토가 필요.
+- `src/puppetPlayerRenderer.js`
+  - 394줄. render/edit region 기록 책임 집중.
 
 ## 현재 판단
 
-이번 단계는 파일 수 감소보다 API 표면 축소가 목적이었다.
+이번 통합은 무리한 수준이 아니다.
 
-더 줄이는 작업은 가능하지만, 다음부터는 큰 파일 비대화 위험이 커진다.
+`actorRenderer.js`가 209줄이므로 아직 관리 가능하다.
 
-계속 진행하려면 먼저 `actorEffectsRenderer.js` 공통화 가능성을 확인하고, 무리하면 중단하는 것이 맞다.
+다만 다음 단계부터는 중심 파일 비대화 위험이 커진다. 더 줄이려면 먼저 후보를 분석하고, 같은 책임으로 묶이는 경우에만 진행해야 한다.

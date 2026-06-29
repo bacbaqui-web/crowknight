@@ -1,6 +1,5 @@
-import { drawAttackTrail } from './actorEffectsRenderer.js';
 import { captureActorMotionStart, updatePausedActors } from './actorFrameState.js';
-import { drawActor } from './actorRenderer.js';
+import { drawActor, drawAttackTrail } from './actorRenderer.js';
 import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
 import { loadEffectAssets } from './assetLoaders.js';
 import {

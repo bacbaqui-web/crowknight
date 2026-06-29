@@ -28,7 +28,7 @@
 - `src/actorTuning.js`: actor tuning helper. 수정: tuning 복제/초기화 변경. 같이: `playerDefaultTuning.js`, `tuningNormalize.js`. 위험: 중간.
 - `src/actorFrameState.js`: frame별 actor state. 수정: Runtime frame 계산 변경. 같이: `actorRenderer.js`. 위험: 중간.
 - `src/actorPlacement.js`: actor 위치 배치. 수정: spawn/preview 위치 변경. 같이: `actorFactory.js`. 위험: 중간.
-- `src/actorRenderer.js`: actor render 조립. 수정: actor draw/HUD 순서 변경. 같이: `puppetPlayerRenderer.js`, HUD layout. 위험: 중간.
+- `src/actorRenderer.js`: actor render 조립. 수정: actor draw/HUD/effect 순서 변경. 같이: `puppetPlayerRenderer.js`, HUD layout. 위험: 중간.
 
 ## Puppet Player / Runtime Geometry
 
@@ -48,11 +48,10 @@
 - `src/backgroundRenderer.js`: background draw. 수정: 배경 렌더/transform. 같이: `backgroundPanelController.js`, `psdBackgroundRuntime.js`. 위험: 중간.
 - `src/cameraView.js`: camera transform. 수정: screen/world 좌표계. 같이: `worldRenderer.js`. 위험: 중간.
 - `src/screenGeometry.js`: screen geometry helper. 수정: 순수 geometry helper. 같이: 호출 파일. 위험: 낮음.
-- `src/actorEffectsRenderer.js`: actor effect draw. 수정: Runtime effect 표시. 같이: `effectTimelineAdapter.js`. 위험: 중간.
 - `src/runHud.js`: game HUD. 수정: Runtime HUD/score UI. 같이: `scoreFormat.js`. 위험: 낮음.
 - `src/runSpeedMotion.js`: speed motion helper. 수정: Runtime speed visual. 같이: `puppetPlayerPose.js`. 위험: 중간.
 - `src/rollGhosts.js`: roll ghost visual. 수정: 구르기 잔상. 같이: `puppetPlayerActions.js`. 위험: 낮음.
-- `src/particleEffects.js`: particle Runtime. 수정: particle 효과. 같이: `actorEffectsRenderer.js`. 위험: 중간.
+- `src/particleEffects.js`: particle Runtime. 수정: particle 효과. 같이: main render. 위험: 중간.
 
 ## Combat / Ranking
 

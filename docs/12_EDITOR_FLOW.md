@@ -180,7 +180,7 @@ Effect interaction:
 
 ```text
 tuning.effectOffsets[effectKey].active / attack / hurt / collision / guard
-→ actorEffectsRenderer.drawAttackTrail()
+→ actorRenderer.drawAttackTrail()
 → player.hitRegions[effect:effectKey].interaction
 → interactionRegionRuntime.createActiveInteractionRegions()
 → combatSystem
