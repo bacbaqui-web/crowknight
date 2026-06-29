@@ -1,6 +1,5 @@
 import { defaultTuningFor } from './actorTuning.js';
-import { refreshCharacterPsdAssets } from './characterPsdRuntime.js';
-import { refreshEffectAsset } from './effectAssetRuntime.js';
+import { refreshCharacterPsdAssets, refreshEffectAsset } from './assetRefreshRuntime.js';
 import { clone } from './utils.js';
 
 export function bindTuningPanelAssetActions({

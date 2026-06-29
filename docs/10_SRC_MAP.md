@@ -67,8 +67,7 @@
 ## Assets / Save / Firebase
 
 - `src/assetLoaders.js`: asset load helper. 수정: 이미지/PSD 로딩. 같이: asset runtime files. 위험: 중간.
-- `src/characterPsdRuntime.js`: character PSD asset. 수정: 캐릭터 PSD 처리. 같이: `tuningPanelAssetActions.js`. 위험: 중간.
-- `src/effectAssetRuntime.js`: effect asset. 수정: 효과 이미지 처리. 같이: `tuningEffectTimelineController.js`. 위험: 중간.
+- `src/assetRefreshRuntime.js`: editor asset refresh/upload. 수정: 캐릭터 PSD/Effect asset 처리. 같이: `tuningPanelAssetActions.js`. 위험: 중간.
 - `src/psdBackgroundRuntime.js`: background PSD asset. 수정: 배경 PSD 처리. 같이: `backgroundPanelController.js`. 위험: 중간.
 - `src/saveStateStorage.js`: local save. 수정: local 저장 키/형식. 같이: `projectStateController.js`. 위험: 높음.
 - `src/projectStateController.js`: project save/load. 수정: 저장/불러오기 흐름. 같이: Firebase/storage files. 위험: 높음.

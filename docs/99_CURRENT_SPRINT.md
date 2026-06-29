@@ -4,29 +4,38 @@
 
 JS 파일 수를 줄인다.
 
-큰 파일을 키우지 않고 StageRules selector/controller 책임을 한 파일로 합친다.
+캐릭터 PSD refresh와 Effect asset refresh의 중복 Runtime helper를 하나로 합친다.
 
 ## 핵심 원칙
 
 - 큰 파일에 무작정 흡수하지 않는다.
-- 단일 소비자 helper는 소비 책임에 붙인다.
-- StageRules 동작은 유지한다.
+- 같은 asset refresh/upload 책임은 같은 파일로 모은다.
+- 중복 helper를 제거한다.
 - 저장 구조는 변경하지 않는다.
 - Runtime combat 규칙은 변경하지 않는다.
 
 ## 완료한 작업
 
-- `src/stageRulesSelectors.js` 제거.
-- StageRules read selector helper를 `src/stageRulesController.js`로 이동.
-- `src/stageRulesController.js`가 StageRules editor API와 내부 read helper를 함께 처리하도록 정리.
-- `docs/10_SRC_MAP.md`에서 삭제/갱신 파일 항목 반영.
+- `src/assetRefreshRuntime.js` 추가.
+- Character PSD refresh/upload 흐름을 `assetRefreshRuntime.js`로 이동.
+- Effect asset refresh/upload 흐름을 `assetRefreshRuntime.js`로 이동.
+- 중복 `fetchJson()` helper를 하나로 통합.
+- 중복 binary upload 흐름을 `uploadBinaryAsset()`로 통합.
+- `src/characterPsdRuntime.js` 제거.
+- `src/effectAssetRuntime.js` 제거.
+- `src/tuningPanelAssetActions.js` import를 공통 asset refresh 파일로 변경.
+- `docs/10_SRC_MAP.md`에서 삭제/추가 파일 항목 갱신.
 
 ## 변경한 파일과 변경 이유
 
-- `src/stageRulesController.js`
-  - 단일 소비자였던 StageRules selector helper 흡수.
-- `src/stageRulesSelectors.js`
-  - 삭제. 외부 공통 API로 쓰이지 않았고 controller 내부 helper로만 사용됨.
+- `src/assetRefreshRuntime.js`
+  - Editor asset refresh/upload Runtime helper 통합.
+- `src/tuningPanelAssetActions.js`
+  - Character/Effect asset refresh import 경로 변경.
+- `src/characterPsdRuntime.js`
+  - 삭제. 기능은 `assetRefreshRuntime.js`로 이동.
+- `src/effectAssetRuntime.js`
+  - 삭제. 기능은 `assetRefreshRuntime.js`로 이동.
 - `docs/10_SRC_MAP.md`
   - 소스 지도 갱신.
 - `docs/99_CURRENT_SPRINT.md`
@@ -37,30 +46,37 @@ JS 파일 수를 줄인다.
 Before:
 
 ```text
-stageRulesController
-→ stageRulesSelectors
-→ stageRulesState.normalizeStageRules
+tuningPanelAssetActions
+→ characterPsdRuntime
+→ fetchJson / uploadCharacterPsd
+
+tuningPanelAssetActions
+→ effectAssetRuntime
+→ fetchJson / uploadEffectAsset
 ```
 
 After:
 
 ```text
-stageRulesController
-→ stageRulesState.normalizeStageRules
+tuningPanelAssetActions
+→ assetRefreshRuntime
+→ fetchJson / uploadBinaryAsset
 ```
 
 ## 제거한 중복 또는 예외 처리
 
-- StageRules selector 전용 파일 제거.
-- StageRules controller read 호출 경로 1단계 축소.
-- JS 파일 수: `src` 기준 143개 → 142개.
+- Character/Effect asset refresh 파일 분리 제거.
+- 중복 `fetchJson()` 제거.
+- 중복 POST upload boilerplate 제거.
+- JS 파일 수: `src` 기준 142개 → 141개.
 
 ## 유지한 구조와 의도적으로 건드리지 않은 부분
 
-- StageRules state/schema는 `stageRulesState.js` 유지.
-- StageRules panel renderer/controller 구조는 유지.
-- StageRules 저장 모델은 변경하지 않음.
-- StageRules UI field 구성은 변경하지 않음.
+- Character asset loader는 `loadCharacterAssets()` 유지.
+- Effect asset loader는 `loadEffectAsset()` 유지.
+- API endpoint는 기존 값 유지.
+- Panel button binding 구조는 유지.
+- 저장 구조는 변경하지 않음.
 - Runtime combat system은 변경하지 않음.
 
 ## 아직 남아있는 예외 처리
@@ -75,17 +91,19 @@ stageRulesController
 
 - 통과: `npm run check`.
 - 통과: `git diff --check`.
-- 통과: `stageRulesController.js` import smoke test.
+- 통과: `assetRefreshRuntime.js` import smoke test.
+- 통과: `tuningPanelAssetActions.js` import smoke test.
 - 통과: 삭제 파일 import 검색.
-  - `src`에서 `stageRulesSelectors` 참조 없음.
-- 통과: `src` 파일 수 142개 확인.
-- 제한: 실제 `setting.html` 브라우저 클릭/드래그 QA는 아직 수행하지 않음.
+  - `src`에서 `characterPsdRuntime` 참조 없음.
+  - `src`에서 `effectAssetRuntime` 참조 없음.
+- 통과: `src` 파일 수 141개 확인.
+- 제한: 실제 PSD/Effect asset upload API QA는 아직 수행하지 않음.
 
 ## 알려진 위험 요소
 
-- `stageRulesController.js`가 read selector helper를 함께 가진다.
-- 현재 160줄대 예상이라 파일 크기 위험은 낮음.
-- StageRules read API가 여러 외부 소비자를 갖게 되면 selector 분리를 재검토한다.
+- `assetRefreshRuntime.js`가 Character와 Effect asset refresh를 함께 가진다.
+- 둘 다 Editor asset refresh/upload 책임이라 현재 통합 경계는 자연스럽다.
+- Asset 종류가 더 늘면 asset type별 config 기반으로 확장할 수 있다.
 
 ## 다음 Sprint 추천
 
@@ -102,8 +120,8 @@ stageRulesController
 
 ## 리팩토링 후보와 이유
 
-- `src/stageRulesController.js`
-  - 이번 Sprint에서 selector helper를 흡수함. 크기 추적 필요.
+- `src/assetRefreshRuntime.js`
+  - 이번 Sprint에서 Character/Effect asset refresh를 통합함. Asset 종류 증가 시 config화 후보.
 - `src/actorEffectsRenderer.js`
   - Runtime Effect render entry가 아직 별도.
 - `src/editableObjectModel.js`
@@ -118,4 +136,4 @@ stageRulesController
 - `src/tuningPanel.js`: 421줄. 추가 흡수 시 파일 비대화 주의.
 - `src/tuningEffectTimelineController.js`: 398줄. Effect UI/timeline 책임 집중.
 - `src/puppetPlayerRenderer.js`: 394줄. render/edit region 기록 책임 집중.
-- `src/stageRulesController.js`: 146줄. 이번 Sprint에서 selector helper를 흡수함.
+- `src/assetRefreshRuntime.js`: 72줄. 이번 Sprint에서 asset refresh helper를 통합함.
