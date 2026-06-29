@@ -54,8 +54,7 @@
 
 ## Combat / Ranking
 
-- `src/combatSystem.js`: Runtime combat. 수정: damage/overlap/reaction. 같이: `combatGeometry.js`, `puppetPlayer.js`. 위험: 높음.
-- `src/combatGeometry.js`: combat geometry. 수정: box overlap math. 같이: `combatSystem.js`. 위험: 중간.
+- `src/combatSystem.js`: Runtime combat. 수정: damage/overlap/reaction geometry. 같이: `puppetPlayer.js`. 위험: 높음.
 - `src/scoreFormat.js`: score formatting. 수정: score text. 같이: `runHud.js`, ranking UI. 위험: 낮음.
 - `src/rankingController.js`: ranking flow. 수정: ranking load/save. 같이: `firebaseRankings.js`, `rankingUi.js`. 위험: 중간.
 - `src/rankingUi.js`: ranking UI. 수정: ranking DOM/canvas 표시. 같이: `rankingController.js`, main render. 위험: 중간.

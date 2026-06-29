@@ -124,7 +124,7 @@ combatSystem
 → interactionRegionRuntime.createActiveInteractionRegions(player, 'attack')
 → active + attack object의 recorded region
 → Runtime attack regions
-→ combatGeometry.interactionRegionsOverlap()
+→ combatSystem.interactionRegionsOverlap()
 → attackInteractionRegion.reaction
 → combatSystem.applyHitReaction()
 ```
