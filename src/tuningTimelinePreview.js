@@ -4,8 +4,8 @@ import {
   shouldPreviewEffect,
   shouldPreviewPose,
 } from './previewState.js';
-import { schedulePreviewStop, stopPreviewTimer } from './previewPlayback.js';
 import { renderInactivePreviewTimeline } from './tuningPanelDom.js';
+import { previewTimeoutMs } from './tuningPlayback.js';
 
 export function syncPoseTimelinePreview({
   actors,
@@ -151,4 +151,13 @@ export function startTimelinePreview({
 export function stopTimelinePreview({ timer, setTimer, setPlaying }) {
   setTimer(clearTimelinePreviewTimer(timer));
   setPlaying(false);
+}
+
+function schedulePreviewStop(settings, onStop) {
+  return setTimeout(onStop, previewTimeoutMs(settings));
+}
+
+function stopPreviewTimer(timer) {
+  clearTimeout(timer);
+  return null;
 }

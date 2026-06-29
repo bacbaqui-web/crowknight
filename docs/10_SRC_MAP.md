@@ -198,6 +198,5 @@
 ## Preview / Playback
 
 - `src/previewState.js`: preview object. 수정: preview state shape. 같이: timeline preview. 위험: 낮음.
-- `src/previewPlayback.js`: preview timing. 수정: preview playback timing. 같이: timeline preview. 위험: 중간.
 - `src/tuningPlayback.js`: tuning playback helper. 수정: tool playback behavior. 같이: timeline preview. 위험: 중간.
 - `src/tuningRunMotionLink.js`: run motion link. 수정: tuning motion → Runtime motion bridge. 같이: motion fields, runtime motion. 위험: 중간.
