@@ -16,7 +16,7 @@ After Effects Transform model
 ```text
 Selection Palette click
 → tuningPanelPartController.selectPickerPart('part', partKey)
-→ tuningPanelSelectionState / tuningPanelEditingState
+→ tuningPanelSelectionState / tuningPanel local editing state
 → tuningPanelPartController.renderPartFields()
 → tuningParts.partEditSources(tuning)
 → canvasVisualValues.updateRigPartValue()

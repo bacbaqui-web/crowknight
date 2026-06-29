@@ -16,12 +16,11 @@ import { reorderTuningLayer } from './tuningPanelLayerOrder.js';
 import { createTuningPanelBootstrap } from './tuningPanelBootstrap.js';
 import { createTuningPanelComposition } from './tuningPanelComposition.js';
 import { bindTuningPanelControls, openTuningPanelEffectSection } from './tuningPanelControlBindings.js';
-import { createTuningPanelEditingState } from './tuningPanelEditingState.js';
 import { createTuningPanelGroupEditState } from './tuningPanelGroupEditState.js';
 import { createTuningPanelSelectionState } from './tuningPanelSelectionState.js';
 import { createTuningPanelSync } from './tuningPanelSync.js';
+import { DEFAULT_TUNING_PANEL_WORKFLOW_SESSION, normalizeTuningPanelWorkflowSession } from './tuningPanelWorkflow.js';
 import { createTuningPanelWorkflowController } from './tuningPanelWorkflowController.js';
-import { createTuningPanelWorkflowSessionState } from './tuningPanelWorkflowSessionState.js';
 
 export function createTuningPanel({
   canvas,
@@ -388,5 +387,35 @@ export function createTuningPanel({
     drawSettingsDebugBoxes,
     handleKeyboardShortcut,
     renderEditHandles: renderPanelEditHandles,
+  };
+}
+
+function createTuningPanelEditingState() {
+  let editFocusContext = null;
+  let editFocusPartKey = null;
+
+  return {
+    getEditFocusContext: () => editFocusContext,
+    setEditFocusContext: (value) => {
+      editFocusContext = value;
+    },
+    getEditFocusPartKey: () => editFocusPartKey,
+    setEditFocusPartKey: (value) => {
+      editFocusPartKey = value;
+    },
+  };
+}
+
+function createTuningPanelWorkflowSessionState({ initialSession = DEFAULT_TUNING_PANEL_WORKFLOW_SESSION } = {}) {
+  let activeSession = normalizeTuningPanelWorkflowSession(initialSession);
+
+  return {
+    getActiveSession: () => activeSession,
+    setActiveSession: (session) => {
+      activeSession = normalizeTuningPanelWorkflowSession(session);
+    },
+    resetActiveSession: () => {
+      activeSession = DEFAULT_TUNING_PANEL_WORKFLOW_SESSION;
+    },
   };
 }

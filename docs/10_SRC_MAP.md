@@ -117,11 +117,9 @@
 ## Panel State / Workflow
 
 - `src/tuningPanelSelectionState.js`: selection state owner. 수정: active selection 값. 같이: part controller. 위험: 중간.
-- `src/tuningPanelEditingState.js`: edit focus owner. 수정: edit focus 값. 같이: canvas/part controller. 위험: 중간.
 - `src/tuningPanelGroupEditState.js`: group edit state. 수정: multi-part edit values. 같이: group pose edit. 위험: 중간.
 - `src/tuningPanelUndoState.js`: undo state. 수정: undo snapshot 경계. 같이: apply/save controllers. 위험: 높음.
 - `src/tuningPanelWorkflow.js`: workflow metadata. 수정: session/section mapping. 같이: workflow controller/navigation. 위험: 중간.
-- `src/tuningPanelWorkflowSessionState.js`: active session owner. 수정: session state. 같이: workflow controller. 위험: 낮음.
 - `src/tuningPanelWorkflowNavigation.js`: session nav. 수정: workflow navigation UI. 같이: workflow metadata. 위험: 중간.
 - `src/tuningPanelWorkflowController.js`: workflow lifecycle. 수정: session enter/exit/filter/sync. 같이: panel sync. 위험: 중간.
 - `src/tuningPanelSync.js`: panel sync. 수정: actor/tuning UI sync. 같이: controllers/views. 위험: 높음.
