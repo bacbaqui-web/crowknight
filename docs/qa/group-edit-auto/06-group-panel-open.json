@@ -1,0 +1,11 @@
+{
+  "panelOpen": true,
+  "fields": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+  "selected": ["upperArmR", "lowerArmR"],
+  "canvas": {
+    "x": 0,
+    "y": 0,
+    "w": 1920,
+    "h": 1200
+  }
+}

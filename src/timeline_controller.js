@@ -18,6 +18,30 @@ export function createTimelineController({ name, core }) {
   };
 }
 
+export function createTimelineControllerCommonApi({
+  playbackControls,
+  timelineFrameCommands,
+  hasFrameSelection,
+  resetSelectionState,
+  stopPreview,
+  syncPreview,
+  updateSetting,
+}) {
+  return {
+    playbackControls,
+    addKeyframe: timelineFrameCommands.addKeyframe,
+    copyFrame: timelineFrameCommands.copyFrame,
+    deleteKeyframe: timelineFrameCommands.deleteKeyframe,
+    hasFrameSelection,
+    pasteFrame: timelineFrameCommands.pasteFrame,
+    resetAnimation: timelineFrameCommands.resetAnimation,
+    resetSelectionState,
+    stopPreview,
+    syncPreview,
+    updateSetting,
+  };
+}
+
 const COMMON_TIMELINE_CONTROLLER_METHODS = [
   'addKeyframe',
   'copyFrame',

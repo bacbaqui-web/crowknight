@@ -4,19 +4,17 @@ import { renderEffectImagePreview } from './editor_panel_dom.js';
 import { isEmptyEditableSlot } from './timeline_dom_helper.js';
 import { finishTimelineMutationAction } from './timeline_action_helper.js';
 import { createTimelineFrameCommands } from './timeline_command_helper.js';
-import { bindTimelineKeyframeDragWithPreview } from './timeline_drag_helper.js';
+import { createTimelineKeyframeDragHandler } from './timeline_drag_helper.js';
 import { createTimelineSelectionCommands } from './timeline_selection_helper.js';
 import { createTimelineSelectionState } from './timeline_state.js';
+import { createTimelineClipboardState } from './timeline_clipboard_helper.js';
 import { clearActorEffectPreviews } from './preview_state.js';
-import {
-  effectFrameValueFromInput,
-  isInteractionToggleProp,
-  readEffectFrameDisplayValue,
-} from './property_value_helper.js';
+import { isInteractionToggleProp } from './editable_property_helper.js';
+import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './property_value_helper.js';
 import { renderScrubGroups } from './property_scrub_helper.js';
 import { createTimelinePreviewControls, syncEffectTimelinePreview } from './timeline_preview_helper.js';
 import { renderEffectTimelineSettingsView } from './timeline_effect_panel_view.js';
-import { createTimelineController } from './timeline_controller.js';
+import { createTimelineController, createTimelineControllerCommonApi } from './timeline_controller.js';
 
 export function createEffectTimelineController({
   actors,
@@ -43,8 +41,9 @@ export function createEffectTimelineController({
   } = elements;
 
   const effectSelection = createTimelineSelectionState();
-  let copiedEffectFrame = null;
+  const clipboardState = createTimelineClipboardState();
   let previewControls = null;
+  let timelineKeyframeDragHandler = null;
   const effectTimeline = createEffectTimelineAdapter({ getActor: actor, effectSelect });
 
   const {
@@ -176,7 +175,7 @@ export function createEffectTimelineController({
       frameCount: getFrameCount(),
       playing: previewControls.isPlaying(),
       hasSelection: isSectionOpen(),
-      hasCopiedFrame: Boolean(copiedEffectFrame),
+      hasCopiedFrame: clipboardState.has(),
       undoCount: undoState.undoCount,
     });
   }
@@ -198,16 +197,12 @@ export function createEffectTimelineController({
     copyTimelineFrame,
     pasteTimelineFrame,
     resetSelectionState,
-    clearCopiedFrame,
+    clipboardState,
     stopPreview,
     finishAdd: finishTimelineMutation,
     finishDelete: finishTimelineMutation,
     finishReset: finishTimelineMutation,
     finishPaste: finishTimelineMutation,
-    getCopiedFrame: () => copiedEffectFrame,
-    setCopiedFrame: (copy) => {
-      copiedEffectFrame = copy;
-    },
     createFrameCopy: () =>
       effectTimeline.copyFrame({
         isOpen: isSectionOpen(),
@@ -221,7 +216,7 @@ export function createEffectTimelineController({
       }),
     pasteFrameCopy: (id) =>
       effectTimeline.pasteFrameCopy({
-        copiedFrame: copiedEffectFrame,
+        copiedFrame: clipboardState.get(),
         id,
       }),
     afterCopy: renderSettings,
@@ -232,6 +227,26 @@ export function createEffectTimelineController({
     selectTimelineSlot,
     setContext: () => setEditContext('effect'),
     applySelection: applyTimelineSelection,
+  });
+
+  timelineKeyframeDragHandler = createTimelineKeyframeDragHandler({
+    selectionCommands: timelineSelectionCommands,
+    selectKeyframeForDrag: selectTimelineKeyframeForDrag,
+    beginUndo: beginUndoSnapshot,
+    commitUndo: commitUndoSnapshot,
+    track: effectTimelineTrack,
+    frameCount: getFrameCount,
+    lastSlot: getLastSlot,
+    keyframes: keyframesForTimeline,
+    toSlot,
+    slotToValue,
+    moveKeyframe: (dragId, nextT) => effectTimeline.moveKeyframe(dragId, nextT),
+    applySelected,
+    setDragPreview: effectTimeline.setDragPreview,
+    slotToLeft,
+    stopPreview,
+    getActiveT,
+    afterFinish: renderFields,
   });
 
   function playPreview() {
@@ -264,7 +279,7 @@ export function createEffectTimelineController({
   }
 
   function clearCopiedFrame() {
-    copiedEffectFrame = null;
+    clipboardState.clear();
   }
 
   function applyTimelineSelection(nextSelection) {
@@ -275,25 +290,7 @@ export function createEffectTimelineController({
   }
 
   function bindKeyframeDragHandler(button, id) {
-    bindTimelineKeyframeDragWithPreview(button, id, {
-      selectKeyframe: timelineSelectionCommands.selectKeyframe,
-      selectKeyframeForDrag: selectTimelineKeyframeForDrag,
-      beginUndo: beginUndoSnapshot,
-      commitUndo: commitUndoSnapshot,
-      track: effectTimelineTrack,
-      frameCount: getFrameCount,
-      lastSlot: getLastSlot,
-      keyframes: keyframesForTimeline,
-      toSlot,
-      slotToValue,
-      moveKeyframe: (dragId, nextT) => effectTimeline.moveKeyframe(dragId, nextT),
-      applySelected,
-      setDragPreview: effectTimeline.setDragPreview,
-      slotToLeft,
-      stopPreview,
-      getActiveT,
-      afterFinish: renderFields,
-    });
+    timelineKeyframeDragHandler?.(button, id);
   }
 
   function getActiveT() {
@@ -318,19 +315,15 @@ export function createEffectTimelineController({
   }
 
   return defineController({
-    common: {
+    common: createTimelineControllerCommonApi({
       playbackControls,
-      addKeyframe: timelineFrameCommands.addKeyframe,
-      copyFrame: timelineFrameCommands.copyFrame,
-      deleteKeyframe: timelineFrameCommands.deleteKeyframe,
+      timelineFrameCommands,
       hasFrameSelection,
-      pasteFrame: timelineFrameCommands.pasteFrame,
-      resetAnimation: timelineFrameCommands.resetAnimation,
       resetSelectionState,
       stopPreview,
       syncPreview,
       updateSetting,
-    },
+    }),
     extensions: {
       clearCopiedFrame,
       clearSelection,

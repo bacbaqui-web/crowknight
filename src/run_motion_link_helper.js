@@ -1,5 +1,6 @@
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
-import { setPath } from './utils.js';
+import { formatNumericDecimalValue } from './property_numeric_input_helper.js';
+import { clamp, setPath } from './utils.js';
 
 const RUN_LINK_FIELDS = ['walkBob'];
 const RUN_LINK_POWER = {
@@ -61,10 +62,7 @@ function normalizeLinkedControlValue(value, input) {
   const min = Number(input?.min);
   const max = Number(input?.max);
   const step = Number(input?.step || 1);
-  const clamped = Math.min(
-    Number.isFinite(max) ? max : Infinity,
-    Math.max(Number.isFinite(min) ? min : -Infinity, value)
-  );
+  const clamped = clamp(value, Number.isFinite(min) ? min : -Infinity, Number.isFinite(max) ? max : Infinity);
   const stepped = Number.isFinite(step) && step > 0 ? Math.round(clamped / step) * step : clamped;
-  return Number(stepped.toFixed(step < 1 ? 3 : 0));
+  return Number(formatNumericDecimalValue(stepped, step < 1 ? 3 : 0));
 }

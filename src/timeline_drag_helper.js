@@ -54,3 +54,44 @@ export function bindTimelineKeyframeDragWithPreview(
     afterFinish,
   });
 }
+
+export function createTimelineKeyframeDragHandler({
+  selectionCommands,
+  selectKeyframeForDrag,
+  beginUndo,
+  commitUndo,
+  track,
+  frameCount,
+  lastSlot,
+  keyframes,
+  toSlot,
+  slotToValue,
+  moveKeyframe,
+  applySelected,
+  setDragPreview,
+  slotToLeft,
+  stopPreview,
+  getActiveT,
+  afterFinish,
+}) {
+  return (button, id) =>
+    bindTimelineKeyframeDragWithPreview(button, id, {
+      selectKeyframe: selectionCommands.selectKeyframe,
+      selectKeyframeForDrag,
+      beginUndo,
+      commitUndo,
+      track,
+      frameCount,
+      lastSlot,
+      keyframes,
+      toSlot,
+      slotToValue,
+      moveKeyframe,
+      applySelected,
+      setDragPreview,
+      slotToLeft,
+      stopPreview,
+      getActiveT,
+      afterFinish,
+    });
+}

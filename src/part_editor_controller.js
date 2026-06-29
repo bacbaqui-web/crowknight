@@ -1,13 +1,14 @@
 import { ensurePoseOffset } from './project_data_normalizer.js';
 import { groupPosePropertyGroups, partPropertyGroups, posePropertyGroups } from './property_field_groups.js';
-import { isInteractionToggleProp, readPartFieldDisplayValue } from './property_value_helper.js';
+import { isInteractionToggleProp } from './editable_property_helper.js';
+import { readPartFieldDisplayValue } from './property_value_helper.js';
 import { emptyPartMessage, markPartPicker, renderPosePartHeader } from './editor_panel_dom.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { partEditSources, poseMotionGroups } from './part_source_registry.js';
 import { posePartFocusAfterMultiSelect } from './panel_edit_state.js';
 import { updateRigPartValue } from './transform_value_helper.js';
 import { renderScrubGroups } from './property_scrub_helper.js';
-import { applyGroupPoseEditValue } from './group_pose_editor.js';
+import { applyGroupTransformPropertyValue } from './group_transform_adapter.js';
 import { MASTER_PART_KEY } from './game_config.js';
 
 export function createTuningPanelPartController({
@@ -227,7 +228,7 @@ export function createTuningPanelPartController({
     renderScrubGroups(
       posePartFields,
       posePropertyGroups(partKey, poseTimeline.hasFrameSelection(), offset),
-      (prop) => poseTimeline.readDisplayValue(partKey, offset, prop),
+      (prop) => poseTimeline.readDisplayValue(partKey, poseTimeline.currentFrameValue(partKey), prop),
       (prop, value) => updatePosePartValue(prop, value),
       scrubCallbacks
     );
@@ -242,7 +243,7 @@ export function createTuningPanelPartController({
   function updateGroupPoseValue(prop, value) {
     poseTimeline.stopPreview();
     const canvasController = getCanvasController();
-    const result = applyGroupPoseEditValue({
+    const result = applyGroupTransformPropertyValue({
       prop,
       value,
       groupEditValues: getGroupEditValues(),

@@ -1,5 +1,19 @@
 import { stepNumberByOne, stepNumberByTen } from './number_input_helper.js';
-import { isInteractionToggleProp, isSizeProp } from './property_value_helper.js';
+import {
+  formatNumericInputValue,
+  formatRotationInputValue,
+  parseNumericTextValue,
+  parseRotationInputValue,
+} from './property_numeric_input_helper.js';
+import {
+  isPercentDisplayProp,
+  isInteractionDecimalProp,
+  isOpacityProp,
+  isRotationProp,
+  isToggleProp,
+  isTogglePropOff,
+  togglePropFallback,
+} from './editable_property_helper.js';
 
 export function renderScrubGroups(container, groups, readValue, writeValue, callbacks) {
   groups.forEach((group) => {
@@ -23,7 +37,7 @@ export function renderScrubGroups(container, groups, readValue, writeValue, call
 function renderScrubValue(label, prop, value, writeValue, container, readValue, callbacks) {
   const control = document.createElement('span');
   control.className = 'scrub-control';
-  control.classList.toggle('is-rotation', prop === 'rot');
+  control.classList.toggle('is-rotation', isRotationProp(prop));
   const button = document.createElement('button');
   button.className = 'scrub-value';
   button.type = 'button';
@@ -138,8 +152,8 @@ function startInlineScrubEdit(button, prop, writeValue, container, readValue, ca
   const currentValue = readValue(prop);
   const input = document.createElement('input');
   input.className = 'scrub-input';
-  input.type = prop === 'rot' ? 'text' : 'number';
-  input.step = isSizeProp(prop) ? '1' : '0.1';
+  input.type = isRotationProp(prop) ? 'text' : 'number';
+  input.step = isPercentDisplayProp(prop) ? '1' : '0.1';
   input.value = scrubInputValue(currentValue, prop);
   button.classList.add('is-editing');
   button.innerHTML = '';
@@ -209,95 +223,39 @@ function propLabelForScrub(prop) {
 }
 
 function scrubInputValue(value, prop) {
-  if (prop === 'rot') return formatRotationValue(value);
-  if (isPercentDisplayProp(prop)) return parseScrubNumber(formatPartValue(value, prop));
-  if (prop === 'stun' || prop === 'deathBurst') return formatDecimalValue(value, 2);
+  if (isRotationProp(prop)) return formatRotationInputValue(value);
+  if (isPercentDisplayProp(prop)) return formatNumericInputValue(Number(value ?? togglePropFallback(prop)), 0.1);
+  if (isInteractionDecimalProp(prop)) return formatNumericInputValue(value, 0.01);
   const number = Number(value ?? 0);
-  return Number.isInteger(number) ? String(number) : number.toFixed(1);
+  return formatNumericInputValue(number, 0.1);
 }
 
 function scrubStep(prop) {
   if (isToggleProp(prop)) return 0.01;
-  if (prop === 'stun' || prop === 'deathBurst') return 0.01;
+  if (isInteractionDecimalProp(prop)) return 0.01;
   if (isPercentDisplayProp(prop)) return 1;
   return 1;
 }
 
-function parseScrubNumber(value) {
-  return Number(String(value).replace('%', '').trim());
-}
-
 function parseScrubInput(value, prop) {
-  if (prop === 'rot') return parseRotationValue(value);
-  return parseScrubNumber(value);
+  if (isRotationProp(prop)) return parseRotationInputValue(value);
+  return parseNumericTextValue(value);
 }
 
 function formatPartValue(value, prop) {
   const fallback = togglePropFallback(prop);
   const number = Number(value ?? fallback);
-  if (prop === 'rot') return formatRotationValue(number);
+  if (isRotationProp(prop)) return formatRotationInputValue(number);
   if (isPercentDisplayProp(prop)) {
-    const text = Number.isInteger(number) ? String(number) : number.toFixed(1);
+    const text = formatNumericInputValue(number, 0.1);
     return `${text}%`;
   }
-  if (prop === 'opacity') {
+  if (isOpacityProp(prop)) {
     return number > 0 ? '보임' : '숨김';
   }
   if (isToggleProp(prop)) {
     return number > 0 ? '켜짐' : '꺼짐';
   }
-  if (prop === 'stun' || prop === 'deathBurst') return formatDecimalValue(number, 2);
-  return Number.isInteger(number) ? String(number) : number.toFixed(1);
-}
-
-function isToggleProp(prop) {
-  return prop === 'opacity' || isInteractionToggleProp(prop);
-}
-
-function isPercentDisplayProp(prop) {
-  return isSizeProp(prop) || prop === 'scale';
-}
-
-function isTogglePropOff(prop, value) {
-  return isToggleProp(prop) && Number(value ?? togglePropFallback(prop)) <= 0;
-}
-
-function togglePropFallback(prop) {
-  if (prop === 'opacity') return 1;
-  return 0;
-}
-
-function formatDecimalValue(value, decimals) {
-  const number = Number(value ?? 0);
-  if (!Number.isFinite(number)) return '0';
-  return Number(number.toFixed(decimals)).toString();
-}
-
-function formatRotationValue(value) {
-  const total = Number(value || 0);
-  if (!Number.isFinite(total)) return '0x +0°';
-  const turns = total < 0 ? Math.ceil(total / 360) : Math.floor(total / 360);
-  const degrees = total - turns * 360;
-  const degreeText = formatDegreeRemainder(degrees);
-  return `${turns}x ${degrees >= 0 ? '+' : ''}${degreeText}°`;
-}
-
-function formatDegreeRemainder(value) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-function parseRotationValue(value) {
-  const text = String(value ?? '')
-    .trim()
-    .replace(/°/g, '');
-  if (!text) return NaN;
-
-  const aeMatch = text.match(/^([+-]?\d+)\s*x\s*([+-]?\d+(?:\.\d+)?)?$/i);
-  if (aeMatch) {
-    const turns = Number(aeMatch[1]);
-    const degrees = Number(aeMatch[2] ?? 0);
-    return turns * 360 + degrees;
-  }
-
-  return parseScrubNumber(text);
+  if (isInteractionDecimalProp(prop)) return formatNumericInputValue(number, 0.01);
+  return formatNumericInputValue(number, 0.1);
 }

@@ -14,6 +14,7 @@ export function loadImages(map) {
 export const deg = (v) => (v * Math.PI) / 180;
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+export const clampFinite = (v, min, max, fallback = min) => (Number.isFinite(v) ? clamp(v, min, max) : fallback);
 export const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export function getPath(source, path) {

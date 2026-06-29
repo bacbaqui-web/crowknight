@@ -1,7 +1,19 @@
 import { defaultEffectSize } from './animation_frame_data.js';
 import { interactionObjectParentPart } from './interaction_object_editor.js';
 import { isMasterPart } from './editor_label_helper.js';
-import { controlGroupPartKeys, effectFieldLimits, isParentSizedPart, poseFieldLimits } from './part_source_registry.js';
+import {
+  effectFieldLimits,
+  isControlGroupPartKey,
+  isParentSizedPart,
+  poseFieldLimits,
+} from './part_source_registry.js';
+import {
+  SIZE_PERCENT_MAX,
+  SIZE_PERCENT_MIN,
+  isInteractionToggleProp,
+  isSizeProp,
+  sizeBaseProp,
+} from './editable_property_helper.js';
 import { clamp } from './utils.js';
 
 const ACTION_BASE_TRANSFORM_DISPLAY = {
@@ -32,9 +44,13 @@ export function readPartFieldDisplayValue(partKey, part, prop, tuning = null) {
 
 function readParentSizedPartFieldDisplayValue(partKey, part, prop, tuning) {
   if (!isSizeProp(prop)) return part?.[prop] ?? 0;
+  const parentSize = parentSizedPartSizeBase(tuning, partKey, prop, part?.[prop]);
+  return sizeValueToPercent(part?.[prop], parentSize);
+}
+
+export function parentSizedPartSizeBase(tuning, partKey, prop, fallback) {
   const parent = tuning ? interactionObjectParentPart(tuning, partKey) : null;
-  const parentSize = Math.max(1, Number(parent?.[prop] || parent?.[sizeBaseProp(prop)] || part?.[prop] || 1));
-  return (Number(part?.[prop] || parentSize) / parentSize) * 100;
+  return Math.max(1, Number(parent?.[prop] || parent?.[sizeBaseProp(prop)] || fallback || 1));
 }
 
 export function readPoseFrameDisplayValue(partKey, offset, prop, basePart) {
@@ -51,6 +67,57 @@ export function partSizeToPercent(partKey, part, prop) {
 
 export function partSizeFromPercent(partKey, part, prop, percent) {
   return setupPartSizeFromPercent(partKey, part, prop, percent);
+}
+
+export function partSizeBase(part, prop, fallbackPart = null) {
+  const baseProp = sizeBaseProp(prop);
+  return Math.max(1, Number(part?.[baseProp] || fallbackPart?.[baseProp] || part?.[prop] || 1));
+}
+
+export function partSizeScale(part, prop, fallbackPart = null) {
+  const base = partSizeBase(part, prop, fallbackPart);
+  return Math.max(0.001, Number(part?.[prop] || base) / base);
+}
+
+export function posePartSizeBase(basePart, prop) {
+  return Math.max(0.001, Number(basePart?.[prop] ?? 1));
+}
+
+export function sizeValueToPercent(value, baseValue) {
+  return (Number(value || baseValue) / baseValue) * 100;
+}
+
+export function sizeValueFromPercent(baseValue, percent, minValue = 1) {
+  return Math.max(minValue, baseValue * (Number(percent) / 100));
+}
+
+export function sizeOffsetToPercent(offset, baseValue) {
+  const currentSize = Math.max(0.001, baseValue + Number(offset || 0));
+  return sizeValueToPercent(currentSize, baseValue);
+}
+
+export function sizeOffsetFromPercent(baseValue, percent) {
+  return baseValue * (Number(percent) / 100 - 1);
+}
+
+export function scaleValueToPercent(value) {
+  return Number(value ?? 1) * 100;
+}
+
+export function positiveScaleValue(value, minScale = 0.001) {
+  return Math.max(minScale, Number(value || 1));
+}
+
+export function scaleValueFromPercent(percent, minScale = SIZE_PERCENT_MIN / 100) {
+  return sizeValueFromPercent(1, percent, minScale);
+}
+
+export function scaleOffsetToPercent(offset) {
+  return (1 + Number(offset || 0)) * 100;
+}
+
+export function scaleOffsetFromPercent(percent) {
+  return Number(percent) / 100 - 1;
 }
 
 export function poseSizeToPercent(partKey, offset, prop, basePart) {
@@ -80,11 +147,15 @@ export function effectSizeBase(effectKey, prop) {
 
 export function effectSizePercent(effectKey, frame, prop) {
   const baseValue = effectSizeBase(effectKey, prop);
-  return Math.round((Number(frame[prop] || baseValue) / baseValue) * 1000) / 10;
+  return Math.round(sizeValueToPercent(frame[prop], baseValue) * 10) / 10;
 }
 
 export function effectSizeFromPercent(effectKey, prop, percent) {
-  return effectSizeBase(effectKey, prop) * (clamp(Number(percent), 5, 300) / 100);
+  return sizeValueFromPercent(
+    effectSizeBase(effectKey, prop),
+    clamp(Number(percent), SIZE_PERCENT_MIN, SIZE_PERCENT_MAX),
+    0
+  );
 }
 
 function readActionBaseTransformDisplayValue(partKey, frameValue, prop, basePart) {
@@ -100,44 +171,28 @@ function actionBaseTransformValueFromInput(partKey, prop, value, basePart) {
   return nextValue;
 }
 
-export function isInteractionToggleProp(prop) {
-  return prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard';
-}
-
-export function isSizeProp(prop) {
-  return prop === 'w' || prop === 'h';
-}
-
-export function sizeBaseProp(prop) {
-  return prop === 'w' ? 'baseW' : 'baseH';
-}
-
 function actionPartSizeToPercent(partKey, frameValue, prop, basePart) {
-  if (isMasterPart(partKey)) return (1 + Number(frameValue?.[prop] || 0)) * 100;
+  if (isMasterPart(partKey)) return scaleOffsetToPercent(frameValue?.[prop]);
 
-  const baseSize = Math.max(0.001, Number(basePart?.[prop] ?? 1));
-  const currentSize = Math.max(0.001, baseSize + Number(frameValue?.[prop] || 0));
-  return (currentSize / baseSize) * 100;
+  const baseSize = posePartSizeBase(basePart, prop);
+  return sizeOffsetToPercent(frameValue?.[prop], baseSize);
 }
 
 function actionPartSizeOffsetFromPercent(partKey, prop, percent, basePart) {
-  if (isMasterPart(partKey)) return Number(percent) / 100 - 1;
+  if (isMasterPart(partKey)) return scaleOffsetFromPercent(percent);
 
-  const baseSize = Math.max(0.001, Number(basePart?.[prop] ?? 1));
-  return baseSize * (Number(percent) / 100 - 1);
+  const baseSize = posePartSizeBase(basePart, prop);
+  return sizeOffsetFromPercent(baseSize, percent);
 }
 
 function setupPartSizeToPercent(partKey, part, prop) {
-  if (controlGroupPartKeys().includes(partKey)) return Number(part?.[prop] ?? 1) * 100;
-  const baseProp = sizeBaseProp(prop);
-  const baseSize = Math.max(1, Number(part?.[baseProp] || part?.[prop] || 1));
-  return (Number(part?.[prop] || baseSize) / baseSize) * 100;
+  if (isControlGroupPartKey(partKey)) return scaleValueToPercent(part?.[prop]);
+  const baseSize = partSizeBase(part, prop);
+  return sizeValueToPercent(part?.[prop], baseSize);
 }
 
 function setupPartSizeFromPercent(partKey, part, prop, percent) {
-  const ratio = Number(percent) / 100;
-  if (controlGroupPartKeys().includes(partKey)) return Math.max(0.05, ratio);
-  const baseProp = sizeBaseProp(prop);
-  const baseSize = Math.max(1, Number(part?.[baseProp] || part?.[prop] || 1));
-  return Math.max(1, baseSize * ratio);
+  if (isControlGroupPartKey(partKey)) return scaleValueFromPercent(percent);
+  const baseSize = partSizeBase(part, prop);
+  return sizeValueFromPercent(baseSize, percent);
 }

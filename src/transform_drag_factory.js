@@ -1,12 +1,13 @@
 import { pickDragValues, pickVisualValues } from './canvasDragState.js';
 import { canvasGroupDragItems } from './transform_edit_state.js';
 
-export function createCanvasGroupDrag({ pointerId, point, handle, mode, parts, writePoseFrameValue }) {
+export function createCanvasGroupDrag({ pointerId, point, handle, mode, parts, startValues, writePoseFrameValue }) {
   return {
     pointerId,
     group: true,
     parts,
     handle,
+    startValues,
     startX: point.x,
     startY: point.y,
     startAngle: Math.atan2(point.y - handle.anchor.y, point.x - handle.anchor.x),
@@ -50,12 +51,13 @@ export function createCanvasGroupDragItems(parts, { editStateForPart, editHandle
   return canvasGroupDragItems(parts, { editStateForPart, editHandles });
 }
 
-export function createCurrentCanvasGroupDrag({ geometry, parts, mode, writePoseFrameValue }) {
-  if (!geometry) return { group: true, parts: [], handle: null, mode, writePoseFrameValue };
+export function createCurrentCanvasGroupDrag({ geometry, parts, mode, startValues, writePoseFrameValue }) {
+  if (!geometry) return { group: true, parts: [], handle: null, mode, startValues, writePoseFrameValue };
   return {
     group: true,
     parts,
     handle: geometry,
+    startValues,
     startX: geometry.anchor.x,
     startY: geometry.anchor.y,
     startAngle: 0,

@@ -1,0 +1,254 @@
+{
+  "url": "http://127.0.0.1:4173/setting.html",
+  "qaDir": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto",
+  "steps": [
+    {
+      "name": "group-selection",
+      "status": "PASS",
+      "details": "{\"text\":\"첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼\",\"values\":{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"},\"selected\":[\"upperArmR\",\"lowerArmR\"],\"hasWidthHeightFields\":false}",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/03-group-before-stepper.png"
+    },
+    {
+      "name": "group-fields-x-y-s-r-o",
+      "status": "PASS",
+      "details": "{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"}",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/03-group-before-stepper.png"
+    },
+    {
+      "name": "group-stepper-x",
+      "status": "PASS",
+      "details": "0 -> 1",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/04-group-after-stepper.png"
+    },
+    {
+      "name": "group-stepper-scale",
+      "status": "PASS",
+      "details": "100% -> 101%",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/04-group-after-stepper.png"
+    },
+    {
+      "name": "group-stepper-rot",
+      "status": "PASS",
+      "details": "0x +0° -> 0x +1°",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/04-group-after-stepper.png"
+    },
+    {
+      "name": "group-stepper-opacity",
+      "status": "PASS",
+      "details": "보임 -> 숨김",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/04-group-after-stepper.png"
+    },
+    {
+      "name": "group-selection-kept-after-stepper",
+      "status": "PASS",
+      "details": "{\"text\":\"첫프레임 · 선택 그룹 2위치X1▲▼Y0▲▼크기S101%▲▼회전R0x +1°▲▼투명O숨김▲▼\",\"values\":{\"x\":\"1\",\"y\":\"0\",\"scale\":\"101%\",\"rot\":\"0x +1°\",\"opacity\":\"숨김\"},\"selected\":[\"upperArmR\",\"lowerArmR\"],\"hasWidthHeightFields\":false}",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/04-group-after-stepper.png"
+    },
+    {
+      "name": "console-network",
+      "status": "PASS",
+      "details": "pageErrors=0 unexpectedBadResponses=none ignored404=1",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/04-group-after-stepper.png"
+    },
+    {
+      "name": "group-selection-kept-after-canvas-move",
+      "status": "PASS",
+      "details": "{\"text\":\"첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼\",\"values\":{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"},\"selected\":[\"upperArmR\",\"lowerArmR\"]}",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/08-after-canvas-move.png"
+    },
+    {
+      "name": "canvas-move-console-network",
+      "status": "PASS",
+      "details": "pageErrors=0 unexpectedBadResponses=none ignored404=1",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/08-after-canvas-move.png"
+    },
+    {
+      "name": "group-canvas-move-drag-offset",
+      "status": "PASS",
+      "details": "[{\"name\":\"09-canvas-move-attempt-offset1\",\"changed\":true,\"before\":{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"},\"after\":{\"x\":\"45\",\"y\":\"20\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"},\"x\":1050,\"y\":722}]",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/09-canvas-move-attempt-offset1.png"
+    },
+    {
+      "name": "group-canvas-rot-drag",
+      "status": "PASS",
+      "details": "{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"} -> {\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +39.4°\",\"opacity\":\"보임\"} @ 1094,665",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/12-canvas-rotate-attempt.png"
+    },
+    {
+      "name": "group-canvas-scale-drag",
+      "status": "PASS",
+      "details": "{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"} -> {\"x\":\"0\",\"y\":\"0\",\"scale\":\"179.7%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"} @ 1092,778",
+      "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/13-canvas-scale-attempt.png"
+    }
+  ],
+  "before": {
+    "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+    "values": {
+      "x": "0",
+      "y": "0",
+      "scale": "100%",
+      "rot": "0x +0°",
+      "opacity": "보임"
+    },
+    "selected": ["upperArmR", "lowerArmR"],
+    "hasWidthHeightFields": false
+  },
+  "after": {
+    "text": "첫프레임 · 선택 그룹 2위치X1▲▼Y0▲▼크기S101%▲▼회전R0x +1°▲▼투명O숨김▲▼",
+    "values": {
+      "x": "1",
+      "y": "0",
+      "scale": "101%",
+      "rot": "0x +1°",
+      "opacity": "숨김"
+    },
+    "selected": ["upperArmR", "lowerArmR"],
+    "hasWidthHeightFields": false
+  },
+  "consoleMessages": ["error: Failed to load resource: the server responded with a status of 404 (File not found)"],
+  "pageErrors": [],
+  "badResponses": ["404:http://127.0.0.1:4173/runtime/project-default-state.json?t=1782764486258"],
+  "canvasMove": {
+    "before": {
+      "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+      "values": {
+        "x": "0",
+        "y": "0",
+        "scale": "100%",
+        "rot": "0x +0°",
+        "opacity": "보임"
+      },
+      "selected": ["upperArmR", "lowerArmR"]
+    },
+    "after": {
+      "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+      "values": {
+        "x": "0",
+        "y": "0",
+        "scale": "100%",
+        "rot": "0x +0°",
+        "opacity": "보임"
+      },
+      "selected": ["upperArmR", "lowerArmR"]
+    },
+    "steps": [
+      {
+        "name": "group-canvas-move-field-change",
+        "status": "FAIL",
+        "details": "{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"} -> {\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"}",
+        "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/08-after-canvas-move.png"
+      },
+      {
+        "name": "group-selection-kept-after-canvas-move",
+        "status": "PASS",
+        "details": "{\"text\":\"첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼\",\"values\":{\"x\":\"0\",\"y\":\"0\",\"scale\":\"100%\",\"rot\":\"0x +0°\",\"opacity\":\"보임\"},\"selected\":[\"upperArmR\",\"lowerArmR\"]}",
+        "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/08-after-canvas-move.png"
+      },
+      {
+        "name": "canvas-move-console-network",
+        "status": "PASS",
+        "details": "pageErrors=0 unexpectedBadResponses=none ignored404=1",
+        "screenshot": "/Users/bacbaqui/Desktop/code/crow_knight/docs/qa/group-edit-auto/08-after-canvas-move.png"
+      }
+    ],
+    "consoleMessages": ["error: Failed to load resource: the server responded with a status of 404 (File not found)"],
+    "pageErrors": [],
+    "badResponses": ["404:http://127.0.0.1:4173/runtime/project-default-state.json?t=1782764614614"]
+  },
+  "canvasMoveOffsetAttempts": [
+    {
+      "name": "09-canvas-move-attempt-offset1",
+      "x": 1050,
+      "y": 722,
+      "dx": 45,
+      "dy": 20,
+      "before": {
+        "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+        "values": {
+          "x": "0",
+          "y": "0",
+          "scale": "100%",
+          "rot": "0x +0°",
+          "opacity": "보임"
+        },
+        "selected": ["upperArmR", "lowerArmR"]
+      },
+      "after": {
+        "text": "첫프레임 · 선택 그룹 2위치X45▲▼Y20▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+        "values": {
+          "x": "45",
+          "y": "20",
+          "scale": "100%",
+          "rot": "0x +0°",
+          "opacity": "보임"
+        },
+        "selected": ["upperArmR", "lowerArmR"]
+      },
+      "changed": true
+    }
+  ],
+  "canvasRotateScaleAttempts": [
+    {
+      "name": "12-canvas-rotate-attempt",
+      "x": 1094,
+      "y": 665,
+      "dx": 20,
+      "dy": 50,
+      "changedProp": "rot",
+      "before": {
+        "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+        "values": {
+          "x": "0",
+          "y": "0",
+          "scale": "100%",
+          "rot": "0x +0°",
+          "opacity": "보임"
+        },
+        "selected": ["upperArmR", "lowerArmR"]
+      },
+      "after": {
+        "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +39.4°▲▼투명O보임▲▼",
+        "values": {
+          "x": "0",
+          "y": "0",
+          "scale": "100%",
+          "rot": "0x +39.4°",
+          "opacity": "보임"
+        },
+        "selected": ["upperArmR", "lowerArmR"]
+      },
+      "changed": true
+    },
+    {
+      "name": "13-canvas-scale-attempt",
+      "x": 1092,
+      "y": 778,
+      "dx": 45,
+      "dy": 45,
+      "changedProp": "scale",
+      "before": {
+        "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+        "values": {
+          "x": "0",
+          "y": "0",
+          "scale": "100%",
+          "rot": "0x +0°",
+          "opacity": "보임"
+        },
+        "selected": ["upperArmR", "lowerArmR"]
+      },
+      "after": {
+        "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S179.7%▲▼회전R0x +0°▲▼투명O보임▲▼",
+        "values": {
+          "x": "0",
+          "y": "0",
+          "scale": "179.7%",
+          "rot": "0x +0°",
+          "opacity": "보임"
+        },
+        "selected": ["upperArmR", "lowerArmR"]
+      },
+      "changed": true
+    }
+  ]
+}

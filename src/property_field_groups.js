@@ -5,6 +5,7 @@ import {
   isPartWithPrimarySizeLabel,
   isPartWithSize,
 } from './part_source_registry.js';
+import { isInteractionPropOn } from './editable_property_helper.js';
 
 export function effectPropertyGroups(frameValue = null) {
   const groups = editableTransformPropertyGroups({
@@ -83,7 +84,7 @@ function poseSizeGroupLabel(partKey) {
 }
 
 function appendInteractionPropertyGroups(groups, frameValue = null) {
-  if (Number(frameValue?.active || 0) < 0.5) return;
+  if (!isInteractionPropOn(frameValue, 'active')) return;
   groups.push({
     label: '상호작용',
     props: [
@@ -94,7 +95,7 @@ function appendInteractionPropertyGroups(groups, frameValue = null) {
     ],
   });
 
-  if (Number(frameValue?.attack || 0) >= 0.5) {
+  if (isInteractionPropOn(frameValue, 'attack')) {
     groups.push({
       label: '공격',
       props: [
@@ -105,7 +106,7 @@ function appendInteractionPropertyGroups(groups, frameValue = null) {
       ],
     });
   }
-  if (Number(frameValue?.collision || 0) >= 0.5) {
+  if (isInteractionPropOn(frameValue, 'collision')) {
     groups.push({ label: '충돌', props: [{ prop: 'pushPower', label: 'P' }] });
   }
 }

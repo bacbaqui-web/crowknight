@@ -1,0 +1,3346 @@
+{
+  "scan": {
+    "buttons": [
+      {
+        "tag": "button",
+        "id": "rankingToggle",
+        "cls": "side-panel-toggle ranking-panel-toggle",
+        "text": "",
+        "aria": "랭킹 접기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "1위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "2위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "3위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "4위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "5위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "6위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "7위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "8위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "settings-ranking-delete",
+        "text": "×",
+        "aria": "9위 기록 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "←이동",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "holdCode": "ArrowLeft"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "→이동",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "holdCode": "ArrowRight"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "Space점프",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "holdCode": "Space"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "Q공격",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "tapCode": "KeyQ"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "W구르기",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "tapCode": "KeyW"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "E방어",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "holdCode": "KeyE"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "startBattle",
+        "cls": "",
+        "text": "전투 시작",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "endBattle",
+        "cls": "",
+        "text": "전투 끝",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "settingsToggle",
+        "cls": "settings-toggle side-panel-toggle",
+        "text": "",
+        "aria": "설정 열기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "firebaseUpload",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "Firebase 업로드",
+        "title": "Firebase 업로드",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "firebaseDownload",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "Firebase 다운로드",
+        "title": "Firebase 다운로드",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "resetTuning",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "초기화",
+        "title": "초기화",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "closeTuning",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "설정 닫기",
+        "title": "설정 닫기",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "is-active",
+        "text": "Setup",
+        "aria": "Setup 세션으로 이동",
+        "title": "",
+        "dataset": {
+          "workflowSessionTab": "setup"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "Action",
+        "aria": "Action 세션으로 이동",
+        "title": "",
+        "dataset": {
+          "workflowSessionTab": "animation"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "Effect",
+        "aria": "Effect 세션으로 이동",
+        "title": "",
+        "dataset": {
+          "workflowSessionTab": "effect"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "Stage",
+        "aria": "Stage 세션으로 이동",
+        "title": "",
+        "dataset": {
+          "workflowSessionTab": "stage"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "characterPsdUpload",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "선택 캐릭터 PSD 파일 선택 및 업로드",
+        "title": "선택 캐릭터 PSD 파일 선택 및 업로드",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "characterPsdRefresh",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "선택 캐릭터 PSD 새로고침",
+        "title": "선택 캐릭터 PSD 새로고침",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "characterPartReset",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "파츠 위치 초기화",
+        "title": "파츠 위치 초기화",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-collision-interaction-object",
+        "text": "충돌영역",
+        "aria": "",
+        "title": "충돌영역",
+        "dataset": {
+          "part": "collisionInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-head",
+        "text": "머리",
+        "aria": "",
+        "title": "머리",
+        "dataset": {
+          "part": "head",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-hurt-interaction-object",
+        "text": "피격영역",
+        "aria": "",
+        "title": "피격영역",
+        "dataset": {
+          "part": "hurtInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-neck",
+        "text": "망토",
+        "aria": "",
+        "title": "망토",
+        "dataset": {
+          "part": "cape",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-shoulder-l",
+        "text": "왼팔 어깨",
+        "aria": "",
+        "title": "왼팔 어깨",
+        "dataset": {
+          "part": "shoulderL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-shoulder-r",
+        "text": "오른팔 어깨",
+        "aria": "",
+        "title": "오른팔 어깨",
+        "dataset": {
+          "part": "shoulderR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-body",
+        "text": "몸통",
+        "aria": "",
+        "title": "몸통",
+        "dataset": {
+          "part": "body",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-arm-l",
+        "text": "왼팔 윗팔",
+        "aria": "",
+        "title": "왼팔 윗팔",
+        "dataset": {
+          "part": "upperArmL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-arm-l",
+        "text": "왼팔 아랫팔",
+        "aria": "",
+        "title": "왼팔 아랫팔",
+        "dataset": {
+          "part": "lowerArmL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-arm-r",
+        "text": "오른팔 윗팔",
+        "aria": "",
+        "title": "오른팔 윗팔",
+        "dataset": {
+          "part": "upperArmR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-arm-r",
+        "text": "오른팔 아랫팔",
+        "aria": "",
+        "title": "오른팔 아랫팔",
+        "dataset": {
+          "part": "lowerArmR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-hip-l",
+        "text": "왼다리 골반",
+        "aria": "",
+        "title": "왼다리 골반",
+        "dataset": {
+          "part": "hipL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-hip-r",
+        "text": "오른다리 골반",
+        "aria": "",
+        "title": "오른다리 골반",
+        "dataset": {
+          "part": "hipR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-shield",
+        "text": "방패",
+        "aria": "",
+        "title": "방패",
+        "dataset": {
+          "part": "shield",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-weapon",
+        "text": "무기",
+        "aria": "",
+        "title": "무기",
+        "dataset": {
+          "part": "weapon",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-leg-l",
+        "text": "왼다리 윗다리",
+        "aria": "",
+        "title": "왼다리 윗다리",
+        "dataset": {
+          "part": "upperLegL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-leg-l",
+        "text": "왼다리 아랫다리",
+        "aria": "",
+        "title": "왼다리 아랫다리",
+        "dataset": {
+          "part": "lowerLegL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-leg-r",
+        "text": "오른다리 윗다리",
+        "aria": "",
+        "title": "오른다리 윗다리",
+        "dataset": {
+          "part": "upperLegR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-leg-r",
+        "text": "오른다리 아랫다리",
+        "aria": "",
+        "title": "오른다리 아랫다리",
+        "dataset": {
+          "part": "lowerLegR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-attack-interaction-object",
+        "text": "공격영역",
+        "aria": "",
+        "title": "공격영역",
+        "dataset": {
+          "part": "attackInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-guard-interaction-object",
+        "text": "방어영역",
+        "aria": "",
+        "title": "방어영역",
+        "dataset": {
+          "part": "guardInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "X0",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "anchorX",
+          "scrubLabel": "X"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "Y0",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "anchorY",
+          "scrubLabel": "Y"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item is-selected",
+        "text": "무기",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "weapon"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "방패",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "shield"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "오른팔 · 아랫팔 위 / 윗팔 아래",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "rightArm"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "오른다리 · 아랫다리 위 / 윗다리 아래",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "rightLeg"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "왼팔 · 아랫팔 위 / 윗팔 아래",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "leftArm"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "망토",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "cape"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "머리",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "head"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "몸통",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "body"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "layer-order-item",
+        "text": "왼다리 · 아랫다리 위 / 윗다리 아래",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "layer": "leftLeg"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "poseFrameUp",
+        "cls": "",
+        "text": "▲",
+        "aria": "프레임 늘리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "poseFrameDown",
+        "cls": "",
+        "text": "▼",
+        "aria": "프레임 줄이기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "posePlayback",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "재생",
+        "title": "반복 재생",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "posePlaybackMode",
+        "cls": "icon-button is-active",
+        "text": "",
+        "aria": "반복 재생 설정",
+        "title": "반복 재생",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "poseCopyFrame",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "프레임 복사",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "posePasteFrame",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "프레임 붙여넣기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "poseUndoFrame",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "되돌리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "poseAddKeyframe",
+        "cls": "icon-button",
+        "text": "+",
+        "aria": "중간 키프레임 추가",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "poseDeleteKeyframe",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "선택 키프레임 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "poseResetAnimation",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "현재 Action 초기화",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "pose-keyframe",
+        "text": "",
+        "aria": "",
+        "title": "1칸",
+        "dataset": {
+          "keyframeId": "start",
+          "fixed": "true"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "pose-keyframe",
+        "text": "",
+        "aria": "",
+        "title": "8칸",
+        "dataset": {
+          "keyframeId": "end",
+          "fixed": "true"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-collision-interaction-object",
+        "text": "충돌영역",
+        "aria": "",
+        "title": "충돌영역",
+        "dataset": {
+          "part": "collisionInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-head",
+        "text": "머리",
+        "aria": "",
+        "title": "머리",
+        "dataset": {
+          "part": "head",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-hurt-interaction-object",
+        "text": "피격영역",
+        "aria": "",
+        "title": "피격영역",
+        "dataset": {
+          "part": "hurtInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-neck",
+        "text": "망토",
+        "aria": "",
+        "title": "망토",
+        "dataset": {
+          "part": "cape",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-shoulder-l",
+        "text": "왼팔 어깨",
+        "aria": "",
+        "title": "왼팔 어깨",
+        "dataset": {
+          "part": "shoulderL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-shoulder-r",
+        "text": "오른팔 어깨",
+        "aria": "",
+        "title": "오른팔 어깨",
+        "dataset": {
+          "part": "shoulderR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-body",
+        "text": "몸통",
+        "aria": "",
+        "title": "몸통",
+        "dataset": {
+          "part": "body",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-arm-l",
+        "text": "왼팔 윗팔",
+        "aria": "",
+        "title": "왼팔 윗팔",
+        "dataset": {
+          "part": "upperArmL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-arm-l",
+        "text": "왼팔 아랫팔",
+        "aria": "",
+        "title": "왼팔 아랫팔",
+        "dataset": {
+          "part": "lowerArmL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-arm-r",
+        "text": "오른팔 윗팔",
+        "aria": "",
+        "title": "오른팔 윗팔",
+        "dataset": {
+          "part": "upperArmR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-arm-r",
+        "text": "오른팔 아랫팔",
+        "aria": "",
+        "title": "오른팔 아랫팔",
+        "dataset": {
+          "part": "lowerArmR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-hip-l",
+        "text": "왼다리 골반",
+        "aria": "",
+        "title": "왼다리 골반",
+        "dataset": {
+          "part": "hipL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-hip-r",
+        "text": "오른다리 골반",
+        "aria": "",
+        "title": "오른다리 골반",
+        "dataset": {
+          "part": "hipR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-shield",
+        "text": "방패",
+        "aria": "",
+        "title": "방패",
+        "dataset": {
+          "part": "shield",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-weapon",
+        "text": "무기",
+        "aria": "",
+        "title": "무기",
+        "dataset": {
+          "part": "weapon",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-leg-l",
+        "text": "왼다리 윗다리",
+        "aria": "",
+        "title": "왼다리 윗다리",
+        "dataset": {
+          "part": "upperLegL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-leg-l",
+        "text": "왼다리 아랫다리",
+        "aria": "",
+        "title": "왼다리 아랫다리",
+        "dataset": {
+          "part": "lowerLegL",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-upper-leg-r",
+        "text": "오른다리 윗다리",
+        "aria": "",
+        "title": "오른다리 윗다리",
+        "dataset": {
+          "part": "upperLegR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-lower-leg-r",
+        "text": "오른다리 아랫다리",
+        "aria": "",
+        "title": "오른다리 아랫다리",
+        "dataset": {
+          "part": "lowerLegR",
+          "selectionType": "part"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-attack-interaction-object",
+        "text": "공격영역",
+        "aria": "",
+        "title": "공격영역",
+        "dataset": {
+          "part": "attackInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "part-pick part-guard-interaction-object",
+        "text": "방어영역",
+        "aria": "",
+        "title": "방어영역",
+        "dataset": {
+          "part": "guardInteractionObject",
+          "selectionType": "interactionObject"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "X0",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "anchorX",
+          "scrubLabel": "X"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "Y0",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "anchorY",
+          "scrubLabel": "Y"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "icon-button motion-link-toggle",
+        "text": "",
+        "aria": "이동 속도와 이동 애니메이션 값 연동",
+        "title": "이동 속도와 이동 애니메이션 값 연동",
+        "dataset": {
+          "action": "toggle-run-motion-link"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "section-toggle",
+        "text": "효과",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectFrameUp",
+        "cls": "",
+        "text": "▲",
+        "aria": "프레임 늘리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectFrameDown",
+        "cls": "",
+        "text": "▼",
+        "aria": "프레임 줄이기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectPlayback",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 재생",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectPlaybackMode",
+        "cls": "icon-button is-active",
+        "text": "",
+        "aria": "효과 반복 재생 설정",
+        "title": "반복 재생",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectCopyFrame",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 프레임 복사",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectPasteFrame",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 프레임 붙여넣기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectUndoFrame",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 되돌리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectAddKeyframe",
+        "cls": "icon-button",
+        "text": "+",
+        "aria": "효과 중간 키프레임 추가",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectDeleteKeyframe",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 선택 키프레임 삭제",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectResetAnimation",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "현재 효과 초기화",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "pose-keyframe is-active",
+        "text": "",
+        "aria": "",
+        "title": "1칸",
+        "dataset": {
+          "keyframeId": "start",
+          "fixed": "true"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "pose-keyframe",
+        "text": "",
+        "aria": "",
+        "title": "8칸",
+        "dataset": {
+          "keyframeId": "end",
+          "fixed": "true"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "effectAssetUpload",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 이미지 파일 선택 및 업로드",
+        "title": "효과 이미지 파일 선택 및 업로드",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectAssetRefresh",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "효과 이미지 새로고침",
+        "title": "효과 이미지 새로고침",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "effectAssetReset",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "현재 효과 초기화",
+        "title": "현재 효과 초기화",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "X72",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "ax",
+          "scrubLabel": "X"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "Y42",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "ay",
+          "scrubLabel": "Y"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "X0",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "x",
+          "scrubLabel": "X"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "Y0",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "y",
+          "scrubLabel": "Y"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "W100%",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "w",
+          "scrubLabel": "W"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "H100%",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "h",
+          "scrubLabel": "H"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "R0x +0°",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "rot",
+          "scrubLabel": "R"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value",
+        "text": "O보임",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "opacity",
+          "scrubLabel": "O"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "scrub-value is-off",
+        "text": "ON꺼짐",
+        "aria": "",
+        "title": "",
+        "dataset": {
+          "scrubProp": "active",
+          "scrubLabel": "ON"
+        }
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "section-toggle",
+        "text": "배경",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "backgroundPsdUpload",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "로컬 PSD 파일 선택 및 업로드",
+        "title": "로컬 PSD 파일 선택 및 업로드",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "backgroundRefresh",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "기본 배경 파일 새로고침 및 업로드",
+        "title": "기본 배경 파일 새로고침 및 업로드",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "backgroundReset",
+        "cls": "icon-button",
+        "text": "",
+        "aria": "배경 초기화",
+        "title": "배경 초기화",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "section-toggle",
+        "text": "진행",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▲",
+        "aria": "값 올리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "",
+        "text": "▼",
+        "aria": "값 내리기",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "section-toggle",
+        "text": "적",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "section-toggle",
+        "text": "보상",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "cls": "section-toggle",
+        "text": "점수",
+        "aria": "",
+        "title": "",
+        "dataset": {}
+      }
+    ],
+    "pickers": [
+      {
+        "picker": "part",
+        "childCount": 21,
+        "children": [
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-collision-interaction-object",
+            "text": "충돌영역",
+            "aria": "",
+            "title": "충돌영역",
+            "dataset": {
+              "part": "collisionInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-head",
+            "text": "머리",
+            "aria": "",
+            "title": "머리",
+            "dataset": {
+              "part": "head",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-hurt-interaction-object",
+            "text": "피격영역",
+            "aria": "",
+            "title": "피격영역",
+            "dataset": {
+              "part": "hurtInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-neck",
+            "text": "망토",
+            "aria": "",
+            "title": "망토",
+            "dataset": {
+              "part": "cape",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-shoulder-l",
+            "text": "왼팔 어깨",
+            "aria": "",
+            "title": "왼팔 어깨",
+            "dataset": {
+              "part": "shoulderL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-shoulder-r",
+            "text": "오른팔 어깨",
+            "aria": "",
+            "title": "오른팔 어깨",
+            "dataset": {
+              "part": "shoulderR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-body",
+            "text": "몸통",
+            "aria": "",
+            "title": "몸통",
+            "dataset": {
+              "part": "body",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-arm-l",
+            "text": "왼팔 윗팔",
+            "aria": "",
+            "title": "왼팔 윗팔",
+            "dataset": {
+              "part": "upperArmL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-arm-l",
+            "text": "왼팔 아랫팔",
+            "aria": "",
+            "title": "왼팔 아랫팔",
+            "dataset": {
+              "part": "lowerArmL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-arm-r",
+            "text": "오른팔 윗팔",
+            "aria": "",
+            "title": "오른팔 윗팔",
+            "dataset": {
+              "part": "upperArmR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-arm-r",
+            "text": "오른팔 아랫팔",
+            "aria": "",
+            "title": "오른팔 아랫팔",
+            "dataset": {
+              "part": "lowerArmR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-hip-l",
+            "text": "왼다리 골반",
+            "aria": "",
+            "title": "왼다리 골반",
+            "dataset": {
+              "part": "hipL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-hip-r",
+            "text": "오른다리 골반",
+            "aria": "",
+            "title": "오른다리 골반",
+            "dataset": {
+              "part": "hipR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-shield",
+            "text": "방패",
+            "aria": "",
+            "title": "방패",
+            "dataset": {
+              "part": "shield",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-weapon",
+            "text": "무기",
+            "aria": "",
+            "title": "무기",
+            "dataset": {
+              "part": "weapon",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-leg-l",
+            "text": "왼다리 윗다리",
+            "aria": "",
+            "title": "왼다리 윗다리",
+            "dataset": {
+              "part": "upperLegL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-leg-l",
+            "text": "왼다리 아랫다리",
+            "aria": "",
+            "title": "왼다리 아랫다리",
+            "dataset": {
+              "part": "lowerLegL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-leg-r",
+            "text": "오른다리 윗다리",
+            "aria": "",
+            "title": "오른다리 윗다리",
+            "dataset": {
+              "part": "upperLegR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-leg-r",
+            "text": "오른다리 아랫다리",
+            "aria": "",
+            "title": "오른다리 아랫다리",
+            "dataset": {
+              "part": "lowerLegR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-attack-interaction-object",
+            "text": "공격영역",
+            "aria": "",
+            "title": "공격영역",
+            "dataset": {
+              "part": "attackInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-guard-interaction-object",
+            "text": "방어영역",
+            "aria": "",
+            "title": "방어영역",
+            "dataset": {
+              "part": "guardInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          }
+        ]
+      },
+      {
+        "picker": "pose",
+        "childCount": 21,
+        "children": [
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-collision-interaction-object",
+            "text": "충돌영역",
+            "aria": "",
+            "title": "충돌영역",
+            "dataset": {
+              "part": "collisionInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-head",
+            "text": "머리",
+            "aria": "",
+            "title": "머리",
+            "dataset": {
+              "part": "head",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-hurt-interaction-object",
+            "text": "피격영역",
+            "aria": "",
+            "title": "피격영역",
+            "dataset": {
+              "part": "hurtInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-neck",
+            "text": "망토",
+            "aria": "",
+            "title": "망토",
+            "dataset": {
+              "part": "cape",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-shoulder-l",
+            "text": "왼팔 어깨",
+            "aria": "",
+            "title": "왼팔 어깨",
+            "dataset": {
+              "part": "shoulderL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-shoulder-r",
+            "text": "오른팔 어깨",
+            "aria": "",
+            "title": "오른팔 어깨",
+            "dataset": {
+              "part": "shoulderR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-body",
+            "text": "몸통",
+            "aria": "",
+            "title": "몸통",
+            "dataset": {
+              "part": "body",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-arm-l",
+            "text": "왼팔 윗팔",
+            "aria": "",
+            "title": "왼팔 윗팔",
+            "dataset": {
+              "part": "upperArmL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-arm-l",
+            "text": "왼팔 아랫팔",
+            "aria": "",
+            "title": "왼팔 아랫팔",
+            "dataset": {
+              "part": "lowerArmL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-arm-r",
+            "text": "오른팔 윗팔",
+            "aria": "",
+            "title": "오른팔 윗팔",
+            "dataset": {
+              "part": "upperArmR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-arm-r",
+            "text": "오른팔 아랫팔",
+            "aria": "",
+            "title": "오른팔 아랫팔",
+            "dataset": {
+              "part": "lowerArmR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-hip-l",
+            "text": "왼다리 골반",
+            "aria": "",
+            "title": "왼다리 골반",
+            "dataset": {
+              "part": "hipL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-hip-r",
+            "text": "오른다리 골반",
+            "aria": "",
+            "title": "오른다리 골반",
+            "dataset": {
+              "part": "hipR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-shield",
+            "text": "방패",
+            "aria": "",
+            "title": "방패",
+            "dataset": {
+              "part": "shield",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-weapon",
+            "text": "무기",
+            "aria": "",
+            "title": "무기",
+            "dataset": {
+              "part": "weapon",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-leg-l",
+            "text": "왼다리 윗다리",
+            "aria": "",
+            "title": "왼다리 윗다리",
+            "dataset": {
+              "part": "upperLegL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-leg-l",
+            "text": "왼다리 아랫다리",
+            "aria": "",
+            "title": "왼다리 아랫다리",
+            "dataset": {
+              "part": "lowerLegL",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-upper-leg-r",
+            "text": "오른다리 윗다리",
+            "aria": "",
+            "title": "오른다리 윗다리",
+            "dataset": {
+              "part": "upperLegR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-lower-leg-r",
+            "text": "오른다리 아랫다리",
+            "aria": "",
+            "title": "오른다리 아랫다리",
+            "dataset": {
+              "part": "lowerLegR",
+              "selectionType": "part"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-attack-interaction-object",
+            "text": "공격영역",
+            "aria": "",
+            "title": "공격영역",
+            "dataset": {
+              "part": "attackInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          },
+          {
+            "tag": "button",
+            "id": "",
+            "cls": "part-pick part-guard-interaction-object",
+            "text": "방어영역",
+            "aria": "",
+            "title": "방어영역",
+            "dataset": {
+              "part": "guardInteractionObject",
+              "selectionType": "interactionObject"
+            }
+          }
+        ]
+      }
+    ],
+    "selects": [
+      {
+        "id": "actorSelect",
+        "value": "player",
+        "options": [
+          {
+            "value": "player",
+            "text": "player - 주인공"
+          },
+          {
+            "value": "enemy1",
+            "text": "enemy - 적1"
+          },
+          {
+            "value": "enemy2",
+            "text": "enemy - 적2"
+          },
+          {
+            "value": "enemy3",
+            "text": "enemy - 적3"
+          },
+          {
+            "value": "enemy4",
+            "text": "enemy - 적4"
+          }
+        ]
+      },
+      {
+        "id": "partSelect",
+        "value": "master",
+        "options": [
+          {
+            "value": "master",
+            "text": "기준"
+          },
+          {
+            "value": "collisionInteractionObject",
+            "text": "충돌영역"
+          },
+          {
+            "value": "head",
+            "text": "머리"
+          },
+          {
+            "value": "hurtInteractionObject",
+            "text": "피격영역"
+          },
+          {
+            "value": "cape",
+            "text": "망토"
+          },
+          {
+            "value": "shoulderL",
+            "text": "왼팔 어깨"
+          },
+          {
+            "value": "shoulderR",
+            "text": "오른팔 어깨"
+          },
+          {
+            "value": "body",
+            "text": "몸통"
+          },
+          {
+            "value": "upperArmL",
+            "text": "왼팔 윗팔"
+          },
+          {
+            "value": "lowerArmL",
+            "text": "왼팔 아랫팔"
+          },
+          {
+            "value": "upperArmR",
+            "text": "오른팔 윗팔"
+          },
+          {
+            "value": "lowerArmR",
+            "text": "오른팔 아랫팔"
+          },
+          {
+            "value": "hipL",
+            "text": "왼다리 골반"
+          },
+          {
+            "value": "hipR",
+            "text": "오른다리 골반"
+          },
+          {
+            "value": "shield",
+            "text": "방패"
+          },
+          {
+            "value": "weapon",
+            "text": "무기"
+          },
+          {
+            "value": "upperLegL",
+            "text": "왼다리 윗다리"
+          },
+          {
+            "value": "lowerLegL",
+            "text": "왼다리 아랫다리"
+          },
+          {
+            "value": "upperLegR",
+            "text": "오른다리 윗다리"
+          },
+          {
+            "value": "lowerLegR",
+            "text": "오른다리 아랫다리"
+          },
+          {
+            "value": "attackInteractionObject",
+            "text": "공격영역"
+          },
+          {
+            "value": "guardInteractionObject",
+            "text": "방어영역"
+          }
+        ]
+      },
+      {
+        "id": "poseSelect",
+        "value": "idle",
+        "options": [
+          {
+            "value": "idle",
+            "text": "대기"
+          },
+          {
+            "value": "run",
+            "text": "이동"
+          },
+          {
+            "value": "jump",
+            "text": "점프"
+          },
+          {
+            "value": "fall",
+            "text": "낙하"
+          },
+          {
+            "value": "glide",
+            "text": "활강"
+          },
+          {
+            "value": "roll",
+            "text": "구르기"
+          },
+          {
+            "value": "guard",
+            "text": "방어"
+          },
+          {
+            "value": "guardBreak",
+            "text": "방어 풀림"
+          },
+          {
+            "value": "hurt",
+            "text": "피격"
+          },
+          {
+            "value": "death",
+            "text": "사망"
+          },
+          {
+            "value": "jumpAttack",
+            "text": "점프 공격"
+          },
+          {
+            "value": "attack1",
+            "text": "공격 1타"
+          },
+          {
+            "value": "attack2",
+            "text": "공격 2타"
+          },
+          {
+            "value": "attack3",
+            "text": "공격 3타"
+          }
+        ]
+      },
+      {
+        "id": "posePartSelect",
+        "value": "master",
+        "options": [
+          {
+            "value": "master",
+            "text": "기준"
+          },
+          {
+            "value": "body",
+            "text": "몸통"
+          },
+          {
+            "value": "head",
+            "text": "머리"
+          },
+          {
+            "value": "cape",
+            "text": "망토"
+          },
+          {
+            "value": "shield",
+            "text": "방패"
+          },
+          {
+            "value": "upperArmL",
+            "text": "왼팔 윗팔"
+          },
+          {
+            "value": "lowerArmL",
+            "text": "왼팔 아랫팔"
+          },
+          {
+            "value": "upperArmR",
+            "text": "오른팔 윗팔"
+          },
+          {
+            "value": "lowerArmR",
+            "text": "오른팔 아랫팔"
+          },
+          {
+            "value": "upperLegL",
+            "text": "왼다리 윗다리"
+          },
+          {
+            "value": "lowerLegL",
+            "text": "왼다리 아랫다리"
+          },
+          {
+            "value": "upperLegR",
+            "text": "오른다리 윗다리"
+          },
+          {
+            "value": "lowerLegR",
+            "text": "오른다리 아랫다리"
+          },
+          {
+            "value": "weapon",
+            "text": "무기"
+          },
+          {
+            "value": "neck",
+            "text": "목 위치"
+          },
+          {
+            "value": "shoulderL",
+            "text": "왼팔 어깨"
+          },
+          {
+            "value": "shoulderR",
+            "text": "오른팔 어깨"
+          },
+          {
+            "value": "hipL",
+            "text": "왼다리 골반"
+          },
+          {
+            "value": "hipR",
+            "text": "오른다리 골반"
+          },
+          {
+            "value": "collisionInteractionObject",
+            "text": "충돌영역"
+          },
+          {
+            "value": "hurtInteractionObject",
+            "text": "피격영역"
+          },
+          {
+            "value": "attackInteractionObject",
+            "text": "공격영역"
+          },
+          {
+            "value": "guardInteractionObject",
+            "text": "방어영역"
+          }
+        ]
+      },
+      {
+        "id": "effectSelect",
+        "value": "idle",
+        "options": [
+          {
+            "value": "idle",
+            "text": "대기"
+          },
+          {
+            "value": "run",
+            "text": "이동"
+          },
+          {
+            "value": "jump",
+            "text": "점프"
+          },
+          {
+            "value": "fall",
+            "text": "낙하"
+          },
+          {
+            "value": "glide",
+            "text": "활강"
+          },
+          {
+            "value": "roll",
+            "text": "구르기"
+          },
+          {
+            "value": "guard",
+            "text": "방어"
+          },
+          {
+            "value": "guardBreak",
+            "text": "방어 풀림"
+          },
+          {
+            "value": "hurt",
+            "text": "피격"
+          },
+          {
+            "value": "death",
+            "text": "사망"
+          },
+          {
+            "value": "jumpAttack",
+            "text": "점프 공격"
+          },
+          {
+            "value": "attack1",
+            "text": "공격 1타"
+          },
+          {
+            "value": "attack2",
+            "text": "공격 2타"
+          },
+          {
+            "value": "attack3",
+            "text": "공격 3타"
+          }
+        ]
+      },
+      {
+        "id": "progressionMode",
+        "value": "endless",
+        "options": [
+          {
+            "value": "endless",
+            "text": "Endless"
+          },
+          {
+            "value": "fixed",
+            "text": "Fixed"
+          }
+        ]
+      },
+      {
+        "id": "enemySpawnMode",
+        "value": "cameraRespawn",
+        "options": [
+          {
+            "value": "cameraRespawn",
+            "text": "Camera Respawn"
+          },
+          {
+            "value": "interval",
+            "text": "Interval"
+          },
+          {
+            "value": "wave",
+            "text": "Wave"
+          }
+        ]
+      }
+    ],
+    "poseFieldsText": "기본기준X0▲▼Y0▲▼",
+    "partFieldsText": "기준X0▲▼Y0▲▼",
+    "canvasRect": null
+  },
+  "consoleMessages": ["error: Failed to load resource: the server responded with a status of 404 (File not found)"],
+  "pageErrors": [],
+  "badResponses": ["404:http://127.0.0.1:4173/runtime/project-default-state.json?t=1782764298413"]
+}

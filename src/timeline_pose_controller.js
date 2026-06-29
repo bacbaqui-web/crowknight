@@ -2,13 +2,14 @@ import { createPoseTimelineAdapter } from './timeline_pose_adapter.js';
 import { poseFrameValueFromInput, readPoseFrameDisplayValue } from './property_value_helper.js';
 import { finishTimelineMutationAction } from './timeline_action_helper.js';
 import { createTimelineFrameCommands } from './timeline_command_helper.js';
-import { bindTimelineKeyframeDragWithPreview } from './timeline_drag_helper.js';
+import { createTimelineKeyframeDragHandler } from './timeline_drag_helper.js';
 import { createTimelineSelectionCommands } from './timeline_selection_helper.js';
 import { createTimelineSelectionState } from './timeline_state.js';
+import { createTimelineClipboardState } from './timeline_clipboard_helper.js';
 import { createTimelinePreviewControls, syncPoseTimelinePreview } from './timeline_preview_helper.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './timeline_pose_panel_view.js';
 import { MASTER_PART_KEY } from './game_config.js';
-import { createTimelineController } from './timeline_controller.js';
+import { createTimelineController, createTimelineControllerCommonApi } from './timeline_controller.js';
 
 export function createPoseTimelineController({
   actors,
@@ -36,8 +37,9 @@ export function createPoseTimelineController({
   } = elements;
 
   const poseSelection = createTimelineSelectionState();
-  let copiedPoseFrame = null;
+  const clipboardState = createTimelineClipboardState();
   let previewControls = null;
+  let timelineKeyframeDragHandler = null;
   const poseTimeline = createPoseTimelineAdapter({ getActor: actor, poseSelect });
 
   const {
@@ -104,7 +106,7 @@ export function createPoseTimelineController({
         frameCount: getFrameCount(),
         playing: previewControls.isPlaying(),
         hasSelection: hasFrameSelection(),
-        hasCopiedFrame: Boolean(copiedPoseFrame),
+        hasCopiedFrame: clipboardState.has(),
         undoCount: undoState.undoCount,
       })
     );
@@ -114,7 +116,7 @@ export function createPoseTimelineController({
     setFrameSelectionActive(
       syncPoseTimelineToolbarView(elements, {
         hasSelection: hasFrameSelection(),
-        hasCopiedFrame: Boolean(copiedPoseFrame),
+        hasCopiedFrame: clipboardState.has(),
         undoCount: undoState.undoCount,
         frameCount: getFrameCount(),
       })
@@ -139,16 +141,12 @@ export function createPoseTimelineController({
     copyTimelineFrame,
     pasteTimelineFrame,
     resetSelectionState,
-    clearCopiedFrame,
+    clipboardState,
     stopPreview,
     finishAdd: () => finishTimelineMutation({ resetGroup: true }),
     finishDelete: () => finishTimelineMutation({ resetGroup: true }),
     finishReset: () => finishTimelineMutation({ syncToolbar: true }),
     finishPaste: () => finishTimelineMutation({ resetGroup: true, syncToolbar: true }),
-    getCopiedFrame: () => copiedPoseFrame,
-    setCopiedFrame: (copy) => {
-      copiedPoseFrame = copy;
-    },
     createFrameCopy: () =>
       poseTimeline.copyFrame({
         isOpen: isSectionOpen(),
@@ -163,7 +161,7 @@ export function createPoseTimelineController({
       }),
     pasteFrameCopy: (id) =>
       poseTimeline.pasteFrameCopy({
-        copiedFrame: copiedPoseFrame,
+        copiedFrame: clipboardState.get(),
         id,
         selectedPoseParts,
         activePosePartKey: getActivePosePartKey(),
@@ -182,6 +180,32 @@ export function createPoseTimelineController({
     }),
   });
 
+  timelineKeyframeDragHandler = createTimelineKeyframeDragHandler({
+    selectionCommands: timelineSelectionCommands,
+    selectKeyframeForDrag: selectTimelineKeyframeForDrag,
+    beginUndo: beginUndoSnapshot,
+    commitUndo: commitUndoSnapshot,
+    track: poseTimelineTrack,
+    frameCount: getFrameCount,
+    lastSlot: getLastSlot,
+    keyframes: keyframesForTimeline,
+    toSlot,
+    slotToValue,
+    moveKeyframe: (dragId, nextT) => poseTimeline.moveKeyframe(dragId, nextT),
+    applySelected,
+    setDragPreview: poseTimeline.setDragPreview,
+    slotToLeft,
+    stopPreview,
+    getActiveT,
+    afterFinish: () => {
+      if (getActivePosePartKey()) renderPosePartFields();
+    },
+  });
+
+  function bindKeyframeDragHandler(button, id) {
+    timelineKeyframeDragHandler?.(button, id);
+  }
+
   function readDisplayValue(partKey, offset, prop) {
     return readPoseFrameDisplayValue(partKey, offset, prop, poseTimeline.source(partKey));
   }
@@ -190,12 +214,11 @@ export function createPoseTimelineController({
     beginUndoSnapshot();
     stopPreview();
     const partKey = getActivePosePartKey() || MASTER_PART_KEY;
-    const offset = currentFrameValue(partKey);
     const writeValue = poseFrameValueFromInput(partKey, prop, value, poseTimeline.source(partKey));
     writeFrameValue(partKey, prop, writeValue);
     syncPreview();
     applySelected();
-    return readDisplayValue(partKey, offset, prop);
+    return readDisplayValue(partKey, currentFrameValue(partKey), prop);
   }
 
   function currentFrameValue(part) {
@@ -230,7 +253,7 @@ export function createPoseTimelineController({
   }
 
   function clearCopiedFrame() {
-    copiedPoseFrame = null;
+    clipboardState.clear();
   }
 
   function applyTimelineSelection(nextSelection, { resetGroup = false } = {}) {
@@ -240,30 +263,6 @@ export function createPoseTimelineController({
         if (resetGroup || kind === 'fixed') resetGroupEditValues();
       },
       renderFields: renderPosePartFields,
-    });
-  }
-
-  function bindKeyframeDragHandler(button, id) {
-    bindTimelineKeyframeDragWithPreview(button, id, {
-      selectKeyframe: timelineSelectionCommands.selectKeyframe,
-      selectKeyframeForDrag: selectTimelineKeyframeForDrag,
-      beginUndo: beginUndoSnapshot,
-      commitUndo: commitUndoSnapshot,
-      track: poseTimelineTrack,
-      frameCount: getFrameCount,
-      lastSlot: getLastSlot,
-      keyframes: keyframesForTimeline,
-      toSlot,
-      slotToValue,
-      moveKeyframe: (dragId, nextT) => poseTimeline.moveKeyframe(dragId, nextT),
-      applySelected,
-      setDragPreview: poseTimeline.setDragPreview,
-      slotToLeft,
-      stopPreview,
-      getActiveT,
-      afterFinish: () => {
-        if (getActivePosePartKey()) renderPosePartFields();
-      },
     });
   }
 
@@ -292,19 +291,15 @@ export function createPoseTimelineController({
   }
 
   return defineController({
-    common: {
+    common: createTimelineControllerCommonApi({
       playbackControls,
-      addKeyframe: timelineFrameCommands.addKeyframe,
-      copyFrame: timelineFrameCommands.copyFrame,
-      deleteKeyframe: timelineFrameCommands.deleteKeyframe,
+      timelineFrameCommands,
       hasFrameSelection,
-      pasteFrame: timelineFrameCommands.pasteFrame,
-      resetAnimation: timelineFrameCommands.resetAnimation,
       resetSelectionState,
       stopPreview,
       syncPreview,
       updateSetting,
-    },
+    }),
     extensions: {
       currentFrameValue,
       frameLabel,

@@ -170,8 +170,6 @@ export function createGroupEditHandleGeometry({
   };
   const xAxis = { x: 1, y: 0 };
   const yAxis = { x: 0, y: 1 };
-  const widthDir = normalizeScreenVector(-1, 0);
-  const heightDir = normalizeScreenVector(0, -1);
   const sizeDir = normalizeScreenVector(1, 1);
   const rotateDir = normalizeScreenVector(1, -1);
   const opacityDir = normalizeScreenVector(-1, 1);
@@ -194,8 +192,6 @@ export function createGroupEditHandleGeometry({
     handles: {
       anchor: { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS },
       move: { mode: 'move', point: anchor, radius: MOVE_HANDLE_RADIUS },
-      width: { mode: 'width', point: addScreenVector(anchor, widthDir, 74), radius: 18 },
-      height: { mode: 'height', point: addScreenVector(anchor, heightDir, 74), radius: 18 },
       rotate: { mode: 'rotate', point: addScreenVector(anchor, rotateDir, 82), radius: 17 },
       size: { mode: 'size', point: addScreenVector(anchor, sizeDir, 82), radius: 18 },
       opacity: { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 82), radius: 17 },

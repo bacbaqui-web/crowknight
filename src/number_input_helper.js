@@ -1,9 +1,8 @@
-import { isNumericInputLocked } from './property_numeric_input_helper.js';
+import { formatNumericInputValue, isNumericInputLocked } from './property_numeric_input_helper.js';
 import { clamp } from './utils.js';
 
 export function formatInputNumber(value, step) {
-  const decimals = String(step).includes('.') ? String(step).split('.')[1].length : 0;
-  return decimals > 0 ? Number(value).toFixed(decimals) : String(Math.round(Number(value)));
+  return formatNumericInputValue(value, step, { trim: false });
 }
 
 export function stepNumberByOne(current, direction) {
@@ -18,13 +17,6 @@ export function stepNumberByTen(current, direction) {
   const ceilTen = Math.ceil(current / 10) * 10;
   if (direction > 0) return current === ceilTen ? current + 10 : ceilTen;
   return current === floorTen ? current - 10 : floorTen;
-}
-
-export function clampPlaybackRateInput(value, peer) {
-  const next = clamp(Number(value), 0.1, 4);
-  if (!Number.isFinite(next)) return null;
-  peer.value = formatInputNumber(next, 0.05);
-  return next;
 }
 
 export function stepTimelineDurationValue(current, delta, snapToTen, min, max) {
@@ -88,10 +80,6 @@ export function bindNumberDragInput(number, peer, updateValue, hooks = {}) {
 
   number.addEventListener('pointermove', (event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
-    if (isNumericInputLocked(number)) {
-      drag = null;
-      return;
-    }
     const distance = drag.startY - event.clientY;
     if (!drag.moved && Math.abs(distance) < 4) return;
     event.preventDefault();

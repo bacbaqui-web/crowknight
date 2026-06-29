@@ -5,14 +5,12 @@ export function createTimelineFrameCommands({
   copyTimelineFrame,
   pasteTimelineFrame,
   resetSelectionState,
-  clearCopiedFrame,
+  clipboardState,
   stopPreview,
   finishAdd,
   finishDelete,
   finishReset,
   finishPaste,
-  getCopiedFrame,
-  setCopiedFrame,
   createFrameCopy,
   pasteTargetFrameId,
   pasteFrameCopy,
@@ -35,7 +33,7 @@ export function createTimelineFrameCommands({
     resetAnimation() {
       resetTimelineAnimation({
         resetSelection: resetSelectionState,
-        clearCopiedFrame,
+        clearCopiedFrame: clipboardState.clear,
         stopPreview,
         finish: finishReset,
       });
@@ -43,13 +41,13 @@ export function createTimelineFrameCommands({
     copyFrame() {
       copyTimelineFrame({
         copyFrame: createFrameCopy,
-        setCopiedFrame,
+        setCopiedFrame: clipboardState.set,
         afterCopy,
       });
     },
     pasteFrame() {
       pasteTimelineFrame({
-        copiedFrame: getCopiedFrame(),
+        copiedFrame: clipboardState.get(),
         pasteTargetFrameId,
         pasteFrameCopy,
         finish: finishPaste,

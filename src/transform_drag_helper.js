@@ -4,6 +4,7 @@ import {
   createCanvasPartDrag,
   isTemporaryCanvasGroupAnchorDrag,
 } from './transform_drag_factory.js';
+import { createGroupTransformTarget } from './group_transform_adapter.js';
 
 export function toggleCanvasOpacity(value) {
   return (value ?? 1) > 0 ? 0 : 1;
@@ -25,7 +26,6 @@ export function handleCanvasPointerDown(
     writePoseFrameValue,
     pushUndoSnapshot,
     beginUndoSnapshot,
-    resetGroupTransformValues,
     setEditContext,
     setEditFocusPartKey,
     setEditHandleActiveMode,
@@ -63,7 +63,7 @@ export function handleCanvasPointerDown(
         mode: handleHit.mode,
         parts: createGroupDragItems(handleHit.geometry.parts),
         beginUndoSnapshot,
-        resetGroupTransformValues,
+        groupEditValues,
         writePoseFrameValue,
       })
     );
@@ -111,11 +111,10 @@ export function beginCanvasGroupPointerDrag({
   mode,
   parts,
   beginUndoSnapshot,
-  resetGroupTransformValues,
+  groupEditValues,
   writePoseFrameValue,
 }) {
   beginUndoSnapshot();
-  resetGroupTransformValues();
   canvas.style.cursor = 'grabbing';
   canvas.setPointerCapture(event.pointerId);
   return createCanvasGroupDrag({
@@ -124,6 +123,7 @@ export function beginCanvasGroupPointerDrag({
     handle,
     mode,
     parts,
+    startValues: createGroupTransformTarget(groupEditValues, handle),
     writePoseFrameValue,
   });
 }
@@ -187,25 +187,14 @@ export function handleCanvasPointerMove(
 
 export function finishCanvasPointerDrag(
   event,
-  {
-    drag,
-    clearCanvasDrag,
-    clearEditHandleActiveMode,
-    resetGroupTransformValues,
-    canvasRefresh,
-    updateCanvasHandleHover,
-    commitUndoSnapshot,
-  }
+  { drag, clearCanvasDrag, clearEditHandleActiveMode, canvasRefresh, updateCanvasHandleHover, commitUndoSnapshot }
 ) {
   if (!drag || drag.pointerId !== event.pointerId) return;
 
   const { wasGroupDrag, wasTemporaryAnchorDrag } = completedCanvasDragState(drag);
   clearCanvasDrag();
   clearEditHandleActiveMode();
-  if (wasGroupDrag && !wasTemporaryAnchorDrag) {
-    resetGroupTransformValues();
-    canvasRefresh.renderGroupPoseFields();
-  }
+  if (wasGroupDrag && !wasTemporaryAnchorDrag) canvasRefresh.renderGroupPoseFields();
   updateCanvasHandleHover(event);
   commitUndoSnapshot();
 }

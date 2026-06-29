@@ -6,6 +6,18 @@ import {
   isInteractionObjectPartKey,
 } from './interaction_object_editor.js';
 import { MASTER_PART_KEY } from './game_config.js';
+import {
+  SIZE_PERCENT_MAX,
+  SIZE_PERCENT_MIN,
+  isAnchorProp,
+  isInteractionDecimalProp,
+  isInteractionKnockbackProp,
+  isInteractionPushPowerProp,
+  isInteractionToggleProp,
+  isOpacityProp,
+  isRotationProp,
+  isSizeProp,
+} from './editable_property_helper.js';
 import { selectionPaletteKeys } from './selection_palette.js';
 
 export function poseMotionGroups(key) {
@@ -83,16 +95,9 @@ function characterBasisSource(tuning) {
 
 export function partFieldLimits(prop, partKey = '') {
   if (partKey === 'effect') return effectFieldLimits(prop);
-  if (isInteractionObjectPartKey(partKey)) {
-    if (prop === 'w' || prop === 'h') return { min: 1, max: 320 };
-    if (prop === 'rot') return { min: -360, max: 360 };
-    return { min: -260, max: 260 };
-  }
-  if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
-  if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
-  if (prop === 'ax' || prop === 'ay') return { min: -180, max: 180 };
-  if (prop === 'rot') return { min: -36000, max: 36000 };
-  return { min: -180, max: 180 };
+  if (isInteractionObjectPartKey(partKey)) return setupInteractionObjectFieldLimits(prop);
+  if (isAnchorProp(prop)) return axisFieldLimits();
+  return commonTransformFieldLimits(prop, axisFieldLimits());
 }
 
 export function isImagePartKey(partKey) {
@@ -126,30 +131,61 @@ export function isParentSizedPart(partKey) {
 export function poseFieldLimits(prop) {
   const interactionLimits = interactionFieldLimits(prop);
   if (interactionLimits) return interactionLimits;
-  if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
-  if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
-  if (prop === 'rot') return { min: -36000, max: 36000 };
-  return { min: -180, max: 180 };
+  return commonTransformFieldLimits(prop, axisFieldLimits());
 }
 
 export function effectFieldLimits(prop) {
   const interactionLimits = interactionFieldLimits(prop);
   if (interactionLimits) return interactionLimits;
-  if (prop === 'opacity') return { min: 0, max: 1, step: 0.01 };
-  if (prop === 'w' || prop === 'h') return { min: 5, max: 300 };
-  if (prop === 'rot') return { min: -36000, max: 36000 };
-  return { min: -260, max: 260 };
+  return commonTransformFieldLimits(prop, wideAxisFieldLimits());
 }
 
 function interactionFieldLimits(prop) {
-  if (prop === 'active' || prop === 'attack' || prop === 'hurt' || prop === 'collision' || prop === 'guard') {
+  if (isInteractionToggleProp(prop)) {
     return { min: 0, max: 1, step: 1 };
   }
-  if (prop === 'stun') return { min: 0, max: 2, step: 0.01 };
-  if (prop === 'deathBurst') return { min: 0, max: 4, step: 0.01 };
-  if (prop === 'knockbackX' || prop === 'knockbackY') return { min: -1200, max: 1200 };
-  if (prop === 'pushPower') return { min: 0, max: 1200 };
+  if (isInteractionDecimalProp(prop)) return interactionDecimalFieldLimits(prop);
+  if (isInteractionKnockbackProp(prop)) return { min: -1200, max: 1200 };
+  if (isInteractionPushPowerProp(prop)) return { min: 0, max: 1200 };
   return null;
+}
+
+function interactionDecimalFieldLimits(prop) {
+  if (prop === 'stun') return { min: 0, max: 2, step: 0.01 };
+  return { min: 0, max: 4, step: 0.01 };
+}
+
+function setupInteractionObjectFieldLimits(prop) {
+  if (isSizeProp(prop)) return { min: 1, max: 320 };
+  if (isRotationProp(prop)) return { min: -360, max: 360 };
+  return wideAxisFieldLimits();
+}
+
+function commonTransformFieldLimits(prop, fallback) {
+  if (isOpacityProp(prop)) return opacityFieldLimits();
+  if (isSizeProp(prop)) return sizePercentFieldLimits();
+  if (isRotationProp(prop)) return rotationFieldLimits();
+  return fallback;
+}
+
+function opacityFieldLimits() {
+  return { min: 0, max: 1, step: 0.01 };
+}
+
+function sizePercentFieldLimits() {
+  return { min: SIZE_PERCENT_MIN, max: SIZE_PERCENT_MAX };
+}
+
+function rotationFieldLimits() {
+  return { min: -36000, max: 36000 };
+}
+
+function axisFieldLimits() {
+  return { min: -180, max: 180 };
+}
+
+function wideAxisFieldLimits() {
+  return { min: -260, max: 260 };
 }
 
 export function imagePartKeys() {

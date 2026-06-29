@@ -489,6 +489,7 @@
           role: '선택 대상의 입력값 표시와 저장.',
           status: 'common',
           js: [
+            'editable_property_helper.js',
             'property_field_groups.js',
             'property_value_helper.js',
             'property_scrub_helper.js',
@@ -514,6 +515,7 @@
           status: 'common',
           js: [
             'editable_object_model_helper.js',
+            'editable_property_helper.js',
             'transform_drag_apply_helper.js',
             'transform_value_helper.js',
             'property_value_helper.js',
@@ -629,10 +631,10 @@
         },
         {
           name: 'Group Edit',
-          role: '여러 파츠를 함께 편집.',
+          role: '여러 파츠를 임시 Transform 대상으로 묶고 결과를 각 파츠에 분배.',
           status: 'dedicated',
-          js: ['group_pose_editor.js', 'group_edit_state.js'],
-          caution: 'screen-space 예외가 남아 있다.',
+          js: ['group_transform_adapter.js', 'group_edit_state.js'],
+          caution: 'Group 전용 차이는 adapter에만 남긴다.',
         },
       ];
 

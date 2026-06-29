@@ -4,6 +4,24 @@ import { effectFrameValue, frameValue } from './animation_frame_data.js';
 import { pasteEffectTimelineFrame, pastePoseTimelineFramePart } from './timeline_keyframe_helper.js';
 import { isTimelineFrameId } from './timeline_state.js';
 
+export function createTimelineClipboardState() {
+  let copiedFrame = null;
+  return {
+    clear() {
+      copiedFrame = null;
+    },
+    get() {
+      return copiedFrame;
+    },
+    has() {
+      return Boolean(copiedFrame);
+    },
+    set(copy) {
+      copiedFrame = copy;
+    },
+  };
+}
+
 export function copyTimelineFrame({ isOpen, id, keyframes, fallbackFrame = null, createCopy }) {
   if (!isOpen) return null;
   const source = (id ? keyframes.find((frame) => frame.id === id) : null) || fallbackFrame;

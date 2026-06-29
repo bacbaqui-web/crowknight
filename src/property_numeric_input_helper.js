@@ -31,10 +31,6 @@ export function bindNumericInputUx({ number, range }) {
     releaseSliderDrag();
   };
 
-  const prepareInputEdit = () => {
-    setInputLock(true);
-  };
-
   const startSliderDrag = (event) => {
     if (isNumericInputLocked(number)) {
       event.preventDefault();
@@ -45,8 +41,6 @@ export function bindNumericInputUx({ number, range }) {
     markSliderDrag();
   };
 
-  number.addEventListener('pointerdown', prepareInputEdit, { capture: true });
-  number.addEventListener('mousedown', prepareInputEdit, { capture: true });
   number.addEventListener('focus', focusInput);
   number.addEventListener('blur', blurInput);
 
@@ -105,12 +99,46 @@ export function normalizeNumericInputValue(value, limits, fallback = 0) {
   return snapNumericStep(clamp(Number.isFinite(number) ? number : 0, limits.min, limits.max), limits);
 }
 
-export function formatNumericInputValue(value, step = 1) {
+export function formatNumericInputValue(value, step = 1, { trim = true } = {}) {
   const decimals = numericStepDecimals(step);
+  return formatNumericDecimalValue(value, decimals, { trim });
+}
+
+export function formatNumericDecimalValue(value, decimals = 0, { trim = true } = {}) {
   const number = Number(value);
   if (!Number.isFinite(number)) return '';
   if (decimals <= 0) return String(Math.round(number));
-  return trimTrailingZeros(number.toFixed(decimals));
+  const fixedValue = number.toFixed(decimals);
+  return trim ? trimTrailingZeros(fixedValue) : fixedValue;
+}
+
+export function formatRotationInputValue(value) {
+  const total = Number(value || 0);
+  if (!Number.isFinite(total)) return '0x +0°';
+  const turns = total < 0 ? Math.ceil(total / 360) : Math.floor(total / 360);
+  const degrees = total - turns * 360;
+  const degreeText = formatNumericInputValue(degrees, 0.1);
+  return `${turns}x ${degrees >= 0 ? '+' : ''}${degreeText}°`;
+}
+
+export function parseNumericTextValue(value) {
+  return Number(String(value).replace('%', '').trim());
+}
+
+export function parseRotationInputValue(value) {
+  const text = String(value ?? '')
+    .trim()
+    .replace(/°/g, '');
+  if (!text) return NaN;
+
+  const aeMatch = text.match(/^([+-]?\d+)\s*x\s*([+-]?\d+(?:\.\d+)?)?$/i);
+  if (aeMatch) {
+    const turns = Number(aeMatch[1]);
+    const degrees = Number(aeMatch[2] ?? 0);
+    return turns * 360 + degrees;
+  }
+
+  return parseNumericTextValue(text);
 }
 
 function snapNumericStep(value, { min = 0, step = 1 } = {}) {

@@ -1,3 +1,6 @@
+import { formatNumericDecimalValue } from './property_numeric_input_helper.js';
+import { clampFinite } from './utils.js';
+
 const ROLE_ORDER = ['back', 'ground', 'front'];
 const ROLE_LABELS = {
   back: '뒤 배경',
@@ -110,13 +113,11 @@ export function isBackgroundControlTarget(target) {
 }
 
 export function clampBackgroundNumber(value, min, max) {
-  if (!Number.isFinite(value)) return min;
-  return Math.max(min, Math.min(max, value));
+  return clampFinite(value, min, max);
 }
 
 export function formatBackgroundInputValue(value, step) {
-  if (step >= 1) return String(Math.round(value));
-  return String(Number(value.toFixed(2)));
+  return formatNumericDecimalValue(value, step >= 1 ? 0 : 2);
 }
 
 function createCompactInput(labelText, field, value, min, max, step) {

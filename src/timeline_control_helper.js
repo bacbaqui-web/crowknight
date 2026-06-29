@@ -12,7 +12,8 @@ import {
 } from './timeline_action_helper.js';
 import { markActiveKeyframeButton } from './timeline_drag_control_helper.js';
 import { hasTimelineSelection } from './timeline_state.js';
-import { clampPlaybackRateInput } from './number_input_helper.js';
+import { formatInputNumber } from './number_input_helper.js';
+import { clampTimelinePlaybackRate } from './timeline_playback_helper.js';
 import { nextTimelineFrameCount } from './timeline_settings_helper.js';
 
 export function createTimelineSelectionControls({
@@ -155,8 +156,9 @@ export function createTimelinePlaybackControls({
 }
 
 function updateTimelinePlaybackRate(value, peer, updateSetting) {
-  const next = clampPlaybackRateInput(value, peer);
-  if (next === null) return;
+  const next = clampTimelinePlaybackRate(value);
+  if (!Number.isFinite(next)) return;
+  peer.value = formatInputNumber(next, 0.05);
   updateSetting('playbackRate', next);
 }
 

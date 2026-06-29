@@ -125,7 +125,7 @@ Data
 
 - 역할: 선택 대상의 입력값 표시와 저장.
 - 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `property_field_groups.js`, `property_value_helper.js`, `property_scrub_helper.js`, `property_numeric_input_helper.js`.
+- 관련 JS: `editable_property_helper.js`, `property_field_groups.js`, `property_value_helper.js`, `property_scrub_helper.js`, `property_numeric_input_helper.js`.
 - 주의: 표시값과 저장값이 어긋나면 Transform Editor 결과와 달라진다.
 
 ### Handle
@@ -139,7 +139,7 @@ Data
 
 - 역할: x/y, ax/ay, w/h, rot 공통 규칙.
 - 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `editable_object_model_helper.js`, `transform_drag_apply_helper.js`, `transform_value_helper.js`, `property_value_helper.js`.
+- 관련 JS: `editable_object_model_helper.js`, `editable_property_helper.js`, `transform_drag_apply_helper.js`, `transform_value_helper.js`, `property_value_helper.js`.
 - 주의: 모든 editable object가 같은 transform 의미를 써야 한다.
 
 ### Timeline
@@ -200,10 +200,10 @@ Data
 
 ### Group Edit
 
-- 역할: 여러 파츠를 함께 편집.
+- 역할: 여러 파츠를 임시 Transform 대상으로 묶고 결과를 각 파츠에 분배.
 - 공통 여부: 🟨 전용 구현.
-- 관련 JS: `group_pose_editor.js`, `group_edit_state.js`.
-- 주의: screen-space 예외가 남아 있다.
+- 관련 JS: `group_transform_adapter.js`, `group_edit_state.js`.
+- 주의: Group 전용 차이는 adapter에만 남긴다.
 
 ## 큰 파일
 
@@ -242,6 +242,7 @@ Data
 - `transform_refresh_helper`: Transform Editor drag 후 context별 반영/렌더 갱신.
 - `timeline_frame_reader`: 현재 frame 읽기.
 - `property_value_helper`: Property 표시값/저장값 변환.
+- `editable_property_helper`: editable object property 종류와 anchor 짝 규칙 판별.
 - `edit_handle_geometry_helper`: Handle 위치 계산.
 - `interaction_region_engine`: Runtime 상호작용 영역 계산.
 - `project_data_normalizer`: 저장 데이터 normalize.

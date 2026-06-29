@@ -1,0 +1,108 @@
+{
+  "results": [
+    {
+      "name": "Setup Part W stepper",
+      "status": "PASS",
+      "detail": "W100% -> W101%",
+      "screenshot": "docs/qa/common-final/setup-part-w-stepper.png"
+    },
+    {
+      "name": "Setup Part W scrub drag",
+      "status": "PASS",
+      "detail": "W101% -> W137%",
+      "screenshot": "docs/qa/common-final/setup-part-w-scrub-drag.png"
+    },
+    {
+      "name": "Setup Control Group W stepper",
+      "status": "PASS",
+      "detail": "W100% -> W101%",
+      "screenshot": "docs/qa/common-final/setup-control-group-w-stepper.png"
+    },
+    {
+      "name": "Setup Control Group W scrub drag",
+      "status": "PASS",
+      "detail": "W101% -> W137%",
+      "screenshot": "docs/qa/common-final/setup-control-group-w-scrub-drag.png"
+    },
+    {
+      "name": "Effect W stepper",
+      "status": "PASS",
+      "detail": "W100% -> W101%",
+      "screenshot": "docs/qa/common-final/effect-w-stepper.png"
+    },
+    {
+      "name": "Effect W scrub drag",
+      "status": "PASS",
+      "detail": "W101% -> W137%",
+      "screenshot": "docs/qa/common-final/effect-w-scrub-drag.png"
+    },
+    {
+      "name": "Effect display formats",
+      "status": "PASS",
+      "detail": "rot=R0x +0°, opacity=O보임, active=ON꺼짐",
+      "screenshot": "docs/qa/common-final/effect-display-formats.png"
+    },
+    {
+      "name": "Action timeline add keyframe",
+      "status": "PASS",
+      "detail": "2 -> 3",
+      "screenshot": "docs/qa/common-final/action-timeline-add-keyframe.png"
+    },
+    {
+      "name": "Effect timeline add keyframe",
+      "status": "PASS",
+      "detail": "2 -> 3",
+      "screenshot": "docs/qa/common-final/effect-timeline-add-keyframe.png"
+    },
+    {
+      "name": "Timeline playback rate clamp",
+      "status": "PASS",
+      "detail": "pose=4, effect=4",
+      "screenshot": "docs/qa/common-final/timeline-playback-rate-clamp.png"
+    },
+    {
+      "name": "Unexpected network failures",
+      "status": "PASS",
+      "detail": "expected optional 404 only",
+      "screenshot": null
+    },
+    {
+      "name": "Page runtime errors",
+      "status": "PASS",
+      "detail": "none",
+      "screenshot": null
+    },
+    {
+      "name": "Action Pose W stepper",
+      "status": "PASS",
+      "detail": "W100% -> W101%",
+      "screenshot": "docs/qa/common-final/action-pose-w-stepper.png"
+    },
+    {
+      "name": "Action InteractionObject W stepper",
+      "status": "PASS",
+      "detail": "W100% -> W101%",
+      "screenshot": "docs/qa/common-final/action-interactionobject-w-stepper.png"
+    },
+    {
+      "name": "Action Pose W scrub drag",
+      "status": "PASS",
+      "detail": "W100% -> W136%",
+      "screenshot": "docs/qa/common-final/action-pose-w-scrub-drag.png"
+    }
+  ],
+  "failedRequests": [
+    {
+      "url": "http://127.0.0.1:4182/runtime/project-default-state.json?t=1782758623244",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4182/runtime/project-default-state.json?t=1782758624050",
+      "status": 404
+    }
+  ],
+  "warnings": [
+    "console error: Failed to load resource: the server responded with a status of 404 (File not found)",
+    "console error: Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+}

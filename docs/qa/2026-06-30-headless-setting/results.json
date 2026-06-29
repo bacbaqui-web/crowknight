@@ -1,0 +1,76 @@
+{
+  "url": "http://127.0.0.1:4173/setting.html",
+  "mode": "Playwright headless Chromium",
+  "qaDir": "docs/qa/2026-06-30-headless-setting",
+  "results": [
+    {
+      "name": "setting-html-load",
+      "status": "PASS",
+      "details": "title=Crow Knight Settings",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/01-setting-html-load.png"
+    },
+    {
+      "name": "settings-panel-open",
+      "status": "PASS",
+      "details": "설정 패널과 파츠 팔레트가 headless viewport 안에 열림.",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/02-settings-panel-open.png"
+    },
+    {
+      "name": "setup-weapon-size-fields",
+      "status": "PASS",
+      "details": "Setup weapon에서 W/H 확인: X8▲▼, Y12▲▼, X0▲▼, Y-12▲▼, W100%▲▼, H100%▲▼, R0x+0°▲▼, O보임▲▼",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/03-setup-weapon-size-fields.png"
+    },
+    {
+      "name": "setup-weapon-w-stepper",
+      "status": "PASS",
+      "details": "Setup W 변경: W100%▲▼ -> W101%▲▼",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/04-setup-weapon-w-stepper.png"
+    },
+    {
+      "name": "action-first-keyframe-select",
+      "status": "PASS",
+      "details": "Action 첫 키프레임을 자동 선택함.",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/05-action-first-keyframe-select.png"
+    },
+    {
+      "name": "action-weapon-size-fields",
+      "status": "PASS",
+      "details": "Action weapon에서 W/H 확인: X0▲▼, Y0▲▼, X0▲▼, Y0▲▼, W100%▲▼, H100%▲▼, R0x+0°▲▼, O보임▲▼, ON꺼짐▲▼",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/06-action-weapon-size-fields.png"
+    },
+    {
+      "name": "action-weapon-w-stepper",
+      "status": "FAIL",
+      "details": "Action W 변경: W100%▲▼ -> W100%▲▼",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/07-action-weapon-w-stepper.png"
+    },
+    {
+      "name": "number-input-formatting",
+      "status": "PASS",
+      "details": "actorScale number input: 1 -> 1.25",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/08-number-input-formatting.png"
+    },
+    {
+      "name": "effect-section-load",
+      "status": "PASS",
+      "details": "Effect 섹션 visible=true, keyframe=2",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/09-effect-section-load.png"
+    },
+    {
+      "name": "console-and-network-check",
+      "status": "FAIL",
+      "details": "errors=Failed to load resource: the server responded with a status of 404 (File not found) badResponses=404:http://127.0.0.1:4173/runtime/project-default-state.json?t=1782754271791",
+      "screenshot": "docs/qa/2026-06-30-headless-setting/10-console-and-network-check.png"
+    }
+  ],
+  "consoleErrors": ["Failed to load resource: the server responded with a status of 404 (File not found)"],
+  "badResponses": [
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:4173/runtime/project-default-state.json?t=1782754271791"
+    }
+  ],
+  "requestFailures": [],
+  "timestamp": "2026-06-29T17:31:18.233Z"
+}

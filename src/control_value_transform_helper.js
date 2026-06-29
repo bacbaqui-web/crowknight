@@ -1,3 +1,6 @@
+import { formatNumericDecimalValue } from './property_numeric_input_helper.js';
+import { clampFinite } from './utils.js';
+
 export const SPEED_LEVEL_MIN = 1;
 export const SPEED_LEVEL_MAX = 10;
 export const SPEED_VALUE_MIN = 400;
@@ -26,10 +29,9 @@ export function speedValueToLevel(value) {
 }
 
 function formatDisplayNumber(value, decimals) {
-  return Number(value.toFixed(decimals));
+  return Number(formatNumericDecimalValue(value, decimals));
 }
 
 function clampNumber(value, min, max) {
-  if (!Number.isFinite(value)) return min;
-  return Math.min(max, Math.max(min, value));
+  return clampFinite(value, min, max);
 }

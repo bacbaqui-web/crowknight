@@ -1,0 +1,125 @@
+{
+  "text": "첫프레임 · 선택 그룹 2위치X0▲▼Y0▲▼크기S100%▲▼회전R0x +0°▲▼투명O보임▲▼",
+  "html": "<div class=\"pose-part-header\">첫프레임 · 선택 그룹 2</div><div class=\"ae-prop-row\"><span class=\"ae-prop-label\">위치</span><div class=\"ae-prop-values\"><span class=\"scrub-control\"><button class=\"scrub-value\" type=\"button\" data-scrub-prop=\"x\" data-scrub-label=\"X\"><span>X</span><strong>0</strong></button><span class=\"scrub-stepper-buttons\"><button type=\"button\" aria-label=\"값 올리기\">▲</button><button type=\"button\" aria-label=\"값 내리기\">▼</button></span></span><span class=\"scrub-control\"><button class=\"scrub-value\" type=\"button\" data-scrub-prop=\"y\" data-scrub-label=\"Y\"><span>Y</span><strong>0</strong></button><span class=\"scrub-stepper-buttons\"><button type=\"button\" aria-label=\"값 올리기\">▲</button><button type=\"button\" aria-label=\"값 내리기\">▼</button></span></span></div></div><div class=\"ae-prop-row\"><span class=\"ae-prop-label\">크기</span><div class=\"ae-prop-values\"><span class=\"scrub-control\"><button class=\"scrub-value\" type=\"button\" data-scrub-prop=\"scale\" data-scrub-label=\"S\"><span>S</span><strong>100%</strong></button><span class=\"scrub-stepper-buttons\"><button type=\"button\" aria-label=\"값 올리기\">▲</button><button type=\"button\" aria-label=\"값 내리기\">▼</button></span></span></div></div><div class=\"ae-prop-row\"><span class=\"ae-prop-label\">회전</span><div class=\"ae-prop-values\"><span class=\"scrub-control is-rotation\"><button class=\"scrub-value\" type=\"button\" data-scrub-prop=\"rot\" data-scrub-label=\"R\"><span>R</span><strong>0x +0°</strong></button><span class=\"scrub-stepper-buttons\"><button type=\"button\" aria-label=\"값 올리기\">▲</button><button type=\"button\" aria-label=\"값 내리기\">▼</button></span></span></div></div><div class=\"ae-prop-row\"><span class=\"ae-prop-label\">투명</span><div class=\"ae-prop-values\"><span class=\"scrub-control\"><button class=\"scrub-value\" type=\"button\" data-scrub-prop=\"opacity\" data-scrub-label=\"O\"><span>O</span><strong>보임</strong></button><span class=\"scrub-stepper-buttons\"><button type=\"button\" aria-label=\"값 올리기\">▲</button><button type=\"button\" aria-label=\"값 내리기\">▼</button></span></span></div></div>",
+  "selected": ["upperArmR", "lowerArmR"],
+  "inputs": [],
+  "buttons": [
+    {
+      "text": "X0",
+      "aria": null,
+      "dataset": {
+        "scrubProp": "x",
+        "scrubLabel": "X"
+      },
+      "parentText": "X0▲▼"
+    },
+    {
+      "text": "▲",
+      "aria": "값 올리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "▼",
+      "aria": "값 내리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "Y0",
+      "aria": null,
+      "dataset": {
+        "scrubProp": "y",
+        "scrubLabel": "Y"
+      },
+      "parentText": "Y0▲▼"
+    },
+    {
+      "text": "▲",
+      "aria": "값 올리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "▼",
+      "aria": "값 내리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "S100%",
+      "aria": null,
+      "dataset": {
+        "scrubProp": "scale",
+        "scrubLabel": "S"
+      },
+      "parentText": "S100%▲▼"
+    },
+    {
+      "text": "▲",
+      "aria": "값 올리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "▼",
+      "aria": "값 내리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "R0x +0°",
+      "aria": null,
+      "dataset": {
+        "scrubProp": "rot",
+        "scrubLabel": "R"
+      },
+      "parentText": "R0x +0°▲▼"
+    },
+    {
+      "text": "▲",
+      "aria": "값 올리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "▼",
+      "aria": "값 내리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "O보임",
+      "aria": null,
+      "dataset": {
+        "scrubProp": "opacity",
+        "scrubLabel": "O"
+      },
+      "parentText": "O보임▲▼"
+    },
+    {
+      "text": "▲",
+      "aria": "값 올리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    },
+    {
+      "text": "▼",
+      "aria": "값 내리기",
+      "dataset": {},
+      "parentText": "▲▼"
+    }
+  ],
+  "keyframes": [
+    {
+      "id": "start",
+      "active": true,
+      "title": "1칸"
+    },
+    {
+      "id": "end",
+      "active": false,
+      "title": "8칸"
+    }
+  ]
+}

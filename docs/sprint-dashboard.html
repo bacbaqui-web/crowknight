@@ -14,8 +14,7 @@
         --blue: #59b8ff;
         --green: #70e2a2;
         --yellow: #ffd166;
-        --red: #ff6b7a;
-        --shadow: 0 16px 38px rgba(0, 0, 0, 0.3);
+        --shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
         --radius: 8px;
       }
 
@@ -38,7 +37,7 @@
       }
 
       .page {
-        width: min(1120px, calc(100% - 32px));
+        width: min(1080px, calc(100% - 32px));
         margin: 0 auto;
         padding: 24px 0 34px;
       }
@@ -68,7 +67,12 @@
 
       h2 {
         margin: 0 0 10px;
-        font-size: 17px;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
       }
 
       .doc-links {
@@ -92,45 +96,226 @@
         font-weight: 850;
       }
 
+      .hero,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)), var(--panel);
+        box-shadow: var(--shadow);
+      }
+
       .hero {
         padding: 18px;
-        border: 1px solid rgba(89, 184, 255, 0.32);
-        border-radius: var(--radius);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)), var(--panel);
-        box-shadow: var(--shadow);
         margin-bottom: 12px;
+        border-color: rgba(89, 184, 255, 0.34);
+      }
+
+      .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 9px;
+        border: 1px solid rgba(112, 226, 162, 0.34);
+        border-radius: 999px;
+        background: rgba(112, 226, 162, 0.12);
+        color: #ccf8dd;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .badge.info {
+        border-color: rgba(89, 184, 255, 0.34);
+        background: rgba(89, 184, 255, 0.12);
+        color: #cdeaff;
       }
 
       .hero strong {
         display: block;
         color: #f6fbff;
-        font-size: clamp(24px, 4vw, 40px);
+        font-size: clamp(24px, 4vw, 38px);
         line-height: 1.12;
+      }
+
+      .hero p {
+        max-width: 760px;
+        margin-top: 10px;
+        color: #bfd0e8;
+        font-size: 16px;
+        font-weight: 750;
       }
 
       .grid {
         display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
       }
 
-      .three {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+      .task-label {
+        margin-bottom: 10px;
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: 0.04em;
       }
 
-      .two {
+      .report-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: 12px;
+      }
+
+      .primary-card {
+        border-color: rgba(112, 226, 162, 0.35);
+      }
+
+      .primary-card h2,
+      .qa-card h2 {
+        font-size: clamp(22px, 3vw, 30px);
+      }
+
+      .qa-card {
+        margin-top: 12px;
+        border-color: rgba(89, 184, 255, 0.42);
+      }
+
+      .qa-list {
+        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .qa-item {
+        display: grid;
+        gap: 6px;
+        min-height: 94px;
+        padding: 12px;
+        border: 1px solid rgba(89, 184, 255, 0.24);
+        border-radius: 8px;
+        background: rgba(8, 14, 26, 0.5);
+      }
+
+      .qa-item strong {
+        color: #f4fbff;
+        font-size: 16px;
+      }
+
+      .qa-item small {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .compact-card {
+        box-shadow: none;
+      }
+
+      .compact-card h2 {
+        font-size: 16px;
+      }
+
+      .compact-card .item {
+        min-height: 34px;
+        padding: 7px 8px;
+        font-size: 13px;
+      }
+
+      .compact-card .item-text strong {
+        font-size: 13px;
+      }
+
+      .compact-card .item-text small {
+        font-size: 11px;
+      }
+
+      .progress-list {
+        display: grid;
+        gap: 8px;
+        margin: 8px 0 10px;
+      }
+
+      .progress-list div:first-child {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .progress-list strong {
+        color: var(--text);
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .bar {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.16);
+      }
+
+      .bar i {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--ok), var(--accent));
+      }
+
+      .sprint-block {
+        margin-top: 28px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(89, 184, 255, 0.22);
+      }
+
+      .sprint-head {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .sprint-head h2 {
+        margin: 0;
+        font-size: clamp(22px, 3vw, 30px);
+      }
+
+      .sprint-head p {
+        max-width: 780px;
+        font-weight: 750;
       }
 
       .card {
         padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)), var(--panel);
-        box-shadow: var(--shadow);
       }
 
-      .section {
-        margin-top: 12px;
+      .checkmark {
+        width: 20px;
+        color: var(--green);
+        font-weight: 950;
+      }
+
+      .empty-check {
+        width: 20px;
+        color: var(--muted);
+        font-weight: 950;
       }
 
       .stack {
@@ -143,10 +328,10 @@
 
       .item {
         display: flex;
-        gap: 8px;
-        align-items: center;
-        min-height: 38px;
-        padding: 8px 9px;
+        gap: 9px;
+        align-items: flex-start;
+        min-height: 40px;
+        padding: 9px 10px;
         border: 1px solid rgba(43, 58, 88, 0.88);
         border-radius: 7px;
         background: rgba(8, 14, 26, 0.45);
@@ -155,103 +340,52 @@
         font-weight: 850;
       }
 
+      .item > span:first-child {
+        flex: 0 0 auto;
+        margin-top: 1px;
+      }
+
+      .item-text {
+        display: grid;
+        gap: 2px;
+      }
+
+      .item-text strong {
+        color: #f4fbff;
+        font-size: 15px;
+        line-height: 1.2;
+      }
+
+      .item-text small {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.35;
+      }
+
       .ok {
         color: var(--green);
       }
+
       .warn {
         color: var(--yellow);
       }
-      .bad {
-        color: var(--red);
-      }
+
       .next {
         color: var(--blue);
       }
 
-      .before-after {
-        display: grid;
-        grid-template-columns: 1fr 46px 1fr;
-        gap: 10px;
-        align-items: stretch;
-      }
-
-      .state {
-        display: grid;
-        gap: 8px;
-        padding: 12px;
-        border: 1px solid rgba(43, 58, 88, 0.88);
-        border-radius: 8px;
-        background: rgba(8, 14, 26, 0.45);
-      }
-
-      .state b {
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .state span {
-        color: #f4fbff;
-        font-size: 20px;
-        font-weight: 950;
-        line-height: 1.15;
-      }
-
-      .arrow {
-        display: grid;
-        place-items: center;
-        color: var(--blue);
-        font-size: 28px;
-        font-weight: 950;
-      }
-
-      .progress {
-        display: grid;
-        gap: 9px;
-      }
-
-      .progress-row {
-        display: grid;
-        grid-template-columns: 110px minmax(0, 1fr);
-        gap: 10px;
-        align-items: center;
-        color: #dce8f8;
-        font-size: 14px;
-        font-weight: 850;
-      }
-
-      .bar {
-        height: 10px;
-        overflow: hidden;
-        border: 1px solid #21304a;
-        border-radius: 999px;
-        background: #08101f;
-      }
-
-      .bar span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--blue), var(--green));
-      }
-
-      .bar.low span {
-        background: linear-gradient(90deg, var(--red), var(--yellow));
-      }
-
       @media (max-width: 820px) {
         .top,
-        .three,
-        .two,
-        .before-after {
+        .grid,
+        .report-grid,
+        .qa-list,
+        .compact-grid {
           grid-template-columns: 1fr;
         }
 
         .doc-links {
           justify-content: flex-start;
-        }
-
-        .arrow {
-          transform: rotate(90deg);
         }
       }
     </style>
@@ -261,7 +395,7 @@
       <header class="top">
         <div>
           <div class="eyebrow">Sprint Briefing</div>
-          <h1>현재 상태</h1>
+          <h1>최신 작업 보고</h1>
         </div>
         <nav class="doc-links" aria-label="문서 링크">
           <a class="doc-link" href="./99_CURRENT_SPRINT.md">보고서</a>
@@ -271,94 +405,384 @@
       </header>
 
       <section class="hero">
-        <strong>Property 공통화 재개.</strong>
+        <div class="hero-badges">
+          <span class="badge">업데이트됨: 2026-06-30</span>
+          <span class="badge info">현재: Group Adapter 전환</span>
+        </div>
+        <strong>Group Edit을 임시 Transform 대상처럼 다루고, Group 전용 차이는 Adapter로 모았습니다.</strong>
+        <p>여러 파츠 선택, Property 입력, Canvas move/rotate/scale 자동 QA가 통과했습니다.</p>
       </section>
 
-      <section class="grid three">
-        <article class="card">
-          <h2>이번 Sprint</h2>
-          <ul class="stack">
-            <li class="item"><span class="ok">✅</span>Rename 종료</li>
-            <li class="item"><span class="ok">✅</span>Property 그룹 공통화</li>
-            <li class="item"><span class="ok">✅</span>판정 Toggle 공통화</li>
-            <li class="item"><span class="ok">✅</span>Size 규칙 공통화</li>
-            <li class="item"><span class="ok">✅</span>Setup/Action/Effect 공유</li>
-            <li class="item"><span class="ok">✅</span>저장 구조 유지</li>
-          </ul>
-        </article>
+      <section aria-labelledby="last-task-title">
+        <div class="task-label">직전 Task 보고</div>
+        <div class="report-grid">
+          <article class="card primary-card">
+            <h2 id="last-task-title">완료된 작업</h2>
+            <ul class="stack">
+              <li class="item">
+                <span class="ok">✅</span>
+                <span class="item-text">
+                  <strong>Group Transform Adapter 추가</strong>
+                  <small>그룹 전용 이동/회전/스케일 분배 계산을 한 파일로 모았습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="ok">✅</span>
+                <span class="item-text">
+                  <strong>Group Pose 전용 파일 제거</strong>
+                  <small>예전 `group_pose_editor.js` 역할을 Adapter로 옮겨 이름과 책임을 맞췄습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="ok">✅</span>
+                <span class="item-text">
+                  <strong>공통 Transform 진입점 유지</strong>
+                  <small
+                    >Canvas drag는 Group이면 Adapter로 넘기고, 일반 Part는 기존 공통 계산을 그대로 사용합니다.</small
+                  >
+                </span>
+              </li>
+              <li class="item">
+                <span class="ok">✅</span>
+                <span class="item-text">
+                  <strong>Property 입력도 Adapter 사용</strong>
+                  <small>Group X/Y/R/S/O 입력이 같은 Adapter를 통해 선택된 여러 파츠에 나눠 적용됩니다.</small>
+                </span>
+              </li>
+            </ul>
+          </article>
 
-        <article class="card">
-          <h2>다음 작업</h2>
-          <ul class="stack">
-            <li class="item"><span class="next">▶</span>Property 패널 QA</li>
-            <li class="item"><span class="next">▶</span>Transform 저장 규칙</li>
-            <li class="item"><span class="next">▶</span>Timeline Glue</li>
-            <li class="item"><span class="next">▶</span>Stage/HUD는 마지막</li>
-          </ul>
-        </article>
-
-        <article class="card">
-          <h2>주의</h2>
-          <ul class="stack">
-            <li class="item"><span class="warn">⚠</span>브라우저 UI QA 필요</li>
-            <li class="item"><span class="warn">⚠</span>Master 예외 유지</li>
-            <li class="item"><span class="warn">⚠</span>Group Pose 예외 유지</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="section card">
-        <h2>Before / After</h2>
-        <div class="before-after">
-          <div class="state">
-            <b>Before</b>
-            <span>❌ Field group<br />반복 생성</span>
-          </div>
-          <div class="arrow">→</div>
-          <div class="state">
-            <b>After</b>
-            <span>✅ 공통 builder<br />한 곳 사용</span>
-          </div>
+          <article class="card">
+            <h2>무슨 뜻인가</h2>
+            <ul class="stack">
+              <li class="item">
+                <span class="next">→</span>
+                <span class="item-text">
+                  <strong>Group은 저장 객체가 아님</strong>
+                  <small>그룹 자체를 저장하지 않고, 선택된 여러 Action part에 결과만 나눠 씁니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="next">→</span>
+                <span class="item-text">
+                  <strong>차이는 Adapter에 둠</strong>
+                  <small>여러 파츠에 값을 분배하는 특수 계산만 Group Adapter에 남깁니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="next">→</span>
+                <span class="item-text">
+                  <strong>공통화 방향이 선명해짐</strong>
+                  <small>Group Edit은 “복수 선택 → 임시 Transform Target → 결과 분배” 역할로 좁아졌습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="next">→</span>
+                <span class="item-text">
+                  <strong>큰 파일 흡수 금지</strong>
+                  <small>공통 기능은 큰 controller에 더 넣지 말고 작은 helper로 유지해야 합니다.</small>
+                </span>
+              </li>
+            </ul>
+          </article>
         </div>
       </section>
 
-      <section class="section grid two">
-        <article class="card">
-          <h2>잘된 점</h2>
+      <section class="card qa-card" aria-labelledby="qa-title">
+        <h2 id="qa-title">자동 QA 결과</h2>
+        <ul class="qa-list">
+          <li class="qa-item">
+            <strong>Group 선택 / Property 표시</strong>
+            <small>PASS: Action 첫프레임에서 선택 그룹 2와 X/Y/S/R/O가 표시됐습니다.</small>
+          </li>
+          <li class="qa-item">
+            <strong>Group Property stepper</strong>
+            <small>PASS: X, S, R, O 값이 stepper 입력으로 변했습니다.</small>
+          </li>
+          <li class="qa-item">
+            <strong>Group Canvas handle</strong>
+            <small>PASS: move, rotate, scale handle drag 후 표시값이 변했습니다.</small>
+          </li>
+        </ul>
+      </section>
+
+      <section class="compact-grid">
+        <article class="card compact-card">
+          <h2>검증 결과</h2>
           <ul class="stack">
-            <li class="item"><span class="ok">✔</span>작은 단위 공통화</li>
-            <li class="item"><span class="ok">✔</span>판정 목록 한 곳 관리</li>
-            <li class="item"><span class="ok">✔</span>w/h 기준 한 곳 관리</li>
-            <li class="item"><span class="ok">✔</span>UI 순서 유지</li>
-            <li class="item"><span class="ok">✔</span>Runtime 미변경</li>
+            <li class="item">
+              <span class="ok">✅</span>
+              <span class="item-text">
+                <strong>Group Adapter 연결 확인</strong>
+                <small>Property 입력과 Canvas drag가 `group_transform_adapter.js`를 사용합니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="ok">✅</span>
+              <span class="item-text">
+                <strong>오래된 파일 참조 제거</strong>
+                <small>`group_pose_editor.js` 코드 참조를 제거하고 문서의 JS 지도도 갱신했습니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="ok">✅</span>
+              <span class="item-text">
+                <strong>기능 범위 유지</strong>
+                <small>Stage/HUD/Background와 저장 구조는 건드리지 않았습니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="ok">✅</span>
+              <span class="item-text">
+                <strong>Headless 자동 QA 통과</strong>
+                <small>Group 선택, Property stepper, Canvas move/rotate/scale이 통과했습니다.</small>
+              </span>
+            </li>
           </ul>
         </article>
 
-        <article class="card">
-          <h2>아쉬운 점</h2>
+        <article class="card compact-card">
+          <h2>주의사항</h2>
           <ul class="stack">
-            <li class="item"><span class="warn">⚠</span>실제 화면 QA 남음</li>
-            <li class="item"><span class="warn">⚠</span>Value helper 예외 남음</li>
-            <li class="item"><span class="warn">⚠</span>Timeline glue 남음</li>
+            <li class="item">
+              <span class="warn">⚠</span>
+              <span class="item-text">
+                <strong>사용자 눈검사는 선택</strong>
+                <small>자동 QA는 통과했습니다. 커밋 전 화면 감각만 한 번 볼 수 있습니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="warn">⚠</span>
+              <span class="item-text">
+                <strong>Group 결과 분배는 Adapter 책임</strong>
+                <small>여러 파츠에 값을 나눠 쓰는 특수 동작은 Adapter 경계에 남아 있습니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="warn">⚠</span>
+              <span class="item-text">
+                <strong>Group은 Action 전용</strong>
+                <small>이번 Sprint에서는 Setup/Effect/Stage/HUD의 Group 편집은 만들지 않았습니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="warn">⚠</span>
+              <span class="item-text">
+                <strong>커밋 안 함</strong>
+                <small>변경분은 작업트리에 남아 있습니다.</small>
+              </span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card compact-card">
+          <h2>다음 작업 추천</h2>
+          <ul class="stack">
+            <li class="item">
+              <span class="next">1</span>
+              <span class="item-text">
+                <strong>커밋 후보 검토</strong>
+                <small>자동 QA가 통과했으니 이번 공통화 묶음을 복구 지점으로 남길지 판단합니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="next">2</span>
+              <span class="item-text">
+                <strong>필요 시 사용자 눈검사</strong>
+                <small>Group handle 감각과 화면 이동이 자연스러운지만 확인합니다.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="next">3</span>
+              <span class="item-text">
+                <strong>Stage/HUD 보류 유지</strong>
+                <small>이번 묶음이 안정된 뒤 마지막 단계에서 공통화합니다.</small>
+              </span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card compact-card">
+          <h2>Sprint 진행상황</h2>
+          <div class="progress-list">
+            <div>
+              <strong>99%</strong>
+              <span>자동 QA 통과</span>
+            </div>
+            <div class="bar"><i style="width: 99%"></i></div>
+          </div>
+          <ul class="stack">
+            <li class="item">
+              <span class="ok">✅</span>
+              <span class="item-text">
+                <strong>진행됨</strong>
+                <small>Property / Transform / Numeric / Clamp / Timeline glue 공통화.</small>
+              </span>
+            </li>
+            <li class="item">
+              <span class="warn">⚠</span>
+              <span class="item-text">
+                <strong>남음</strong>
+                <small>커밋 후보 검토, 필요 시 사용자 눈검사.</small>
+              </span>
+            </li>
           </ul>
         </article>
       </section>
 
-      <section class="section card">
-        <h2>진행률</h2>
-        <div class="progress">
-          <div class="progress-row">
-            <span>Property</span>
-            <div class="bar"><span style="width: 82%"></span></div>
-          </div>
-          <div class="progress-row">
-            <span>Transform</span>
-            <div class="bar"><span style="width: 70%"></span></div>
-          </div>
-          <div class="progress-row">
-            <span>Stage/HUD</span>
-            <div class="bar low"><span style="width: 25%"></span></div>
-          </div>
+      <section class="sprint-block" aria-labelledby="current-sprint-title">
+        <div class="sprint-head">
+          <div class="eyebrow">Current Sprint</div>
+          <h2 id="current-sprint-title">현재 진행 중인 Sprint</h2>
+          <p>
+            목표는 Group Edit을 임시 Transform 대상으로 좁히고, Group 전용 차이를 Adapter에만 남기는 것입니다. 완료된
+            것과 남은 것을 체크 상태로 표시합니다.
+          </p>
+        </div>
+
+        <div class="grid">
+          <article class="card">
+            <h2>Sprint 완료 조건</h2>
+            <ul class="stack">
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Group 전용 계산 Adapter 격리</strong>
+                  <small>여러 파츠에 결과를 분배하는 계산은 Group Adapter에만 있어야 합니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>공통 Transform 진입점 유지</strong>
+                  <small>일반 Part drag는 기존 공통 계산을 유지하고, Group만 Adapter로 위임합니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Group Property 입력 Adapter 사용</strong>
+                  <small>X/Y/R/S/O 입력이 Group 전용 파일에서 선택 파츠에 분배되어야 합니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Action Group 자동 QA 통과</strong>
+                  <small>여러 파츠 선택 후 Canvas drag와 Property 입력이 headless QA에서 통과했습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>문서와 Dashboard 최신화</strong>
+                  <small>99 보고서는 기술 기록, Dashboard는 남은 확인과 다음 작업만 보여야 합니다.</small>
+                </span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h2>달성 목표</h2>
+            <ul class="stack">
+              <li class="item">
+                <span class="next">🎯</span>
+                <span class="item-text">
+                  <strong>Group은 임시 객체</strong>
+                  <small>Group 자체를 저장하지 않고 선택된 파츠에 결과만 나눠 적용합니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="next">🎯</span>
+                <span class="item-text">
+                  <strong>공통 기능 재사용</strong>
+                  <small>가능한 이동/회전/스케일/Property/Handle 흐름을 기존 Transform 경로에 맞춥니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="next">🎯</span>
+                <span class="item-text">
+                  <strong>저장 구조 유지</strong>
+                  <small>poseOffsets와 Runtime은 바꾸지 않고 내부 경계만 정리합니다.</small>
+                </span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h2>완료된 작업</h2>
+            <ul class="stack">
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Group Transform Adapter 추가</strong>
+                  <small>Group 전용 분배 계산을 `group_transform_adapter.js`로 모았습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Group Pose 전용 파일 제거</strong>
+                  <small>`group_pose_editor.js`를 제거하고 Adapter 이름으로 책임을 맞췄습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Property와 Canvas 경로 연결</strong>
+                  <small>Group Property 입력과 Group Canvas drag가 같은 Adapter를 사용합니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>표시값 유지</strong>
+                  <small>Group 선택 중 방금 적용한 X/Y/R/S가 다음 드래그 시작에도 유지되게 했습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>Stage/HUD/Background 보류 유지</strong>
+                  <small>이번 Sprint에서는 Group Edit만 다루고 나머지는 건드리지 않았습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>문서 최신화</strong>
+                  <small>99 보고서, Dashboard, JS 지도에 Group Adapter 전환을 반영했습니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="checkmark">☑</span>
+                <span class="item-text">
+                  <strong>정적 검증 통과</strong>
+                  <small>`npm run check`와 `git diff --check`가 통과했습니다.</small>
+                </span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h2>아직 못한 것</h2>
+            <ul class="stack">
+              <li class="item">
+                <span class="empty-check">☐</span>
+                <span class="item-text">
+                  <strong>커밋 후보 검토</strong>
+                  <small>자동 QA가 통과했으므로 이번 공통화 묶음을 커밋 후보로 봅니다.</small>
+                </span>
+              </li>
+              <li class="item">
+                <span class="empty-check">☐</span>
+                <span class="item-text">
+                  <strong>Stage/HUD 보류 유지</strong>
+                  <small>이번 공통화 묶음과 QA가 안정된 뒤 마지막에 다룹니다.</small>
+                </span>
+              </li>
+            </ul>
+          </article>
         </div>
       </section>
     </main>

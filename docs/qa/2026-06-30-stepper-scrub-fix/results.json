@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "name": "loaded",
+      "status": "PASS",
+      "details": "setting.html loaded and panel opened",
+      "screenshot": "docs/qa/2026-06-30-stepper-scrub-fix/01-loaded.png"
+    },
+    {
+      "name": "setup-hp-number-drag",
+      "status": "PASS",
+      "details": "HP drag: 5 -> 20",
+      "screenshot": "docs/qa/2026-06-30-stepper-scrub-fix/02-setup-hp-number-drag.png"
+    },
+    {
+      "name": "setup-scale-number-drag",
+      "status": "PASS",
+      "details": "Scale drag: 1 -> 2.4",
+      "screenshot": "docs/qa/2026-06-30-stepper-scrub-fix/03-setup-scale-number-drag.png"
+    },
+    {
+      "name": "action-weapon-w-stepper",
+      "status": "PASS",
+      "details": "Action W: W100%▲▼ -> W101%▲▼",
+      "screenshot": "docs/qa/2026-06-30-stepper-scrub-fix/04-action-weapon-w-stepper.png"
+    }
+  ],
+  "qaDir": "docs/qa/2026-06-30-stepper-scrub-fix",
+  "timestamp": "2026-06-29T17:55:12.655Z"
+}

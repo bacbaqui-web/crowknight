@@ -8,12 +8,13 @@ import {
   createCurrentCanvasGroupDrag,
 } from './transform_drag_factory.js';
 import { finishCanvasPointerDrag, handleCanvasPointerDown, handleCanvasPointerMove } from './transform_drag_helper.js';
+import { applyTuningCanvasDrag } from './transform_drag_apply_helper.js';
 import {
-  applyCanvasGroupDrag,
-  applyCanvasGroupRotation,
-  applyCanvasGroupScale,
-  applyTuningCanvasDrag,
-} from './transform_drag_apply_helper.js';
+  applyGroupTransformDrag,
+  applyGroupTransformRotation,
+  applyGroupTransformScale,
+  createGroupTransformTarget,
+} from './group_transform_adapter.js';
 import { createCanvasEditRefresh } from './transform_refresh_helper.js';
 import { currentCanvasSettingsEditContext } from './settings_panel_state.js';
 import { MASTER_PART_KEY } from './game_config.js';
@@ -35,7 +36,6 @@ export function createTuningPanelCanvasController({
   getGroupEditHandleGeometry,
   setEditHandleHover,
   setEditHandleActiveMode,
-  resetGroupTransformValues,
   poseTimeline,
   effectTimeline,
   getPoseKey,
@@ -74,7 +74,6 @@ export function createTuningPanelCanvasController({
       writePoseFrameValue: poseTimeline.writeFrameValue,
       pushUndoSnapshot,
       beginUndoSnapshot,
-      resetGroupTransformValues,
       setEditContext,
       setEditFocusPartKey,
       setEditHandleActiveMode,
@@ -122,7 +121,6 @@ export function createTuningPanelCanvasController({
       clearEditHandleActiveMode: () => {
         setEditHandleActiveMode(null);
       },
-      resetGroupTransformValues,
       canvasRefresh,
       updateCanvasHandleHover,
       commitUndoSnapshot,
@@ -176,6 +174,7 @@ export function createTuningPanelCanvasController({
       geometry,
       parts: geometry ? createGroupDragItems(geometry.parts) : [],
       mode,
+      startValues: createGroupTransformTarget(getGroupEditValues(), geometry),
       writePoseFrameValue: poseTimeline.writeFrameValue,
     });
   }
@@ -200,19 +199,19 @@ export function createTuningPanelCanvasController({
   }
 
   function applyCurrentGroupMove(dx, dy) {
-    applyCanvasGroupDrag(createCurrentGroupDrag('move'), dx, dy);
+    applyGroupTransformDrag(createCurrentGroupDrag('move'), dx, dy);
   }
 
   function applyCurrentGroupRotation(degrees) {
     const drag = createCurrentGroupDrag('rotate');
     if (!drag.handle || !drag.parts.length) return;
-    applyCanvasGroupRotation(drag, degrees);
+    applyGroupTransformRotation(drag, degrees);
   }
 
   function applyCurrentGroupScale(scale) {
     const drag = createCurrentGroupDrag('size');
     if (!drag.handle || !drag.parts.length) return;
-    applyCanvasGroupScale(drag, scale);
+    applyGroupTransformScale(drag, scale);
   }
 
   function applyCurrentGroupOpacity(opacity) {
