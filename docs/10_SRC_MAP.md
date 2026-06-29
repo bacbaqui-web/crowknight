@@ -183,7 +183,6 @@
 - `src/tuningEffectTimelineController.js`: Effect timeline controller. 수정: Effect UX/property. 같이: effect adapter/view/assets. 위험: 높음.
 - `src/effectTimelineAdapter.js`: effectOffsets adapter. 수정: Effect data read/write. 같이: mutations/read. 위험: 높음.
 - `src/tuningEffectTimelinePanelView.js`: Effect view. 수정: Effect toolbar/settings/image UI. 같이: effect controller. 위험: 중간.
-- `src/settingsEffectPreviewRenderer.js`: setting effect preview. 수정: Effect preview draw. 같이: effect renderer/controller. 위험: 중간.
 
 ## Background / Stage
 
