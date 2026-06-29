@@ -40,7 +40,7 @@
 - `src/puppetPlayerRenderer.js`: rig part 렌더와 edit region 기록. 수정: part/InteractionObject render/edit region. 같이: `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`. 위험: 높음.
 - `src/puppetPlayerGeometry.js`: part geometry 계산. 수정: 좌표계/anchor/quad 계산. 같이: `puppetPlayerRenderer.js`, `editHandleGeometry.js`. 위험: 높음.
 - `src/puppetPlayerEditRegions.js`: editor hit region 기록. 수정: image-less part region 추가. 같이: `puppetPlayerRenderer.js`, `tuningEditHandleGeometry.js`. 위험: 높음.
-- `src/puppetPlayerDebug.js`: player debug helper. 수정: debug 표시. 같이: `settingsDebugRenderer.js`. 위험: 낮음.
+- `src/puppetPlayerDebug.js`: player debug helper. 수정: debug 표시. 같이: puppet renderer. 위험: 낮음.
 
 ## Rendering / World
 
@@ -106,7 +106,6 @@
 - `src/tuningPanelAssetActions.js`: asset actions. 수정: upload/download. 같이: asset runtime, project state. 위험: 중간.
 - `src/tuningPanelShortcuts.js`: shortcuts. 수정: keyboard shortcut. 같이: timeline/selection controllers. 위험: 중간.
 - `src/tuningPanelDebugView.js`: debug view. 수정: setting debug UI. 같이: settings debug renderer. 위험: 낮음.
-- `src/settingsDebugRenderer.js`: setting debug draw. 수정: InteractionObject/attack debug 표시. 같이: `tuningInteractionObjects.js`, `interactionRegionRuntime.js`. 위험: 중간.
 - `src/settingsPanelState.js`: panel section state helper. 수정: open section/edit context 판단. 같이: workflow controller. 위험: 중간.
 
 ## Panel State / Workflow

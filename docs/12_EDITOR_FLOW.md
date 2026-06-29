@@ -211,7 +211,7 @@ Action select
 ```text
 activeAttackSettingsKey()
 → tuningPanelDebugView.drawTuningPanelDebugBoxes()
-→ settingsDebugRenderer.drawFallbackAttackRegionPreview()
+→ tuningPanelDebugView.drawFallbackAttackRegionPreview()
 → player.editHandles.attackInteractionObject.target
 → actor.player.getPartOffset('attackInteractionObject').active
 ```
