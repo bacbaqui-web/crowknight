@@ -1,15 +1,26 @@
 import { ensurePoseOffset } from './project_data_normalizer.js';
 import { groupPosePropertyGroups, partPropertyGroups, posePropertyGroups } from './property_field_groups.js';
-import { isInteractionToggleProp } from './editable_property_helper.js';
 import { readPartFieldDisplayValue } from './property_value_helper.js';
 import { emptyPartMessage, markPartPicker, renderPosePartHeader } from './editor_panel_dom.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { partEditSources, poseMotionGroups } from './part_source_registry.js';
 import { posePartFocusAfterMultiSelect } from './panel_edit_state.js';
 import { updateRigPartValue } from './transform_value_helper.js';
-import { renderScrubGroups } from './property_scrub_helper.js';
+import { renderScrubGroups } from './editor_scrub_helper.js';
 import { applyGroupTransformPropertyValue } from './group_transform_adapter.js';
 import { MASTER_PART_KEY } from './game_config.js';
+import { renderEditorDataCard } from './editor_card_panel_view.js';
+import {
+  interactionFrameValueFromInput,
+  readInteractionDisplayValue,
+  renderInteractionEditor,
+} from './interaction_editor_engine.js';
+import { renderModifierEditor } from './modifier_editor_engine.js';
+import {
+  ensureTimelineModifierTarget,
+  writeTimelineModifierEnabled,
+  writeTimelineModifierSetting,
+} from './timeline_modifier_data.js';
 
 export function createTuningPanelPartController({
   elements,
@@ -225,19 +236,62 @@ export function createTuningPanelPartController({
     posePartFields.innerHTML = '';
     renderPosePartHeader(posePartFields, partKey, selectedPoseParts.size(), frameLabel);
 
-    renderScrubGroups(
-      posePartFields,
-      posePropertyGroups(partKey, poseTimeline.hasFrameSelection(), offset),
-      (prop) => poseTimeline.readDisplayValue(partKey, poseTimeline.currentFrameValue(partKey), prop),
-      (prop, value) => updatePosePartValue(prop, value),
-      scrubCallbacks
-    );
+    renderEditorDataCard(posePartFields, { title: 'Property', className: 'property-editor-card' }, (body) => {
+      renderScrubGroups(
+        body,
+        posePropertyGroups(partKey, poseTimeline.hasFrameSelection()),
+        (prop) => poseTimeline.readDisplayValue(partKey, poseTimeline.currentFrameValue(partKey), prop),
+        (prop, value) => updatePosePartValue(prop, value),
+        scrubCallbacks
+      );
+    });
+
+    renderInteractionEditor(posePartFields, {
+      frameValue: offset,
+      targetKey: partKey,
+      scrubCallbacks,
+      onWrite: (prop, value, { rerender = true } = {}) => updatePoseInteractionValue(prop, value, rerender),
+    });
+
+    renderModifierEditor(posePartFields, {
+      modifiers: poseModifiers(),
+      onToggle: updatePoseModifierEnabled,
+      onSettingChange: updatePoseModifierSetting,
+    });
   }
 
   function updatePosePartValue(prop, value) {
     const nextValue = poseTimeline.updateOffset(prop, value);
-    if (isInteractionToggleProp(prop)) renderPosePartFields();
     return nextValue;
+  }
+
+  function updatePoseInteractionValue(prop, value, rerender = true) {
+    beginUndoSnapshot();
+    poseTimeline.stopPreview();
+    const partKey = getActivePosePartKey() || MASTER_PART_KEY;
+    const nextValue = interactionFrameValueFromInput(prop, value);
+    poseTimeline.writeFrameValue(partKey, prop, nextValue);
+    poseTimeline.syncPreview();
+    applySelected();
+    if (rerender) renderPosePartFields();
+    return readInteractionDisplayValue(poseTimeline.currentFrameValue(partKey), prop);
+  }
+
+  function poseModifiers() {
+    return ensureTimelineModifierTarget(getSelectedActor().tuning, 'pose', poseSelect.value);
+  }
+
+  function updatePoseModifierEnabled(type, enabled) {
+    beginUndoSnapshot();
+    writeTimelineModifierEnabled(getSelectedActor().tuning, 'pose', poseSelect.value, type, enabled);
+    applySelected();
+    renderPosePartFields();
+  }
+
+  function updatePoseModifierSetting(type, prop, value) {
+    beginUndoSnapshot();
+    writeTimelineModifierSetting(getSelectedActor().tuning, 'pose', poseSelect.value, type, prop, value);
+    applySelected();
   }
 
   function updateGroupPoseValue(prop, value) {

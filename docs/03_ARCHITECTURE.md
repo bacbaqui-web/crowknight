@@ -10,13 +10,13 @@
 
 ## Workflow
 
-| Session | 역할                  | 주요 연결                          |
-| ------- | --------------------- | ---------------------------------- |
-| Setup   | 캐릭터 기본 상태 제작 | Selection, Canvas, Layer, Save     |
-| Action  | 캐릭터 행동 제작      | Timeline, Part Property, Preview   |
-| Effect  | 시각 효과 제작        | Timeline, Effect Property, Preview |
-| Stage   | 배경과 월드 규칙 제작 | Background, Stage Rules, Scene     |
-| Common  | 미리보기와 저장       | Canvas, Project State, Assets      |
+| Session | 역할                  | 주요 연결                                           |
+| ------- | --------------------- | --------------------------------------------------- |
+| Setup   | 캐릭터 기본 상태 제작 | Selection, Canvas, Layer, Save                      |
+| Action  | 캐릭터 행동 제작      | Timeline, Interaction, Modifiers, Preview           |
+| Effect  | 시각 효과 제작        | Timeline, Property, Interaction, Modifiers, Preview |
+| Stage   | 배경과 월드 규칙 제작 | Background, Stage Rules, Scene                      |
+| Common  | 미리보기와 저장       | Canvas, Project State, Assets                       |
 
 ## State
 
@@ -33,6 +33,69 @@
 - 각 Timeline은 adapter를 통해 자기 데이터만 읽고 쓴다.
 - Timeline은 keyframe 추가, 삭제, 이동, 선택, 복사, 붙여넣기를 담당한다.
 - Preview는 Timeline 상태를 읽어 현재 Canvas에 반영한다.
+
+## Timeline Target Editor
+
+Timeline target 편집 UI는 세 개의 형제 패널로 구성한다.
+
+```text
+Timeline Target
+├── Property
+├── Interaction
+└── Modifiers
+```
+
+- `Property`는 Transform 전용이다. `x/y`, `w/h`, `rot`, `opacity`, anchor 편집만 담당한다.
+- `Interaction`은 충돌, 피격, 공격, 방어 같은 상호작용 state와 세부 값을 담당한다.
+- `Modifiers`는 무적, 색 변화, ease, gravity, hit stop 같은 실행 옵션 목록과 설정값을 담당한다.
+- Interaction/Modifiers는 Action 전용이 아니며 Effect도 같은 Editor Engine을 사용한다.
+- Projectile, Stage 같은 미래 target도 adapter로 같은 패널 구조에 연결할 수 있어야 한다.
+
+## Action
+
+목표 구조:
+
+```text
+Action
+├── Timeline
+├── Interaction
+└── Modifiers
+    ↓
+Runtime
+    ↓
+Action Modifier Engine
+    ↓
+Combat
+    ↓
+Renderer
+```
+
+- Timeline은 part/effect transform과 frame 값을 저장한다.
+- Interaction은 충돌, 피격, 공격, 방어 같은 상호작용 box와 frame state를 저장한다.
+- Modifiers는 무적, 색 변화 같은 실행 옵션을 저장한다.
+- Basic Actions는 기존 기본 상태를 보존한다.
+- Skills는 사용자가 추가하는 Action 데이터다.
+- Runtime은 Action 데이터를 해석하고 실행 상태를 계산한다.
+
+## Editor Engines
+
+현재 Editor 공통 엔진 경계:
+
+```text
+Timeline Adapter
+    ↓
+Property Editor Engine
+Interaction Editor Engine
+Modifiers Editor Engine
+    ↓
+Project Data
+```
+
+- Property Editor Engine은 Interaction/Modifier의 존재를 모른다.
+- Interaction Editor Engine은 체크 상태, 세부 row 표시, frame 값 저장을 담당한다.
+- Modifiers Editor Engine은 modifier 목록, 활성화, 설정 UI, 저장을 담당한다.
+- 공통 카드 UI는 `editor_card_panel_view.js`에서 공유한다.
+- Runtime 해석과 Action Modifier Engine 연결은 다음 Task 범위다.
 
 ## Canvas
 
@@ -65,11 +128,17 @@ drawRect(-ax, -ay, w, h)
 - Runtime은 제작툴 데이터를 읽어 실행 상태로 변환한다.
 - 캐릭터 렌더링, 행동 상태, 효과, 전투 판정, HUD, 배경을 실행 화면에서 처리한다.
 - Runtime 판정 데이터는 Editor 원본에서 실행 중 계산한다.
+- Runtime은 새 Action을 만드는 곳이 아니다.
+- Action별 하드코딩 규칙은 유지/제거/Modifier Engine 이동 대상으로 분류한다.
+- Runtime은 팔, 다리, 몸통의 사전 포즈 애니메이션을 만들지 않는다. `actor_pose_helper.js`는 neutral pose만 제공하고 실제 자세는 Timeline data에서 온다.
 
 ## Save / Assets
 
 - Project State는 actor, scene, tuning, asset reference를 저장한다.
 - Local 저장과 remote 저장은 같은 project state를 기준으로 한다.
+- Firebase 업로드는 Project State metadata와 Storage asset을 같은 저장 흐름으로 취급한다.
+- PSD 원본, PNG/WebP 런타임 이미지, asset reference metadata는 같은 업로드/다운로드 버튼 규칙을 따른다.
+- Firebase 다운로드는 Firestore metadata를 먼저 받고, 그 안의 Storage URL을 Runtime asset source로 즉시 사용한다.
 - PSD, effect image, background asset은 제작툴에서 교체하고 Runtime이 읽을 수 있는 형태로 로드된다.
 
 ## Implementation Documents
@@ -77,3 +146,4 @@ drawRect(-ax, -ay, w, h)
 - 파일을 찾을 때: `10_SRC_MAP.md`
 - 데이터 저장 위치를 볼 때: `11_DATA_MODEL.md`
 - 사용자 행동 저장 흐름을 볼 때: `12_EDITOR_FLOW.md`
+- Action 제작 모델을 볼 때: `13_ACTION_MODEL.md`

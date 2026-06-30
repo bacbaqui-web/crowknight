@@ -16,6 +16,7 @@ export async function refreshPsdBackground({ getSceneSession, onUpdate, force = 
     session.background.psdPreview = {
       enabled: true,
       url: `./runtime/${manifest.preview}?v=${manifest.updatedAt}`,
+      sourceUrl: manifest.sourceUrl || session.background.psdPreview?.sourceUrl || '',
       updatedAt: manifest.updatedAt,
       width: manifest.width,
       height: manifest.height,

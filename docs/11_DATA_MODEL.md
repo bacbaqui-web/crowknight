@@ -6,6 +6,7 @@
 
 Actor별 제작 데이터의 중심 객체다.
 
+- 현재 Action 데이터는 별도 `actions` 컬렉션이 아니라 `poseOffsets`, `poseSettings`, `effectOffsets`, `effectSettings`, 일부 `motion/invulnerability` 필드에 나뉘어 있다.
 - `tuning.rig`: Setup base rig.
 - `tuning.poseOffsets`: Action Timeline frame data.
 - `tuning.poseSettings`: Action duration/playback settings.
@@ -15,6 +16,55 @@ Actor별 제작 데이터의 중심 객체다.
 - `tuning.layerOrder`: part render layer order.
 - `tuning.transform`: actor scale/anchor.
 - `tuning.maxHpPips`: HP 설정.
+
+## Target Action Model
+
+아직 구현하지 않은 목표 구조다.
+
+```text
+Action
+├─ type
+├─ trigger
+├─ timeline
+├─ interaction
+└─ modifiers
+```
+
+후보 형태:
+
+```js
+{
+  id: "skill_001",
+  type: "skill",
+  name: "Fire Slash",
+  trigger: { input: "KeyA" },
+  timeline: {
+    pose: {},
+    effect: {}
+  },
+  interaction: {
+    collision: { enabled: false, boxes: [] },
+    hurt: { enabled: false, boxes: [] },
+    attack: { enabled: false, boxes: [] },
+    guard: { enabled: false, boxes: [] }
+  },
+  modifiers: []
+}
+```
+
+현재 저장 구조와 충돌하는 지점:
+
+- `POSE_KEYS` / `EFFECT_KEYS`가 고정 배열이라 사용자 정의 Skill key를 바로 담기 어렵다.
+- `poseOffsets[poseKey][partKey]`는 Basic Action 중심 구조다.
+- Interaction은 현재 frame value의 `active/attack/hurt/collision/guard`와 fallback rig object에 섞여 있다.
+- Runtime modifier 전용 저장 위치가 없다.
+- 입력 trigger는 `GAME_KEYS`와 `actor_action_helper` 분기에 하드코딩되어 있다.
+
+권장 확장 방향:
+
+- 기존 `poseOffsets` / `poseSettings`는 Basic Actions 호환 layer로 유지한다.
+- 새 Skill은 별도 `tuning.actions.skills[]` 또는 `tuning.actions.byId` 후보를 별도 저장 구조 Sprint에서 확정한다.
+- 저장 migration 전까지는 `13_ACTION_MODEL.md`의 target model을 설계 기준으로만 사용한다.
 
 ## `tuning.rig`
 
@@ -175,6 +225,15 @@ sceneSession.stageRules
 - scene sessions
 - asset references
 - tuning data
+
+Asset reference 규칙:
+
+- `actors[id].assets`: 캐릭터 파츠 PNG source와 선택 캐릭터 PSD source를 저장한다.
+- `effectAssets`: 이펙트 PNG source와 선택 가능한 effect PSD source를 저장한다.
+- `sessions[id].background.psdPreview`: 배경 preview URL, 원본 PSD source URL, 크기 metadata를 저장한다.
+- `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다.
+- Firebase 업로드 버튼은 위 metadata를 Firestore에 저장하고, 참조되는 PSD/PNG/WebP 파일은 Storage에 올린 뒤 URL을 metadata에 반영한다.
+- Firebase 다운로드 버튼은 Firestore metadata를 받아 Storage URL을 Runtime source로 사용한다.
 
 저장 경로:
 

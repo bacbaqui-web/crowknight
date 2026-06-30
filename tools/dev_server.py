@@ -258,7 +258,13 @@ def export_background_preview(source_path, output_path, manifest_path, layer_out
     suffix = source_path.suffix.lower()
     if suffix != ".psd":
         raise RuntimeError("Background source must be a PSD file")
-    return export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
+    manifest = export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
+    try:
+        manifest["sourceUrl"] = f"./{source_path.resolve().relative_to(CrowKnightHandler.root_dir).as_posix()}"
+    except ValueError:
+        manifest["sourceUrl"] = ""
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    return manifest
 
 
 def main():

@@ -5,17 +5,13 @@ import {
   isPartWithPrimarySizeLabel,
   isPartWithSize,
 } from './part_source_registry.js';
-import { isInteractionPropOn } from './editable_property_helper.js';
 
-export function effectPropertyGroups(frameValue = null) {
-  const groups = editableTransformPropertyGroups({
+export function effectPropertyGroups() {
+  return editableTransformPropertyGroups({
     anchor: true,
     size: true,
     opacity: true,
-    active: true,
   });
-  appendInteractionPropertyGroups(groups, frameValue);
-  return groups;
 }
 
 export function groupPosePropertyGroups() {
@@ -38,21 +34,17 @@ export function partPropertyGroups(partKey) {
   });
 }
 
-export function posePropertyGroups(partKey, hasFrameSelection, frameValue = null) {
+export function posePropertyGroups(partKey, hasFrameSelection) {
   if (isMasterPart(partKey) && !hasFrameSelection) {
     return [{ label: '기준', props: axisProps('anchorX', 'anchorY', 'X', 'Y') }];
   }
 
-  const isEditableObject = isEditableObjectPart(partKey);
-  const groups = editableTransformPropertyGroups({
+  return editableTransformPropertyGroups({
     anchor: isPartWithAnchor(partKey),
     size: isMasterPart(partKey) || isPartWithSize(partKey),
     sizeLabel: poseSizeGroupLabel(partKey),
     opacity: isMasterPart(partKey) || isPartWithOpacity(partKey),
-    active: isEditableObject,
   });
-  if (isEditableObject) appendInteractionPropertyGroups(groups, frameValue);
-  return groups;
 }
 
 function editableTransformPropertyGroups({
@@ -63,7 +55,6 @@ function editableTransformPropertyGroups({
   sizeProps = axisProps('w', 'h', 'W', 'H'),
   rotation = true,
   opacity = false,
-  active = false,
 } = {}) {
   const groups = [];
   if (anchor) groups.push({ label: '기준', props: axisProps('ax', 'ay') });
@@ -71,7 +62,6 @@ function editableTransformPropertyGroups({
   if (size) groups.push({ label: sizeLabel, props: sizeProps });
   if (rotation) groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
   if (opacity) groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
-  if (active) groups.push({ label: '판정', props: [{ prop: 'active', label: 'ON' }] });
   return groups;
 }
 
@@ -81,36 +71,4 @@ function partSizeGroupLabel(partKey) {
 
 function poseSizeGroupLabel(partKey) {
   return isMasterPart(partKey) || isPartWithPrimarySizeLabel(partKey) ? '크기' : '그룹 크기';
-}
-
-function appendInteractionPropertyGroups(groups, frameValue = null) {
-  if (!isInteractionPropOn(frameValue, 'active')) return;
-  groups.push({
-    label: '상호작용',
-    props: [
-      { prop: 'attack', label: 'AT' },
-      { prop: 'hurt', label: 'HT' },
-      { prop: 'collision', label: 'CL' },
-      { prop: 'guard', label: 'GD' },
-    ],
-  });
-
-  if (isInteractionPropOn(frameValue, 'attack')) {
-    groups.push({
-      label: '공격',
-      props: [
-        { prop: 'stun', label: 'ST' },
-        { prop: 'knockbackX', label: 'KX' },
-        { prop: 'knockbackY', label: 'KY' },
-        { prop: 'deathBurst', label: 'DB' },
-      ],
-    });
-  }
-  if (isInteractionPropOn(frameValue, 'collision')) {
-    groups.push({ label: '충돌', props: [{ prop: 'pushPower', label: 'P' }] });
-  }
-}
-
-function isEditableObjectPart(partKey) {
-  return !isMasterPart(partKey);
 }

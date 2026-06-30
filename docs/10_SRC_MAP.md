@@ -105,6 +105,12 @@ Data
 └─ stageRulesState.js
 ```
 
+## Save / Asset 규칙
+
+- `project_storage_helper.js`: Firestore에 저장할 Project State metadata를 만든다.
+- `firebase_asset_storage.js`: actor PNG, actor PSD, effect PNG/PSD, background PSD/WebP/layer asset을 Firebase Storage에 올리고 metadata source URL을 갱신한다.
+- Firebase 다운로드는 local file을 덮어쓰지 않고, Firestore metadata의 Storage URL을 Runtime source로 적용한다.
+
 ## 기능 그룹
 
 ### Selection
@@ -123,10 +129,33 @@ Data
 
 ### Property
 
-- 역할: 선택 대상의 입력값 표시와 저장.
+- 역할: 선택 대상의 Transform 입력값 표시와 저장.
 - 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `editable_property_helper.js`, `property_field_groups.js`, `property_value_helper.js`, `property_scrub_helper.js`, `property_numeric_input_helper.js`.
-- 주의: 표시값과 저장값이 어긋나면 Transform Editor 결과와 달라진다.
+- 관련 JS: `editable_property_helper.js`, `property_field_groups.js`, `property_value_helper.js`, `editor_scrub_helper.js`, `property_scrub_helper.js`, `property_numeric_input_helper.js`.
+- 주의: Property는 `x/y`, `w/h`, `rot`, `opacity`, anchor 같은 Transform만 담당한다. Interaction/Modifier 코드를 넣지 않는다.
+
+### Editor Data Cards
+
+- 역할: Property / Interaction / Modifiers 패널의 공통 카드 UI.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `editor_card_panel_view.js`, `settingsPanel.css`.
+- 주의: 세 패널은 형제 관계다. Property 아래에 보이더라도 Property의 일부가 아니다.
+
+### Interaction Editor Engine
+
+- 역할: Interaction 체크 상태, 세부 설정 row, Timeline frame 값 저장.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `interaction_editor_engine.js`, `interaction_object_editor.js`, `editor_scrub_helper.js`, `part_source_registry.js`.
+- 사용처: Action Pose Timeline, Effect Timeline.
+- 주의: Runtime Box를 Editor source로 사용하지 않는다.
+
+### Modifiers Editor Engine
+
+- 역할: Modifier 목록, 추가/삭제 기준이 되는 활성화, Modifier별 설정 UI, 저장 정규화.
+- 공통 여부: 🟦 공통 시스템.
+- 관련 JS: `modifier_editor_engine.js`, `timeline_modifier_data.js`, `project_data_normalizer.js`, `player_default_tuning_data.js`.
+- 사용처: Action Pose Timeline, Effect Timeline.
+- 주의: Modifier 해석은 Runtime Task에서 별도 Action Modifier Engine으로 연결한다.
 
 ### Handle
 
@@ -168,7 +197,7 @@ Data
 - 역할: Editor 데이터를 게임 실행 결과로 계산.
 - 공통 여부: 🟦 공통 경계.
 - 관련 JS: `main.js`, `actor_factory.js`, `actor_runtime_engine.js`, `actor_pose_helper.js`, `actor_renderer.js`, `actor_canvas_renderer.js`, `combat_engine.js`.
-- 주의: Runtime은 Editor 원본을 직접 수정하지 않는다.
+- 주의: Runtime은 Editor 원본을 직접 수정하지 않는다. `actor_pose_helper.js`는 neutral pose만 반환하며 사전 팔/다리 애니메이션을 만들지 않는다.
 
 ### Data
 
@@ -233,7 +262,7 @@ Data
   - 이유: 역할 재분류가 필요하다. Runtime 동작 민감 파일은 별도 작은 Sprint에서 검토.
 - Canvas/DOM 보조: `canvasDragMath.js`, `canvasDragState.js`, `canvasLayout.js`, `cameraView.js`, `inputControls.js`, `mainDomElements.js`
   - 이유: 이번 Sprint 후보가 아니며 함수/DOM 이름과 같이 검토해야 한다.
-- 기타 전용 파일: `particleEffects.js`, `runSpeedMotion.js`, `rollGhosts.js`, `scoreFormat.js`, `firebaseConfig.js`
+- 기타 전용 파일: `particleEffects.js`, `rollGhosts.js`, `scoreFormat.js`, `firebaseConfig.js`
   - 이유: 현재 기능별 전용 구현. 무리하게 suffix를 붙이지 않는다.
 
 ## 검색 힌트

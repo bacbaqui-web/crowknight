@@ -1,5 +1,6 @@
 import { DEFAULT_PLAYER_RIG } from './player_default_rig_data.js';
 import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_editor.js';
+import { defaultTimelineModifiers } from './timeline_modifier_data.js';
 
 const DEFAULT_ATTACK_REACTIONS = {
   attack1: { stun: 0.22, knockbackX: 330, knockbackY: 110, deathBurst: 1 },
@@ -25,6 +26,7 @@ export const DEFAULT_PLAYER_TUNING = {
   transform: { scale: 1, anchorX: 0, anchorY: 0 },
   hud: { offsetY: 0 },
   effects: { hitShake: 1.6, hitSpark: 1 },
+  modifiers: defaultTimelineModifiers(),
   effectOffsets: {
     idle: {},
     run: {},
@@ -58,7 +60,6 @@ export const DEFAULT_PLAYER_TUNING = {
     attack3: { duration: 0.36, playback: 'once', playbackRate: 1 },
   },
   motion: {
-    walkBob: 5,
     rollIntensity: 1,
     rollWeapon: 0,
     rollGhostCount: 5,

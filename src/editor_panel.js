@@ -27,6 +27,7 @@ export function createTuningPanel({
   ctx,
   actors,
   effectAssets,
+  effectAssetSources,
   playerActor,
   getSelectedActor,
   setSelectedActor,
@@ -222,6 +223,7 @@ export function createTuningPanel({
     bindTuningPanelAssetActions({
       elements: panelElements,
       effectAssets,
+      effectAssetSources,
       getSelectedActor: () => selectedActor,
       getEffectTimeline: () => effectTimeline,
       pushUndoSnapshot,

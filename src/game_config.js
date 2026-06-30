@@ -95,7 +95,6 @@ export const TUNING_FIELDS = [
   ['hudOffsetY', ['hud', 'offsetY']],
   ['anchorX', ['transform', 'anchorX']],
   ['anchorY', ['transform', 'anchorY']],
-  ['walkBob', ['motion', 'walkBob']],
   ['rollIntensity', ['motion', 'rollIntensity']],
   ['rollWeapon', ['motion', 'rollWeapon']],
   ['rollGhostCount', ['motion', 'rollGhostCount']],

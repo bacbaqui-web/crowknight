@@ -9,12 +9,23 @@ import { createTimelineSelectionCommands } from './timeline_selection_helper.js'
 import { createTimelineSelectionState } from './timeline_state.js';
 import { createTimelineClipboardState } from './timeline_clipboard_helper.js';
 import { clearActorEffectPreviews } from './preview_state.js';
-import { isInteractionToggleProp } from './editable_property_helper.js';
 import { effectFrameValueFromInput, readEffectFrameDisplayValue } from './property_value_helper.js';
-import { renderScrubGroups } from './property_scrub_helper.js';
+import { renderScrubGroups } from './editor_scrub_helper.js';
 import { createTimelinePreviewControls, syncEffectTimelinePreview } from './timeline_preview_helper.js';
 import { renderEffectTimelineSettingsView } from './timeline_effect_panel_view.js';
 import { createTimelineController, createTimelineControllerCommonApi } from './timeline_controller.js';
+import { renderEditorDataCard } from './editor_card_panel_view.js';
+import {
+  interactionFrameValueFromInput,
+  readInteractionDisplayValue,
+  renderInteractionEditor,
+} from './interaction_editor_engine.js';
+import { renderModifierEditor } from './modifier_editor_engine.js';
+import {
+  ensureTimelineModifierTarget,
+  writeTimelineModifierEnabled,
+  writeTimelineModifierSetting,
+} from './timeline_modifier_data.js';
 
 export function createEffectTimelineController({
   actors,
@@ -107,13 +118,20 @@ export function createEffectTimelineController({
     effectTimeline.ensureOffset();
     renderEffectImagePreview(effectImagePreview, effectTimeline.key(), effectAssets);
     effectFields.innerHTML = '';
-    renderScrubGroups(
-      effectFields,
-      effectPropertyGroups(currentFrameValue()),
-      readDisplayValue,
-      updateOffset,
-      scrubCallbacks
-    );
+    renderEditorDataCard(effectFields, { title: 'Property', className: 'property-editor-card' }, (body) => {
+      renderScrubGroups(body, effectPropertyGroups(), readDisplayValue, updateOffset, scrubCallbacks);
+    });
+    renderInteractionEditor(effectFields, {
+      frameValue: currentFrameValue(),
+      targetKey: 'effect',
+      scrubCallbacks,
+      onWrite: (prop, value, { rerender = true } = {}) => updateInteractionValue(prop, value, rerender),
+    });
+    renderModifierEditor(effectFields, {
+      modifiers: effectModifiers(),
+      onToggle: updateEffectModifierEnabled,
+      onSettingChange: updateEffectModifierSetting,
+    });
   }
 
   function readDisplayValue(prop) {
@@ -131,8 +149,37 @@ export function createEffectTimelineController({
     writeFrameValue(prop, effectFrameValueFromInput(effectTimeline.key(), prop, value));
     syncPreview();
     applySelected();
-    if (isInteractionToggleProp(prop)) renderFields();
     return readDisplayValue(prop);
+  }
+
+  function updateInteractionValue(prop, value, rerender = true) {
+    beginUndoSnapshot();
+    stopPreview();
+    effectTimeline.ensureOffset();
+    if (!currentFrameValue()) return readInteractionDisplayValue(null, prop);
+
+    writeFrameValue(prop, interactionFrameValueFromInput(prop, value));
+    syncPreview();
+    applySelected();
+    if (rerender) renderFields();
+    return readInteractionDisplayValue(currentFrameValue(), prop);
+  }
+
+  function effectModifiers() {
+    return ensureTimelineModifierTarget(actor().tuning, 'effect', effectTimeline.key());
+  }
+
+  function updateEffectModifierEnabled(type, enabled) {
+    beginUndoSnapshot();
+    writeTimelineModifierEnabled(actor().tuning, 'effect', effectTimeline.key(), type, enabled);
+    applySelected();
+    renderFields();
+  }
+
+  function updateEffectModifierSetting(type, prop, value) {
+    beginUndoSnapshot();
+    writeTimelineModifierSetting(actor().tuning, 'effect', effectTimeline.key(), type, prop, value);
+    applySelected();
   }
 
   function currentFrameValue() {

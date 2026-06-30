@@ -140,7 +140,7 @@ export function effectFieldLimits(prop) {
   return commonTransformFieldLimits(prop, wideAxisFieldLimits());
 }
 
-function interactionFieldLimits(prop) {
+export function interactionFieldLimits(prop) {
   if (isInteractionToggleProp(prop)) {
     return { min: 0, max: 1, step: 1 };
   }

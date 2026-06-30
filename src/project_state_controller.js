@@ -1,5 +1,5 @@
 import { refreshPsdBackground } from './psd_background_helper.js';
-import { uploadScenePsdAssetsToFirebase } from './firebase_asset_storage.js';
+import { uploadGameAssetsToFirebase, uploadScenePsdAssetsToFirebase } from './firebase_asset_storage.js';
 import {
   downloadSavedStateFromFirebase,
   saveGameState,
@@ -11,6 +11,7 @@ export function createProjectStateController({
   actors,
   world,
   sceneSessions,
+  effectAssetSources,
   activeSessionId,
   getSceneSession,
   onSceneBackgroundUpdate,
@@ -27,12 +28,23 @@ export function createProjectStateController({
 
   function saveState() {
     syncCurrentSceneSession();
-    saveGameState({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions });
+    saveGameState({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions, effectAssetSources });
   }
 
   async function uploadSettingsToFirebase() {
-    syncCurrentSceneSession();
-    return uploadSavedStateToFirebase({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions });
+    const sceneSession = syncCurrentSceneSession();
+    const uploadedSceneAssets = await uploadScenePsdAssetsToFirebase(sceneSession.background);
+    if (!uploadedSceneAssets) return false;
+    onSceneBackgroundUpdate(sceneSession.background);
+    sceneSessions[sceneSession.id] = sceneSession;
+    const uploadedAssets = await uploadGameAssetsToFirebase({ actors, effectAssetSources });
+    if (!uploadedAssets) return false;
+    return uploadSavedStateToFirebase({
+      actors,
+      activeSessionId: activeSceneSessionId,
+      sessions: sceneSessions,
+      effectAssetSources,
+    });
   }
 
   async function downloadSettingsFromFirebase() {
@@ -51,9 +63,6 @@ export function createProjectStateController({
     if (!refreshed) return false;
 
     const sceneSession = getSceneSession();
-    const uploadedAssets = await uploadScenePsdAssetsToFirebase(sceneSession.background);
-    if (!uploadedAssets) return false;
-
     onSceneBackgroundUpdate(sceneSession.background);
     return uploadSettingsToFirebase();
   }

@@ -49,7 +49,7 @@ export function isPercentDisplayProp(prop) {
 }
 
 export function isToggleProp(prop) {
-  return isOpacityProp(prop) || isInteractionToggleProp(prop);
+  return isOpacityProp(prop);
 }
 
 export function isTogglePropOff(prop, value) {
@@ -57,8 +57,7 @@ export function isTogglePropOff(prop, value) {
 }
 
 export function togglePropFallback(prop) {
-  if (isOpacityProp(prop)) return 1;
-  return 0;
+  return isOpacityProp(prop) ? 1 : 0;
 }
 
 export function sizeBaseProp(prop) {

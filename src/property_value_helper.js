@@ -7,13 +7,7 @@ import {
   isParentSizedPart,
   poseFieldLimits,
 } from './part_source_registry.js';
-import {
-  SIZE_PERCENT_MAX,
-  SIZE_PERCENT_MIN,
-  isInteractionToggleProp,
-  isSizeProp,
-  sizeBaseProp,
-} from './editable_property_helper.js';
+import { SIZE_PERCENT_MAX, SIZE_PERCENT_MIN, isSizeProp, sizeBaseProp } from './editable_property_helper.js';
 import { clamp } from './utils.js';
 
 const ACTION_BASE_TRANSFORM_DISPLAY = {
@@ -24,16 +18,6 @@ const ACTION_BASE_TRANSFORM_DISPLAY = {
   w: 100,
   h: 100,
   rot: 0,
-  active: 0,
-  attack: 0,
-  hurt: 0,
-  collision: 0,
-  guard: 0,
-  stun: 0,
-  knockbackX: 0,
-  knockbackY: 0,
-  deathBurst: 1,
-  pushPower: 0,
 };
 
 export function readPartFieldDisplayValue(partKey, part, prop, tuning = null) {
@@ -166,7 +150,6 @@ function readActionBaseTransformDisplayValue(partKey, frameValue, prop, basePart
 function actionBaseTransformValueFromInput(partKey, prop, value, basePart) {
   const limits = poseFieldLimits(prop, partKey);
   const nextValue = clamp(Number(value), limits.min, limits.max);
-  if (isInteractionToggleProp(prop)) return nextValue >= 0.5 ? 1 : 0;
   if (isSizeProp(prop)) return actionPartSizeOffsetFromPercent(partKey, prop, nextValue, basePart);
   return nextValue;
 }

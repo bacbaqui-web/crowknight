@@ -12,6 +12,7 @@ import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import { normalizeCharacterHud } from './characterHudLayout.js';
 import { SPEED_VALUE_MAX, SPEED_VALUE_MIN } from './control_value_transform_helper.js';
 import { controlGroupPartKeys, imagePartKeys } from './part_source_registry.js';
+import { normalizeTimelineModifiers } from './timeline_modifier_data.js';
 import {
   COLLISION_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
@@ -29,6 +30,7 @@ export function mergeTuning(base, saved) {
     fresh.poseSettings = normalizePoseSettings(fresh.poseSettings, base.poseSettings);
     fresh.effectOffsets = normalizeEffectOffsets(fresh.effectOffsets);
     fresh.effectSettings = normalizeEffectSettings(fresh.effectSettings, base.effectSettings || base.poseSettings);
+    fresh.modifiers = normalizeTimelineModifiers(fresh.modifiers);
     normalizeControlGroups(fresh.rig);
     normalizeRigImageAnchors(fresh.rig);
     normalizeRigRotations(fresh.rig, base.rig);
@@ -48,6 +50,7 @@ export function mergeTuning(base, saved) {
     saved.effectSettings || merged.effectSettings,
     base.effectSettings || base.poseSettings
   );
+  merged.modifiers = normalizeTimelineModifiers(saved.modifiers || merged.modifiers);
   normalizeControlGroups(merged.rig);
   normalizeRigImageAnchors(merged.rig, saved.rig);
   normalizeRigRotations(merged.rig, base.rig);
@@ -115,6 +118,7 @@ function normalizeMovementScalars(tuning) {
 
 function normalizeMotionSettings(motion, fallback) {
   delete motion.animationIntensity;
+  delete motion.walkBob;
   motion.rollIntensity = clamp(Number(motion.rollIntensity ?? fallback.rollIntensity ?? 1), 0, 4);
   motion.rollWeapon = Number(motion.rollWeapon ?? fallback.rollWeapon ?? 0) >= 0.5 ? 1 : 0;
   motion.rollGhostCount = Math.round(clamp(Number(motion.rollGhostCount ?? fallback.rollGhostCount ?? 5), 0, 8));

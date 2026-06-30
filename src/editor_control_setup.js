@@ -21,7 +21,6 @@ import {
   parseNumericInputValue,
   readNumericInputLimits,
 } from './property_numeric_input_helper.js';
-import { bindRunMotionLinkControl } from './run_motion_link_helper.js';
 import { getPath, setPath } from './utils.js';
 
 export function initializeTuningPanelControls({
@@ -83,14 +82,6 @@ export function initializeTuningPanelControls({
   populatePartPickerButtons(partPicker);
   populatePartPickerButtons(posePartPicker);
 
-  const runMotionLink = bindRunMotionLinkControl({
-    panel,
-    beginUndoSnapshot: callbacks.beginUndoSnapshot,
-    getTuning: callbacks.getTuning,
-    applySelected: callbacks.applySelected,
-    commitUndoSnapshot: callbacks.commitUndoSnapshot,
-  });
-
   fields.forEach(([id, path]) =>
     bindTuningNumericControl({
       id,
@@ -100,7 +91,6 @@ export function initializeTuningPanelControls({
       commitUndoSnapshot: callbacks.commitUndoSnapshot,
       getTuning: callbacks.getTuning,
       applySelected: callbacks.applySelected,
-      afterUpdate: runMotionLink.afterTuningFieldUpdate,
     })
   );
   bindSelectionControls(

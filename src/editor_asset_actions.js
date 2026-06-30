@@ -1,10 +1,12 @@
 import { defaultTuningFor } from './actorTuning.js';
 import { refreshCharacterPsdAssets, refreshEffectAsset } from './asset_refresh_helper.js';
+import { showPanelActionFeedback } from './panel_action_feedback.js';
 import { clone } from './utils.js';
 
 export function bindTuningPanelAssetActions({
   elements,
   effectAssets,
+  effectAssetSources,
   getSelectedActor,
   getEffectTimeline,
   pushUndoSnapshot,
@@ -15,7 +17,7 @@ export function bindTuningPanelAssetActions({
 }) {
   bindFirebaseButtons({ elements, uploadSettings, downloadSettings });
   bindCharacterPsdButtons({ elements, getSelectedActor, pushUndoSnapshot, saveState, syncPanel });
-  bindEffectAssetButtons({ elements, effectAssets, getEffectTimeline });
+  bindEffectAssetButtons({ elements, effectAssets, effectAssetSources, getEffectTimeline, saveState });
 }
 
 function bindFirebaseButtons({ elements, uploadSettings, downloadSettings }) {
@@ -40,20 +42,25 @@ function bindCharacterPsdButtons({ elements, getSelectedActor, pushUndoSnapshot,
   characterPsdFile?.addEventListener('change', async () => {
     const psdFile = characterPsdFile.files?.[0];
     if (!psdFile) return;
-    await runPanelButtonAction(characterPsdUpload, 'PSD 업로드', async () => {
-      const actor = getSelectedActor();
-      const ok = await refreshCharacterPsdAssets({ actor, psdFile });
-      if (ok) actor.player.applyTuning(actor.tuning);
-      return ok;
-    });
+    await runPanelButtonAction(characterPsdUpload, 'PSD 업로드', () =>
+      refreshSelectedCharacterPsd({
+        actor: getSelectedActor(),
+        psdFile,
+        pushUndoSnapshot,
+        saveState,
+        syncPanel,
+      })
+    );
   });
   characterPsdRefresh?.addEventListener('click', async () => {
-    await runPanelButtonAction(characterPsdRefresh, 'PSD 새로고침', async () => {
-      const actor = getSelectedActor();
-      const ok = await refreshCharacterPsdAssets({ actor });
-      if (ok) actor.player.applyTuning(actor.tuning);
-      return ok;
-    });
+    await runPanelButtonAction(characterPsdRefresh, 'PSD 새로고침', () =>
+      refreshSelectedCharacterPsd({
+        actor: getSelectedActor(),
+        pushUndoSnapshot,
+        saveState,
+        syncPanel,
+      })
+    );
   });
   characterPartReset?.addEventListener('click', () => {
     if (!window.confirm('선택 캐릭터의 파츠 위치를 초기화할까요?')) return;
@@ -66,7 +73,19 @@ function bindCharacterPsdButtons({ elements, getSelectedActor, pushUndoSnapshot,
   });
 }
 
-function bindEffectAssetButtons({ elements, effectAssets, getEffectTimeline }) {
+async function refreshSelectedCharacterPsd({ actor, psdFile = null, pushUndoSnapshot, saveState, syncPanel }) {
+  if (!actor) return false;
+  pushUndoSnapshot();
+  const ok = await refreshCharacterPsdAssets({ actor, psdFile });
+  if (!ok) return false;
+
+  actor.player.applyTuning(actor.tuning);
+  saveState();
+  syncPanel();
+  return true;
+}
+
+function bindEffectAssetButtons({ elements, effectAssets, effectAssetSources, getEffectTimeline, saveState }) {
   const { effectAssetUpload, effectAssetFile, effectAssetRefresh, effectAssetReset, effectSelect } = elements;
 
   effectAssetUpload?.addEventListener('click', () => {
@@ -78,12 +97,25 @@ function bindEffectAssetButtons({ elements, effectAssets, getEffectTimeline }) {
     const effectFile = effectAssetFile.files?.[0];
     if (!effectFile) return;
     await runPanelButtonAction(effectAssetUpload, '효과 업로드', async () =>
-      refreshCurrentEffectAsset({ effectAssets, effectKey: effectSelect.value, effectFile, getEffectTimeline })
+      refreshCurrentEffectAsset({
+        effectAssets,
+        effectAssetSources,
+        effectKey: effectSelect.value,
+        effectFile,
+        getEffectTimeline,
+        saveState,
+      })
     );
   });
   effectAssetRefresh?.addEventListener('click', async () => {
     await runPanelButtonAction(effectAssetRefresh, '효과 새로고침', () =>
-      refreshCurrentEffectAsset({ effectAssets, effectKey: effectSelect.value, getEffectTimeline })
+      refreshCurrentEffectAsset({
+        effectAssets,
+        effectAssetSources,
+        effectKey: effectSelect.value,
+        getEffectTimeline,
+        saveState,
+      })
     );
   });
   effectAssetReset?.addEventListener('click', () => {
@@ -92,13 +124,21 @@ function bindEffectAssetButtons({ elements, effectAssets, getEffectTimeline }) {
   });
 }
 
-async function refreshCurrentEffectAsset({ effectAssets, effectKey, effectFile = null, getEffectTimeline }) {
-  const ok = await refreshEffectAsset({ effectAssets, effectKey, file: effectFile });
+async function refreshCurrentEffectAsset({
+  effectAssets,
+  effectAssetSources,
+  effectKey,
+  effectFile = null,
+  getEffectTimeline,
+  saveState,
+}) {
+  const ok = await refreshEffectAsset({ effectAssets, effectAssetSources, effectKey, file: effectFile });
   if (!ok) return false;
 
   const effectTimeline = getEffectTimeline();
   effectTimeline?.renderFields();
   effectTimeline?.syncPreview();
+  saveState?.();
   return true;
 }
 
@@ -109,6 +149,7 @@ async function runPanelButtonAction(button, label, action) {
   button.classList.add('is-working');
   button.classList.remove('is-success', 'is-error');
   button.setAttribute('aria-label', `${label} 처리중`);
+  showPanelActionFeedback(label, 'working');
 
   let ok;
   try {
@@ -121,6 +162,7 @@ async function runPanelButtonAction(button, label, action) {
   button.classList.toggle('is-success', Boolean(ok));
   button.classList.toggle('is-error', !ok);
   button.setAttribute('aria-label', `${label} ${ok ? '완료' : '실패'}`);
+  showPanelActionFeedback(label, ok ? 'success' : 'error');
 
   window.setTimeout(() => {
     button.classList.remove('is-success', 'is-error');

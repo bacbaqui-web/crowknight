@@ -13,6 +13,12 @@ const PROJECT_DEFAULT_STATE_URL = './runtime/project-default-state.json';
 export async function loadSavedState() {
   removeObsoleteLocalTuningState();
 
+  const remoteState = normalizeNullableSavedState(await loadRemoteProjectState());
+  if (remoteState) {
+    saveLocalState(remoteState);
+    return remoteState;
+  }
+
   let localState = null;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -28,10 +34,8 @@ export async function loadSavedState() {
     // Ignore broken browser storage and fall back to the project default.
   }
 
-  const remoteState = normalizeNullableSavedState(await loadRemoteProjectState());
-  const freshestSavedState = newestSavedState(localState, remoteState);
-  if (freshestSavedState) {
-    const state = freshestSavedState.savedAt ? freshestSavedState : stampSavedState(freshestSavedState);
+  if (localState) {
+    const state = localState.savedAt ? localState : stampSavedState(localState);
     saveLocalState(state);
     return state;
   }
@@ -61,8 +65,8 @@ export function saveActorState(actors, sceneSession = null) {
   });
 }
 
-export function saveGameState({ actors, activeSessionId, sessions }) {
-  const state = createSavedStateSnapshot({ actors, activeSessionId, sessions });
+export function saveGameState({ actors, activeSessionId, sessions, effectAssetSources = {} }) {
+  const state = createSavedStateSnapshot({ actors, activeSessionId, sessions, effectAssetSources });
   saveLocalState(state);
 }
 
@@ -71,12 +75,13 @@ export function syncSceneWorldBeforeSave(sceneSession, world) {
   syncWorldToSceneSession(sceneSession, world);
 }
 
-export function createSavedStateSnapshot({ actors, activeSessionId, sessions }) {
+export function createSavedStateSnapshot({ actors, activeSessionId, sessions, effectAssetSources = {} }) {
   const actorsState = {};
   actors.forEach((actor) => {
     actorsState[actor.id] = {
       name: actor.name,
       tuning: actor.tuning,
+      assets: actor.assetSources || {},
     };
   });
 
@@ -85,12 +90,13 @@ export function createSavedStateSnapshot({ actors, activeSessionId, sessions }) 
     savedAt: Date.now(),
     activeSessionId,
     sessions,
+    effectAssets: effectAssetSources,
     actors: actorsState,
   };
 }
 
-export async function uploadSavedStateToFirebase({ actors, activeSessionId, sessions }) {
-  const state = createSavedStateSnapshot({ actors, activeSessionId, sessions });
+export async function uploadSavedStateToFirebase({ actors, activeSessionId, sessions, effectAssetSources }) {
+  const state = createSavedStateSnapshot({ actors, activeSessionId, sessions, effectAssetSources });
   saveLocalState(state);
   return saveRemoteProjectState(state);
 }
@@ -117,6 +123,7 @@ function normalizeSavedState(saved) {
     activeSessionId: normalized.activeSessionId,
     sessions: normalized.sessions,
     sceneSession: normalized.sceneSession,
+    effectAssets: saved?.effectAssets || {},
     actors: saved?.actors || {},
   };
 }
@@ -124,10 +131,6 @@ function normalizeSavedState(saved) {
 function normalizeNullableSavedState(saved) {
   if (!saved || hasObsoleteTuningKeys(saved)) return null;
   return normalizeSavedState(saved);
-}
-
-function newestSavedState(...states) {
-  return states.filter(Boolean).sort((a, b) => Number(b.savedAt || 0) - Number(a.savedAt || 0))[0];
 }
 
 function stampSavedState(state) {

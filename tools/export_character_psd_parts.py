@@ -6,6 +6,8 @@ from PIL import Image
 from psd_tools import PSDImage
 
 
+CHARACTER_PSD_IMPORT_SCALE = 0.25
+
 PART_LAYER_NAMES = {
     "body",
     "head",
@@ -26,7 +28,7 @@ PART_LAYER_NAMES = {
 def main():
     parser = ArgumentParser(description="Export character PSD layers into the matching character part PNG files.")
     parser.add_argument("--characters", default="assets/characters")
-    parser.add_argument("--resize-to-existing", action="store_true", default=True)
+    parser.add_argument("--resize-to-existing", action="store_true")
     parser.add_argument("folders", nargs="*")
     args = parser.parse_args()
 
@@ -52,7 +54,7 @@ def find_character_psd(folder):
     return next((path for path in psds if path.stem == folder.name), psds[0])
 
 
-def export_character_parts(psd_path, folder, resize_to_existing=True):
+def export_character_parts(psd_path, folder, resize_to_existing=False):
     psd = PSDImage.open(psd_path)
     exported = 0
 
@@ -66,6 +68,7 @@ def export_character_parts(psd_path, folder, resize_to_existing=True):
             continue
 
         image = image.convert("RGBA")
+        image = scale_imported_image(image, CHARACTER_PSD_IMPORT_SCALE)
         if resize_to_existing and output_path.exists():
             image = fit_to_existing_size(image, output_path)
 
@@ -74,6 +77,14 @@ def export_character_parts(psd_path, folder, resize_to_existing=True):
         print(f"{psd_path.name}: {layer.name} -> {output_path}")
 
     return exported
+
+
+def scale_imported_image(image, scale):
+    if scale == 1:
+        return image
+    width = max(1, round(image.width * scale))
+    height = max(1, round(image.height * scale))
+    return image.resize((width, height), Image.Resampling.LANCZOS)
 
 
 def fit_to_existing_size(image, output_path):

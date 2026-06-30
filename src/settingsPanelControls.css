@@ -25,6 +25,51 @@
   display: none;
 }
 
+.panel-action-feedback {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 8;
+  min-width: 150px;
+  max-width: min(310px, calc(100vw - 28px));
+  border: 1px solid #525767;
+  border-radius: 6px;
+  background: rgba(17, 22, 32, 0.96);
+  color: #f8f8fb;
+  padding: 9px 11px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.panel-action-feedback.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.panel-action-feedback.is-working {
+  border-color: #69b7e5;
+  color: #d8eefb;
+}
+
+.panel-action-feedback.is-success {
+  border-color: #7cc3a2;
+  color: #ccebdc;
+}
+
+.panel-action-feedback.is-error {
+  border-color: #ef767a;
+  color: #ffd5d8;
+}
+
 .panel-actions button,
 .section-action-row button {
   flex: 0 0 auto;

@@ -37,7 +37,6 @@ import {
   translationMatrix,
 } from './puppetPlayerGeometry.js';
 import { createPuppetPose } from './actor_pose_helper.js';
-import { runPartOffset } from './runSpeedMotion.js';
 
 export class PuppetPlayer {
   constructor(x, y, assets) {
@@ -294,7 +293,7 @@ export class PuppetPlayer {
 
   getPartOffset(key) {
     const value = this.poseOffsets?.[this.poseKey]?.[key];
-    return mergePartOffsets(this.resolvePoseOffset(value), runPartOffset(this, key));
+    return this.resolvePoseOffset(value);
   }
 
   resolvePoseOffset(value) {
@@ -427,14 +426,4 @@ export class PuppetPlayer {
   drawImageGlow(ctx, image, x, y, w, h) {
     drawPuppetImageGlow(ctx, image, x, y, w, h);
   }
-}
-
-function mergePartOffsets(base, additive) {
-  if (!additive) return base;
-  return {
-    ...base,
-    x: base.x + Number(additive.x || 0),
-    y: base.y + Number(additive.y || 0),
-    rot: base.rot + Number(additive.rot || 0),
-  };
 }

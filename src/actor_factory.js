@@ -8,7 +8,8 @@ export async function createActors(saved, world) {
   const created = [];
 
   for (const def of ACTOR_DEFS) {
-    const assets = await loadCharacterAssets(def.folder);
+    const assetSources = saved?.actors?.[def.id]?.assets || {};
+    const assets = await loadCharacterAssets(def.folder, '', assetSources);
     const tuning = mergeTuning(defaultTuningFor(def), saved?.actors?.[def.id]?.tuning);
     const actor = {
       ...def,
@@ -24,6 +25,7 @@ export async function createActors(saved, world) {
       rollGhosts: [],
       rollGhostTimer: 0,
       lastHitSerials: {},
+      assetSources,
       tuning,
       player: new PuppetPlayer(def.x, world.floorY, assets),
     };

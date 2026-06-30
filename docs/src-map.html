@@ -486,16 +486,48 @@
         },
         {
           name: 'Property',
-          role: '선택 대상의 입력값 표시와 저장.',
+          role: '선택 대상의 Transform 입력값 표시와 저장.',
           status: 'common',
           js: [
             'editable_property_helper.js',
             'property_field_groups.js',
             'property_value_helper.js',
+            'editor_scrub_helper.js',
             'property_scrub_helper.js',
             'property_numeric_input_helper.js',
           ],
-          caution: '표시값과 저장값이 어긋나면 Transform Editor 결과와 달라진다.',
+          caution: 'Property는 Transform만 담당한다. Interaction/Modifier 코드를 넣지 않는다.',
+        },
+        {
+          name: 'Editor Data Cards',
+          role: 'Property / Interaction / Modifiers 패널의 공통 카드 UI.',
+          status: 'common',
+          js: ['editor_card_panel_view.js', 'settingsPanel.css'],
+          caution: '세 패널은 형제 관계다. Property 아래에 보여도 Property의 일부가 아니다.',
+        },
+        {
+          name: 'Interaction Editor Engine',
+          role: 'Interaction 체크 상태, 세부 설정 row, Timeline frame 값 저장.',
+          status: 'common',
+          js: [
+            'interaction_editor_engine.js',
+            'interaction_object_editor.js',
+            'editor_scrub_helper.js',
+            'part_source_registry.js',
+          ],
+          caution: 'Runtime Box를 Editor source로 사용하지 않는다.',
+        },
+        {
+          name: 'Modifiers Editor Engine',
+          role: 'Modifier 목록, 활성화, Modifier별 설정 UI, 저장 정규화.',
+          status: 'common',
+          js: [
+            'modifier_editor_engine.js',
+            'timeline_modifier_data.js',
+            'project_data_normalizer.js',
+            'player_default_tuning_data.js',
+          ],
+          caution: 'Modifier 해석은 Runtime Task에서 별도 Action Modifier Engine으로 연결한다.',
         },
         {
           name: 'Handle',
@@ -583,7 +615,8 @@
             'combat_engine.js',
             'world_renderer.js',
           ],
-          caution: 'Runtime은 Editor 원본을 직접 수정하지 않는다.',
+          caution:
+            'Runtime은 Editor 원본을 직접 수정하지 않는다. actor_pose_helper.js는 neutral pose만 반환하며 사전 팔/다리 애니메이션을 만들지 않는다.',
         },
         {
           name: 'Data',

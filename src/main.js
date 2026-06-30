@@ -60,7 +60,8 @@ preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
 const actors = await createActors(savedState, world);
-const effectAssets = await loadEffectAssets();
+const effectAssetSources = savedState.effectAssets || {};
+const effectAssets = await loadEffectAssets('', effectAssetSources);
 const playerActor = actors[0];
 const particleEffects = createParticleEffects({ actors, world, ctx });
 const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshPsdAndUploadSettings } =
@@ -68,6 +69,7 @@ const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refre
     actors,
     world,
     sceneSessions,
+    effectAssetSources,
     activeSessionId: savedState.activeSessionId,
     getSceneSession: () => sceneSession,
     onSceneBackgroundUpdate: preloadSceneBackground,
@@ -125,6 +127,7 @@ const tuningPanel = createTuningPanel({
   ctx,
   actors,
   effectAssets,
+  effectAssetSources,
   playerActor,
   getSelectedActor: () => selectedActor,
   setSelectedActor: (actor) => {

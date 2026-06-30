@@ -155,6 +155,52 @@ pointer drag
 → tuning.poseOffsets[poseKey][partKey]
 ```
 
+## Target Action 제작 흐름
+
+아직 구현하지 않은 목표 흐름이다.
+
+```text
++ Skill
+↓
+기본 설정
+↓
+Timeline
+↓
+Interaction
+↓
+Modifiers
+↓
+저장
+```
+
+Basic Actions:
+
+```text
+Action select
+→ 기존 poseSelect / poseTimeline 유지
+→ tuning.poseOffsets / tuning.poseSettings
+```
+
+Skills:
+
+```text
++ Skill
+→ action 기본 정보 생성
+→ trigger input 설정
+→ Timeline keyframe 작성
+→ Interaction 체크 ON/OFF
+→ 체크한 box를 Transform target으로 편집
+→ Modifiers 추가/설정
+→ Action 데이터 저장
+```
+
+원칙:
+
+- Action 제작 UI는 기존 Timeline / Property / Transform 경로를 재사용한다.
+- Interaction Box도 editable object Transform 모델을 따른다.
+- Group Edit은 임시 Transform Target으로만 사용하고 저장 source가 되지 않는다.
+- Runtime 계산값은 Editor source처럼 편집하지 않는다.
+
 ## Effect Keyframe 편집
 
 ```text

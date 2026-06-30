@@ -9,10 +9,6 @@ function row(field, group, label, min, max, step, number = null) {
   };
 }
 
-function linkToggle(group, label) {
-  return { type: 'linkToggle', group, label };
-}
-
 function attackRows(prefix, group, label) {
   return [
     row(`${prefix}Stun`, group, `${label} 경직`, '0', '1.2', '0.01'),
@@ -23,10 +19,8 @@ function attackRows(prefix, group, label) {
 }
 
 const MOTION_FIELD_ROWS = [
-  linkToggle('run', '이동 연동'),
   row('speed', 'run', '이동 속도', '1', '10', '0.1'),
   row('runAcceleration', 'run', '이동 가속도', '0.02', '0.4', '0.01'),
-  row('walkBob', 'run', '이동 상하', '0', '18', '1'),
   row('jumpPower', 'jump', '점프 높이', '40', '720', '5'),
   row('airFlapPower', 'jump', '날개짓 힘', '0', '420', '5'),
   row('airFlapCooldown', 'jump', '날개짓 간격', '0', '0.35', '0.01'),
@@ -58,37 +52,7 @@ export function populateMotionSettingRows(container) {
 }
 
 function createMotionSettingElement(item) {
-  if (item.type === 'linkToggle') return createLinkToggle(item);
   return createFieldRow(item);
-}
-
-function createLinkToggle({ group, label }) {
-  const rowElement = document.createElement('div');
-  rowElement.className = 'setting-row motion-link-row';
-  rowElement.dataset.motionGroup = group;
-
-  const labelElement = document.createElement('span');
-  labelElement.textContent = label;
-
-  const guide = document.createElement('span');
-  guide.className = 'motion-link-guide';
-
-  const button = document.createElement('button');
-  button.className = 'icon-button motion-link-toggle';
-  button.type = 'button';
-  button.dataset.action = 'toggle-run-motion-link';
-  button.setAttribute('aria-label', '이동 속도와 이동 애니메이션 값 연동');
-  button.setAttribute('aria-pressed', 'false');
-  button.title = '이동 속도와 이동 애니메이션 값 연동';
-  button.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"></path>
-      <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"></path>
-    </svg>
-  `;
-
-  rowElement.append(labelElement, guide, button);
-  return rowElement;
 }
 
 function createFieldRow({ field, group, label, range, number }) {

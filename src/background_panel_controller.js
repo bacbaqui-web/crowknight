@@ -8,6 +8,7 @@ import {
   isBackgroundControlTarget,
   renderBackgroundLayerSignature,
 } from './background_panel_view.js';
+import { showPanelActionFeedback } from './panel_action_feedback.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { createDefaultBackground, normalizeSceneBackground } from './scene_session_data.js';
 
@@ -67,6 +68,7 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     button.disabled = true;
     button.classList.add('is-refreshing');
     button.setAttribute('aria-label', `${label} 처리중`);
+    showPanelActionFeedback(label, 'working');
     try {
       const refreshed = refreshPsdSettings
         ? await refreshPsdSettings({ psdFile })
@@ -284,6 +286,7 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     button.classList.toggle('is-success', Boolean(ok));
     button.classList.toggle('is-error', !ok);
     button.setAttribute('aria-label', `${label} ${ok ? '완료' : '실패'}`);
+    showPanelActionFeedback(label, ok ? 'success' : 'error');
     window.setTimeout(() => {
       button.classList.remove('is-success', 'is-error');
       button.setAttribute('aria-label', label);

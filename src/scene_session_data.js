@@ -69,6 +69,7 @@ export function createDefaultPsdPreviewBackground() {
   return {
     enabled: false,
     url: '',
+    sourceUrl: '',
     updatedAt: null,
     width: null,
     height: null,
@@ -178,6 +179,7 @@ function normalizePsdPreviewBackground(saved) {
   return {
     enabled: Boolean(saved?.enabled),
     url: typeof saved?.url === 'string' ? saved.url : defaults.url,
+    sourceUrl: typeof saved?.sourceUrl === 'string' ? saved.sourceUrl : defaults.sourceUrl,
     updatedAt: Number.isFinite(saved?.updatedAt) ? saved.updatedAt : defaults.updatedAt,
     width: Number.isFinite(saved?.width) ? saved.width : defaults.width,
     height: Number.isFinite(saved?.height) ? saved.height : defaults.height,

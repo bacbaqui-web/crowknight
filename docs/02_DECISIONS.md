@@ -40,6 +40,45 @@
 - 이유: 움직임의 원천이 하나여야 사용자가 결과를 예측할 수 있다.
 - 대체안: 자동 움직임 슬라이더와 Timeline을 함께 쓰는 방식은 채택하지 않는다.
 
+## Action 데이터 구성
+
+- 결정: Action은 `Timeline + Interaction + Modifiers` 데이터로 구성한다.
+- 이유: 움직임, 판정, 실행 중 옵션이 같은 Action 안에서 제작되어야 코드 추가 없이 새 행동을 만들 수 있다.
+- 보완: 기존 `Action은 Timeline` 결정은 Action의 움직임 원천에 대한 결정으로 유지한다.
+- 대체안: Timeline과 판정/옵션을 서로 다른 Runtime 전용 구조로 분리하는 방식은 채택하지 않는다.
+
+## 기능은 공통 블록으로 조립한다
+
+- 결정: 새 기능은 먼저 `Timeline`, `Interaction`, `Modifiers`, `Runtime Rule` 중 하나로 표현 가능한지 검토한다.
+- 이유: 새 기능마다 전용 Engine이나 Runtime 분기를 만들면 프로젝트가 빠르게 복잡해지고, 같은 기능이 Action/Effect/Projectile마다 중복된다.
+- 규칙: 같은 기능은 한 번만 만든다. 예를 들어 무적은 `Action Invincible`, `Effect Invincible`, `Projectile Invincible`로 나누지 않고 가능한 한 `Invincible Modifier` 하나로 공유한다.
+- 규칙: 새 Engine은 마지막 선택이다. 네 블록으로 표현할 수 없을 때만 새 Engine을 제안한다.
+- 대체안: 새 기능마다 Action 전용 / Effect 전용 / Projectile 전용 구현을 따로 만드는 방식은 채택하지 않는다.
+
+## Runtime은 Action Interpreter
+
+- 결정: Runtime은 Action을 생성하지 않고 Action 데이터를 해석해서 실행한다.
+- 이유: Runtime이 Action을 만들면 Editor 데이터와 실행 규칙이 다시 갈라진다.
+- 대체안: `actor_action_helper`나 전투 코드에 새 Action별 분기와 타이밍을 계속 추가하는 방식은 채택하지 않는다.
+
+## 새 Action은 데이터로 만든다
+
+- 결정: 새로운 Action은 코드가 아니라 저장 가능한 데이터로 추가한다.
+- 이유: Crow Knight의 중심은 게임 코드 확장이 아니라 액션 제작 흐름이다.
+- 대체안: 새 공격/스킬마다 `POSE_KEYS`, 입력 처리, Runtime 상태 필드를 직접 늘리는 방식은 장기 구조로 채택하지 않는다.
+
+## Basic Actions와 Skills
+
+- 결정: 기존 기본 동작은 Basic Actions로 유지하고, 사용자가 추가하는 Action은 Skills로 분리한다.
+- 이유: 이동, 점프, 피격, 죽음 같은 기본 상태와 사용자 제작 스킬은 발동 조건과 안정성 요구가 다르다.
+- 대체안: 기존 Basic Actions를 한 번에 Skill 데이터로 이관하는 방식은 현재 단계에서 채택하지 않는다.
+
+## Action Modifier Engine
+
+- 결정: Action 실행 중 적용되는 옵션은 `action_modifier_engine`이 해석한다.
+- 이유: 무적, 색 변화 같은 규칙을 Runtime 곳곳에 흩뿌리면 Action 데이터 구조가 커질수록 유지보수가 어려워진다.
+- 대체안: modifier별 처리를 `combat_engine`, `actor_canvas_renderer`, `actor_action_helper`에 직접 추가하는 방식은 채택하지 않는다.
+
 ## Effect는 Timeline
 
 - 결정: Effect도 Timeline 기준으로 편집한다.
@@ -65,6 +104,12 @@
 - 계산: `translate(x, y) → rotate(rot) → drawRect(-ax, -ay, w, h)`.
 - 이유: Setup, Action, Effect, Stage, interaction object가 같은 좌표/핸들/resize 규칙을 공유해야 한다.
 - 대체안: 대상별로 `x/y` 의미와 resize 계산을 다르게 유지하는 방식은 채택하지 않는다.
+
+## Group Edit은 Temporary Transform Target
+
+- 결정: Group Edit은 저장 모델이 아니라 여러 editable object에 변환을 분배하기 위한 Temporary Transform Target이다.
+- 이유: 그룹 자체를 저장 source로 만들면 실제 part/keyframe source와 handle source가 어긋난다.
+- 대체안: Group을 별도 editable object로 저장하거나 Runtime source로 사용하는 방식은 채택하지 않는다.
 
 ## Common Editor Feature Path
 
