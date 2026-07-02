@@ -7,6 +7,7 @@ export function bindKeyframeDrag(
 ) {
   bindTimelineKeyframeDrag(button, id, {
     onSelectFixed: selectKeyframe,
+    onSelectKeyframe: selectKeyframe,
     onStartDrag: (keyframeId) => {
       selectForDrag(keyframeId);
       beginUndo();

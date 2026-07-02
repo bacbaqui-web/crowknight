@@ -19,7 +19,7 @@ export function currentPoseTimelineFrame({
   const frames = tuning.poseOffsets[poseKey][part];
 
   if (activeKeyframeId) return ensureKeyframe(frames, activeKeyframeId);
-  if (!fixedFrame) return isMasterPart ? frames : frameValue();
+  if (!fixedFrame) return isMasterPart ? frames : frames.start || frameValue();
   return (
     poseKeyframesFor(frames).find((frame) => frame.id === fixedFrame) || frames[fixedFrame === 'end' ? 'end' : 'start']
   );

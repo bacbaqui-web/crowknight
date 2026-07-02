@@ -42,11 +42,11 @@ Crow Knight는 데이터 기반 액션 제작 툴이다. Action은 코드에 하
 
 - GPT는 설계자다. 프로젝트 방향, 구조 설계, Sprint 계획, 코드 리뷰, 문서 운영, 기술부채 우선순위를 결정한다.
 - Codex는 구현 담당이다. 기능 구현, 리팩토링, 버그 수정, 테스트, 문서 갱신, Sprint 보고서를 담당한다.
-- 개발 순서는 `사용자 → GPT → Sprint 계획 → Codex → 구현 → 테스트 → 99_CURRENT_SPRINT 갱신 → GPT 리뷰 → 다음 Sprint`를 따른다.
+- 개발 순서는 `사용자 → GPT → Sprint 계획 → Codex → 구현 → 테스트 → 99_TASK_REPORT 갱신 → GPT 리뷰 → 다음 Sprint`를 따른다.
 - Codex는 구현 전에 필요한 문서를 읽고, 가능한 기존 구조를 재사용한다.
 - Codex는 새 기능 구현 전에 기능 분류, 공통 시스템 재사용 가능성, 새 Engine 필요 여부, 재사용 범위, 가장 단순한 MVP를 먼저 보고한다.
 - 새로운 구조가 필요하면 먼저 GPT가 검토할 수 있도록 제안한다.
-- 작업이 끝나면 반드시 `99_CURRENT_SPRINT.md`를 최신 상태로 갱신한다.
+- 작업이 끝나면 반드시 `99_TASK_REPORT.md`를 최신 상태로 갱신한다.
 - Workflow 자체도 프로젝트의 일부이며, 더 나은 방식이 발견되면 Sprint를 통해 개선한다.
 
 ## AI Documentation Principles

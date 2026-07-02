@@ -72,6 +72,44 @@ export function movePoseTimelineKeyframe(tuning, poseKey, id, t) {
   return moved;
 }
 
+export function applyPoseTimelineFrameValueDelta(tuning, poseKey, part, prop, delta) {
+  const frames = tuning.poseOffsets[poseKey]?.[part];
+  if (!frames?.keyframes || !Number.isFinite(delta)) return false;
+
+  poseKeyframesFor(frames).forEach((frame) => {
+    frame[prop] = Number(frame[prop] ?? 0) + delta;
+  });
+  syncFrameAliases(frames);
+  return true;
+}
+
+export function applyPoseTimelineAllFrameValueDelta(tuning, poseKey, prop, delta, parts = POSE_PART_KEYS) {
+  if (!Number.isFinite(delta)) return false;
+  let changed = false;
+  parts.forEach((part) => {
+    ensurePoseOffset(tuning, poseKey, part);
+    if (applyPoseTimelineFrameValueDelta(tuning, poseKey, part, prop, delta)) changed = true;
+  });
+  return changed;
+}
+
+export function applyPoseTimelineAllFrameValueTransform(tuning, poseKey, prop, transformValue, parts = POSE_PART_KEYS) {
+  let changed = false;
+  parts.forEach((part) => {
+    ensurePoseOffset(tuning, poseKey, part);
+    const frames = tuning.poseOffsets[poseKey]?.[part];
+    if (!frames?.keyframes) return;
+    poseKeyframesFor(frames).forEach((frame) => {
+      const nextValue = transformValue(Number(frame[prop] ?? 0), part, frame);
+      if (!Number.isFinite(nextValue)) return;
+      frame[prop] = nextValue;
+      changed = true;
+    });
+    syncFrameAliases(frames);
+  });
+  return changed;
+}
+
 export function addEffectTimelineKeyframe(tuning, effectKey, t) {
   ensureEffectOffset(tuning, effectKey);
   const effect = tuning.effectOffsets[effectKey];

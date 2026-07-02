@@ -47,7 +47,7 @@ Timeline Target
 
 - `Property`는 Transform 전용이다. `x/y`, `w/h`, `rot`, `opacity`, anchor 편집만 담당한다.
 - `Interaction`은 충돌, 피격, 공격, 방어 같은 상호작용 state와 세부 값을 담당한다.
-- `Modifiers`는 무적, 색 변화, ease, gravity, hit stop 같은 실행 옵션 목록과 설정값을 담당한다.
+- `Modifiers`는 Action 실행 중 적용되는 수식 목록과 설정값을 담당한다. 현재 MVP는 이동, 가속, 감속만 노출한다.
 - Interaction/Modifiers는 Action 전용이 아니며 Effect도 같은 Editor Engine을 사용한다.
 - Projectile, Stage 같은 미래 target도 adapter로 같은 패널 구조에 연결할 수 있어야 한다.
 
@@ -72,7 +72,7 @@ Renderer
 
 - Timeline은 part/effect transform과 frame 값을 저장한다.
 - Interaction은 충돌, 피격, 공격, 방어 같은 상호작용 box와 frame state를 저장한다.
-- Modifiers는 무적, 색 변화 같은 실행 옵션을 저장한다.
+- Modifiers는 이동, 가속, 감속 같은 실행 수식을 저장한다.
 - Basic Actions는 기존 기본 상태를 보존한다.
 - Skills는 사용자가 추가하는 Action 데이터다.
 - Runtime은 Action 데이터를 해석하고 실행 상태를 계산한다.
@@ -136,9 +136,9 @@ drawRect(-ax, -ay, w, h)
 
 - Project State는 actor, scene, tuning, asset reference를 저장한다.
 - Local 저장과 remote 저장은 같은 project state를 기준으로 한다.
-- Firebase 업로드는 Project State metadata와 Storage asset을 같은 저장 흐름으로 취급한다.
-- PSD 원본, PNG/WebP 런타임 이미지, asset reference metadata는 같은 업로드/다운로드 버튼 규칙을 따른다.
-- Firebase 다운로드는 Firestore metadata를 먼저 받고, 그 안의 Storage URL을 Runtime asset source로 즉시 사용한다.
+- 상단 Firebase 업로드/다운로드는 Project State metadata만 Firestore에 저장/불러온다.
+- Project State metadata는 `projectSettings/crowKnight` 단일 문서에 저장하며, 크기 문제를 줄이기 위해 gzip-base64 압축 필드를 우선 사용한다.
+- PSD 원본, PNG/WebP 런타임 이미지는 Setup / Effect / Stage 내부의 asset 버튼에서 개별 처리한다.
 - PSD, effect image, background asset은 제작툴에서 교체하고 Runtime이 읽을 수 있는 형태로 로드된다.
 
 ## Implementation Documents

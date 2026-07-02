@@ -7,7 +7,7 @@ import {
   resetEffectTimelineAnimation,
   writeEffectTimelineFrameValue,
 } from './timeline_keyframe_helper.js';
-import { writeEffectTimelineSetting } from './timeline_settings_helper.js';
+import { preserveTimelineKeyframeSlots, writeEffectTimelineSetting } from './timeline_settings_helper.js';
 import { createEffectPreview } from './preview_state.js';
 import { defineTimelineAdapter } from './timeline_adapter_contract.js';
 import { activeTimelineT } from './timeline_state.js';
@@ -114,6 +114,11 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     writeEffectTimelineSetting(settingsByKey(), key(), prop, value);
   }
 
+  function preserveKeyframeSlots(oldFrameCount, nextFrameCount) {
+    ensureEffectOffset(tuning(), key());
+    preserveTimelineKeyframeSlots(effectKeyframesFor(offset(), key()), oldFrameCount, nextFrameCount);
+  }
+
   function createPreview({ playing = false, t = null } = {}) {
     return createEffectPreview({
       key: key(),
@@ -177,6 +182,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
       settingsByKey,
       pasteFrameCopy,
       pasteTargetFrameId,
+      preserveKeyframeSlots,
       writeFrameValue,
       writeSetting,
     },

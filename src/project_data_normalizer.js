@@ -14,6 +14,13 @@ import { SPEED_VALUE_MAX, SPEED_VALUE_MIN } from './control_value_transform_help
 import { controlGroupPartKeys, imagePartKeys } from './part_source_registry.js';
 import { normalizeTimelineModifiers } from './timeline_modifier_data.js';
 import {
+  defaultPoseActionSettings,
+  normalizeActionNames,
+  normalizeActionTriggers,
+  normalizeCustomActions,
+  normalizeDeletedPoseActions,
+} from './pose_action_authoring.js';
+import {
   COLLISION_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
   GUARD_INTERACTION_OBJECT_KEY,
@@ -26,8 +33,17 @@ import { clamp, clone, lerp } from './utils.js';
 export function mergeTuning(base, saved) {
   if (!saved) {
     const fresh = clone(base);
-    fresh.poseOffsets = normalizePoseOffsets(fresh.poseOffsets);
-    fresh.poseSettings = normalizePoseSettings(fresh.poseSettings, base.poseSettings);
+    fresh.actionNames = normalizeActionNames(fresh.actionNames);
+    fresh.customActions = normalizeCustomActions(fresh.customActions);
+    fresh.deletedPoseActions = normalizeDeletedPoseActions(fresh.deletedPoseActions);
+    fresh.actionTriggers = normalizeActionTriggers(fresh.actionTriggers, fresh.customActions);
+    fresh.poseOffsets = normalizePoseOffsets(fresh.poseOffsets, fresh.customActions, fresh.deletedPoseActions);
+    fresh.poseSettings = normalizePoseSettings(
+      fresh.poseSettings,
+      base.poseSettings,
+      fresh.customActions,
+      fresh.deletedPoseActions
+    );
     fresh.effectOffsets = normalizeEffectOffsets(fresh.effectOffsets);
     fresh.effectSettings = normalizeEffectSettings(fresh.effectSettings, base.effectSettings || base.poseSettings);
     fresh.modifiers = normalizeTimelineModifiers(fresh.modifiers);
@@ -43,8 +59,21 @@ export function mergeTuning(base, saved) {
   mergeInto(merged, saved);
   migrateSplitRigParts(merged.rig, saved.rig);
   merged.layerOrder = normalizeLayerOrder(merged.layerOrder, base.layerOrder);
-  merged.poseOffsets = normalizePoseOffsets(saved.poseOffsets || merged.poseOffsets);
-  merged.poseSettings = normalizePoseSettings(saved.poseSettings || merged.poseSettings, base.poseSettings);
+  merged.actionNames = normalizeActionNames(saved.actionNames || merged.actionNames);
+  merged.customActions = normalizeCustomActions(saved.customActions || merged.customActions);
+  merged.deletedPoseActions = normalizeDeletedPoseActions(saved.deletedPoseActions || merged.deletedPoseActions);
+  merged.actionTriggers = normalizeActionTriggers(saved.actionTriggers || merged.actionTriggers, merged.customActions);
+  merged.poseOffsets = normalizePoseOffsets(
+    saved.poseOffsets || merged.poseOffsets,
+    merged.customActions,
+    merged.deletedPoseActions
+  );
+  merged.poseSettings = normalizePoseSettings(
+    saved.poseSettings || merged.poseSettings,
+    base.poseSettings,
+    merged.customActions,
+    merged.deletedPoseActions
+  );
   merged.effectOffsets = normalizeEffectOffsets(saved.effectOffsets || merged.effectOffsets);
   merged.effectSettings = normalizeEffectSettings(
     saved.effectSettings || merged.effectSettings,
@@ -127,15 +156,19 @@ function normalizeMotionSettings(motion, fallback) {
   motion.rollGhostOpacity = clamp(Number(motion.rollGhostOpacity ?? fallback.rollGhostOpacity ?? 1), 0, 2);
 }
 
-function normalizePoseSettings(current = {}, fallback = {}) {
+function normalizePoseSettings(current = {}, fallback = {}, customActions = [], deletedPoseActions = []) {
   const normalized = {};
-  POSE_KEYS.forEach((key) => {
+  poseActionKeysForNormalize(customActions, deletedPoseActions).forEach((key) => {
     const source = current?.[key] || {};
     const base = fallback?.[key] || {};
+    const defaultSettings = defaultPoseActionSettings();
     normalized[key] = {
-      duration: clamp(Number(source.duration ?? base.duration ?? 0.6), 0.05, 5),
-      playback: source.playback === 'once' || base.playback === 'once' ? source.playback || base.playback : 'loop',
-      playbackRate: clamp(Number(source.playbackRate ?? base.playbackRate ?? 1), 0.1, 4),
+      duration: clamp(Number(source.duration ?? base.duration ?? defaultSettings.duration), 0.05, 5),
+      playback:
+        source.playback === 'once' || base.playback === 'once'
+          ? source.playback || base.playback
+          : defaultSettings.playback,
+      playbackRate: clamp(Number(source.playbackRate ?? base.playbackRate ?? defaultSettings.playbackRate), 0.1, 4),
     };
     if (normalized[key].playback !== 'once') normalized[key].playback = 'loop';
   });
@@ -286,9 +319,9 @@ function normalizeRigRotations(rig, baseRig) {
   });
 }
 
-function normalizePoseOffsets(current = {}) {
+function normalizePoseOffsets(current = {}, customActions = [], deletedPoseActions = []) {
   const normalized = {};
-  POSE_KEYS.forEach((pose) => {
+  poseActionKeysForNormalize(customActions, deletedPoseActions).forEach((pose) => {
     normalized[pose] = {};
     POSE_PART_KEYS.forEach((part) => {
       const value = current?.[pose]?.[part] ?? current?.[pose]?.[legacyPosePartKey(part)];
@@ -296,6 +329,14 @@ function normalizePoseOffsets(current = {}) {
     });
   });
   return normalized;
+}
+
+function poseActionKeysForNormalize(customActions = [], deletedPoseActions = []) {
+  const deleted = new Set(normalizeDeletedPoseActions(deletedPoseActions));
+  return [
+    ...POSE_KEYS.filter((key) => !deleted.has(key)),
+    ...normalizeCustomActions(customActions).map((action) => action.key),
+  ];
 }
 
 function poseFrameValueWithInteractionDefaults(pose, part, value) {

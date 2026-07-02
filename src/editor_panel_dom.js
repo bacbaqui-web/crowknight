@@ -4,6 +4,7 @@ import { getPath } from './utils.js';
 import { layerLabel, partLabel, poseLabel } from './editor_label_helper.js';
 import { displayTuningControlValue } from './control_value_transform_helper.js';
 import { partEditKeys } from './part_source_registry.js';
+import { poseActionOptions } from './pose_action_authoring.js';
 import { SELECTION_PALETTE_TARGETS } from './selection_palette.js';
 import {
   ATTACK_INTERACTION_OBJECT_KEY,
@@ -13,6 +14,7 @@ import {
 } from './interaction_object_editor.js';
 import { populateMotionSettingRows } from './motion_field_rows.js';
 import { getTuningPanelWorkflowSections } from './editor_workflow_data.js';
+import { characterGroupLabel, visibleCharacterGroups } from './character_group_data.js';
 
 const PART_PICKER_CLASS_BY_KEY = {
   cape: 'part-neck',
@@ -34,6 +36,7 @@ export function getTuningPanelElements(panel) {
     resetButton: document.querySelector('#resetTuning'),
     firebaseUpload: document.querySelector('#firebaseUpload'),
     firebaseDownload: document.querySelector('#firebaseDownload'),
+    actorGroupSelect: document.querySelector('#actorGroupSelect'),
     actorSelect: document.querySelector('#actorSelect'),
     actorName: document.querySelector('#actorName'),
     ...workflowSections,
@@ -52,6 +55,21 @@ export function getTuningPanelElements(panel) {
     scoreRulesFields: document.querySelector('#scoreRulesFields'),
     characterPsdUpload: document.querySelector('#characterPsdUpload'),
     characterPsdFile: document.querySelector('#characterPsdFile'),
+    characterAdd: document.querySelector('#characterAdd'),
+    characterCreatePsdFile: document.querySelector('#characterCreatePsdFile'),
+    characterCreateDialog: document.querySelector('#characterCreateDialog'),
+    characterCreateEnglishName: document.querySelector('#characterCreateEnglishName'),
+    characterCreateKoreanName: document.querySelector('#characterCreateKoreanName'),
+    characterCreateGroup: document.querySelector('#characterCreateGroup'),
+    characterCreateCancel: document.querySelector('#characterCreateCancel'),
+    characterCreateChoosePsd: document.querySelector('#characterCreateChoosePsd'),
+    characterDelete: document.querySelector('#characterDelete'),
+    characterTrashOpen: document.querySelector('#characterTrashOpen'),
+    characterTrashDialog: document.querySelector('#characterTrashDialog'),
+    characterTrashList: document.querySelector('#characterTrashList'),
+    characterTrashClose: document.querySelector('#characterTrashClose'),
+    characterMenu: document.querySelector('#characterMenu'),
+    characterMenuToggle: document.querySelector('#characterMenuToggle'),
     characterPsdRefresh: document.querySelector('#characterPsdRefresh'),
     characterPartReset: document.querySelector('#characterPartReset'),
     partPicker: panel.querySelector('[data-picker="part"]'),
@@ -59,9 +77,31 @@ export function getTuningPanelElements(panel) {
     partSelect: document.querySelector('#partSelect'),
     partFields: document.querySelector('#partFields'),
     poseSelect: document.querySelector('#poseSelect'),
+    poseAddAction: document.querySelector('#poseAddAction'),
+    poseActionMenu: document.querySelector('#poseActionMenu'),
+    poseActionMenuToggle: document.querySelector('#poseActionMenuToggle'),
+    poseDeleteAction: document.querySelector('#poseDeleteAction'),
+    poseExportAction: document.querySelector('#poseExportAction'),
+    poseImportAction: document.querySelector('#poseImportAction'),
+    poseImportFile: document.querySelector('#poseImportFile'),
+    poseName: document.querySelector('#poseName'),
+    poseTriggerHint: document.querySelector('#poseTriggerHint'),
+    poseTriggerType: document.querySelector('#poseTriggerType'),
+    poseTriggerSingleKey: document.querySelector('#poseTriggerSingleKey'),
+    poseTriggerSequenceKeys: document.querySelector('#poseTriggerSequenceKeys'),
+    poseTriggerMaxGapMs: document.querySelector('#poseTriggerMaxGapMs'),
+    poseTriggerHoldKey: document.querySelector('#poseTriggerHoldKey'),
+    poseTriggerPressKey: document.querySelector('#poseTriggerPressKey'),
+    poseTriggerRecord: document.querySelector('#poseTriggerRecord'),
+    poseTriggerRepeat: document.querySelector('#poseTriggerRepeat'),
+    poseTriggerRecordStatus: document.querySelector('#poseTriggerRecordStatus'),
+    poseTriggerRecordComplete: document.querySelector('#poseTriggerRecordComplete'),
+    poseTriggerRecordCancel: document.querySelector('#poseTriggerRecordCancel'),
     posePartSelect: document.querySelector('#posePartSelect'),
     posePartFields: document.querySelector('#posePartFields'),
     poseDuration: document.querySelector('#poseDuration'),
+    poseTimelineMenu: document.querySelector('#poseTimelineMenu'),
+    poseTimelineMenuToggle: document.querySelector('#poseTimelineMenuToggle'),
     posePlaybackRateRange: document.querySelector('#posePlaybackRateRange'),
     posePlaybackRate: document.querySelector('#posePlaybackRate'),
     poseFrameUp: document.querySelector('#poseFrameUp'),
@@ -76,13 +116,18 @@ export function getTuningPanelElements(panel) {
     poseDeleteKeyframe: document.querySelector('#poseDeleteKeyframe'),
     poseResetAnimation: document.querySelector('#poseResetAnimation'),
     effectSelect: document.querySelector('#effectSelect'),
+    effectName: document.querySelector('#effectName'),
     effectImagePreview: document.querySelector('#effectImagePreview'),
+    effectAssetMenu: document.querySelector('#effectAssetMenu'),
+    effectAssetMenuToggle: document.querySelector('#effectAssetMenuToggle'),
     effectAssetUpload: document.querySelector('#effectAssetUpload'),
     effectAssetFile: document.querySelector('#effectAssetFile'),
     effectAssetRefresh: document.querySelector('#effectAssetRefresh'),
     effectAssetReset: document.querySelector('#effectAssetReset'),
     effectFields: document.querySelector('#effectFields'),
     effectDuration: document.querySelector('#effectDuration'),
+    effectTimelineMenu: document.querySelector('#effectTimelineMenu'),
+    effectTimelineMenuToggle: document.querySelector('#effectTimelineMenuToggle'),
     effectPlaybackRateRange: document.querySelector('#effectPlaybackRateRange'),
     effectPlaybackRate: document.querySelector('#effectPlaybackRate'),
     effectFrameUp: document.querySelector('#effectFrameUp'),
@@ -122,6 +167,7 @@ export function closeTuningPanelShell(panel, backdrop) {
 }
 
 export function replaceSelectOptions(select, options) {
+  if (!select) return;
   select.innerHTML = '';
   options.forEach(({ value, label }) => {
     const option = document.createElement('option');
@@ -202,14 +248,20 @@ export function renderInactivePreviewTimeline(playbackButton, renderTimeline) {
 export function renderPosePartHeader(container, partKey, selectedCount, frameLabel = '') {
   const header = document.createElement('div');
   header.className = 'pose-part-header';
-  if (partKey === 'group') {
+  if (partKey === 'all') {
+    header.textContent = `${poseFrameScopeLabel(frameLabel)} · 전체파츠`;
+  } else if (partKey === 'group') {
     header.textContent = frameLabel ? `${frameLabel} · 선택 그룹 ${selectedCount}` : `선택 그룹 ${selectedCount}`;
   } else if (partKey === 'master') {
     header.textContent = frameLabel || '기본';
   } else {
-    header.textContent = frameLabel ? `${frameLabel} · ${partLabel(partKey)}` : partLabel(partKey);
+    header.textContent = `${poseFrameScopeLabel(frameLabel)} · ${partLabel(partKey)}`;
   }
   container.append(header);
+}
+
+function poseFrameScopeLabel(frameLabel) {
+  return frameLabel && frameLabel !== '기본' ? frameLabel : '전체프레임';
 }
 
 export function bindPartPickerButtons(picker, onSelect) {
@@ -238,20 +290,48 @@ function partPickerClassName(partKey) {
 }
 
 export function syncActorSelectLabels(actorSelect, actors) {
+  const actorIds = actors.map((actor) => actor.id);
+  const optionIds = Array.from(actorSelect.options).map((option) => option.value);
+  if (actorIds.length !== optionIds.length || actorIds.some((id, index) => id !== optionIds[index])) {
+    replaceSelectOptions(
+      actorSelect,
+      actors.map((actor) => ({ value: actor.id, label: actorTypeLabel(actor) }))
+    );
+  }
   Array.from(actorSelect.options).forEach((option) => {
     const actor = actors.find((item) => item.id === option.value);
-    option.textContent = `${actorTypeLabel(actor)} - ${actor.name}`;
+    option.textContent = `${actor.name}`;
   });
 }
 
+export function syncActorGroupOptions(actorGroupSelect, activeGroup) {
+  if (!actorGroupSelect) return;
+
+  const groups = visibleCharacterGroups();
+  const optionIds = Array.from(actorGroupSelect.options).map((option) => option.value);
+  if (groups.length !== optionIds.length || groups.some((group, index) => group.key !== optionIds[index])) {
+    replaceSelectOptions(
+      actorGroupSelect,
+      groups.map((group) => ({ value: group.key, label: group.label }))
+    );
+  }
+  actorGroupSelect.value = groups.some((group) => group.key === activeGroup) ? activeGroup : groups[0]?.key || 'mobs';
+}
+
 export function populateTuningPanelSelects(
-  { actorSelect, partSelect, poseSelect, posePartSelect, effectSelect },
+  { actorGroupSelect, actorSelect, partSelect, poseSelect, posePartSelect, effectSelect },
   actors,
-  rig
+  rig,
+  tuning = null
 ) {
+  syncActorGroupOptions(actorGroupSelect, actors[0]?.group || 'players');
   replaceSelectOptions(
     actorSelect,
-    actors.map((actor) => ({ value: actor.id, label: actorTypeLabel(actor) }))
+    actors.map((actor) => ({ value: actor.id, label: actor.name || actorTypeLabel(actor) }))
+  );
+  replaceSelectOptions(
+    document.querySelector('#characterCreateGroup'),
+    visibleCharacterGroups().map((group) => ({ value: group.key, label: characterGroupLabel(group.key) }))
   );
   replaceSelectOptions(
     partSelect,
@@ -259,7 +339,7 @@ export function populateTuningPanelSelects(
   );
   replaceSelectOptions(
     poseSelect,
-    POSE_KEYS.map((key) => ({ value: key, label: poseLabel(key) }))
+    tuning ? poseActionOptions(tuning) : POSE_KEYS.map((key) => ({ value: key, label: poseLabel(key) }))
   );
   replaceSelectOptions(
     posePartSelect,
@@ -272,5 +352,6 @@ export function populateTuningPanelSelects(
 }
 
 function actorTypeLabel(actor) {
+  if (actor?.type) return actor.type;
   return actor?.id === 'player' ? 'player' : 'enemy';
 }

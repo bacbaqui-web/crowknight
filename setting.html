@@ -117,51 +117,48 @@
               <h2 class="setup-area-title">캐릭터</h2>
               <div class="select-row character-select-row">
                 <span>선택</span>
+                <select id="actorGroupSelect" aria-label="캐릭터 폴더"></select>
                 <select id="actorSelect"></select>
                 <div class="section-action-row character-actions" aria-label="캐릭터 관리">
                   <input id="characterPsdFile" class="hidden-file-input" type="file" accept=".psd" />
-                  <button
-                    id="characterPsdUpload"
-                    class="icon-button"
-                    type="button"
-                    aria-label="선택 캐릭터 PSD 파일 선택 및 업로드"
-                    title="선택 캐릭터 PSD 파일 선택 및 업로드"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <path d="M14 2v6h6"></path>
-                      <path d="M12 18v-7"></path>
-                      <path d="M8 15l4-4 4 4"></path>
-                    </svg>
-                  </button>
-                  <button
-                    id="characterPsdRefresh"
-                    class="icon-button"
-                    type="button"
-                    aria-label="선택 캐릭터 PSD 새로고침"
-                    title="선택 캐릭터 PSD 새로고침"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
-                      <path d="M18 3v5h-5"></path>
-                      <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
-                      <path d="M6 21v-5h5"></path>
-                    </svg>
-                  </button>
-                  <button
-                    id="characterPartReset"
-                    class="icon-button"
-                    type="button"
-                    aria-label="파츠 위치 초기화"
-                    title="파츠 위치 초기화"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                      <path d="M4 5v5h5"></path>
-                      <path d="M12 8v8"></path>
-                      <path d="M8 12h8"></path>
-                    </svg>
-                  </button>
+                  <input id="characterCreatePsdFile" class="hidden-file-input" type="file" accept=".psd" />
+                  <div class="character-menu">
+                    <button
+                      id="characterMenuToggle"
+                      class="icon-button"
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded="false"
+                      aria-label="캐릭터 작업 메뉴"
+                      title="캐릭터 작업"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="5" cy="12" r="1.5"></circle>
+                        <circle cx="12" cy="12" r="1.5"></circle>
+                        <circle cx="19" cy="12" r="1.5"></circle>
+                      </svg>
+                    </button>
+                    <div id="characterMenu" class="character-menu-panel" role="menu" hidden>
+                      <button id="characterAdd" class="character-menu-item" type="button" role="menuitem">
+                        새 캐릭터 추가
+                      </button>
+                      <button id="characterPsdUpload" class="character-menu-item" type="button" role="menuitem">
+                        PSD 업로드
+                      </button>
+                      <button id="characterPsdRefresh" class="character-menu-item" type="button" role="menuitem">
+                        PSD 새로고침
+                      </button>
+                      <button id="characterPartReset" class="character-menu-item" type="button" role="menuitem">
+                        파츠 위치 초기화
+                      </button>
+                      <button id="characterDelete" class="character-menu-item danger" type="button" role="menuitem">
+                        캐릭터 삭제
+                      </button>
+                      <button id="characterTrashOpen" class="character-menu-item danger" type="button" role="menuitem">
+                        휴지통
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <label class="select-row">
@@ -206,12 +203,144 @@
           </div>
         </section>
 
+        <div
+          id="characterCreateDialog"
+          class="character-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="characterCreateTitle"
+          hidden
+        >
+          <div class="character-dialog-card">
+            <h2 id="characterCreateTitle">새 캐릭터 만들기</h2>
+            <label>
+              <span>영어명</span>
+              <input id="characterCreateEnglishName" type="text" maxlength="48" autocomplete="off" placeholder="crow" />
+            </label>
+            <label>
+              <span>한글명</span>
+              <input
+                id="characterCreateKoreanName"
+                type="text"
+                maxlength="18"
+                autocomplete="off"
+                placeholder="까마귀"
+              />
+            </label>
+            <label>
+              <span>폴더</span>
+              <select id="characterCreateGroup"></select>
+            </label>
+            <div class="character-dialog-actions">
+              <button id="characterCreateCancel" type="button">취소</button>
+              <button id="characterCreateChoosePsd" type="button">PSD 선택</button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="characterTrashDialog"
+          class="character-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="characterTrashTitle"
+          hidden
+        >
+          <div class="character-dialog-card">
+            <h2 id="characterTrashTitle">캐릭터 휴지통</h2>
+            <div id="characterTrashList" class="character-trash-list"></div>
+            <div class="character-dialog-actions">
+              <button id="characterTrashClose" type="button">닫기</button>
+            </div>
+          </div>
+        </div>
+
         <section class="setting-section" data-section="pose">
           <div class="section-content">
-            <label class="select-row">
-              <span>Action</span>
-              <select id="poseSelect"></select>
-            </label>
+            <div class="action-select-row">
+              <label class="select-row action-select-control">
+                <span>선택</span>
+                <select id="poseSelect"></select>
+              </label>
+              <div class="control-more-menu">
+                <button
+                  id="poseActionMenuToggle"
+                  class="icon-button"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  aria-label="Action 작업 메뉴"
+                  title="Action 작업"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="5" cy="12" r="1.5"></circle>
+                    <circle cx="12" cy="12" r="1.5"></circle>
+                    <circle cx="19" cy="12" r="1.5"></circle>
+                  </svg>
+                </button>
+                <div id="poseActionMenu" class="control-more-menu-panel" role="menu" hidden>
+                  <button id="poseAddAction" class="control-menu-item" type="button" role="menuitem">
+                    새 Action 생성
+                  </button>
+                  <button id="poseExportAction" class="control-menu-item" type="button" role="menuitem">
+                    현재 Action 저장
+                  </button>
+                  <button id="poseImportAction" class="control-menu-item" type="button" role="menuitem">
+                    Action 불러오기
+                  </button>
+                  <button id="poseDeleteAction" class="control-menu-item danger" type="button" role="menuitem">
+                    현재 custom Action 삭제
+                  </button>
+                  <input id="poseImportFile" type="file" accept="application/json,.json" hidden />
+                </div>
+              </div>
+            </div>
+            <div class="action-name-trigger-row">
+              <label for="poseName">이름</label>
+              <input id="poseName" type="text" autocomplete="off" />
+              <div class="action-trigger-card">
+                <span id="poseTriggerRecordStatus" class="action-trigger-summary">없음</span>
+                <button id="poseTriggerRecordComplete" class="action-trigger-mini-button" type="button" hidden>
+                  완료
+                </button>
+                <button id="poseTriggerRecordCancel" class="action-trigger-mini-button" type="button" hidden>
+                  취소
+                </button>
+                <button
+                  id="poseTriggerRepeat"
+                  class="action-trigger-repeat-toggle"
+                  type="button"
+                  aria-label="누르고 있는 동안 반복"
+                  title="누르고 있는 동안 반복"
+                  aria-pressed="false"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M17 1l4 4-4 4"></path>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <path d="M7 23l-4-4 4-4"></path>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                  </svg>
+                </button>
+                <button
+                  id="poseTriggerRecord"
+                  class="action-trigger-record-dot"
+                  type="button"
+                  aria-label="Trigger 녹화"
+                  title="Trigger 녹화"
+                ></button>
+                <small id="poseTriggerHint" hidden></small>
+                <select id="poseTriggerType" hidden>
+                  <option value="single">단일</option>
+                  <option value="sequence">연속</option>
+                  <option value="holdCombo">홀드 조합</option>
+                </select>
+                <select id="poseTriggerSingleKey" hidden></select>
+                <input id="poseTriggerSequenceKeys" type="text" autocomplete="off" hidden />
+                <input id="poseTriggerMaxGapMs" type="hidden" value="350" />
+                <select id="poseTriggerHoldKey" hidden></select>
+                <select id="poseTriggerPressKey" hidden></select>
+              </div>
+            </div>
             <div class="pose-timeline-settings">
               <div class="pose-frame-input">
                 <input id="poseDuration" type="number" min="2" max="50" step="1" />
@@ -225,7 +354,7 @@
                   <path d="M8 5v14l11-7z"></path>
                 </svg>
               </button>
-              <button id="posePlaybackMode" class="icon-button" type="button" aria-label="반복 재생 설정">
+              <button id="posePlaybackMode" class="icon-button" type="button" aria-label="왕복 재생 설정">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M17 1l4 4-4 4"></path>
                   <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
@@ -233,49 +362,36 @@
                   <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                 </svg>
               </button>
-              <button id="poseCopyFrame" class="icon-button" type="button" aria-label="프레임 복사">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8 8h11v13H8z"></path>
-                  <path d="M5 16H4V3h11v1"></path>
-                </svg>
-              </button>
-              <button id="posePasteFrame" class="icon-button" type="button" aria-label="프레임 붙여넣기">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 4h6l1 2h3v15H5V6h3z"></path>
-                  <path d="M8 11h8"></path>
-                  <path d="M8 15h6"></path>
-                </svg>
-              </button>
-              <button id="poseUndoFrame" class="icon-button" type="button" aria-label="되돌리기">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 7H4v5"></path>
-                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                </svg>
-              </button>
-              <button id="poseAddKeyframe" class="icon-button" type="button" aria-label="중간 키프레임 추가">+</button>
-              <button id="poseDeleteKeyframe" class="icon-button" type="button" aria-label="선택 키프레임 삭제">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M3 6h18"></path>
-                  <path d="M8 6V4h8v2"></path>
-                  <path d="M6 6l1 15h10l1-15"></path>
-                  <path d="M10 11v6"></path>
-                  <path d="M14 11v6"></path>
-                </svg>
-              </button>
-              <button id="poseResetAnimation" class="icon-button" type="button" aria-label="현재 Action 초기화">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                  <path d="M4 5v5h5"></path>
-                  <path d="M12 8v8"></path>
-                  <path d="M8 12h8"></path>
-                </svg>
-              </button>
+              <div class="timeline-speed-control">
+                <input id="posePlaybackRateRange" type="range" min="0.1" max="4" step="0.05" aria-label="재생 속도" />
+                <input id="posePlaybackRate" type="number" min="0.1" max="4" step="0.05" aria-label="재생 속도" />
+              </div>
+              <div class="control-more-menu">
+                <button
+                  id="poseTimelineMenuToggle"
+                  class="icon-button"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  aria-label="Action 타임라인 작업 메뉴"
+                  title="Action 타임라인 작업"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="5" cy="12" r="1.5"></circle>
+                    <circle cx="12" cy="12" r="1.5"></circle>
+                    <circle cx="19" cy="12" r="1.5"></circle>
+                  </svg>
+                </button>
+                <div id="poseTimelineMenu" class="control-more-menu-panel" role="menu" hidden>
+                  <button id="poseAddKeyframe" class="control-menu-item" type="button" role="menuitem">
+                    새 키프레임
+                  </button>
+                  <button id="poseDeleteKeyframe" class="control-menu-item danger" type="button" role="menuitem">
+                    키프레임 삭제
+                  </button>
+                </div>
+              </div>
             </div>
-            <label class="setting-row pose-playback-rate-row">
-              <span>재생 속도</span>
-              <input id="posePlaybackRateRange" type="range" min="0.1" max="4" step="0.05" />
-              <input id="posePlaybackRate" type="number" min="0.1" max="4" step="0.05" />
-            </label>
             <div class="pose-timeline" aria-label="Action 키프레임 타임라인">
               <div id="poseTimelineTrack" class="pose-timeline-track"></div>
             </div>
@@ -292,9 +408,44 @@
         <section class="setting-section" data-collapsible data-section="effect">
           <button class="section-toggle" type="button">효과</button>
           <div class="section-content">
-            <label class="select-row">
-              <span>동작</span>
-              <select id="effectSelect"></select>
+            <div class="action-select-row">
+              <label class="select-row action-select-control">
+                <span>선택</span>
+                <select id="effectSelect"></select>
+              </label>
+              <div class="control-more-menu">
+                <button
+                  id="effectAssetMenuToggle"
+                  class="icon-button"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  aria-label="Effect 작업 메뉴"
+                  title="Effect 작업"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="5" cy="12" r="1.5"></circle>
+                    <circle cx="12" cy="12" r="1.5"></circle>
+                    <circle cx="19" cy="12" r="1.5"></circle>
+                  </svg>
+                </button>
+                <div id="effectAssetMenu" class="control-more-menu-panel" role="menu" hidden>
+                  <input id="effectAssetFile" class="hidden-file-input" type="file" accept=".psd,.png,.webp" />
+                  <button id="effectAssetUpload" class="control-menu-item" type="button" role="menuitem">
+                    이미지 업로드
+                  </button>
+                  <button id="effectAssetRefresh" class="control-menu-item" type="button" role="menuitem">
+                    이미지 새로고침
+                  </button>
+                  <button id="effectAssetReset" class="control-menu-item danger" type="button" role="menuitem">
+                    현재 효과 초기화
+                  </button>
+                </div>
+              </div>
+            </div>
+            <label class="action-name-trigger-row effect-name-row">
+              <span>이름</span>
+              <input id="effectName" type="text" readonly />
             </label>
             <div class="pose-timeline-settings">
               <div class="pose-frame-input">
@@ -317,101 +468,67 @@
                   <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                 </svg>
               </button>
-              <button id="effectCopyFrame" class="icon-button" type="button" aria-label="효과 프레임 복사">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8 8h11v13H8z"></path>
-                  <path d="M5 16H4V3h11v1"></path>
-                </svg>
-              </button>
-              <button id="effectPasteFrame" class="icon-button" type="button" aria-label="효과 프레임 붙여넣기">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 4h6l1 2h3v15H5V6h3z"></path>
-                  <path d="M8 11h8"></path>
-                  <path d="M8 15h6"></path>
-                </svg>
-              </button>
-              <button id="effectUndoFrame" class="icon-button" type="button" aria-label="효과 되돌리기">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 7H4v5"></path>
-                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                </svg>
-              </button>
-              <button id="effectAddKeyframe" class="icon-button" type="button" aria-label="효과 중간 키프레임 추가">
-                +
-              </button>
-              <button id="effectDeleteKeyframe" class="icon-button" type="button" aria-label="효과 선택 키프레임 삭제">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M3 6h18"></path>
-                  <path d="M8 6V4h8v2"></path>
-                  <path d="M6 6l1 15h10l1-15"></path>
-                  <path d="M10 11v6"></path>
-                  <path d="M14 11v6"></path>
-                </svg>
-              </button>
-              <button id="effectResetAnimation" class="icon-button" type="button" aria-label="현재 효과 초기화">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                  <path d="M4 5v5h5"></path>
-                  <path d="M12 8v8"></path>
-                  <path d="M8 12h8"></path>
-                </svg>
-              </button>
+              <div class="timeline-speed-control">
+                <input
+                  id="effectPlaybackRateRange"
+                  type="range"
+                  min="0.1"
+                  max="4"
+                  step="0.05"
+                  aria-label="효과 재생 속도"
+                />
+                <input
+                  id="effectPlaybackRate"
+                  type="number"
+                  min="0.1"
+                  max="4"
+                  step="0.05"
+                  aria-label="효과 재생 속도"
+                />
+              </div>
+              <div class="control-more-menu">
+                <button
+                  id="effectTimelineMenuToggle"
+                  class="icon-button"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  aria-label="Effect 타임라인 작업 메뉴"
+                  title="Effect 타임라인 작업"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="5" cy="12" r="1.5"></circle>
+                    <circle cx="12" cy="12" r="1.5"></circle>
+                    <circle cx="19" cy="12" r="1.5"></circle>
+                  </svg>
+                </button>
+                <div id="effectTimelineMenu" class="control-more-menu-panel" role="menu" hidden>
+                  <button id="effectCopyFrame" class="control-menu-item" type="button" role="menuitem">
+                    프레임 복사
+                  </button>
+                  <button id="effectPasteFrame" class="control-menu-item" type="button" role="menuitem">
+                    프레임 붙여넣기
+                  </button>
+                  <button id="effectUndoFrame" class="control-menu-item" type="button" role="menuitem">
+                    타임라인 되돌리기
+                  </button>
+                  <button id="effectAddKeyframe" class="control-menu-item" type="button" role="menuitem">
+                    새 키프레임
+                  </button>
+                  <button id="effectDeleteKeyframe" class="control-menu-item danger" type="button" role="menuitem">
+                    키프레임 삭제
+                  </button>
+                  <button id="effectResetAnimation" class="control-menu-item danger" type="button" role="menuitem">
+                    효과 초기화
+                  </button>
+                </div>
+              </div>
             </div>
-            <label class="setting-row pose-playback-rate-row">
-              <span>재생 속도</span>
-              <input id="effectPlaybackRateRange" type="range" min="0.1" max="4" step="0.05" />
-              <input id="effectPlaybackRate" type="number" min="0.1" max="4" step="0.05" />
-            </label>
             <div class="pose-timeline" aria-label="효과 키프레임 타임라인">
               <div id="effectTimelineTrack" class="pose-timeline-track"></div>
             </div>
             <div class="effect-picker">
               <div id="effectImagePreview" class="effect-image-preview" aria-hidden="true"></div>
-              <div class="section-action-row effect-asset-actions" aria-label="효과 이미지 작업">
-                <input id="effectAssetFile" class="hidden-file-input" type="file" accept=".psd,.png,.webp" />
-                <button
-                  id="effectAssetUpload"
-                  class="icon-button"
-                  type="button"
-                  aria-label="효과 이미지 파일 선택 및 업로드"
-                  title="효과 이미지 파일 선택 및 업로드"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <path d="M14 2v6h6"></path>
-                    <path d="M12 18v-7"></path>
-                    <path d="M8 15l4-4 4 4"></path>
-                  </svg>
-                </button>
-                <button
-                  id="effectAssetRefresh"
-                  class="icon-button"
-                  type="button"
-                  aria-label="효과 이미지 새로고침"
-                  title="효과 이미지 새로고침"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 12a8 8 0 0 1 13.66-5.66"></path>
-                    <path d="M18 3v5h-5"></path>
-                    <path d="M20 12a8 8 0 0 1-13.66 5.66"></path>
-                    <path d="M6 21v-5h5"></path>
-                  </svg>
-                </button>
-                <button
-                  id="effectAssetReset"
-                  class="icon-button"
-                  type="button"
-                  aria-label="현재 효과 초기화"
-                  title="현재 효과 초기화"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 12a8 8 0 1 0 2.34-5.66"></path>
-                    <path d="M4 5v5h5"></path>
-                    <path d="M12 8v8"></path>
-                    <path d="M8 12h8"></path>
-                  </svg>
-                </button>
-              </div>
             </div>
             <div id="effectFields" class="part-fields"></div>
           </div>

@@ -2,13 +2,16 @@ import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './projec
 import { partPositionSources } from './part_source_registry.js';
 import {
   addPoseTimelineKeyframe,
+  applyPoseTimelineAllFrameValueDelta,
+  applyPoseTimelineAllFrameValueTransform,
+  applyPoseTimelineFrameValueDelta,
   deletePoseTimelineKeyframe,
   ensurePoseTimelineKeyframe,
   movePoseTimelineKeyframe,
   resetPoseTimelineAnimation,
   writePoseTimelineFrameValue,
 } from './timeline_keyframe_helper.js';
-import { writePoseTimelineSetting } from './timeline_settings_helper.js';
+import { preserveTimelineKeyframeSlots, writePoseTimelineSetting } from './timeline_settings_helper.js';
 import { POSE_PART_KEYS } from './game_config.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { createPosePreview } from './preview_state.js';
@@ -94,6 +97,19 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     return movePoseTimelineKeyframe(tuning(), key(), id, t);
   }
 
+  function applyFrameValueDelta(part, prop, delta) {
+    ensurePoseOffset(tuning(), key(), part);
+    return applyPoseTimelineFrameValueDelta(tuning(), key(), part, prop, delta);
+  }
+
+  function applyAllFrameValueDelta(prop, delta, parts) {
+    return applyPoseTimelineAllFrameValueDelta(tuning(), key(), prop, delta, parts);
+  }
+
+  function applyAllFrameValueTransform(prop, transformValue, parts) {
+    return applyPoseTimelineAllFrameValueTransform(tuning(), key(), prop, transformValue, parts);
+  }
+
   function resetAnimation() {
     resetPoseTimelineAnimation(tuning(), key());
   }
@@ -116,6 +132,13 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
 
   function writeSetting(prop, value) {
     writePoseTimelineSetting(settingsByKey(), key(), prop, value);
+  }
+
+  function preserveKeyframeSlots(oldFrameCount, nextFrameCount) {
+    POSE_PART_KEYS.forEach((part) => {
+      ensurePoseOffset(tuning(), key(), part);
+      preserveTimelineKeyframeSlots(poseKeyframesFor(offset(part)), oldFrameCount, nextFrameCount);
+    });
   }
 
   function createPreview({ fixedFrame = null, playing = false, loop = false, t = null } = {}) {
@@ -178,6 +201,9 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
     {
       activeT,
       addKeyframe,
+      applyAllFrameValueDelta,
+      applyAllFrameValueTransform,
+      applyFrameValueDelta,
       copyFrame,
       createPreview,
       currentFrameValue,
@@ -193,6 +219,7 @@ export function createPoseTimelineAdapter({ getActor, poseSelect }) {
       settingsByKey,
       pasteFrameCopy,
       pasteTargetFrameId,
+      preserveKeyframeSlots,
       writeFrameValue,
       writeSetting,
     },

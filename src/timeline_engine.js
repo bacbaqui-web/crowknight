@@ -17,6 +17,9 @@ import {
   timelineSlotToValue,
   timelineValueToSlot,
 } from './timeline_state.js';
+import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './game_config.js';
+import { minTimelineFrameCountForKeyframes } from './timeline_settings_helper.js';
+import { clamp } from './utils.js';
 
 export function createTimelineControllerCore({
   timeline,
@@ -51,12 +54,25 @@ export function createTimelineControllerCore({
     });
   const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
   const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
+  const minFrameCount = () =>
+    minTimelineFrameCountForKeyframes(keyframesForTimeline(), accessors.frameCount(), POSE_MIN_FRAMES);
+  const normalizeSettingValue = (prop, value) => {
+    if (prop !== 'duration') return value;
+    return clamp(Math.round(Number(value)), minFrameCount(), POSE_MAX_FRAMES);
+  };
+  const beforeSettingWrite = (prop, value) => {
+    if (prop !== 'duration') return;
+    const oldFrameCount = accessors.frameCount();
+    if (oldFrameCount === value) return;
+    timeline.preserveKeyframeSlots?.(oldFrameCount, value);
+  };
   const updateSetting = (prop, value) =>
     updateTimelineSettingAction({
       prop,
-      value,
+      value: normalizeSettingValue(prop, value),
       beginUndo,
       ensureSettings: timeline.ensureSettings,
+      beforeWrite: beforeSettingWrite,
       writeSetting: timeline.writeSetting,
       applySelected,
       syncPreview,
@@ -110,6 +126,7 @@ export function createTimelineControllerCore({
 
   const playbackControls = createTimelinePlaybackControls({
     getFrameCount: accessors.frameCount,
+    getMinFrameCount: minFrameCount,
     durationInput,
     beginUndo,
     commitUndo,
@@ -149,6 +166,7 @@ export function createTimelineControllerCore({
     hasFrameSelection: selectionControls.hasFrameSelection,
     isSectionOpen: selectionControls.isSectionOpen,
     keyframes: keyframesForTimeline,
+    minFrameCount,
     playbackControls,
     pasteFrame: clipboardControls.pasteFrame,
     renderTimeline,

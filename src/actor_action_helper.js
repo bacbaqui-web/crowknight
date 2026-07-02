@@ -1,4 +1,5 @@
 import { clamp, lerp } from './utils.js';
+import { advanceCustomActionRuntime, updateActionTriggerRuntime } from './action_trigger_runtime.js';
 
 const JUMP_HOLD_MAX = 0.22;
 const JUMP_HELD_GRAVITY = 0.42;
@@ -12,10 +13,11 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   player.guardBlockTime = Math.max(0, player.guardBlockTime - dt);
   player.guardBreakTime = Math.max(0, player.guardBreakTime - dt);
 
+  const consumedInputs = updateActionTriggerRuntime(player, dt, keys, pressed);
   const l = keys.has('ArrowLeft');
   const r = keys.has('ArrowRight');
   const jumpHeld = keys.has('Space');
-  const guardHeld = keys.has('KeyE');
+  const guardHeld = keys.has('KeyE') && !consumedInputs.has('KeyE');
 
   updatePuppetGuardInput(player, guardHeld);
   const runAcceleration = clamp(Number(player.runAcceleration ?? DEFAULT_RUN_ACCELERATION), 0.02, 0.4);
@@ -39,7 +41,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
     if (Math.abs(player.vx) < 2) player.vx = 0;
   }
 
-  if (pressed.has('Space') && player.onGround) {
+  if (isPressed(pressed, consumedInputs, 'Space') && player.onGround) {
     player.vy = -jumpVelocityForHeight(player.jumpPower, world.gravity);
     player.jumpStartVy = player.vy;
     player.jumpStartY = player.y;
@@ -47,7 +49,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
     player.jumpHoldTime = JUMP_HOLD_MAX;
     player.glideTime = player.glideTimeMax;
     player.airFlapCooldownTime = player.airFlapCooldown;
-  } else if (pressed.has('Space') && canPuppetAirFlap(player)) {
+  } else if (isPressed(pressed, consumedInputs, 'Space') && canPuppetAirFlap(player)) {
     const jumpVelocity = jumpVelocityForHeight(player.jumpPower, world.gravity);
     player.vy = Math.min(player.vy - player.airFlapPower, -player.airFlapPower);
     player.vy = Math.max(player.vy, -jumpVelocity * 0.78);
@@ -59,7 +61,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   }
 
   if (
-    pressed.has('KeyW') &&
+    isPressed(pressed, consumedInputs, 'KeyW') &&
     player.onGround &&
     player.dashCooldown <= 0 &&
     !player.isGuarding &&
@@ -74,7 +76,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
     player.vy = 0;
   }
 
-  if (pressed.has('KeyQ')) tryPuppetAttack(player);
+  if (isPressed(pressed, consumedInputs, 'KeyQ')) tryPuppetAttack(player);
 
   if (player.dashTime > 0) {
     player.glideActive = false;
@@ -93,6 +95,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   player.jumpAttackTime -= dt;
   player.attackCooldown -= dt;
   player.comboTimer -= dt;
+  advanceCustomActionRuntime(player, dt);
   player.x += player.vx * dt;
   player.y += player.vy * dt;
   clampJumpToConfiguredHeight(player);
@@ -113,6 +116,10 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   }
 
   updatePuppetPlayerState(player);
+}
+
+function isPressed(pressed, consumedInputs, code) {
+  return pressed.has(code) && !consumedInputs.has(code);
 }
 
 export function updatePuppetNpc(player, dt, target, world, bounds = null) {

@@ -70,12 +70,14 @@ export function updateTimelineSettingAction({
   value,
   beginUndo,
   ensureSettings,
+  beforeWrite = null,
   writeSetting,
   applySelected,
   syncPreview,
 }) {
   beginUndo();
   ensureSettings();
+  beforeWrite?.(prop, value);
   writeSetting(prop, value);
   applySelected();
   syncPreview();

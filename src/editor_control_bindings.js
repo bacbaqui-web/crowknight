@@ -41,6 +41,7 @@ export function bindTuningPanelControls({
       beginUndoSnapshot,
       getTuning: () => getSelectedActor().tuning,
       applySelected,
+      handleActorGroupChange: lifecycleController.handleActorGroupChange,
       handleActorChange: lifecycleController.handleActorChange,
       handleActorNameInput: lifecycleController.handleActorNameInput,
       handlePartChange: partController.handlePartChange,

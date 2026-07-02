@@ -1,39 +1,21 @@
 export const MODIFIER_DEFS = Object.freeze([
   {
-    type: 'invincible',
-    label: 'Invincible',
+    type: 'move',
+    label: '이동',
     settings: [
-      { prop: 'startFrame', label: 'Start', min: 0, max: 50, step: 1 },
-      { prop: 'endFrame', label: 'End', min: 0, max: 50, step: 1 },
+      { prop: 'x', label: 'X 이동량', min: -2000, max: 2000, step: 1 },
+      { prop: 'y', label: 'Y 이동량', min: -2000, max: 2000, step: 1 },
     ],
   },
   {
-    type: 'tint',
-    label: 'Tint',
-    settings: [
-      { prop: 'color', label: 'Color', kind: 'color' },
-      { prop: 'intensity', label: 'Intensity', min: 0, max: 1, step: 0.05 },
-    ],
+    type: 'accelerate',
+    label: '가속',
+    settings: [{ prop: 'strength', label: '강도', min: 0, max: 5, step: 0.05 }],
   },
   {
-    type: 'easeIn',
-    label: 'Ease In',
-    settings: [{ prop: 'amount', label: 'Amount', min: 0, max: 1, step: 0.05 }],
-  },
-  {
-    type: 'easeOut',
-    label: 'Ease Out',
-    settings: [{ prop: 'amount', label: 'Amount', min: 0, max: 1, step: 0.05 }],
-  },
-  {
-    type: 'gravity',
-    label: 'Gravity',
-    settings: [{ prop: 'scale', label: 'Scale', min: 0, max: 3, step: 0.05 }],
-  },
-  {
-    type: 'hitStop',
-    label: 'Hit Stop',
-    settings: [{ prop: 'duration', label: 'Duration', min: 0, max: 1, step: 0.01 }],
+    type: 'decelerate',
+    label: '감속',
+    settings: [{ prop: 'strength', label: '강도', min: 0, max: 5, step: 0.05 }],
   },
 ]);
 
@@ -87,8 +69,9 @@ function normalizeModifier(modifier) {
   const def = modifierDef(modifier?.type);
   if (!def) return null;
   const settings = {};
+  const sourceSettings = modifier?.settings || modifier;
   def.settings.forEach((item) => {
-    settings[item.prop] = normalizeModifierSetting(def.type, item.prop, modifier?.settings?.[item.prop]);
+    settings[item.prop] = normalizeModifierSetting(def.type, item.prop, sourceSettings?.[item.prop]);
   });
   return {
     type: def.type,
@@ -120,7 +103,6 @@ function normalizeModifierSetting(type, prop, value) {
 }
 
 function defaultModifierSettingValue(prop) {
-  if (prop === 'endFrame') return 1;
-  if (prop === 'intensity' || prop === 'amount' || prop === 'scale') return 1;
+  if (prop === 'strength') return 1;
   return 0;
 }

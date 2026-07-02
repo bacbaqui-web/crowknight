@@ -20,7 +20,7 @@ import {
   readInteractionDisplayValue,
   renderInteractionEditor,
 } from './interaction_editor_engine.js';
-import { renderModifierEditor } from './modifier_editor_engine.js';
+import { renderAppliedModifierEditor, renderModifierLibraryEditor } from './modifier_editor_engine.js';
 import {
   ensureTimelineModifierTarget,
   writeTimelineModifierEnabled,
@@ -70,6 +70,7 @@ export function createEffectTimelineController({
     isSectionOpen,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
+    minFrameCount,
     toSlot,
     slotToValue,
     slotToLeft,
@@ -117,20 +118,46 @@ export function createEffectTimelineController({
     renderTimeline();
     effectTimeline.ensureOffset();
     renderEffectImagePreview(effectImagePreview, effectTimeline.key(), effectAssets);
+    clearEffectSupplementCards();
     effectFields.innerHTML = '';
-    renderEditorDataCard(effectFields, { title: 'Property', className: 'property-editor-card' }, (body) => {
-      renderScrubGroups(body, effectPropertyGroups(), readDisplayValue, updateOffset, scrubCallbacks);
+    renderEditorDataCard(
+      effectFields,
+      { title: 'Property', className: 'property-editor-card', collapsible: false },
+      (body) => {
+        renderScrubGroups(body, effectPropertyGroups(), readDisplayValue, updateOffset, scrubCallbacks);
+      }
+    );
+    const supplementContainer = effectFields.parentElement || effectFields;
+
+    renderAppliedModifierEditor(supplementContainer, {
+      modifiers: effectModifiers(),
+      onSettingChange: updateEffectModifierSetting,
     });
-    renderInteractionEditor(effectFields, {
+
+    renderInteractionEditor(supplementContainer, {
       frameValue: currentFrameValue(),
       targetKey: 'effect',
       scrubCallbacks,
       onWrite: (prop, value, { rerender = true } = {}) => updateInteractionValue(prop, value, rerender),
     });
-    renderModifierEditor(effectFields, {
+
+    renderModifierLibraryEditor(supplementContainer, {
       modifiers: effectModifiers(),
       onToggle: updateEffectModifierEnabled,
-      onSettingChange: updateEffectModifierSetting,
+    });
+  }
+
+  function clearEffectSupplementCards() {
+    const container = effectFields.parentElement;
+    if (!container) return;
+    Array.from(container.children).forEach((child) => {
+      if (
+        child.classList.contains('interaction-editor-card') ||
+        child.classList.contains('modifier-applied-card') ||
+        child.classList.contains('modifier-library-card')
+      ) {
+        child.remove();
+      }
     });
   }
 
@@ -224,6 +251,7 @@ export function createEffectTimelineController({
       hasSelection: isSectionOpen(),
       hasCopiedFrame: clipboardState.has(),
       undoCount: undoState.undoCount,
+      minFrameCount: minFrameCount(),
     });
   }
 

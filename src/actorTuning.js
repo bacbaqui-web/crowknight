@@ -5,7 +5,11 @@ import { clamp, clone } from './utils.js';
 export function defaultTuningFor(def) {
   const tuning = clone(DEFAULT_PLAYER_TUNING);
   if (def.id !== 'player') {
-    tuning.speed = 150 + ACTOR_DEFS.findIndex((item) => item.id === def.id) * 18;
+    const actorIndex = Math.max(
+      1,
+      ACTOR_DEFS.findIndex((item) => item.id === def.id)
+    );
+    tuning.speed = 150 + actorIndex * 18;
     tuning.jumpPower = 104;
     tuning.glideTimeMax = 0.75;
     tuning.dashCooldownMax = 0.75;

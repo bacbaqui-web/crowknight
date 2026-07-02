@@ -7,28 +7,28 @@ import { interactionFieldLimits } from './part_source_registry.js';
 import { clamp } from './utils.js';
 
 const INTERACTION_DEFS = [
-  { prop: 'collision', label: 'Collision' },
-  { prop: 'hurt', label: 'Hurt' },
-  { prop: 'attack', label: 'Attack' },
-  { prop: 'guard', label: 'Guard' },
+  { prop: 'collision', label: '충돌' },
+  { prop: 'hurt', label: '피격' },
+  { prop: 'attack', label: '공격' },
+  { prop: 'guard', label: '방어' },
 ];
 
 const ATTACK_GROUPS = [
   {
     label: '공격',
     props: [
-      { prop: 'stun', label: 'ST' },
-      { prop: 'knockbackX', label: 'KX' },
-      { prop: 'knockbackY', label: 'KY' },
-      { prop: 'deathBurst', label: 'DB' },
+      { prop: 'stun', label: '경직' },
+      { prop: 'knockbackX', label: '넉백 X' },
+      { prop: 'knockbackY', label: '넉백 Y' },
+      { prop: 'deathBurst', label: '처치 연출' },
     ],
   },
 ];
 
-const COLLISION_GROUPS = [{ label: '충돌', props: [{ prop: 'pushPower', label: 'P' }] }];
+const COLLISION_GROUPS = [{ label: '충돌', props: [{ prop: 'pushPower', label: '밀기' }] }];
 
 export function renderInteractionEditor(container, options) {
-  renderEditorDataCard(container, { title: 'Interaction', className: 'interaction-editor-card' }, (body) => {
+  renderEditorDataCard(container, { title: '상호작용', className: 'interaction-editor-card' }, (body) => {
     renderInteractionToggleGrid(body, options);
     renderInteractionDetails(body, options);
   });
@@ -74,7 +74,7 @@ function renderInteractionDetails(body, options) {
   if (!activeRoles.length) {
     const empty = document.createElement('div');
     empty.className = 'editor-data-empty';
-    empty.textContent = '활성화된 Interaction이 없습니다.';
+    empty.textContent = '활성화된 상호작용이 없습니다.';
     body.append(empty);
     return;
   }
@@ -104,7 +104,7 @@ function renderInteractionDetails(body, options) {
 function interactionDetailTitle(label, targetKey) {
   if (!isInteractionObjectPartKey(targetKey)) return label;
   const parentKey = interactionObjectParentPartKey(targetKey);
-  return parentKey ? `${label} / Parent ${partLabel(parentKey)}` : label;
+  return parentKey ? `${label} / 부모 ${partLabel(parentKey)}` : label;
 }
 
 function interactionDetailGroups(prop) {

@@ -26,6 +26,10 @@ export const DEFAULT_PLAYER_TUNING = {
   transform: { scale: 1, anchorX: 0, anchorY: 0 },
   hud: { offsetY: 0 },
   effects: { hitShake: 1.6, hitSpark: 1 },
+  customActions: [],
+  deletedPoseActions: [],
+  actionNames: {},
+  actionTriggers: {},
   modifiers: defaultTimelineModifiers(),
   effectOffsets: {
     idle: {},

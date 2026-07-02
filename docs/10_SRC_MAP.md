@@ -45,6 +45,7 @@ Runtime
 ├─ actor_pose_helper.js
 ├─ actor_renderer.js
 ├─ actor_action_helper.js
+├─ action_trigger_runtime.js
 ├─ actor_canvas_renderer.js
 ├─ combat_engine.js
 └─ world_renderer.js
@@ -100,6 +101,7 @@ Data
 ├─ game_config.js
 ├─ player_default_rig_data.js
 ├─ player_default_tuning_data.js
+├─ action_trigger_data.js
 ├─ project_data_normalizer.js
 ├─ animation_frame_data.js
 └─ stageRulesState.js
@@ -108,8 +110,12 @@ Data
 ## Save / Asset 규칙
 
 - `project_storage_helper.js`: Firestore에 저장할 Project State metadata를 만든다.
-- `firebase_asset_storage.js`: actor PNG, actor PSD, effect PNG/PSD, background PSD/WebP/layer asset을 Firebase Storage에 올리고 metadata source URL을 갱신한다.
-- Firebase 다운로드는 local file을 덮어쓰지 않고, Firestore metadata의 Storage URL을 Runtime source로 적용한다.
+- `firebase_asset_storage.js`: character PSD, effect PNG/PSD, background PSD/WebP/layer asset을 Firebase Storage에 올린다.
+- 상단 Firebase 업로드/다운로드 버튼은 설정 수치 metadata만 Firestore에 저장/불러온다. Storage asset 업로드를 같이 실행하지 않는다.
+- Setup / Effect / Stage 내부의 업로드/새로고침 버튼은 각 섹션의 asset만 처리한다.
+- Firebase metadata 다운로드는 local file을 덮어쓰지 않고, Firestore metadata를 설정 수치 source로 적용한다.
+- Storage 기준 경로는 `crow-knight/assets`다. 하위 폴더는 로컬 `assets`와 맞춰 `backgrounds`, `characters`, `effects`, `icons`를 사용한다.
+- 캐릭터 PSD는 Storage의 `characters/player/player.psd`, `characters/enemy/enemy.psd`가 원본이다. Setup PSD 업로드/새로고침 후에는 선택 캐릭터의 로컬 PNG export만 다시 뽑는다.
 
 ## 기능 그룹
 
@@ -153,9 +159,9 @@ Data
 
 - 역할: Modifier 목록, 추가/삭제 기준이 되는 활성화, Modifier별 설정 UI, 저장 정규화.
 - 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `modifier_editor_engine.js`, `timeline_modifier_data.js`, `project_data_normalizer.js`, `player_default_tuning_data.js`.
+- 관련 JS: `modifier_editor_engine.js`, `timeline_modifier_data.js`, `project_data_normalizer.js`, `player_default_tuning_data.js`, `action_trigger_runtime.js`.
 - 사용처: Action Pose Timeline, Effect Timeline.
-- 주의: Modifier 해석은 Runtime Task에서 별도 Action Modifier Engine으로 연결한다.
+- 주의: 현재 Runtime MVP는 Custom Action에서 `move` / `accelerate` / `decelerate`만 해석한다.
 
 ### Handle
 
@@ -177,6 +183,29 @@ Data
 - 공통 여부: 🟦 공통 시스템.
 - 관련 JS: `timeline_controller.js`, `timeline_engine.js`, `timeline_state.js`, `timeline_command_helper.js`, `timeline_drag_helper.js`, `timeline_selection_helper.js`, `timeline_preview_helper.js`, `timeline_pose_adapter.js`, `timeline_effect_adapter.js`, `timeline_pose_controller.js`, `timeline_effect_controller.js`, `timeline_view.js`, `timeline_renderer.js`, `timeline_frame_reader.js`, `timeline_keyframe_helper.js`.
 - 주의: Action/Effect 모두 영향. 공통 engine에 전용 예외를 넣지 않는다.
+
+### Action Authoring
+
+#### Pose Action Authoring
+
+- 파일: `pose_action_authoring.js`
+- 역할: Action descriptor compatibility layer, custom Action 생성/삭제/이름/JSON export/import, 모든 Action key의 trigger 저장 데이터 정규화 연결.
+- 사용처: Action panel.
+- 주의: `runtimeMode`은 migration flag다. 최종 Action 종류로 취급하지 않는다.
+
+#### Action Trigger Data
+
+- 파일: `action_trigger_data.js`
+- 역할: Trigger key/type 목록, Single/Sequence/Hold Combo trigger 정규화, sequence 문자열 parse/format.
+- 사용처: `pose_action_authoring.js`, `pose_action_authoring_controls.js`, `action_trigger_runtime.js`.
+- 주의: 데이터 정규화 helper다. Runtime 판정은 `action_trigger_runtime.js`에 둔다.
+
+#### Action Trigger Runtime
+
+- 파일: `action_trigger_runtime.js`
+- 역할: 통합 Action descriptor의 trigger를 입력 상태와 매칭하고 Trigger Runtime으로 이동한 Action Timeline 실행을 시작한다.
+- 사용처: `actor_action_helper.js`.
+- 주의: Action 이름별 Runtime 분기를 추가하지 않는다. Basic Action legacy migration과 Modifier 해석은 별도 Runtime Task다.
 
 ### InteractionObject
 

@@ -1,5 +1,5 @@
 import { refreshPsdBackground } from './psd_background_helper.js';
-import { uploadGameAssetsToFirebase, uploadScenePsdAssetsToFirebase } from './firebase_asset_storage.js';
+import { uploadScenePsdAssetsToFirebase } from './firebase_asset_storage.js';
 import {
   downloadSavedStateFromFirebase,
   saveGameState,
@@ -9,6 +9,7 @@ import {
 
 export function createProjectStateController({
   actors,
+  characterDefs,
   world,
   sceneSessions,
   effectAssetSources,
@@ -28,19 +29,20 @@ export function createProjectStateController({
 
   function saveState() {
     syncCurrentSceneSession();
-    saveGameState({ actors, activeSessionId: activeSceneSessionId, sessions: sceneSessions, effectAssetSources });
+    saveGameState({
+      actors,
+      characterDefs,
+      activeSessionId: activeSceneSessionId,
+      sessions: sceneSessions,
+      effectAssetSources,
+    });
   }
 
   async function uploadSettingsToFirebase() {
-    const sceneSession = syncCurrentSceneSession();
-    const uploadedSceneAssets = await uploadScenePsdAssetsToFirebase(sceneSession.background);
-    if (!uploadedSceneAssets) return false;
-    onSceneBackgroundUpdate(sceneSession.background);
-    sceneSessions[sceneSession.id] = sceneSession;
-    const uploadedAssets = await uploadGameAssetsToFirebase({ actors, effectAssetSources });
-    if (!uploadedAssets) return false;
+    syncCurrentSceneSession();
     return uploadSavedStateToFirebase({
       actors,
+      characterDefs,
       activeSessionId: activeSceneSessionId,
       sessions: sceneSessions,
       effectAssetSources,
@@ -53,7 +55,7 @@ export function createProjectStateController({
     return downloaded;
   }
 
-  async function refreshPsdAndUploadSettings({ psdFile = null } = {}) {
+  async function refreshStagePsdAsset({ psdFile = null } = {}) {
     const refreshed = await refreshPsdBackground({
       getSceneSession,
       onUpdate: onSceneBackgroundUpdate,
@@ -64,12 +66,14 @@ export function createProjectStateController({
 
     const sceneSession = getSceneSession();
     onSceneBackgroundUpdate(sceneSession.background);
-    return uploadSettingsToFirebase();
+    const uploaded = await uploadScenePsdAssetsToFirebase(sceneSession.background);
+    saveState();
+    return uploaded;
   }
 
   return {
     downloadSettingsFromFirebase,
-    refreshPsdAndUploadSettings,
+    refreshStagePsdAsset,
     saveState,
     uploadSettingsToFirebase,
   };

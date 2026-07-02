@@ -416,7 +416,7 @@
         <nav class="doc-links" aria-label="문서 링크">
           <a class="doc-link" href="./10_SRC_MAP.md">10_SRC_MAP 원본</a>
           <a class="doc-link" href="./sprint-dashboard.html">Sprint Dashboard</a>
-          <a class="doc-link" href="./99_CURRENT_SPRINT.md">Current Sprint</a>
+          <a class="doc-link" href="./99_TASK_REPORT.md">Task Report</a>
         </nav>
       </header>
 
@@ -526,8 +526,9 @@
             'timeline_modifier_data.js',
             'project_data_normalizer.js',
             'player_default_tuning_data.js',
+            'action_trigger_runtime.js',
           ],
-          caution: 'Modifier 해석은 Runtime Task에서 별도 Action Modifier Engine으로 연결한다.',
+          caution: '현재 Runtime MVP는 Custom Action에서 move / accelerate / decelerate만 해석한다.',
         },
         {
           name: 'Handle',

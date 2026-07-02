@@ -37,6 +37,7 @@ import {
   translationMatrix,
 } from './puppetPlayerGeometry.js';
 import { createPuppetPose } from './actor_pose_helper.js';
+import { poseActionDescriptors } from './pose_action_authoring.js';
 
 export class PuppetPlayer {
   constructor(x, y, assets) {
@@ -69,6 +70,10 @@ export class PuppetPlayer {
     this.comboTimer = 0;
     this.attackSerial = 0;
     this.attackCarrySpeed = 0;
+    this.customActionKey = null;
+    this.customActionTime = 0;
+    this.customActionDuration = 0;
+    this.customActionMoveProgress = 0;
     this.hurtTime = 0;
     this.guardActive = false;
     this.guardHits = 0;
@@ -99,9 +104,17 @@ export class PuppetPlayer {
     this.effects = next.effects;
     this.motion = next.motion;
     this.layerOrder = next.layerOrder;
+    this.actions = poseActionDescriptors(next);
+    this.customActions = next.customActions || [];
     this.poseOffsets = next.poseOffsets;
     this.poseSettings = next.poseSettings;
     this.rig = next.rig;
+    if (this.customActionKey && !this.customActions.some((action) => action.key === this.customActionKey)) {
+      this.customActionKey = null;
+      this.customActionTime = 0;
+      this.customActionDuration = 0;
+      this.customActionMoveProgress = 0;
+    }
   }
 
   get hurtInteractionRegion() {
@@ -125,6 +138,9 @@ export class PuppetPlayer {
   }
 
   get attackInteractionRegions() {
+    if (this.isCustomActionActive) {
+      return this.activeAttackInteractionRegions();
+    }
     if (this.jumpAttackTime > 0 && this.isJumpAttackStrikeActive()) {
       return this.activeAttackInteractionRegions();
     }
@@ -146,7 +162,11 @@ export class PuppetPlayer {
   }
 
   get isAttacking() {
-    return this.attackTime > 0 || this.jumpAttackTime > 0;
+    return this.attackTime > 0 || this.jumpAttackTime > 0 || this.isCustomActionActive;
+  }
+
+  get isCustomActionActive() {
+    return Boolean(this.customActionKey && this.customActionTime > 0);
   }
 
   activeAttackInteractionRegions() {
@@ -286,6 +306,7 @@ export class PuppetPlayer {
 
   get poseKey() {
     if (this.posePreview?.pose) return this.posePreview.pose;
+    if (this.isCustomActionActive) return this.customActionKey;
     if (this.state === 'jumpAttack') return 'jumpAttack';
     if (this.state === 'attack') return `attack${this.comboStep || 1}`;
     return this.state;
@@ -364,6 +385,9 @@ export class PuppetPlayer {
     }
 
     if (this.posePreview?.frame) return this.posePreview.frame === 'end' ? 1 : 0;
+    if (this.isCustomActionActive) {
+      return clamp(1 - this.customActionTime / Math.max(0.01, this.customActionDuration || 0.6), 0, 1);
+    }
     if (this.state === 'attack') return clamp(this.attackProgress, 0, 1);
     if (this.state === 'jumpAttack') return clamp(this.jumpAttackProgress, 0, 1);
     if (this.state === 'roll') return clamp(1 - Math.max(0, this.dashTime) / Math.max(0.01, this.rollDuration), 0, 1);

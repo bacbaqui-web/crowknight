@@ -22,6 +22,7 @@ import {
   readNumericInputLimits,
 } from './property_numeric_input_helper.js';
 import { getPath, setPath } from './utils.js';
+import { bindPoseActionAuthoringControls } from './pose_action_authoring_controls.js';
 
 export function initializeTuningPanelControls({
   panel,
@@ -38,6 +39,7 @@ export function initializeTuningPanelControls({
     openButton,
     closeButton,
     resetButton,
+    actorGroupSelect,
     actorSelect,
     actorName,
     partSection,
@@ -47,6 +49,24 @@ export function initializeTuningPanelControls({
     posePartPicker,
     partSelect,
     poseSelect,
+    poseAddAction,
+    poseDeleteAction,
+    poseExportAction,
+    poseImportAction,
+    poseImportFile,
+    poseName,
+    poseTriggerHint,
+    poseTriggerType,
+    poseTriggerSingleKey,
+    poseTriggerSequenceKeys,
+    poseTriggerMaxGapMs,
+    poseTriggerHoldKey,
+    poseTriggerPressKey,
+    poseTriggerRecord,
+    poseTriggerRepeat,
+    poseTriggerRecordStatus,
+    poseTriggerRecordComplete,
+    poseTriggerRecordCancel,
     effectSelect,
     posePartSelect,
     poseDuration,
@@ -78,7 +98,12 @@ export function initializeTuningPanelControls({
     layerOrder,
   } = elements;
 
-  populateTuningPanelSelects({ actorSelect, partSelect, poseSelect, posePartSelect, effectSelect }, actors, rig);
+  populateTuningPanelSelects(
+    { actorGroupSelect, actorSelect, partSelect, poseSelect, posePartSelect, effectSelect },
+    actors,
+    rig,
+    callbacks.getTuning()
+  );
   populatePartPickerButtons(partPicker);
   populatePartPickerButtons(posePartPicker);
 
@@ -94,14 +119,45 @@ export function initializeTuningPanelControls({
     })
   );
   bindSelectionControls(
-    { actorSelect, actorName, partSelect, poseSelect, effectSelect, posePartSelect },
+    { actorGroupSelect, actorSelect, actorName, partSelect, poseSelect, effectSelect, posePartSelect },
     {
+      onActorGroupChange: callbacks.handleActorGroupChange,
       onActorChange: callbacks.handleActorChange,
       onActorNameInput: callbacks.handleActorNameInput,
       onPartChange: callbacks.handlePartChange,
       onPoseChange: callbacks.handlePoseChange,
       onEffectChange: callbacks.handleEffectChange,
       onPosePartChange: callbacks.handlePosePartChange,
+    }
+  );
+  bindPoseActionAuthoringControls(
+    {
+      poseAddAction,
+      poseDeleteAction,
+      poseExportAction,
+      poseImportAction,
+      poseImportFile,
+      poseName,
+      poseSelect,
+      poseTriggerHint,
+      poseTriggerType,
+      poseTriggerSingleKey,
+      poseTriggerSequenceKeys,
+      poseTriggerMaxGapMs,
+      poseTriggerHoldKey,
+      poseTriggerPressKey,
+      poseTriggerRecord,
+      poseTriggerRepeat,
+      poseTriggerRecordStatus,
+      poseTriggerRecordComplete,
+      poseTriggerRecordCancel,
+    },
+    {
+      beginUndoSnapshot: callbacks.beginUndoSnapshot,
+      commitUndoSnapshot: callbacks.commitUndoSnapshot,
+      getTuning: callbacks.getTuning,
+      handlePoseChange: callbacks.handlePoseChange,
+      applySelected: callbacks.applySelected,
     }
   );
 
@@ -179,6 +235,12 @@ export function initializeTuningPanelControls({
   );
 
   bindLayerOrderControls(layerOrder, callbacks.reorderSelectedLayer);
+  bindControlMoreMenus([
+    { menu: elements.poseActionMenu, toggle: elements.poseActionMenuToggle },
+    { menu: elements.poseTimelineMenu, toggle: elements.poseTimelineMenuToggle },
+    { menu: elements.effectAssetMenu, toggle: elements.effectAssetMenuToggle },
+    { menu: elements.effectTimelineMenu, toggle: elements.effectTimelineMenuToggle },
+  ]);
   bindPanelShellControls(
     { panel, openButton, closeButton, backdrop },
     { openPanel: callbacks.openPanel, closePanel: callbacks.closePanel }
@@ -199,6 +261,37 @@ export function initializeTuningPanelControls({
     onPointerUp: callbacks.endCanvasDrag,
   });
   enhanceNumberInputs(panel);
+}
+
+function bindControlMoreMenus(menuPairs) {
+  const pairs = menuPairs.filter(({ menu, toggle }) => menu && toggle);
+  if (!pairs.length) return;
+
+  const closeAll = () => pairs.forEach((pair) => setControlMenuOpen(pair, false));
+
+  pairs.forEach((pair) => {
+    pair.toggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const nextOpen = pair.menu.hidden;
+      closeAll();
+      setControlMenuOpen(pair, nextOpen);
+    });
+    pair.menu.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (event.target.closest('button')) setControlMenuOpen(pair, false);
+    });
+  });
+
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAll();
+  });
+}
+
+function setControlMenuOpen({ menu, toggle }, open) {
+  menu.hidden = !open;
+  toggle.classList.toggle('is-active', open);
+  toggle.setAttribute('aria-expanded', String(open));
 }
 
 function bindTuningNumericControl({

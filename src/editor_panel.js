@@ -26,6 +26,8 @@ export function createTuningPanel({
   canvas,
   ctx,
   actors,
+  characterDefs,
+  world,
   effectAssets,
   effectAssetSources,
   playerActor,
@@ -35,7 +37,7 @@ export function createTuningPanel({
   saveState,
   uploadSettings,
   downloadSettings,
-  refreshPsdSettings,
+  refreshStagePsdAsset,
 }) {
   let selectedActor = getSelectedActor();
 
@@ -129,6 +131,7 @@ export function createTuningPanel({
     let workflowController = null;
     const undoState = createTuningPanelUndoState({
       actors,
+      characterDefs,
       getSelectedActor: () => selectedActor,
       setSelectedActor: (actor) => {
         selectedActor = actor;
@@ -160,6 +163,7 @@ export function createTuningPanel({
       lifecycleController,
     } = createTuningPanelComposition({
       actors,
+      characterDefs,
       applySelected,
       beginUndoSnapshot,
       canvas,
@@ -184,7 +188,7 @@ export function createTuningPanel({
       panel,
       playerActor,
       pushUndoSnapshot,
-      refreshPsdSettings,
+      refreshStagePsdAsset,
       resetGroupEditValues: groupEditState.resetValues,
       resetGroupTransformValues: groupEditState.resetTransformValues,
       saveState,
@@ -222,9 +226,14 @@ export function createTuningPanel({
     frameSelectionCheckGlobal = timelineFrameActions.hasCurrentFrameSelection;
     bindTuningPanelAssetActions({
       elements: panelElements,
+      actors,
+      characterDefs,
+      world,
+      playerActor,
       effectAssets,
       effectAssetSources,
       getSelectedActor: () => selectedActor,
+      setActiveActor,
       getEffectTimeline: () => effectTimeline,
       pushUndoSnapshot,
       saveState,

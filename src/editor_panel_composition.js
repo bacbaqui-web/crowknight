@@ -8,6 +8,7 @@ import { createTuningPanelTimelines } from './editor_timeline_section.js';
 
 export function createTuningPanelComposition({
   actors,
+  characterDefs,
   applySelected,
   beginUndoSnapshot,
   canvas,
@@ -30,7 +31,7 @@ export function createTuningPanelComposition({
   panel,
   playerActor,
   pushUndoSnapshot,
-  refreshPsdSettings,
+  refreshStagePsdAsset,
   resetGroupEditValues,
   resetGroupTransformValues,
   saveState,
@@ -83,7 +84,7 @@ export function createTuningPanelComposition({
     elements,
     getSceneSession,
     saveState,
-    refreshPsdSettings,
+    refreshStagePsdAsset,
   });
   const stageRulesController = createStageRulesController({
     initialRules: getSceneSession()?.stageRules,
@@ -165,6 +166,7 @@ export function createTuningPanelComposition({
   const lifecycleController = createTuningPanelLifecycleController({
     elements,
     actors,
+    characterDefs,
     playerActor,
     selectedPoseParts,
     getSelectedActor,

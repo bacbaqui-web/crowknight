@@ -4,7 +4,7 @@
 
 ## 목적
 
-- `99_CURRENT_SPRINT.md`는 현재 작업 인수인계용으로 계속 갱신한다.
+- `99_TASK_REPORT.md`는 현재 작업 인수인계용으로 계속 갱신한다.
 - 완료된 Sprint는 이 폴더에 별도 Markdown으로 보관한다.
 - 나중에 같은 영역을 다시 작업할 때 완료 이유, 변경 범위, QA 결과, 남은 결정을 빠르게 복구한다.
 
@@ -26,6 +26,6 @@
 
 Sprint 완료 후:
 
-1. `99_CURRENT_SPRINT.md`를 최신 상태로 갱신한다.
+1. `99_TASK_REPORT.md`를 최신 상태로 갱신한다.
 2. 이 폴더에 완료 Sprint 요약본을 추가한다.
 3. 필요하면 `docs/sprint-dashboard.html`에는 최신 상태만 짧게 반영한다.

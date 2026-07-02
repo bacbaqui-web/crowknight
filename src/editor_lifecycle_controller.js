@@ -1,11 +1,18 @@
 import { defaultTuningFor } from './actorTuning.js';
+import { normalizeCharacterGroup } from './character_group_data.js';
 import { replaceObject } from './project_data_normalizer.js';
-import { closeTuningPanelShell, openTuningPanelShell, syncActorSelectLabels } from './editor_panel_dom.js';
+import {
+  closeTuningPanelShell,
+  openTuningPanelShell,
+  syncActorGroupOptions,
+  syncActorSelectLabels,
+} from './editor_panel_dom.js';
 import { clearActorEditPreviews } from './preview_state.js';
 
 export function createTuningPanelLifecycleController({
   elements,
   actors,
+  characterDefs,
   playerActor,
   selectedPoseParts,
   getSelectedActor,
@@ -26,7 +33,7 @@ export function createTuningPanelLifecycleController({
   pushUndoSnapshot,
   saveState,
 }) {
-  const { panel, backdrop, actorSelect, actorName } = elements;
+  const { panel, backdrop, actorGroupSelect, actorSelect, actorName, effectName, effectSelect } = elements;
 
   function openPanel() {
     syncPanel();
@@ -71,7 +78,14 @@ export function createTuningPanelLifecycleController({
   }
 
   function handleActorChange() {
-    setActiveActor(actors.find((actor) => actor.id === actorSelect.value) || playerActor);
+    setActiveActor(visibleActorsForActiveGroup().find((actor) => actor.id === actorSelect.value) || playerActor);
+    clearPanelSelectionState({ clearCopiedEffect: true });
+    syncPanel();
+  }
+
+  function handleActorGroupChange() {
+    const firstActor = visibleActorsForActiveGroup()[0] || playerActor;
+    setActiveActor(firstActor);
     clearPanelSelectionState({ clearCopiedEffect: true });
     syncPanel();
   }
@@ -79,12 +93,15 @@ export function createTuningPanelLifecycleController({
   function handleActorNameInput() {
     const selectedActor = getSelectedActor();
     selectedActor.name = actorName.value || selectedActor.label;
+    const def = characterDefs?.find((item) => item.id === selectedActor.id);
+    if (def) def.name = selectedActor.name;
     saveState();
     syncActorOptions();
   }
 
   function handleEffectChange() {
     setEditContext('effect');
+    syncEffectName();
     effectTimeline.stopPreview();
     effectTimeline.resetSelectionState();
     effectTimeline.ensureActiveFrame();
@@ -93,11 +110,25 @@ export function createTuningPanelLifecycleController({
   }
 
   function syncActorOptions() {
-    syncActorSelectLabels(actorSelect, actors);
+    const selectedActor = getSelectedActor();
+    const group = normalizeCharacterGroup(selectedActor?.group || actorGroupSelect?.value || 'players');
+    syncActorGroupOptions(actorGroupSelect, group);
+    syncActorSelectLabels(actorSelect, visibleActorsForActiveGroup());
+  }
+
+  function visibleActorsForActiveGroup() {
+    const group = normalizeCharacterGroup(actorGroupSelect?.value || getSelectedActor()?.group || 'players');
+    return actors.filter((actor) => normalizeCharacterGroup(actor.group) === group);
+  }
+
+  function syncEffectName() {
+    if (!effectName || !effectSelect) return;
+    effectName.value = effectSelect.selectedOptions[0]?.textContent || '';
   }
 
   return {
     handleActorChange,
+    handleActorGroupChange,
     handleActorNameInput,
     handleEffectChange,
     openPanel,

@@ -34,7 +34,7 @@ export function syncEffectTimelineToolbarView(elements, state) {
       hasCopiedFrame: state.hasCopiedFrame,
       undoCount: state.undoCount,
       frameCount: state.frameCount,
-      minFrames: POSE_MIN_FRAMES,
+      minFrames: state.minFrameCount ?? POSE_MIN_FRAMES,
       maxFrames: POSE_MAX_FRAMES,
     }
   );

@@ -19,7 +19,7 @@ import { applyWorldView, drawWorld } from './world_renderer.js';
 import { getViewTransform } from './cameraView.js';
 import { isSettingsPanelOpen } from './settings_panel_state.js';
 import { createTuningPanel } from './editor_panel.js';
-import { createActors } from './actor_factory.js';
+import { actorDefsFromSavedState, createActors } from './actor_factory.js';
 import { syncCanvasToLayout } from './canvasLayout.js';
 import { DEATH_RESULT_DELAY } from './game_config.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
@@ -59,14 +59,16 @@ let sceneSession = savedState.sceneSession;
 preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
-const actors = await createActors(savedState, world);
+const characterDefs = actorDefsFromSavedState(savedState, { includeTrash: true });
+const actors = await createActors({ ...savedState, characters: characterDefs }, world);
 const effectAssetSources = savedState.effectAssets || {};
 const effectAssets = await loadEffectAssets('', effectAssetSources);
 const playerActor = actors[0];
 const particleEffects = createParticleEffects({ actors, world, ctx });
-const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshPsdAndUploadSettings } =
+const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshStagePsdAsset } =
   createProjectStateController({
     actors,
+    characterDefs,
     world,
     sceneSessions,
     effectAssetSources,
@@ -126,6 +128,8 @@ const tuningPanel = createTuningPanel({
   canvas,
   ctx,
   actors,
+  characterDefs,
+  world,
   effectAssets,
   effectAssetSources,
   playerActor,
@@ -137,7 +141,7 @@ const tuningPanel = createTuningPanel({
   saveState,
   uploadSettings: uploadSettingsToFirebase,
   downloadSettings: downloadSettingsFromFirebase,
-  refreshPsdSettings: refreshPsdAndUploadSettings,
+  refreshStagePsdAsset,
 });
 bindKeyboardControls({
   keys,

@@ -14,7 +14,7 @@ import { createDefaultBackground, normalizeSceneBackground } from './scene_sessi
 
 const NUMBER_DRAG_PIXELS_PER_STEP = 8;
 
-export function createBackgroundPanelController({ elements, getSceneSession, saveState, refreshPsdSettings }) {
+export function createBackgroundPanelController({ elements, getSceneSession, saveState, refreshStagePsdAsset }) {
   const { backgroundPsdUpload, backgroundPsdFile, backgroundRefresh, backgroundReset, backgroundLayerList } = elements;
   if (!backgroundLayerList) return { sync: () => {} };
 
@@ -70,8 +70,8 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     button.setAttribute('aria-label', `${label} 처리중`);
     showPanelActionFeedback(label, 'working');
     try {
-      const refreshed = refreshPsdSettings
-        ? await refreshPsdSettings({ psdFile })
+      const refreshed = refreshStagePsdAsset
+        ? await refreshStagePsdAsset({ psdFile })
         : await refreshPsdBackground({
             getSceneSession,
             onUpdate: preloadSceneBackground,

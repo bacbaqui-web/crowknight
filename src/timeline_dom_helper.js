@@ -59,7 +59,7 @@ export function syncTimelinePlaybackControls(elements, state) {
   const { frameCount, settings, playing, isLoop } = state;
 
   duration.value = frameCount;
-  playbackRateRange.value = settings.playbackRate;
+  if (playbackRateRange) playbackRateRange.value = settings.playbackRate;
   playbackRate.value = settings.playbackRate;
   playback.classList.toggle('is-active', playing);
   playback.setAttribute('aria-pressed', String(playing));
@@ -112,7 +112,7 @@ export function appendTimelineKeyframes(track, keyframes, options) {
 }
 
 export function bindTimelineKeyframeDrag(button, id, handlers) {
-  const { onSelectFixed, onStartDrag, onMoveDrag, onFinishDrag } = handlers;
+  const { onSelectFixed, onSelectKeyframe, onStartDrag, onMoveDrag, onFinishDrag } = handlers;
 
   if (id === 'start' || id === 'end') {
     button.addEventListener('pointerdown', (event) => {
@@ -128,22 +128,39 @@ export function bindTimelineKeyframeDrag(button, id, handlers) {
   button.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
     event.preventDefault();
-    onStartDrag(id);
-    drag = { pointerId: event.pointerId };
+    event.stopPropagation();
+    drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      started: false,
+    };
     button.setPointerCapture(event.pointerId);
   });
   button.addEventListener('pointermove', (event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     event.preventDefault();
+    if (!drag.started) {
+      const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+      if (moved < 2) return;
+      drag.started = true;
+      onStartDrag(id);
+    }
     onMoveDrag(id, event);
   });
-  const finish = (event) => {
+  const finish = (event, { cancelled = false } = {}) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
+    const wasDragging = drag.started;
     drag = null;
-    onFinishDrag(id);
+    if (wasDragging) {
+      onFinishDrag(id);
+      return;
+    }
+    if (cancelled) return;
+    onSelectKeyframe(id);
   };
   button.addEventListener('pointerup', finish);
-  button.addEventListener('pointercancel', finish);
+  button.addEventListener('pointercancel', (event) => finish(event, { cancelled: true }));
 }
 
 function createSkipIcon(id) {

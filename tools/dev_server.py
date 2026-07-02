@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import shutil
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -41,6 +42,15 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
             return
         if parsed.path == "/api/character/refresh":
             self.handle_character_upload_refresh(parsed)
+            return
+        if parsed.path == "/api/character/create":
+            self.handle_character_create(parsed)
+            return
+        if parsed.path == "/api/character/move":
+            self.handle_character_move(parsed)
+            return
+        if parsed.path == "/api/character/delete":
+            self.handle_character_delete(parsed)
             return
         if parsed.path == "/api/effect/refresh":
             self.handle_effect_upload_refresh(parsed)
@@ -135,6 +145,51 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
+    def handle_character_create(self, parsed):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length <= 0:
+                self.send_json(400, {"error": "Empty PSD file"})
+                return
+
+            folder_path = self.character_folder_from_request(parsed, allow_create=True)
+            if any(folder_path.iterdir()):
+                self.send_json(409, {"error": "Character folder already exists"})
+                return
+
+            filename = self.headers.get("X-Character-Filename", f"{folder_path.name}.psd")
+            uploaded_name = sanitize_psd_filename(filename)
+            target_path = folder_path / uploaded_name
+            target_path.write_bytes(self.rfile.read(content_length))
+            exported = export_character_parts(target_path, folder_path)
+            self.send_json(200, {"ok": True, "folder": folder_path.name, "psd": target_path.name, "exported": exported, "updatedAt": int(target_path.stat().st_mtime * 1000)})
+        except Exception as exc:
+            self.send_json(500, {"error": str(exc)})
+
+    def handle_character_move(self, parsed):
+        try:
+            source_path = self.character_folder_from_named_request(parsed, "from")
+            target_path = self.character_folder_from_named_request(parsed, "to", allow_create=True)
+            if target_path.exists() and any(target_path.iterdir()):
+                self.send_json(409, {"error": "Target character folder already exists"})
+                return
+
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            if target_path.exists():
+                target_path.rmdir()
+            shutil.move(str(source_path), str(target_path))
+            self.send_json(200, {"ok": True, "from": str(source_path), "to": str(target_path)})
+        except Exception as exc:
+            self.send_json(500, {"error": str(exc)})
+
+    def handle_character_delete(self, parsed):
+        try:
+            folder_path = self.character_folder_from_request(parsed)
+            shutil.rmtree(folder_path)
+            self.send_json(200, {"ok": True, "folder": str(folder_path)})
+        except Exception as exc:
+            self.send_json(500, {"error": str(exc)})
+
     def handle_effect_refresh(self, parsed):
         try:
             asset = effect_asset_from_request(parsed)
@@ -171,16 +226,24 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
-    def character_folder_from_request(self, parsed):
+    def character_folder_from_request(self, parsed, allow_create=False):
+        return self.character_folder_from_named_request(parsed, "folder", allow_create)
+
+    def character_folder_from_named_request(self, parsed, name, allow_create=False):
         folder = ""
         for item in parsed.query.split("&"):
             key, _, value = item.partition("=")
-            if key == "folder":
+            if key == name:
                 folder = unquote(value)
                 break
         safe = sanitize_character_folder(folder)
         folder_path = (self.characters_dir / safe).resolve()
-        if not folder_path.is_dir() or self.characters_dir not in folder_path.parents:
+        if self.characters_dir not in folder_path.parents:
+            raise RuntimeError("Invalid character folder")
+        if allow_create:
+            folder_path.mkdir(parents=True, exist_ok=True)
+            return folder_path
+        if not folder_path.is_dir():
             raise RuntimeError("Invalid character folder")
         return folder_path
 
@@ -231,7 +294,12 @@ def sanitize_psd_filename(filename):
 
 
 def sanitize_character_folder(folder):
-    safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in folder)
+    parts = []
+    for part in str(folder).split("/"):
+        safe_part = "".join(char if char.isalnum() or char in "._-" else "_" for char in part).strip("._-")
+        if safe_part:
+            parts.append(safe_part)
+    safe = "/".join(parts)
     if not safe:
         raise RuntimeError("Character folder is required")
     return safe

@@ -1,4 +1,4 @@
-import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './game_config.js';
+import { POSE_MAX_FRAMES } from './game_config.js';
 import {
   applyTimelineSelectionAction,
   copyTimelineFrameAction,
@@ -136,6 +136,7 @@ export function createTimelineClipboardControls({ isOpen, beginUndo, commitUndo 
 
 export function createTimelinePlaybackControls({
   getFrameCount,
+  getMinFrameCount,
   durationInput,
   beginUndo,
   commitUndo,
@@ -149,7 +150,16 @@ export function createTimelinePlaybackControls({
   return {
     updatePlaybackRate: (value, peer) => updateTimelinePlaybackRate(value, peer, updateSetting),
     stepDuration: (delta, snapToTen = false) =>
-      stepTimelineDuration(getFrameCount(), delta, snapToTen, durationInput, beginUndo, updateSetting, commitUndo),
+      stepTimelineDuration(
+        getFrameCount(),
+        delta,
+        snapToTen,
+        durationInput,
+        beginUndo,
+        updateSetting,
+        commitUndo,
+        getMinFrameCount()
+      ),
     togglePlayback: () => toggleTimelinePlayback(isPlaying, stopPreview, syncPreview, playPreview),
     togglePlaybackMode: () => toggleTimelinePlaybackMode(settings, beginUndo, updateSetting, commitUndo),
   };
@@ -158,13 +168,22 @@ export function createTimelinePlaybackControls({
 function updateTimelinePlaybackRate(value, peer, updateSetting) {
   const next = clampTimelinePlaybackRate(value);
   if (!Number.isFinite(next)) return;
-  peer.value = formatInputNumber(next, 0.05);
+  if (peer) peer.value = formatInputNumber(next, 0.05);
   updateSetting('playbackRate', next);
 }
 
-function stepTimelineDuration(frameCount, delta, snapToTen, durationInput, beginUndo, updateSetting, commitUndo) {
+function stepTimelineDuration(
+  frameCount,
+  delta,
+  snapToTen,
+  durationInput,
+  beginUndo,
+  updateSetting,
+  commitUndo,
+  minFrames
+) {
   beginUndo();
-  const next = nextTimelineFrameCount(frameCount, delta, snapToTen, POSE_MIN_FRAMES, POSE_MAX_FRAMES);
+  const next = nextTimelineFrameCount(frameCount, delta, snapToTen, minFrames, POSE_MAX_FRAMES);
   durationInput.value = next;
   updateSetting('duration', next);
   commitUndo();

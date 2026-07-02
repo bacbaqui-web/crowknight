@@ -10,6 +10,7 @@ import { createTimelinePreviewControls, syncPoseTimelinePreview } from './timeli
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './timeline_pose_panel_view.js';
 import { MASTER_PART_KEY } from './game_config.js';
 import { createTimelineController, createTimelineControllerCommonApi } from './timeline_controller.js';
+import { isMasterPart } from './editor_label_helper.js';
 
 export function createPoseTimelineController({
   actors,
@@ -45,6 +46,8 @@ export function createPoseTimelineController({
   const {
     activeT: timelineActiveT,
     addKeyframe: addTimelineKeyframe,
+    applyAllFrameValueDelta: applyTimelineAllFrameValueDelta,
+    applyAllFrameValueTransform: applyTimelineAllFrameValueTransform,
     applySelection: applyTimelineSelectionCore,
     copyFrame: copyTimelineFrame,
     currentFrameValue: timelineCurrentFrameValue,
@@ -56,6 +59,7 @@ export function createPoseTimelineController({
     isSectionOpen,
     keyframes: keyframesForTimeline,
     lastSlot: getLastSlot,
+    minFrameCount,
     toSlot,
     slotToValue,
     slotToLeft,
@@ -108,6 +112,7 @@ export function createPoseTimelineController({
         hasSelection: hasFrameSelection(),
         hasCopiedFrame: clipboardState.has(),
         undoCount: undoState.undoCount,
+        minFrameCount: minFrameCount(),
       })
     );
   }
@@ -119,6 +124,7 @@ export function createPoseTimelineController({
         hasCopiedFrame: clipboardState.has(),
         undoCount: undoState.undoCount,
         frameCount: getFrameCount(),
+        minFrameCount: minFrameCount(),
       })
     );
   }
@@ -198,7 +204,7 @@ export function createPoseTimelineController({
     stopPreview,
     getActiveT,
     afterFinish: () => {
-      if (getActivePosePartKey()) renderPosePartFields();
+      renderPosePartFields();
     },
   });
 
@@ -215,14 +221,31 @@ export function createPoseTimelineController({
     stopPreview();
     const partKey = getActivePosePartKey() || MASTER_PART_KEY;
     const writeValue = poseFrameValueFromInput(partKey, prop, value, poseTimeline.source(partKey));
-    writeFrameValue(partKey, prop, writeValue);
+    if (!hasFrameTarget() && !isMasterPart(partKey)) {
+      const currentValue = Number(currentFrameValue(partKey)?.[prop] ?? 0);
+      poseTimeline.applyFrameValueDelta(partKey, prop, writeValue - currentValue);
+    } else {
+      writeFrameValue(partKey, prop, writeValue);
+    }
     syncPreview();
     applySelected();
     return readDisplayValue(partKey, currentFrameValue(partKey), prop);
   }
 
+  function updateAllOffsets(prop, delta, parts) {
+    return applyTimelineAllFrameValueDelta(prop, delta, parts);
+  }
+
+  function transformAllOffsets(prop, transformValue, parts) {
+    return applyTimelineAllFrameValueTransform(prop, transformValue, parts);
+  }
+
   function currentFrameValue(part) {
     return timelineCurrentFrameValue({ part });
+  }
+
+  function source(part) {
+    return poseTimeline.source(part);
   }
 
   function writeFrameValue(part, prop, value) {
@@ -254,6 +277,10 @@ export function createPoseTimelineController({
 
   function clearCopiedFrame() {
     clipboardState.clear();
+  }
+
+  function hasFrameTarget() {
+    return Boolean(poseSelection.activeKeyframeId || poseSelection.fixedFrame || poseSelection.selectedSlot !== null);
   }
 
   function applyTimelineSelection(nextSelection, { resetGroup = false } = {}) {
@@ -303,11 +330,15 @@ export function createPoseTimelineController({
     extensions: {
       currentFrameValue,
       frameLabel,
+      hasFrameTarget,
       readDisplayValue,
       renderSettings,
       renderTimeline,
+      source,
       syncToolbarButtons,
+      transformAllOffsets,
       updateOffset,
+      updateAllOffsets,
       writeFrameValue,
       clearCopiedFrame,
     },

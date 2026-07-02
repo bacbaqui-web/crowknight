@@ -10,6 +10,9 @@ Actor별 제작 데이터의 중심 객체다.
 - `tuning.rig`: Setup base rig.
 - `tuning.poseOffsets`: Action Timeline frame data.
 - `tuning.poseSettings`: Action duration/playback settings.
+- `tuning.customActions`: 사용자 제작 Action 목록. MVP에서는 custom Action의 `key`, `name`과 legacy mirror `trigger`를 저장한다.
+- `tuning.deletedPoseActions`: Editor 목록에서 숨긴 Basic Action key 목록. `idle`은 삭제할 수 없고 이 목록에 들어가지 않는다.
+- `tuning.actionTriggers`: 모든 Action key의 Trigger override map. Basic/Custom을 같은 방식으로 다루는 compatibility 저장소다.
 - `tuning.effectOffsets`: Effect Timeline frame data.
 - `tuning.effectSettings`: Effect duration/playback settings.
 - `tuning.hud`: 이름/HP HUD layout data.
@@ -37,7 +40,7 @@ Action
   id: "skill_001",
   type: "skill",
   name: "Fire Slash",
-  trigger: { input: "KeyA" },
+  trigger: { type: "single", keys: ["Q"] },
   timeline: {
     pose: {},
     effect: {}
@@ -65,6 +68,126 @@ Action
 - 기존 `poseOffsets` / `poseSettings`는 Basic Actions 호환 layer로 유지한다.
 - 새 Skill은 별도 `tuning.actions.skills[]` 또는 `tuning.actions.byId` 후보를 별도 저장 구조 Sprint에서 확정한다.
 - 저장 migration 전까지는 `13_ACTION_MODEL.md`의 target model을 설계 기준으로만 사용한다.
+
+## `actionTriggers`
+
+모든 Action의 Editor 발동 조건이다.
+
+MVP 저장 위치:
+
+```text
+tuning.actionTriggers[actionKey]
+```
+
+Custom Action legacy mirror:
+
+```text
+tuning.customActions[]
+├─ key
+├─ name
+└─ trigger // actionTriggers와 동기화되는 호환 필드
+```
+
+지원 형태:
+
+```js
+{ type: "single", keys: ["Q"] }
+{ type: "sequence", keys: ["Q", "Q", "Q"], maxGapMs: 350 }
+{ type: "holdCombo", hold: "ArrowUp", press: "W" }
+```
+
+Trigger 실행 옵션:
+
+```js
+repeatWhileHeld: true;
+```
+
+- 없거나 `false`이면 Trigger가 맞는 순간 한 번 실행한다.
+- `true`이면 Action이 끝난 뒤에도 Trigger 입력이 계속 눌려 있을 때 같은 Action을 다시 실행한다.
+- 이 값은 Action 이름별 분기가 아니라 Trigger Runtime Rule이 읽는 실행 정책이다.
+
+지원 key:
+
+- `Q`
+- `W`
+- `E`
+- `Space`
+- `ArrowUp`
+- `ArrowDown`
+- `ArrowLeft`
+- `ArrowRight`
+
+주의:
+
+- Basic Action은 기존 Runtime 입력을 유지한다.
+- Runtime 발동 판정은 통합 Action descriptor의 `trigger` 데이터를 해석한다.
+- Trigger는 Action 이름별 Runtime 분기를 늘리기 위한 데이터가 아니라 Runtime Rule이 읽는 입력 조건 데이터다.
+- Sequence가 서로 겹치는 경우, 예를 들어 `QQ`와 `QQQ`를 동시에 만들면 짧은 trigger가 먼저 발동할 수 있다. 겹치는 입력의 우선순위/지연 판정은 다음 Trigger 정교화 단계에서 다룬다.
+
+## `modifiers`
+
+Action / Effect Timeline Target에 붙는 수식 데이터다.
+
+MVP 저장 위치:
+
+```text
+tuning.modifiers.pose[actionKey]
+tuning.modifiers.effect[effectKey]
+```
+
+현재 MVP 수식:
+
+```js
+[
+  {
+    type: 'move',
+    enabled: true,
+    settings: { x: 50, y: 0 },
+  },
+  {
+    type: 'accelerate',
+    enabled: true,
+    settings: { strength: 1 },
+  },
+  {
+    type: 'decelerate',
+    enabled: false,
+    settings: { strength: 1 },
+  },
+];
+```
+
+주의:
+
+- `move`는 Action Timeline 전체 길이 동안 X/Y 이동량을 적용한다.
+- `accelerate`와 `decelerate`는 이동 진행률만 보정한다.
+- Runtime은 Custom Action 실행 중 modifier 데이터의 진행률 차분만 actor 위치에 더하고, Timeline 원본 pose offset은 수정하지 않는다.
+
+## Action Descriptor Compatibility Layer
+
+Runtime과 Editor가 앞으로 공통으로 볼 임시 Action descriptor다.
+
+```js
+{
+  key: "attack1",
+  name: "공격 1타",
+  trigger: { type: "single", keys: ["Q"] },
+  runtimeMode: "legacy", // migration flag
+  timeline: {
+    settings: {},
+    offsets: {}
+  },
+  modifiers: [],
+  deletable: false
+}
+```
+
+주의:
+
+- `runtimeMode`은 Action 종류가 아니라 migration 상태다.
+- `legacy`는 아직 기존 Basic Action Runtime 물리를 사용한다.
+- `trigger`는 Trigger Runtime으로 이동한 Action을 뜻한다.
+- 최종 목표는 `runtimeMode`를 제거하고 모든 Action을 동일한 Runtime 실행 경로로 보내는 것이다.
 
 ## `tuning.rig`
 
@@ -229,11 +352,20 @@ sceneSession.stageRules
 Asset reference 규칙:
 
 - `actors[id].assets`: 캐릭터 파츠 PNG source와 선택 캐릭터 PSD source를 저장한다.
+- `characters`: Setup 캐릭터 목록 metadata를 저장한다. 저장된 `characters`가 없을 때만 기존 고정 `ACTOR_DEFS`를 fallback으로 사용한다.
+- 새 캐릭터는 `id`, `type`, `name`, `folder`, `storageFolder`, `psdFileName`, `deletable`을 가진다. `folder`는 로컬 `assets/characters/{folder}`와 Firebase Storage `crow-knight/assets/characters/{folder}`를 연결하는 기준이다.
 - `effectAssets`: 이펙트 PNG source와 선택 가능한 effect PSD source를 저장한다.
 - `sessions[id].background.psdPreview`: 배경 preview URL, 원본 PSD source URL, 크기 metadata를 저장한다.
 - `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다.
-- Firebase 업로드 버튼은 위 metadata를 Firestore에 저장하고, 참조되는 PSD/PNG/WebP 파일은 Storage에 올린 뒤 URL을 metadata에 반영한다.
-- Firebase 다운로드 버튼은 Firestore metadata를 받아 Storage URL을 Runtime source로 사용한다.
+- 상단 Firebase 업로드 버튼은 Project State metadata만 Firestore에 저장한다. PSD/PNG/WebP Storage 업로드는 실행하지 않는다.
+- 상단 Firebase 다운로드 버튼은 Firestore metadata만 받아 설정 수치에 적용한다.
+- Project State metadata는 `projectSettings/crowKnight` 단일 문서에 저장한다. 문서 크기를 줄이기 위해 가능하면 gzip-base64 압축 필드로 저장한다.
+- Setup / Effect / Stage 내부 업로드/새로고침 버튼은 각 섹션의 asset만 Storage/Runtime export에 반영한다.
+- Firebase Storage asset은 `crow-knight/assets/backgrounds`, `crow-knight/assets/characters`, `crow-knight/assets/effects`, `crow-knight/assets/icons` 아래에 저장한다.
+- Setup 기본 캐릭터 PSD 원본은 Storage의 `characters/player/player.psd`와 `characters/enemy/enemy.psd`를 따른다. 새 캐릭터는 `characters/{folder}/{psdFileName}`을 따른다.
+- Setup에서 PSD를 업로드하면 PSD가 먼저 Storage 원본 경로에 저장되고, 캐릭터 새로고침은 Storage PSD를 다시 읽어 로컬 PNG를 재생성한다.
+- PSD 새로고침으로 생성된 캐릭터 PNG는 선택 캐릭터의 로컬 Runtime export 결과이며, 상단 metadata 업로드가 PNG를 Storage에 올리지는 않는다.
+- Firestore metadata는 설정 수치 JSON이다. binary asset 업로드와 분리한다.
 
 저장 경로:
 

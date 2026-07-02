@@ -40,9 +40,9 @@ function syncTimelineFrameToolbarButtons(elements, state) {
 
   const { copyButton, pasteButton, undoButton, frameDownButton, frameUpButton } = elements;
   const { hasSelection, hasCopiedFrame, undoCount, frameCount, minFrames, maxFrames } = state;
-  copyButton.disabled = !hasSelection;
-  pasteButton.disabled = !hasCopiedFrame;
-  undoButton.disabled = undoCount <= 0;
+  if (copyButton) copyButton.disabled = !hasSelection;
+  if (pasteButton) pasteButton.disabled = !hasCopiedFrame;
+  if (undoButton) undoButton.disabled = undoCount <= 0;
   frameDownButton.disabled = frameCount <= minFrames;
   frameUpButton.disabled = frameCount >= maxFrames;
 }

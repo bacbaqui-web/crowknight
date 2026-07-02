@@ -1,5 +1,6 @@
 import { FIREBASE_PROJECT_STATE_CONFIG } from './firebaseConfig.js';
-import { OBSOLETE_EFFECT_FRAME_KEYS, OBSOLETE_STORAGE_KEYS, OBSOLETE_TUNING_KEYS, STORAGE_KEY } from './game_config.js';
+import { OBSOLETE_STORAGE_KEYS, STORAGE_KEY } from './game_config.js';
+import { createActorDefsSnapshot } from './actor_factory.js';
 import {
   DEFAULT_SCENE_SESSION_ID,
   normalizeSceneSession,
@@ -24,11 +25,7 @@ export async function loadSavedState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsedState = JSON.parse(saved);
-      if (hasObsoleteTuningKeys(parsedState)) {
-        localStorage.removeItem(STORAGE_KEY);
-      } else {
-        localState = normalizeSavedState(parsedState);
-      }
+      localState = normalizeSavedState(parsedState);
     }
   } catch {
     // Ignore broken browser storage and fall back to the project default.
@@ -44,11 +41,9 @@ export async function loadSavedState() {
     const response = await window.fetch(`${PROJECT_DEFAULT_STATE_URL}?t=${Date.now()}`, { cache: 'no-store' });
     if (response.ok) {
       const projectState = await response.json();
-      if (!hasObsoleteTuningKeys(projectState)) {
-        const normalizedProjectState = normalizeSavedState(projectState);
-        saveLocalState(normalizedProjectState);
-        return normalizedProjectState;
-      }
+      const normalizedProjectState = normalizeSavedState(projectState);
+      saveLocalState(normalizedProjectState);
+      return normalizedProjectState;
     }
   } catch {
     // The project default file is optional.
@@ -65,8 +60,8 @@ export function saveActorState(actors, sceneSession = null) {
   });
 }
 
-export function saveGameState({ actors, activeSessionId, sessions, effectAssetSources = {} }) {
-  const state = createSavedStateSnapshot({ actors, activeSessionId, sessions, effectAssetSources });
+export function saveGameState({ actors, characterDefs = null, activeSessionId, sessions, effectAssetSources = {} }) {
+  const state = createSavedStateSnapshot({ actors, characterDefs, activeSessionId, sessions, effectAssetSources });
   saveLocalState(state);
 }
 
@@ -75,7 +70,13 @@ export function syncSceneWorldBeforeSave(sceneSession, world) {
   syncWorldToSceneSession(sceneSession, world);
 }
 
-export function createSavedStateSnapshot({ actors, activeSessionId, sessions, effectAssetSources = {} }) {
+export function createSavedStateSnapshot({
+  actors,
+  characterDefs = null,
+  activeSessionId,
+  sessions,
+  effectAssetSources = {},
+}) {
   const actorsState = {};
   actors.forEach((actor) => {
     actorsState[actor.id] = {
@@ -91,12 +92,19 @@ export function createSavedStateSnapshot({ actors, activeSessionId, sessions, ef
     activeSessionId,
     sessions,
     effectAssets: effectAssetSources,
+    characters: createActorDefsSnapshot(characterDefs || actors),
     actors: actorsState,
   };
 }
 
-export async function uploadSavedStateToFirebase({ actors, activeSessionId, sessions, effectAssetSources }) {
-  const state = createSavedStateSnapshot({ actors, activeSessionId, sessions, effectAssetSources });
+export async function uploadSavedStateToFirebase({
+  actors,
+  characterDefs = null,
+  activeSessionId,
+  sessions,
+  effectAssetSources,
+}) {
+  const state = createSavedStateSnapshot({ actors, characterDefs, activeSessionId, sessions, effectAssetSources });
   saveLocalState(state);
   return saveRemoteProjectState(state);
 }
@@ -124,12 +132,13 @@ function normalizeSavedState(saved) {
     sessions: normalized.sessions,
     sceneSession: normalized.sceneSession,
     effectAssets: saved?.effectAssets || {},
+    characters: Array.isArray(saved?.characters) ? saved.characters : null,
     actors: saved?.actors || {},
   };
 }
 
 function normalizeNullableSavedState(saved) {
-  if (!saved || hasObsoleteTuningKeys(saved)) return null;
+  if (!saved) return null;
   return normalizeSavedState(saved);
 }
 
@@ -141,55 +150,33 @@ function stampSavedState(state) {
 }
 
 function saveLocalState(state) {
-  removeObsoleteLocalTuningState();
-  if (hasObsoleteTuningKeys(state)) return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    removeObsoleteLocalTuningState();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch (error) {
+    window.console?.warn('Local metadata save failed. Firebase upload will continue.', error);
+    return false;
+  }
 }
 
 function removeObsoleteLocalTuningState() {
-  OBSOLETE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
-}
-
-function hasObsoleteTuningKeys(saved) {
-  return Object.values(saved?.actors || {}).some((actorState) => {
-    const tuning = actorState?.tuning || {};
-    if (containsObsoleteKey(tuning.rig)) return true;
-    if (Object.values(tuning.poseOffsets || {}).some((poseOffset) => containsObsoleteKey(poseOffset))) return true;
-    return Object.values(tuning.effectOffsets || {}).some((effectOffset) =>
-      containsObsoleteEffectFrameKey(effectOffset)
-    );
-  });
-}
-
-function containsObsoleteKey(source) {
-  if (!source) return false;
-  return OBSOLETE_TUNING_KEYS.some((key) => Object.hasOwn(source, key));
-}
-
-function containsObsoleteEffectFrameKey(effectOffset) {
-  if (!effectOffset) return false;
-  const frames = [
-    effectOffset.start,
-    effectOffset.end,
-    ...(Array.isArray(effectOffset.keyframes) ? effectOffset.keyframes : []),
-  ];
-  return frames.some((frame) => frame && OBSOLETE_EFFECT_FRAME_KEYS.some((key) => Object.hasOwn(frame, key)));
+  try {
+    OBSOLETE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  } catch (error) {
+    window.console?.warn('Obsolete local metadata cleanup failed.', error);
+  }
 }
 
 async function loadRemoteProjectState() {
   if (!isFirebaseProjectStateEnabled()) return null;
 
   try {
-    const response = await window.fetch(
-      `${remoteProjectStateDocumentUrl()}?key=${encodeURIComponent(FIREBASE_PROJECT_STATE_CONFIG.apiKey)}`,
-      {
-        cache: 'no-store',
-      }
-    );
+    const response = await window.fetch(remoteProjectStateDocumentUrl(), { cache: 'no-store' });
     if (!response.ok) return null;
 
     const document = await response.json();
-    const stateJson = document?.fields?.stateJson?.stringValue;
+    const stateJson = await readFirestoreStateJson(document?.fields || {});
     if (!stateJson) return null;
 
     return JSON.parse(stateJson);
@@ -202,22 +189,103 @@ async function saveRemoteProjectState(state) {
   if (!isFirebaseProjectStateEnabled() || !state) return false;
 
   try {
-    const response = await window.fetch(
-      `${remoteProjectStateDocumentUrl()}?key=${encodeURIComponent(FIREBASE_PROJECT_STATE_CONFIG.apiKey)}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fields: {
-            stateJson: { stringValue: JSON.stringify(state) },
-            savedAt: { integerValue: String(state.savedAt || Date.now()) },
-          },
-        }),
-      }
-    );
-    return response.ok;
-  } catch {
+    const stateJson = JSON.stringify(state);
+    const stateFields = await createFirestoreStateFields(stateJson);
+    const response = await window.fetch(remoteProjectStateDocumentUrl(), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          ...stateFields,
+          savedAt: { integerValue: String(state.savedAt || Date.now()) },
+        },
+      }),
+    });
+    if (!response.ok) {
+      window.console?.warn('Firebase metadata upload failed.', response.status, await responseText(response));
+      return false;
+    }
+    return true;
+  } catch (error) {
+    window.console?.warn('Firebase metadata upload failed.', error);
     return false;
+  }
+}
+
+async function readFirestoreStateJson(fields) {
+  const encoding = fields.stateEncoding?.stringValue || 'json';
+  const stateData = fields.stateData?.stringValue || '';
+  if (encoding === 'gzip-base64' && stateData) return decompressBase64Gzip(stateData);
+  return fields.stateJson?.stringValue || '';
+}
+
+async function createFirestoreStateFields(stateJson) {
+  const compressed = await compressToBase64Gzip(stateJson);
+  if (compressed) {
+    return {
+      stateEncoding: { stringValue: 'gzip-base64' },
+      stateData: { stringValue: compressed },
+      stateJson: { stringValue: '' },
+    };
+  }
+
+  return {
+    stateEncoding: { stringValue: 'json' },
+    stateData: { stringValue: '' },
+    stateJson: { stringValue: stateJson },
+  };
+}
+
+async function compressToBase64Gzip(value) {
+  if (!window.CompressionStream || !window.TextEncoder || !window.Blob || !window.Response) return '';
+
+  try {
+    const bytes = new window.TextEncoder().encode(value);
+    const stream = new window.Blob([bytes]).stream().pipeThrough(new window.CompressionStream('gzip'));
+    const buffer = await new window.Response(stream).arrayBuffer();
+    return bytesToBase64(new Uint8Array(buffer));
+  } catch (error) {
+    window.console?.warn('Firebase metadata compression failed. Falling back to plain JSON.', error);
+    return '';
+  }
+}
+
+async function decompressBase64Gzip(value) {
+  if (!window.DecompressionStream || !window.Blob || !window.Response) return '';
+
+  try {
+    const bytes = base64ToBytes(value);
+    const stream = new window.Blob([bytes]).stream().pipeThrough(new window.DecompressionStream('gzip'));
+    return new window.Response(stream).text();
+  } catch (error) {
+    window.console?.warn('Firebase metadata decompression failed.', error);
+    return '';
+  }
+}
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return window.btoa(binary);
+}
+
+function base64ToBytes(value) {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+async function responseText(response) {
+  try {
+    return await response.text();
+  } catch {
+    return '';
   }
 }
 
@@ -235,5 +303,7 @@ function remoteProjectStateDocumentUrl() {
   const { projectId, collection, documentId } = FIREBASE_PROJECT_STATE_CONFIG;
   return `${FIRESTORE_BASE_URL}/projects/${encodeURIComponent(
     projectId.trim()
-  )}/databases/(default)/documents/${encodeURIComponent(collection.trim())}/${encodeURIComponent(documentId.trim())}`;
+  )}/databases/(default)/documents/${encodeURIComponent(collection.trim())}/${encodeURIComponent(
+    documentId.trim()
+  )}?key=${encodeURIComponent(FIREBASE_PROJECT_STATE_CONFIG.apiKey)}`;
 }

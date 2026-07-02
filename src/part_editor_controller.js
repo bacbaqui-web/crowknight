@@ -3,7 +3,7 @@ import { groupPosePropertyGroups, partPropertyGroups, posePropertyGroups } from 
 import { readPartFieldDisplayValue } from './property_value_helper.js';
 import { emptyPartMessage, markPartPicker, renderPosePartHeader } from './editor_panel_dom.js';
 import { isMasterPart } from './editor_label_helper.js';
-import { partEditSources, poseMotionGroups } from './part_source_registry.js';
+import { isPartWithSize, partEditSources, partPositionSources, poseMotionGroups } from './part_source_registry.js';
 import { posePartFocusAfterMultiSelect } from './panel_edit_state.js';
 import { updateRigPartValue } from './transform_value_helper.js';
 import { renderScrubGroups } from './editor_scrub_helper.js';
@@ -15,7 +15,7 @@ import {
   readInteractionDisplayValue,
   renderInteractionEditor,
 } from './interaction_editor_engine.js';
-import { renderModifierEditor } from './modifier_editor_engine.js';
+import { renderAppliedModifierEditor, renderModifierLibraryEditor } from './modifier_editor_engine.js';
 import {
   ensureTimelineModifierTarget,
   writeTimelineModifierEnabled,
@@ -206,6 +206,7 @@ export function createTuningPanelPartController({
 
   function renderPosePartFields() {
     poseTimeline.renderTimeline();
+    clearPoseSupplementCards();
     const frameLabel = poseTimeline.frameLabel();
     if (selectedPoseParts.size() > 1) {
       posePartFields.innerHTML = '';
@@ -225,7 +226,14 @@ export function createTuningPanelPartController({
     }
 
     const partKey = getActivePosePartKey() || MASTER_PART_KEY;
-    if (!poseTimeline.hasFrameSelection() && !isMasterPart(partKey)) {
+    const hasFrameSelection = poseTimeline.hasFrameSelection();
+    const isWholeTimelineEdit = !poseTimeline.hasFrameTarget();
+    const isAllPartsEdit = isAllPosePartsEdit();
+    if (isAllPartsEdit) {
+      renderAllPosePartsFields(frameLabel);
+      return;
+    }
+    if (!hasFrameSelection && !isWholeTimelineEdit && !isMasterPart(partKey)) {
       posePartFields.innerHTML = emptyPartMessage('편집할 프레임을 선택하세요.');
       return;
     }
@@ -236,33 +244,115 @@ export function createTuningPanelPartController({
     posePartFields.innerHTML = '';
     renderPosePartHeader(posePartFields, partKey, selectedPoseParts.size(), frameLabel);
 
-    renderEditorDataCard(posePartFields, { title: 'Property', className: 'property-editor-card' }, (body) => {
-      renderScrubGroups(
-        body,
-        posePropertyGroups(partKey, poseTimeline.hasFrameSelection()),
-        (prop) => poseTimeline.readDisplayValue(partKey, poseTimeline.currentFrameValue(partKey), prop),
-        (prop, value) => updatePosePartValue(prop, value),
-        scrubCallbacks
-      );
+    renderEditorDataCard(
+      posePartFields,
+      { title: 'Property', className: 'property-editor-card', collapsible: false },
+      (body) => {
+        renderScrubGroups(
+          body,
+          posePropertyGroups(partKey, hasFrameSelection),
+          (prop) => poseTimeline.readDisplayValue(partKey, poseTimeline.currentFrameValue(partKey), prop),
+          (prop, value) => updatePosePartValue(prop, value),
+          scrubCallbacks
+        );
+      }
+    );
+
+    const supplementContainer = posePartFields.parentElement || posePartFields;
+
+    renderAppliedModifierEditor(supplementContainer, {
+      modifiers: poseModifiers(),
+      onSettingChange: updatePoseModifierSetting,
     });
 
-    renderInteractionEditor(posePartFields, {
-      frameValue: offset,
-      targetKey: partKey,
-      scrubCallbacks,
-      onWrite: (prop, value, { rerender = true } = {}) => updatePoseInteractionValue(prop, value, rerender),
-    });
+    if (hasFrameSelection) {
+      renderInteractionEditor(supplementContainer, {
+        frameValue: offset,
+        targetKey: partKey,
+        scrubCallbacks,
+        onWrite: (prop, value, { rerender = true } = {}) => updatePoseInteractionValue(prop, value, rerender),
+      });
+    }
 
-    renderModifierEditor(posePartFields, {
+    renderModifierLibraryEditor(supplementContainer, {
       modifiers: poseModifiers(),
       onToggle: updatePoseModifierEnabled,
+    });
+  }
+
+  function renderAllPosePartsFields(frameLabel) {
+    posePartFields.innerHTML = '';
+    renderPosePartHeader(posePartFields, 'all', 0, frameLabel);
+
+    renderEditorDataCard(
+      posePartFields,
+      { title: 'Property', className: 'property-editor-card', collapsible: false },
+      (body) => {
+        renderScrubGroups(
+          body,
+          groupPosePropertyGroups(),
+          (prop) => getGroupEditValues()[prop],
+          (prop, value) => updateAllPosePartsValue(prop, value),
+          scrubCallbacks
+        );
+      }
+    );
+
+    const supplementContainer = posePartFields.parentElement || posePartFields;
+
+    renderAppliedModifierEditor(supplementContainer, {
+      modifiers: poseModifiers(),
       onSettingChange: updatePoseModifierSetting,
+    });
+
+    renderModifierLibraryEditor(supplementContainer, {
+      modifiers: poseModifiers(),
+      onToggle: updatePoseModifierEnabled,
+    });
+  }
+
+  function clearPoseSupplementCards() {
+    const container = posePartFields.parentElement;
+    if (!container) return;
+    Array.from(container.children).forEach((child) => {
+      if (
+        child.classList.contains('interaction-editor-card') ||
+        child.classList.contains('modifier-applied-card') ||
+        child.classList.contains('modifier-library-card')
+      ) {
+        child.remove();
+      }
     });
   }
 
   function updatePosePartValue(prop, value) {
     const nextValue = poseTimeline.updateOffset(prop, value);
     return nextValue;
+  }
+
+  function updateAllPosePartsValue(prop, value) {
+    beginUndoSnapshot();
+    poseTimeline.stopPreview();
+    const groupValues = getGroupEditValues();
+    const nextValue = prop === 'opacity' ? (Number(value) > 0 ? 1 : 0) : Number(value);
+    if (!Number.isFinite(nextValue)) return groupValues[prop];
+
+    const parts = allPoseTimelineEditParts();
+    if (prop === 'x' || prop === 'y' || prop === 'rot') {
+      const delta = nextValue - Number(groupValues[prop] || 0);
+      applyAllPosePartsDelta(prop, delta, parts);
+      groupValues[prop] = nextValue;
+    } else if (prop === 'scale') {
+      applyAllPosePartsScale(nextValue, parts);
+      groupValues.scale = nextValue;
+    } else if (prop === 'opacity') {
+      applyAllPosePartsTransform('opacity', () => nextValue, parts);
+      groupValues.opacity = nextValue;
+    }
+
+    poseTimeline.syncPreview();
+    applySelected();
+    return groupValues[prop];
   }
 
   function updatePoseInteractionValue(prop, value, rerender = true) {
@@ -311,6 +401,57 @@ export function createTuningPanelPartController({
     poseTimeline.syncPreview();
     applySelected();
     return result.value;
+  }
+
+  function applyAllPosePartsDelta(prop, delta, parts) {
+    if (poseTimeline.hasFrameTarget()) {
+      parts.forEach((part) => {
+        const currentValue = Number(poseTimeline.currentFrameValue(part)?.[prop] ?? 0);
+        poseTimeline.writeFrameValue(part, prop, currentValue + delta);
+      });
+      return;
+    }
+    poseTimeline.updateAllOffsets(prop, delta, parts);
+  }
+
+  function applyAllPosePartsTransform(prop, transformValue, parts) {
+    if (poseTimeline.hasFrameTarget()) {
+      parts.forEach((part) => {
+        const currentValue = Number(poseTimeline.currentFrameValue(part)?.[prop] ?? 0);
+        const nextValue = transformValue(currentValue, part);
+        if (Number.isFinite(nextValue)) poseTimeline.writeFrameValue(part, prop, nextValue);
+      });
+      return;
+    }
+    poseTimeline.transformAllOffsets(prop, transformValue, parts);
+  }
+
+  function applyAllPosePartsScale(nextValue, parts) {
+    const groupValues = getGroupEditValues();
+    const previousScale = Math.max(0.1, Number(groupValues.scale || 100) / 100);
+    const nextScale = Math.max(0.1, Number(nextValue) / 100);
+    const ratio = nextScale / previousScale;
+    if (!Number.isFinite(ratio) || ratio === 1) return;
+    ['w', 'h'].forEach((prop) => {
+      applyAllPosePartsTransform(
+        prop,
+        (currentOffset, part) => {
+          if (!isPartWithSize(part)) return currentOffset;
+          const base = Math.max(0.001, Number(poseTimeline.source(part)?.[prop] || 1));
+          return (base + currentOffset) * ratio - base;
+        },
+        parts
+      );
+    });
+  }
+
+  function isAllPosePartsEdit() {
+    const activePosePartKey = getActivePosePartKey();
+    return selectedPoseParts.size() === 0 && (!activePosePartKey || isMasterPart(activePosePartKey));
+  }
+
+  function allPoseTimelineEditParts() {
+    return Object.keys(partPositionSources(getSelectedActor().tuning.rig));
   }
 
   function updatePartValue(prop, value) {

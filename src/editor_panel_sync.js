@@ -2,6 +2,7 @@ import { TUNING_FIELDS } from './game_config.js';
 import { syncNumericFields } from './editor_panel_dom.js';
 import { renderTuningLayerOrder } from './editor_layer_order.js';
 import { normalizeTuningPanelWorkflowSession } from './editor_workflow_data.js';
+import { syncPoseActionAuthoringControls } from './pose_action_authoring_controls.js';
 
 export function createTuningPanelSync({
   elements,
@@ -14,14 +15,15 @@ export function createTuningPanelSync({
   poseTimeline,
   syncAnchorDebugPart,
 }) {
-  const { actorSelect, actorName, layerOrder } = elements;
+  const { actorSelect, actorName, characterDelete, effectName, effectSelect, layerOrder } = elements;
 
   function syncActorControls() {
     const selectedActor = getSelectedActor();
 
+    lifecycleController.syncActorOptions();
     actorSelect.value = selectedActor.id;
     actorName.value = selectedActor.name;
-    lifecycleController.syncActorOptions();
+    if (characterDelete) characterDelete.disabled = selectedActor.id === 'player';
   }
 
   function syncSetup(selectedLayerValue = layerOrder.value) {
@@ -35,6 +37,7 @@ export function createTuningPanelSync({
   }
 
   function syncAnimation() {
+    syncPoseActionAuthoringControls(elements, getSelectedActor().tuning);
     partController.renderPosePartFields();
     partController.syncMotionRows();
     partController.syncPartPickers();
@@ -43,6 +46,9 @@ export function createTuningPanelSync({
   }
 
   function syncEffect() {
+    if (effectName && effectSelect) {
+      effectName.value = effectSelect.selectedOptions[0]?.textContent || '';
+    }
     effectTimeline.renderFields();
     effectTimeline.syncPreview();
   }

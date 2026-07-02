@@ -13,6 +13,7 @@ Action = Timeline + Interaction + Modifiers
 - Timeline: 파츠와 효과의 시간 변화.
 - Interaction: 충돌, 피격, 공격, 방어 box와 frame state.
 - Modifiers: Action 실행 중 자기 자신에게 적용되는 규칙.
+- Trigger: Custom Action을 언제 시작할지 정하는 입력 조건. Runtime Rule이 해석한다.
 
 Runtime은 Action을 만들지 않는다. Runtime은 Action 데이터를 해석해서 실행한다.
 
@@ -32,7 +33,7 @@ New Feature
 
 - Timeline은 움직임이다. 위치, 크기, 회전, opacity, timing처럼 시간에 따라 변하는 제작 데이터다.
 - Interaction은 다른 객체와의 관계다. 충돌, 피격, 공격, 방어처럼 서로 만났을 때 의미가 생기는 데이터다.
-- Modifiers는 실행 중 적용되는 규칙이다. 무적, 색 변화, gravity override, hit stop처럼 Action/Effect/Projectile이 공유할 수 있는 옵션이다.
+- Modifiers는 실행 중 적용되는 규칙이다. 현재 MVP에서는 이동, 가속, 감속처럼 Action/Effect/Projectile이 공유할 수 있는 수식부터 검증한다.
 - Runtime Rule은 게임 전체에 필요한 실행 규칙이다. 입력 수집, 중력, 월드 경계, HP, score, overlap 계산처럼 특정 Action 이름에 종속되지 않는 규칙이다.
 
 새 Action은 위 블록을 조합해서 만든다. Runtime은 `attack1`, `roll`, `fireSlash` 같은 이름을 보고 특별 처리하지 않는다.
@@ -94,7 +95,27 @@ input keys
 → actor_canvas_renderer
 ```
 
-## Basic Actions / Skills
+## Action Equality Target
+
+최종 목표는 "모든 Action은 동일하다"이다.
+
+```text
+Action
+├─ Trigger
+├─ Timeline
+├─ Interaction
+└─ Modifiers
+```
+
+Runtime은 `jump`, `roll`, `attack1`, `fireSlash` 같은 이름을 특별 취급하지 않는다.
+
+현재 migration 단계에서는 `poseActionDescriptors()`가 Basic Action과 Custom Action을 같은 descriptor로 묶는다.
+
+- Basic Action: `runtimeMode: "legacy"`로 기존 물리 Runtime을 유지한다.
+- Custom Action: `runtimeMode: "trigger"`로 Trigger Runtime MVP를 탄다.
+- `runtimeMode`은 임시 migration flag이며 최종 모델에는 남기지 않는다.
+
+## Basic Actions / Skills Legacy Note
 
 Basic Actions는 기존 동작이다.
 
@@ -108,6 +129,35 @@ Skills는 사용자가 새로 만드는 Action이다.
 - `trigger`를 가진다.
 - Timeline, Interaction, Modifiers를 자체 데이터로 가진다.
 - Basic Actions와 같은 Timeline/Property/Transform 편집 경로를 최대한 재사용한다.
+
+## Trigger
+
+Trigger는 Action 데이터에 저장되는 입력 조건이다.
+
+MVP 지원 형태:
+
+- Single: `Q`, `W`, `E`, `Space`, `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight`.
+- Sequence: `QQ`, `QQQ`, `QW`, `QWE`처럼 순서가 있는 입력. 각 입력 사이에는 `maxGapMs`를 둔다.
+- Hold Combo: `Q-E`, `ArrowUp-W`처럼 앞 키를 누른 상태에서 뒤 키를 누르는 구조.
+
+저장 예:
+
+```js
+{ type: "single", keys: ["Q"] }
+{ type: "sequence", keys: ["Q", "Q", "Q"], maxGapMs: 350 }
+{ type: "holdCombo", hold: "ArrowUp", press: "W" }
+{ type: "single", keys: ["ArrowRight"], repeatWhileHeld: true }
+```
+
+설계 원칙:
+
+- Trigger는 Runtime에서 Action 이름을 보고 분기하기 위한 장치가 아니다.
+- Runtime은 Trigger 데이터를 해석해 Custom Action Timeline 실행을 요청한다.
+- `repeatWhileHeld`는 즉발 실행과 홀드 반복 실행을 나누는 Trigger Runtime Rule이다.
+- Basic Action과 Custom Action 모두 Trigger Editor 데이터를 가질 수 있다.
+- 기존 물리 Runtime이 남아 있는 Basic Action은 migration이 끝날 때까지 `runtimeMode: "legacy"`로 둔다.
+- Runtime MVP는 발동된 Custom Action의 pose timeline 재생과 공격 Interaction region 연결까지만 수행한다.
+- Modifier Engine 해석, 복잡한 입력 우선순위, overlapping sequence 지연 판정은 별도 단계로 분리한다.
 
 분리 가능성:
 
@@ -133,6 +183,7 @@ Runtime에 반드시 남아야 함:
 
 Modifier Engine으로 이동 가능:
 
+- 이동 / 가속 / 감속 같은 Action 실행 중 위치 보정.
 - 무적 시간 적용.
 - 색 변화 / tint / hit flash 성격의 Action별 표시 옵션.
 - 구르기 뒤 무적.
@@ -185,16 +236,17 @@ action_modifier_engine
 Runtime
 ```
 
-MVP 후보:
+현재 MVP:
 
-- invincible: frame/time 범위에서 피격 무시.
-- tint: frame/time 범위에서 색 변화.
+- move: Action Timeline 전체 길이 동안 X/Y 이동량만큼 이동한다.
+- accelerate: 이동 진행률을 ease-in처럼 보정한다.
+- decelerate: 이동 진행률을 ease-out처럼 보정한다.
 
 설계 원칙:
 
 - Modifier별 Runtime 적용 지점은 engine이 계산한 결과만 읽는다.
-- `combat_engine`은 "현재 무적인가" 같은 해석 결과를 사용한다.
-- `actor_canvas_renderer`는 "현재 tint/filter가 있는가" 같은 해석 결과를 사용한다.
+- 이동 수식은 Timeline 원본 포즈 데이터를 수정하지 않고, 현재 실행 중인 Action의 진행률 차분만 actor 위치에 더한다.
+- 가속과 감속이 함께 켜지면 ease-in-out으로 해석한다.
 - Modifier 설정 UI는 Property 공통 입력을 우선 사용한다.
 
 ## Recommended Implementation Order
@@ -204,7 +256,7 @@ MVP 후보:
 3. Skill 데이터 생성만 추가한다.
 4. Skill Timeline을 기존 Timeline adapter에 연결한다.
 5. Interaction checkbox와 box 생성을 붙인다.
-6. `action_modifier_engine`을 만들고 무적/색 변화만 연결한다.
+6. 이동 / 가속 / 감속 수식 MVP를 Runtime에 최소 연결한다.
 7. Runtime Skill trigger와 playback을 연결한다.
 
 ## Risks

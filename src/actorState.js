@@ -7,6 +7,10 @@ export function resetPlayerActionState(player) {
   player.dashTime = 0;
   player.attackCooldown = 0;
   player.attackCarrySpeed = 0;
+  player.customActionKey = null;
+  player.customActionTime = 0;
+  player.customActionDuration = 0;
+  player.customActionMoveProgress = 0;
   player.hurtTime = 0;
   player.guardActive = false;
   player.guardHits = 0;

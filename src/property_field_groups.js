@@ -1,10 +1,5 @@
 import { axisProps, isMasterPart } from './editor_label_helper.js';
-import {
-  isPartWithAnchor,
-  isPartWithOpacity,
-  isPartWithPrimarySizeLabel,
-  isPartWithSize,
-} from './part_source_registry.js';
+import { isPartWithAnchor, isPartWithOpacity, isPartWithSize } from './part_source_registry.js';
 
 export function effectPropertyGroups() {
   return editableTransformPropertyGroups({
@@ -60,15 +55,26 @@ function editableTransformPropertyGroups({
   if (anchor) groups.push({ label: '기준', props: axisProps('ax', 'ay') });
   if (position) groups.push({ label: '위치', props: axisProps('x', 'y') });
   if (size) groups.push({ label: sizeLabel, props: sizeProps });
-  if (rotation) groups.push({ label: '회전', props: [{ prop: 'rot', label: 'R' }] });
-  if (opacity) groups.push({ label: '투명', props: [{ prop: 'opacity', label: 'O' }] });
+  if (rotation && opacity) {
+    groups.push({
+      label: '회전',
+      props: [
+        { prop: 'rot', label: '' },
+        { prop: 'opacity', label: '투명' },
+      ],
+    });
+  } else if (rotation) {
+    groups.push({ label: '회전', props: [{ prop: 'rot', label: '회전' }] });
+  } else if (opacity) {
+    groups.push({ label: '투명', props: [{ prop: 'opacity', label: '투명' }] });
+  }
   return groups;
 }
 
-function partSizeGroupLabel(partKey) {
-  return isPartWithPrimarySizeLabel(partKey) ? '크기' : '그룹 크기';
+function partSizeGroupLabel() {
+  return '크기';
 }
 
-function poseSizeGroupLabel(partKey) {
-  return isMasterPart(partKey) || isPartWithPrimarySizeLabel(partKey) ? '크기' : '그룹 크기';
+function poseSizeGroupLabel() {
+  return '크기';
 }

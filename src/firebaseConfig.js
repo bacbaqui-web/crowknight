@@ -3,7 +3,7 @@ export const FIREBASE_PROJECT_STATE_CONFIG = {
   apiKey: 'AIzaSyB9btGUOTYhk8MEGs73YYD0DQj_yiC1aN8',
   projectId: 'crow-knight',
   storageBucket: 'crow-knight.firebasestorage.app',
-  storagePath: 'crow-knight/backgrounds',
+  storagePath: 'crow-knight/assets',
   collection: 'projectSettings',
   documentId: 'crowKnight',
   rankingCollection: 'rankingEntries',

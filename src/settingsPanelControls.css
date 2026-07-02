@@ -94,6 +94,70 @@
   height: 16px;
 }
 
+.section-action-row .character-menu-item {
+  width: 100%;
+  height: auto;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #f8f8fb;
+  padding: 8px 9px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.section-action-row .character-menu-item:hover,
+.section-action-row .character-menu-item:focus-visible {
+  background: #252a36;
+}
+
+.section-action-row .character-menu-item.danger {
+  color: #ffd5d8;
+}
+
+.section-action-row .character-menu-item:disabled {
+  color: #747b8d;
+  cursor: not-allowed;
+}
+
+.section-action-row .character-menu-item:disabled:hover {
+  background: transparent;
+}
+
+.control-more-menu .control-menu-item {
+  width: 100%;
+  height: auto;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #f8f8fb;
+  padding: 8px 9px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.control-more-menu .control-menu-item:hover,
+.control-more-menu .control-menu-item:focus-visible {
+  background: #252a36;
+}
+
+.control-more-menu .control-menu-item.danger {
+  color: #ffd5d8;
+}
+
+.control-more-menu .control-menu-item:disabled {
+  color: #747b8d;
+  cursor: not-allowed;
+}
+
+.control-more-menu .control-menu-item:disabled:hover {
+  background: transparent;
+}
+
 .panel-actions .icon-button.is-working svg,
 .panel-actions .icon-button.is-refreshing svg,
 .section-action-row .icon-button.is-working svg,
