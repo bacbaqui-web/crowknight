@@ -1,5 +1,5 @@
 import { formatNumericInputValue, isNumericInputLocked } from './property_numeric_input_helper.js';
-import { clamp } from './utils.js';
+import { clamp } from './common_helper.js';
 
 export function formatInputNumber(value, step) {
   return formatNumericInputValue(value, step, { trim: false });
@@ -39,7 +39,7 @@ function stepNumberInput(event, input, direction) {
 
 export function enhanceNumberInputs(root) {
   root.querySelectorAll('input[type="number"]').forEach((input) => {
-    if (input.closest('.pose-frame-input') || input.closest('.number-stepper-control')) return;
+    if (input.closest('.timeline-frame-input') || input.closest('.number-stepper-control')) return;
     const wrapper = document.createElement('span');
     wrapper.className = 'number-stepper-control';
     const buttons = document.createElement('span');

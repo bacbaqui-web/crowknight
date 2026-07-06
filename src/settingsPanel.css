@@ -35,8 +35,10 @@
   flex-direction: column;
   gap: 12px;
   width: min(350px, 100vw);
+  max-width: 100vw;
   height: 100vh;
   padding: 12px;
+  box-sizing: border-box;
   background: rgba(12, 14, 20, 0.7);
   border: 1px solid rgba(57, 61, 75, 0.92);
   border-right: 0;
@@ -47,6 +49,18 @@
     transform 180ms ease,
     opacity 180ms ease;
   backdrop-filter: blur(8px);
+}
+
+.tuning-panel,
+.tuning-panel * {
+  box-sizing: border-box;
+}
+
+.tuning-panel input,
+.tuning-panel select,
+.tuning-panel textarea,
+.tuning-panel button {
+  max-width: 100%;
 }
 
 .tuning-panel {
@@ -120,6 +134,9 @@
 .setting-section {
   display: grid;
   gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .setting-section[hidden] {
@@ -153,6 +170,9 @@
 .section-content {
   display: none;
   gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .setting-section.is-open .section-content {
@@ -163,16 +183,18 @@
 .field-grid label,
 .select-row {
   display: grid;
-  grid-template-columns: 82px minmax(100px, 1fr) 88px;
+  grid-template-columns: 82px minmax(0, 1fr) minmax(0, 88px);
   gap: 9px;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
   min-height: 32px;
   color: #d9deec;
   font-size: 13px;
 }
 
 .setting-row.compact {
-  grid-template-columns: 34px minmax(100px, 1fr) 88px;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(0, 88px);
 }
 
 .motion-link-row {
@@ -243,6 +265,28 @@
 
 .select-row {
   grid-template-columns: 82px minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.select-row.has-unit {
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+}
+
+.field-unit-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  border: 1px solid #3a4050;
+  border-radius: 4px;
+  background: #151a24;
+  color: #8f98aa;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .action-select-row {
@@ -250,6 +294,12 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 6px;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.setting-section[data-section='action'] .select-row.action-select-row {
+  grid-template-columns: 82px minmax(96px, 0.45fr) minmax(0, 1fr) auto;
 }
 
 .action-select-control {
@@ -257,10 +307,7 @@
 }
 
 .action-name-trigger-row {
-  display: grid;
-  grid-template-columns: 42px minmax(110px, 0.62fr) minmax(230px, 1fr);
-  align-items: center;
-  gap: 6px;
+  grid-template-columns: 82px minmax(0, 1fr) minmax(140px, 0.55fr);
 }
 
 .action-name-trigger-row > label,
@@ -369,9 +416,11 @@
 
 .action-trigger-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto 24px 24px;
+  grid-template-columns: minmax(0, 1fr) auto auto 24px;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  max-width: 100%;
   min-height: 34px;
   padding: 5px;
   border: 1px solid #394051;
@@ -426,6 +475,7 @@
 
 .action-trigger-summary {
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   border: 1px solid #303746;
   border-radius: 5px;
@@ -548,6 +598,28 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
 }
 
+.character-move-menu-wrap {
+  position: relative;
+}
+
+.character-move-menu-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 8px);
+  z-index: 10;
+  display: grid;
+  min-width: 118px;
+  padding: 6px;
+  border: 1px solid #525767;
+  border-radius: 7px;
+  background: #151923;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+.character-move-menu-panel[hidden] {
+  display: none;
+}
+
 .character-menu-item {
   width: 100%;
   border: 0;
@@ -562,7 +634,8 @@
 }
 
 .character-menu-item:hover,
-.character-menu-item:focus-visible {
+.character-menu-item:focus-visible,
+.character-menu-item.is-active {
   background: #252a36;
 }
 
@@ -747,6 +820,8 @@
 .part-fields {
   display: grid;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .editor-data-card {
@@ -811,10 +886,10 @@
   padding: 0;
 }
 
-.setting-section[data-section='pose'] .section-content > .interaction-editor-card,
-.setting-section[data-section='pose'] .section-content > .modifier-editor-card,
-.setting-section[data-section='pose'] .section-content > .modifier-applied-card,
-.setting-section[data-section='pose'] .section-content > .modifier-library-card,
+.setting-section[data-section='action'] .section-content > .interaction-editor-card,
+.setting-section[data-section='action'] .section-content > .modifier-editor-card,
+.setting-section[data-section='action'] .section-content > .modifier-applied-card,
+.setting-section[data-section='action'] .section-content > .modifier-library-card,
 .setting-section[data-section='effect'] .section-content > .interaction-editor-card,
 .setting-section[data-section='effect'] .section-content > .modifier-editor-card,
 .setting-section[data-section='effect'] .section-content > .modifier-applied-card,
@@ -836,6 +911,47 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+}
+
+.modifier-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
+.modifier-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid #596176;
+  border-radius: 999px;
+  background: #151a24;
+  color: #d9deec;
+  padding: 5px 13px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.modifier-tag-pill:hover {
+  border-color: #8edab8;
+  color: #f5f7fb;
+}
+
+.modifier-tag-pill.is-active {
+  border-color: #8edab8;
+  background: #7cc3a2;
+  color: #0d1514;
+  box-shadow: 0 0 0 2px rgba(124, 195, 162, 0.14);
 }
 
 .editor-check-row {
@@ -876,6 +992,10 @@
   background: #151b24;
 }
 
+.modifier-applied-card > .editor-data-card-body {
+  gap: 5px;
+}
+
 .interaction-detail-title {
   display: flex;
   justify-content: space-between;
@@ -889,6 +1009,20 @@
   color: #d9deec;
   font-size: 13px;
   font-weight: 850;
+}
+
+.modifier-applied-card .editor-data-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modifier-title-meta {
+  color: #8f98aa;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .interaction-detail-title span:last-child {
@@ -909,8 +1043,8 @@
 
 .modifier-setting-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: 1fr;
+  gap: 5px;
   padding: 0;
 }
 
@@ -933,6 +1067,134 @@
   color: #f5f7fb;
   padding: 3px 6px;
   font: inherit;
+}
+
+.modifier-unit-label {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  border: 1px solid #3a4050;
+  border-radius: 4px;
+  background: #151a24;
+  color: #8f98aa;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.scrub-control:has(.modifier-unit-label) {
+  grid-template-columns: minmax(0, 1fr) 0 auto;
+}
+
+.scrub-control:has(.modifier-unit-label):hover,
+.scrub-control:has(.modifier-unit-label):focus-within,
+.scrub-control:has(.modifier-unit-label):has(.scrub-value.is-scrubbing) {
+  grid-template-columns: minmax(0, 1fr) 16px auto;
+}
+
+.modifier-select-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  color: #cdd4e4;
+  font-size: 13px;
+}
+
+.modifier-mini-timeline-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 32px;
+  color: #cdd4e4;
+  font-size: 13px;
+}
+
+.modifier-mini-timeline-track {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 22px;
+  border-radius: 4px;
+}
+
+.modifier-mini-timeline-track .timeline-slot {
+  cursor: default;
+}
+
+.modifier-mini-timeline-track .timeline-slot.is-in-range {
+  background: rgba(124, 195, 162, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(222, 255, 238, 0.3);
+}
+
+.modifier-select-field {
+  min-width: 0;
+  height: 28px;
+  border: 1px solid #3a4050;
+  border-radius: 4px;
+  background: #0f1219;
+  color: #f5f7fb;
+  padding: 3px 6px;
+  font: inherit;
+}
+
+.modifier-graph-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 46px);
+  gap: 5px;
+  justify-content: start;
+}
+
+.modifier-graph-button {
+  display: inline-flex;
+  width: 46px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #3a4050;
+  border-radius: 5px;
+  background: #0f1219;
+  color: #f5f7fb;
+  cursor: pointer;
+}
+
+.modifier-graph-button:hover {
+  border-color: #596276;
+  background: #171d29;
+}
+
+.modifier-graph-button.is-active {
+  border-color: #7cc3a2;
+  background: #18281f;
+  box-shadow: inset 0 0 0 1px rgba(124, 195, 162, 0.3);
+}
+
+.modifier-graph-button svg {
+  width: 38px;
+  height: 32px;
+  overflow: visible;
+}
+
+.modifier-graph-axis,
+.modifier-graph-curve {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.modifier-graph-axis {
+  stroke: #d8deeb;
+  stroke-width: 4;
+}
+
+.modifier-graph-curve {
+  stroke: #ff3b30;
+  stroke-width: 5;
 }
 
 .modifier-setting-placeholder {
@@ -959,7 +1221,7 @@
   min-width: 0;
 }
 
-.pose-part-header {
+.action-part-header {
   border: 1px solid #394051;
   border-radius: 6px;
   background: #141820;
@@ -971,31 +1233,36 @@
 }
 
 .setup-section .part-position-layout,
-.setting-section[data-section='pose'] .section-content,
+.setting-section[data-section='action'] .section-content,
 .setting-section[data-section='effect'] .section-content {
   grid-template-columns: 142px minmax(0, 1fr);
   align-items: start;
   gap: 6px;
 }
 
-.setting-section[data-section='pose'] .section-content > .action-select-row,
-.setting-section[data-section='pose'] .section-content > .action-name-trigger-row,
-.setting-section[data-section='pose'] .section-content > .select-row:not(.native-part-select),
-.setting-section[data-section='pose'] .section-content > .pose-timeline-settings,
-.setting-section[data-section='pose'] .section-content > .pose-timeline,
-.setting-section[data-section='pose'] .section-content > .setting-row,
-.setting-section[data-section='pose'] .section-content > .metric,
+.setting-section[data-section='action'] .section-content > .action-select-row,
+.setting-section[data-section='action'] .section-content > .action-name-trigger-row,
+.setting-section[data-section='action'] .section-content > .select-row:not(.native-part-select),
+.setting-section[data-section='action'] .section-content > .timeline-settings,
+.setting-section[data-section='action'] .section-content > .timeline-view,
+.setting-section[data-section='action'] .section-content > .timeline-speed-control,
+.setting-section[data-section='action'] .section-content > .setting-row,
+.setting-section[data-section='action'] .section-content > .metric,
 .setting-section[data-section='effect'] .section-content > .select-row,
 .setting-section[data-section='effect'] .section-content > .action-select-row,
 .setting-section[data-section='effect'] .section-content > .action-name-trigger-row,
-.setting-section[data-section='effect'] .section-content > .pose-timeline-settings,
-.setting-section[data-section='effect'] .section-content > .pose-timeline,
+.setting-section[data-section='effect'] .section-content > .timeline-settings,
+.setting-section[data-section='effect'] .section-content > .timeline-view,
+.setting-section[data-section='effect'] .section-content > .timeline-speed-control,
 .setting-section[data-section='effect'] .section-content > .setting-row {
   grid-column: 1 / -1;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .setup-section .part-fields,
-.setting-section[data-section='pose'] .part-fields,
+.setting-section[data-section='action'] .part-fields,
 .setting-section[data-section='effect'] .part-fields {
   align-self: start;
 }
@@ -1061,7 +1328,7 @@
   }
 
   .setup-section .part-position-layout,
-  .setting-section[data-section='pose'] .section-content,
+  .setting-section[data-section='action'] .section-content,
   .setting-section[data-section='effect'] .section-content {
     grid-template-columns: 1fr;
   }

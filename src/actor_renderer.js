@@ -1,20 +1,29 @@
-import { clamp, deg } from './utils.js';
+import { clamp, deg } from './common_helper.js';
 import {
   createEditableAppearance,
   createEditableTransform,
   editableTransformDrawRect,
   scaledEditableAnchor,
 } from './editable_object_model_helper.js';
-import { drawPuppetAnchorDot, drawPuppetDebug } from './puppetPlayerDebug.js';
+import { drawPuppetAnchorDot, drawPuppetDebug } from './puppet_player_debug_view.js';
 import {
   recordPuppetAnchorDebugPoint,
   recordPuppetEditHandle,
   recordPuppetImageRegion,
   recordPuppetJointRegion,
   recordPuppetRectPart,
-} from './puppetPlayerEditRegions.js';
-import { glowSilhouetteFor, groupAnchor, partHeight, partWidth, shouldGlowPartKey } from './puppetPlayerGeometry.js';
-import { INTERACTION_OBJECT_TARGET_TYPE, interactionObjectPartKeysForParent } from './interaction_object_editor.js';
+} from './puppet_player_edit_region_helper.js';
+import {
+  glowSilhouetteFor,
+  groupAnchor,
+  partHeight,
+  partWidth,
+  shouldGlowPartKey,
+} from './puppet_player_geometry_helper.js';
+import {
+  INTERACTION_OBJECT_TARGET_TYPE,
+  interactionObjectPartKeysForParent,
+} from './interaction_object_editor_controller.js';
 
 export function drawPuppetPlayer(player, ctx) {
   const p = player.getPose();

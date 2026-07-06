@@ -1,6 +1,6 @@
-import { ensurePoseOffset } from './project_data_normalizer.js';
+import { ensureActionOffset } from './project_data_normalizer_helper.js';
 import { handleCursor } from './edit_handle_drawing_helper.js';
-import { canvasPointFromEvent } from './canvasDragMath.js';
+import { canvasPointFromEvent } from './canvas_drag_math_helper.js';
 import { canvasEffectEditState, canvasPartEditState, refreshCanvasDragTargets } from './transform_edit_state.js';
 import {
   canvasHandleHoverMode,
@@ -17,15 +17,16 @@ import {
 } from './group_transform_adapter.js';
 import { createCanvasEditRefresh } from './transform_refresh_helper.js';
 import { currentCanvasSettingsEditContext } from './settings_panel_state.js';
-import { MASTER_PART_KEY } from './game_config.js';
+import { MASTER_PART_KEY } from './game_config_data.js';
+import { normalizeActionEditPivot, writeActionEditPivot } from './action_timeline_edit_helper.js';
+import { EDIT_CONTEXT_ACTION, EDIT_CONTEXT_EFFECT } from './edit_target_helper.js';
 
 export function createTuningPanelCanvasController({
   canvas,
   panel,
   sections,
-  selectedPoseParts,
   getSelectedActor,
-  getEditFocusPartKey,
+  getEditTarget,
   setEditFocusPartKey,
   getEditFocusContext,
   getEditContext,
@@ -36,14 +37,14 @@ export function createTuningPanelCanvasController({
   getGroupEditHandleGeometry,
   setEditHandleHover,
   setEditHandleActiveMode,
-  poseTimeline,
+  actionTimeline,
   effectTimeline,
-  getPoseKey,
+  getActionKey,
   getEffectKey,
   applySelected,
   saveState,
   renderPartFields,
-  renderPosePartFields,
+  renderActionPartFields,
   pushUndoSnapshot,
   beginUndoSnapshot,
   commitUndoSnapshot,
@@ -56,7 +57,7 @@ export function createTuningPanelCanvasController({
     renderEffectFields: effectTimeline.renderFields,
     syncEffectPreview: effectTimeline.syncPreview,
     renderPartFields,
-    renderPosePartFields,
+    renderActionPartFields,
   });
 
   function onPointerDown(event) {
@@ -71,7 +72,8 @@ export function createTuningPanelCanvasController({
       canvasRefresh,
       createGroupDragItems,
       canvasEditState,
-      writePoseFrameValue: poseTimeline.writeFrameValue,
+      writeActionFrameValue: actionTimeline.writeFrameValue,
+      writeActionPivotValue,
       pushUndoSnapshot,
       beginUndoSnapshot,
       setEditContext,
@@ -86,7 +88,7 @@ export function createTuningPanelCanvasController({
   function currentCanvasEditContext() {
     return currentCanvasSettingsEditContext({
       partSection: sections.part,
-      poseSection: sections.pose,
+      actionSection: sections.action,
       effectSection: sections.effect,
       editFocusContext: getEditFocusContext(),
       editContext: getEditContext(),
@@ -96,9 +98,7 @@ export function createTuningPanelCanvasController({
 
   function currentCanvasActivePart() {
     const context = currentCanvasEditContext();
-    if (context === 'effect') return 'effect';
-    if (context === 'pose') return getEditFocusPartKey() || MASTER_PART_KEY;
-    return getEditFocusPartKey();
+    return getEditTarget?.(context)?.writeTargetKey || null;
   }
 
   function onPointerMove(event) {
@@ -140,32 +140,61 @@ export function createTuningPanelCanvasController({
 
   function canvasEditState(part, context) {
     const actor = getSelectedActor();
-    if (context === 'effect') {
-      effectTimeline.ensureActiveFrame();
-      return canvasEffectEditState({
-        effectKey: getEffectKey(),
-        target: effectTimeline.currentFrameValue(),
-        writeValue: effectTimeline.writeFrameValue,
-      });
+    if (context === EDIT_CONTEXT_EFFECT) {
+      return effectCanvasEditState();
     }
 
-    if (context === 'pose') {
-      ensurePoseOffset(actor.tuning, getPoseKey(), part);
+    if (context === EDIT_CONTEXT_ACTION) {
+      ensureActionOffset(actor.tuning, getActionKey(), part);
     }
 
     return canvasPartEditState({
       part,
       context,
       tuning: actor.tuning,
-      poseValue: context === 'pose' ? poseTimeline.currentFrameValue(part) : null,
+      actionValue: context === EDIT_CONTEXT_ACTION ? actionTimeline.currentFrameValue(part) : null,
+    });
+  }
+
+  function effectCanvasEditState() {
+    const editTarget = getEditTarget?.('effect');
+    effectTimeline.ensureActiveFrame();
+    return canvasEffectEditState({
+      effectKey: getEffectKey(),
+      target: effectTimeline.currentFrameValue(),
+      writeValue: (prop, value) => {
+        if (editTarget?.writeTargetKey && editTarget.writeTargetKey !== 'effect') return;
+        effectTimeline.writeFrameValue(prop, value);
+      },
     });
   }
 
   function createGroupDragItems(parts) {
     return createCanvasGroupDragItems(parts, {
-      editStateForPart: (part) => canvasEditState(part, 'pose'),
+      editStateForPart: (part) => canvasEditState(part, EDIT_CONTEXT_ACTION),
       editHandles: getSelectedActor().player.editHandles,
     });
+  }
+
+  function writeActionPivotValue(prop, value) {
+    const settings = currentActionSettings();
+    writeActionEditPivot(settings, masterActionFrames(), { ...settings.editPivot, [prop]: value });
+  }
+
+  function currentActionSettings() {
+    const actor = getSelectedActor();
+    actor.tuning.actionSettings ||= {};
+    actor.tuning.actionSettings[getActionKey()] ||= {};
+    actor.tuning.actionSettings[getActionKey()].editPivot = normalizeActionEditPivot(
+      actor.tuning.actionSettings[getActionKey()].editPivot
+    );
+    return actor.tuning.actionSettings[getActionKey()];
+  }
+
+  function masterActionFrames() {
+    const actor = getSelectedActor();
+    ensureActionOffset(actor.tuning, getActionKey(), MASTER_PART_KEY);
+    return actor.tuning.actionOffsets?.[getActionKey()]?.[MASTER_PART_KEY];
   }
 
   function createCurrentGroupDrag(mode) {
@@ -175,7 +204,7 @@ export function createTuningPanelCanvasController({
       parts: geometry ? createGroupDragItems(geometry.parts) : [],
       mode,
       startValues: createGroupTransformTarget(getGroupEditValues(), geometry),
-      writePoseFrameValue: poseTimeline.writeFrameValue,
+      writeActionFrameValue: actionTimeline.writeFrameValue,
     });
   }
 
@@ -184,7 +213,10 @@ export function createTuningPanelCanvasController({
     if (!geometry) return null;
 
     const values = getGroupEditValues();
-    if (!Number.isFinite(values.anchorX) || !Number.isFinite(values.anchorY)) {
+    if (geometry.isFrameGroup) {
+      values.anchorX = geometry.anchor.x;
+      values.anchorY = geometry.anchor.y;
+    } else if (!Number.isFinite(values.anchorX) || !Number.isFinite(values.anchorY)) {
       values.anchorX = geometry.anchor.x;
       values.anchorY = geometry.anchor.y;
     }
@@ -199,32 +231,41 @@ export function createTuningPanelCanvasController({
   }
 
   function applyCurrentGroupMove(dx, dy) {
+    if (isFrameGroupEditTarget()) return;
     applyGroupTransformDrag(createCurrentGroupDrag('move'), dx, dy);
   }
 
   function applyCurrentGroupRotation(degrees) {
+    if (isFrameGroupEditTarget()) return;
     const drag = createCurrentGroupDrag('rotate');
     if (!drag.handle || !drag.parts.length) return;
     applyGroupTransformRotation(drag, degrees);
   }
 
   function applyCurrentGroupScale(scale) {
+    if (isFrameGroupEditTarget()) return;
     const drag = createCurrentGroupDrag('size');
     if (!drag.handle || !drag.parts.length) return;
     applyGroupTransformScale(drag, scale);
   }
 
   function applyCurrentGroupOpacity(opacity) {
-    selectedPoseParts.forEach((part) => {
-      ensurePoseOffset(getSelectedActor().tuning, getPoseKey(), part);
-      poseTimeline.writeFrameValue(part, 'opacity', opacity);
+    if (isFrameGroupEditTarget()) return;
+    currentGroupEditParts().forEach((part) => {
+      ensureActionOffset(getSelectedActor().tuning, getActionKey(), part);
+      actionTimeline.writeFrameValue(part, 'opacity', opacity);
     });
+  }
+
+  function currentGroupEditParts() {
+    const editTarget = getEditTarget?.(EDIT_CONTEXT_ACTION);
+    return editTarget?.isGroup ? editTarget.writeTargetKeys : [];
   }
 
   function refreshCanvasDragTarget() {
     refreshCanvasDragTargets(canvasDrag, {
       editStateForPart: canvasEditState,
-      effectFrameValue: effectTimeline.currentFrameValue,
+      effectEditState: effectCanvasEditState,
     });
   }
 
@@ -232,6 +273,10 @@ export function createTuningPanelCanvasController({
     applyTuningCanvasDrag(drag, dx, dy, {
       groupEditValues: getGroupEditValues(),
     });
+  }
+
+  function isFrameGroupEditTarget() {
+    return getEditTarget?.(EDIT_CONTEXT_ACTION)?.isFrameGroup === true;
   }
 
   return {

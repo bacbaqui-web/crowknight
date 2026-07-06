@@ -1,0 +1,155 @@
+export function renderStageRulesPanels(panel, { definitions = STAGE_RULES_PANEL_DEFINITIONS } = {}) {
+  const mount = panel.querySelector('#stageRulesPanelMount');
+  if (!mount) return;
+
+  mount.replaceChildren(...definitions.map(createStageRulesPanel));
+}
+
+const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
+  {
+    key: 'worldPhysics',
+    title: 'World Physics',
+    fields: [
+      {
+        type: 'number',
+        id: 'worldPhysicsGravity',
+        label: 'Gravity',
+        min: 0,
+        max: 100,
+        step: 0.05,
+        unit: 'px/f²',
+        title: '매 Action Timeline frame마다 Y velocity에 더해지는 값입니다.',
+      },
+      {
+        type: 'number',
+        id: 'worldPhysicsInertia',
+        label: 'Inertia',
+        min: 0,
+        max: 300,
+        step: 1,
+        unit: 'frame',
+        title: '입력이나 힘이 멈춘 뒤 velocity가 0이 되기까지 걸리는 frame 수입니다.',
+      },
+    ],
+  },
+]);
+
+function createStageRulesPanel(definition) {
+  const section = document.createElement('section');
+  section.className = 'setting-section';
+  section.dataset.collapsible = '';
+  section.dataset.section = definition.key;
+
+  const toggle = document.createElement('button');
+  toggle.className = 'section-toggle';
+  toggle.type = 'button';
+  toggle.textContent = definition.title;
+
+  const content = document.createElement('div');
+  content.className = 'section-content';
+  content.append(...definition.fields.map(createFieldElement));
+
+  section.append(toggle, content);
+  return section;
+}
+
+function createFieldElement(field) {
+  if (field.type === 'select') return createSelectField(field);
+  if (field.type === 'rangeNumber') return createRangeNumberField(field);
+  if (field.type === 'number') return createNumberField(field);
+  if (field.type === 'summary') return createSummaryField(field);
+  return document.createTextNode('');
+}
+
+function createSelectField(field) {
+  const row = document.createElement('label');
+  row.className = 'select-row';
+
+  const label = document.createElement('span');
+  label.textContent = field.label;
+
+  const select = document.createElement('select');
+  select.id = field.id;
+  select.append(...field.options.map(createOption));
+
+  row.append(label, select);
+  return row;
+}
+
+function createRangeNumberField(field) {
+  const row = document.createElement('label');
+  row.className = 'setting-row';
+
+  const label = document.createElement('span');
+  label.textContent = field.label;
+
+  const range = createNumberInput({
+    id: field.rangeId,
+    type: 'range',
+    min: field.min,
+    max: field.max,
+    step: field.step,
+  });
+  const number = createNumberInput({
+    id: field.numberId,
+    type: 'number',
+    min: field.min,
+    max: field.max,
+    step: field.step,
+  });
+
+  row.append(label, range, number);
+  return row;
+}
+
+function createNumberField(field) {
+  const row = document.createElement('label');
+  row.className = 'select-row';
+  if (field.unit) row.classList.add('has-unit');
+
+  const label = document.createElement('span');
+  label.textContent = field.label;
+
+  const input = createNumberInput({
+    id: field.id,
+    type: 'number',
+    min: field.min,
+    max: field.max,
+    step: field.step,
+  });
+
+  row.append(label, input);
+  if (field.unit) {
+    const unit = document.createElement('span');
+    unit.className = 'field-unit-label';
+    unit.textContent = field.unit;
+    unit.title = field.title || field.unit;
+    unit.setAttribute('aria-label', unit.title);
+    row.append(unit);
+  }
+  return row;
+}
+
+function createSummaryField(field) {
+  const summary = document.createElement('div');
+  summary.id = field.id;
+  summary.className = 'part-fields';
+  return summary;
+}
+
+function createOption(optionDefinition) {
+  const option = document.createElement('option');
+  option.value = optionDefinition.value;
+  option.textContent = optionDefinition.label;
+  return option;
+}
+
+function createNumberInput({ id, type, min, max, step }) {
+  const input = document.createElement('input');
+  input.id = id;
+  input.type = type;
+  input.min = String(min);
+  input.max = String(max);
+  input.step = String(step);
+  return input;
+}

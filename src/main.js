@@ -1,31 +1,36 @@
-import { captureActorMotionStart, updatePausedActors } from './actorFrameState.js';
+import { captureActorMotionStart, updatePausedActors } from './actor_frame_state.js';
 import { drawActor, drawAttackTrail } from './actor_canvas_renderer.js';
-import { lineUpActors as lineUpActorPositions, placeEnemiesAhead as placeEnemyActorsAhead } from './actorPlacement.js';
+import {
+  lineUpActors as lineUpActorPositions,
+  placeEnemiesAhead as placeEnemyActorsAhead,
+} from './actor_placement_helper.js';
 import { loadEffectAssets } from './asset_loader_helper.js';
 import {
   bindBattleControls,
   bindCollapsibleSections,
   bindKeyboardControls,
   bindTouchControls,
-} from './inputControls.js';
+} from './input_control_controller.js';
 import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combat_engine.js';
-import { drawRankingHud } from './rankingUi.js';
-import { createRankingController } from './rankingController.js';
-import { createParticleEffects } from './particleEffects.js';
-import { drawRollGhosts, updateRollGhosts } from './rollGhosts.js';
-import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './runHud.js';
+import { drawRankingHud } from './ranking_view.js';
+import { createRankingController } from './ranking_controller.js';
+import { createParticleEffects } from './particle_effects_engine.js';
+import { drawRollGhosts, updateRollGhosts } from './roll_ghost_engine.js';
+import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './run_hud_view.js';
 import { loadSavedState as loadStoredSavedState } from './project_storage_helper.js';
 import { applyWorldView, drawWorld } from './world_renderer.js';
-import { getViewTransform } from './cameraView.js';
+import { getViewTransform } from './camera_view.js';
 import { isSettingsPanelOpen } from './settings_panel_state.js';
-import { createTuningPanel } from './editor_panel.js';
+import { createTuningPanel } from './editor_panel_controller.js';
 import { actorDefsFromSavedState, createActors } from './actor_factory.js';
-import { syncCanvasToLayout } from './canvasLayout.js';
-import { DEATH_RESULT_DELAY } from './game_config.js';
+import { syncCanvasToLayout } from './canvas_layout_helper.js';
+import { DEATH_RESULT_DELAY } from './game_config_data.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
 import { createWorldFromSceneSession } from './scene_session_data.js';
 import { createProjectStateController } from './project_state_controller.js';
-import { getMainDomElements } from './mainDomElements.js';
+import { getMainDomElements } from './main_dom_helper.js';
+import { isTrashCharacter } from './character_group_data.js';
+import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 
 const {
   canvas,
@@ -59,8 +64,18 @@ let sceneSession = savedState.sceneSession;
 preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
-const characterDefs = actorDefsFromSavedState(savedState, { includeTrash: true });
-const actors = await createActors({ ...savedState, characters: characterDefs }, world);
+const localCharacterState = await loadCharacterStateFromLocalAssets();
+const characterSourceState = localCharacterState
+  ? {
+      ...savedState,
+      characters: localCharacterState.characters,
+      actors: localCharacterActors(savedState, localCharacterState.characters),
+    }
+  : savedState;
+const characterDefs = actorDefsFromSavedState(characterSourceState, { includeTrash: true });
+const actors = await createActors({ ...characterSourceState, characters: characterDefs }, world, {
+  includeTrash: true,
+});
 const effectAssetSources = savedState.effectAssets || {};
 const effectAssets = await loadEffectAssets('', effectAssetSources);
 const playerActor = actors[0];
@@ -86,8 +101,10 @@ let runSurvivalTime = 0;
 let runKills = 0;
 let lastRecordedScore = 0;
 
-window.addEventListener('resize', () => syncCanvasToLayout({ canvas, world, actors, isFullStage, adjustActors: true }));
-lineUpActorPositions(actors, world);
+window.addEventListener('resize', () =>
+  syncCanvasToLayout({ canvas, world, actors: activeGameActors(), isFullStage, adjustActors: true })
+);
+lineUpActorPositions(activeGameActors(), world);
 bindBattleControls(
   { startBattleButton, homeStartButton, endBattleButton },
   {
@@ -95,7 +112,7 @@ bindBattleControls(
     endRun: () => {
       finishRun({ showResult: Boolean(resultScreen) });
       particleEffects.reset();
-      if (!resultScreen) lineUpActorPositions(actors, world);
+      if (!resultScreen) lineUpActorPositions(activeGameActors(), world);
     },
   }
 );
@@ -123,7 +140,9 @@ const rankingController = createRankingController({
   showStartScreen,
 });
 rankingController.renderSettingsRankingList();
-rankingController.syncFromFirebase();
+if (!settingsRankingList) {
+  rankingController.syncFromFirebase();
+}
 const tuningPanel = createTuningPanel({
   canvas,
   ctx,
@@ -160,7 +179,8 @@ function loop(now) {
 }
 
 function update(dt) {
-  captureActorMotionStart(actors);
+  const gameActors = activeGameActors();
+  captureActorMotionStart(gameActors);
 
   if (playerDeathPending) {
     updatePlayerDeathSequence(dt);
@@ -173,9 +193,14 @@ function update(dt) {
   }
 
   if (!battleActive) {
-    playerActor.player.update(dt, keys, pressed, world);
-    updatePausedActors(actors.slice(1), dt, { clearAttackTime: true });
-    updateRollGhosts(actors, dt);
+    const controlActor = editorControlActor(gameActors);
+    controlActor.player.update(dt, keys, pressed, world);
+    updatePausedActors(
+      gameActors.filter((actor) => actor !== controlActor),
+      dt,
+      { clearAttackTime: true }
+    );
+    updateRollGhosts(gameActors, dt);
     particleEffects.emitDust(dt);
     particleEffects.update(dt);
     return;
@@ -184,7 +209,7 @@ function update(dt) {
   runSurvivalTime += dt;
 
   updateBattleActorMotion({
-    actors,
+    actors: gameActors,
     playerActor,
     keys,
     pressed,
@@ -193,7 +218,7 @@ function update(dt) {
   });
 
   resolveCombat({
-    actors,
+    actors: gameActors,
     playerActor,
     world,
     particleEffects,
@@ -203,8 +228,8 @@ function update(dt) {
     },
   });
 
-  maintainEnemyFlow({ actors, playerActor, world, particleEffects });
-  updateRollGhosts(actors, dt);
+  maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects });
+  updateRollGhosts(gameActors, dt);
   particleEffects.emitDust(dt);
   particleEffects.update(dt);
 }
@@ -240,6 +265,7 @@ function beginPlayerDeath() {
 }
 
 function updatePlayerDeathSequence(dt) {
+  const gameActors = activeGameActors();
   const player = playerActor.player;
   deathSequenceTime += dt;
   player.animTime += dt;
@@ -249,9 +275,9 @@ function updatePlayerDeathSequence(dt) {
   player.vy = 0;
   player.updateState();
 
-  updatePausedActors(actors.slice(1), dt, { clearAttackTime: true });
+  updatePausedActors(gameActors.slice(1), dt, { clearAttackTime: true });
 
-  updateRollGhosts(actors, dt);
+  updateRollGhosts(gameActors, dt);
   particleEffects.update(dt);
 
   if (deathSequenceTime >= DEATH_RESULT_DELAY) {
@@ -261,6 +287,7 @@ function updatePlayerDeathSequence(dt) {
 }
 
 function updateResultScene(dt) {
+  const gameActors = activeGameActors();
   const player = playerActor.player;
   player.animTime += dt;
   player.stateTime += dt;
@@ -270,7 +297,7 @@ function updateResultScene(dt) {
   player.y = world.floorY;
   player.updateState();
 
-  updatePausedActors(actors.slice(1), dt);
+  updatePausedActors(gameActors.slice(1), dt);
 
   particleEffects.update(dt);
 }
@@ -292,6 +319,7 @@ function finishRun({ showResult = false } = {}) {
 }
 
 function draw() {
+  const gameActors = activeGameActors();
   const view = getViewTransform({
     world,
     playerActor,
@@ -307,8 +335,8 @@ function draw() {
   ctx.save();
   applyWorldView(ctx, world, view);
   particleEffects.drawDust();
-  actors.forEach((actor) => drawRollGhosts(ctx, actor));
-  actors.forEach((actor) =>
+  gameActors.forEach((actor) => drawRollGhosts(ctx, actor));
+  gameActors.forEach((actor) =>
     drawActor(ctx, world, actor, {
       selectedActor,
       activeEditPartKey: tuningPanel.activeEditPartKey,
@@ -317,7 +345,7 @@ function draw() {
   );
   particleEffects.drawHitSparks();
   particleEffects.drawDeathParticles();
-  actors.forEach((actor) => drawAttackTrail(ctx, actor, effectAssets));
+  gameActors.forEach((actor) => drawAttackTrail(ctx, actor, effectAssets));
 
   tuningPanel.drawSettingsDebugBoxes();
   ctx.restore();
@@ -349,7 +377,8 @@ function syncRunHud() {
 
 function startRun() {
   hideResultScreen();
-  lineUpActorPositions(actors, world);
+  const gameActors = activeGameActors();
+  lineUpActorPositions(gameActors, world);
   battleActive = true;
   playerDeathPending = false;
   resultOpen = false;
@@ -360,12 +389,32 @@ function startRun() {
   particleEffects.reset();
   keys.clear();
   pressed.clear();
-  placeEnemyActorsAhead(actors, playerActor, world);
+  placeEnemyActorsAhead(gameActors, playerActor, world);
   hideStartScreen();
   if (startBattleButton) startBattleButton.disabled = true;
   if (homeStartButton) homeStartButton.disabled = true;
   if (endBattleButton) endBattleButton.disabled = false;
   document.activeElement?.blur();
+}
+
+function activeGameActors() {
+  return actors.filter((actor) => !isTrashCharacter(actor));
+}
+
+function editorControlActor(gameActors = activeGameActors()) {
+  return gameActors.includes(selectedActor) ? selectedActor : playerActor;
+}
+
+function localCharacterActors(savedStateSource, characterDefinitions) {
+  return Object.fromEntries(
+    characterDefinitions.map((def) => [
+      def.id,
+      {
+        ...(savedStateSource.actors?.[def.id] || {}),
+        name: def.name,
+      },
+    ])
+  );
 }
 
 function hideStartScreen() {

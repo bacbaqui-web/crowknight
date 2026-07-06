@@ -1,5 +1,5 @@
 import { formatNumericDecimalValue } from './property_numeric_input_helper.js';
-import { clampFinite } from './utils.js';
+import { clampFinite } from './common_helper.js';
 
 const ROLE_ORDER = ['back', 'ground', 'front'];
 const ROLE_LABELS = {

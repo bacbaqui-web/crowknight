@@ -1,18 +1,23 @@
 import { PuppetPlayer } from './actor_runtime_engine.js';
-import { defaultTuningFor } from './actorTuning.js';
+import { defaultTuningFor } from './actor_tuning_helper.js';
 import { loadCharacterAssets } from './asset_loader_helper.js';
-import { inferCharacterGroup, isTrashCharacter, normalizeCharacterGroup } from './character_group_data.js';
-import { ACTOR_DEFS } from './game_config.js';
-import { mergeTuning } from './project_data_normalizer.js';
+import {
+  characterPsdFileNameForGroup,
+  inferCharacterGroup,
+  isPlayerCharacter,
+  isTrashCharacter,
+  legacyCharacterFolder,
+  normalizeCharacterGroup,
+} from './character_group_data.js';
+import { ACTOR_DEFS } from './game_config_data.js';
+import { mergeTuning } from './project_data_normalizer_helper.js';
 
-export async function createActors(saved, world) {
-  const created = [];
-
-  for (const def of actorDefsFromSavedState(saved)) {
-    created.push(await createActorFromDef(def, saved?.actors?.[def.id], world));
-  }
-
-  return created;
+export async function createActors(saved, world, { includeTrash = false } = {}) {
+  return Promise.all(
+    actorDefsFromSavedState(saved, { includeTrash }).map((def) =>
+      createActorFromDef(def, saved?.actors?.[def.id], world)
+    )
+  );
 }
 
 export async function createActorFromDef(def, savedActor = null, world) {
@@ -54,7 +59,7 @@ export function actorDefsFromSavedState(saved, { includeTrash = false } = {}) {
 
   const normalized = savedDefs.map(normalizeActorDef).filter((def) => def.id && def.folder);
   const visible = includeTrash ? normalized : normalized.filter((def) => !isTrashCharacter(def));
-  const hasPlayer = normalized.some((def) => def.id === 'player');
+  const hasPlayer = normalized.some((def) => isPlayerCharacter(def));
   return hasPlayer ? visible : [normalizeActorDef(ACTOR_DEFS[0]), ...visible];
 }
 
@@ -78,18 +83,20 @@ export function createActorDefsSnapshot(actors) {
 }
 
 function normalizeActorDef(def) {
+  const group = normalizeCharacterGroup(def?.group || inferCharacterGroup(def));
+  const folder = legacyCharacterFolder(def?.folder || def?.id || '');
   return {
     id: String(def?.id || '').trim(),
-    type: String(def?.type || (def?.id === 'player' ? 'player' : 'enemy')).trim(),
+    type: String(def?.type || (group === 'players' || def?.id === 'player' ? 'player' : 'enemy')).trim(),
     label: String(def?.label || def?.name || def?.id || '캐릭터').trim(),
     name: String(def?.name || def?.label || def?.id || '캐릭터').trim(),
     x: Number.isFinite(Number(def?.x)) ? Number(def.x) : 480,
-    folder: String(def?.folder || def?.id || '').trim(),
+    folder,
     tint: String(def?.tint || '#7cc3a2'),
     deletable: Boolean(def?.deletable),
-    group: normalizeCharacterGroup(def?.group || inferCharacterGroup(def)),
+    group,
     deleted: Boolean(def?.deleted),
-    ...(def?.storageFolder ? { storageFolder: String(def.storageFolder) } : {}),
-    ...(def?.psdFileName ? { psdFileName: String(def.psdFileName) } : {}),
+    storageFolder: legacyCharacterFolder(def?.storageFolder || folder),
+    psdFileName: String(def?.psdFileName || characterPsdFileNameForGroup(group)),
   };
 }

@@ -1,4 +1,4 @@
-import { effectKeyframesFor, ensureEffectOffset, ensureEffectSettings } from './project_data_normalizer.js';
+import { effectKeyframesFor, ensureEffectOffset, ensureEffectSettings } from './project_data_normalizer_helper.js';
 import {
   addEffectTimelineKeyframe,
   deleteEffectTimelineKeyframe,
@@ -9,7 +9,7 @@ import {
 } from './timeline_keyframe_helper.js';
 import { preserveTimelineKeyframeSlots, writeEffectTimelineSetting } from './timeline_settings_helper.js';
 import { createEffectPreview } from './preview_state.js';
-import { defineTimelineAdapter } from './timeline_adapter_contract.js';
+import { defineTimelineAdapter } from './timeline_adapter_contract_helper.js';
 import { activeTimelineT } from './timeline_state.js';
 import { currentEffectTimelineFrame } from './timeline_frame_reader.js';
 import {

@@ -1,12 +1,12 @@
-import { defaultTuningFor } from './actorTuning.js';
+import { defaultTuningFor } from './actor_tuning_helper.js';
 import { normalizeCharacterGroup } from './character_group_data.js';
-import { replaceObject } from './project_data_normalizer.js';
+import { replaceObject } from './project_data_normalizer_helper.js';
 import {
   closeTuningPanelShell,
   openTuningPanelShell,
   syncActorGroupOptions,
   syncActorSelectLabels,
-} from './editor_panel_dom.js';
+} from './editor_panel_dom_helper.js';
 import { clearActorEditPreviews } from './preview_state.js';
 
 export function createTuningPanelLifecycleController({
@@ -14,18 +14,19 @@ export function createTuningPanelLifecycleController({
   actors,
   characterDefs,
   playerActor,
-  selectedPoseParts,
+  selectedActionParts,
   getSelectedActor,
   setActiveActor,
   setActivePartKey,
   setActivePartKeyGlobal,
-  setActivePosePartKey,
+  setActiveActionPartKey,
   setEditContext,
   setEditFocusPartKey,
   setEditFocusContext,
   resetGroupEditValues,
+  resetActionEditSessions,
   clearEditHandleState,
-  poseTimeline,
+  actionTimeline,
   effectTimeline,
   partController,
   syncPanel,
@@ -55,11 +56,12 @@ export function createTuningPanelLifecycleController({
   }
 
   function clearPanelSelectionState({ clearCopiedEffect = false } = {}) {
-    selectedPoseParts.clear();
+    selectedActionParts.clear();
+    resetActionEditSessions?.();
     setActivePartKeyGlobal(null);
     setActivePartKey(null);
-    setActivePosePartKey(null);
-    poseTimeline.resetSelectionState();
+    setActiveActionPartKey(null);
+    actionTimeline.resetSelectionState();
     effectTimeline.resetSelectionState();
     if (clearCopiedEffect) effectTimeline.clearCopiedFrame();
     resetGroupEditValues();

@@ -1,4 +1,4 @@
-import { createDefaultStageRules, normalizeStageRules } from './stageRulesState.js';
+import { createDefaultStageRules, normalizeStageRules, normalizeWorldPhysicsRules } from './stage_rules_state.js';
 
 export const DEFAULT_SCENE_SESSION_ID = 'default';
 
@@ -100,14 +100,23 @@ export function createDefaultWorldSettings() {
 
 export function createWorldFromSceneSession(session) {
   const settings = normalizeWorldSettings(session?.world);
+  const stageRules = normalizeStageRules(session?.stageRules);
   return {
     gravity: settings.gravity,
     floorY: settings.floorY,
     minX: settings.minX,
     maxX: settings.maxX ?? Infinity,
+    worldPhysics: stageRules.worldPhysics,
     viewW: 960,
     viewH: 540,
   };
+}
+
+export function syncWorldPhysicsToWorld(world, stageRules) {
+  if (!world) return null;
+  const normalized = normalizeWorldPhysicsRules(stageRules?.worldPhysics);
+  world.worldPhysics = normalized;
+  return normalized;
 }
 
 export function syncWorldToSceneSession(session, world) {

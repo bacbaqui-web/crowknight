@@ -1,13 +1,21 @@
-export function shouldPreviewPose({ playing, activeKeyframeId, fixedFrame, selectedSlot }) {
+export function shouldPreviewAction({ playing, activeKeyframeId, fixedFrame, selectedSlot }) {
   return Boolean(playing || activeKeyframeId || fixedFrame || selectedSlot !== null);
 }
 
-export function createPosePreview({ pose, fixedFrame = null, playing = false, loop = false, t = null, now }) {
+export function createActionPreview({
+  action,
+  fixedFrame = null,
+  playing = false,
+  playback = null,
+  loop = false,
+  t = null,
+  now,
+}) {
   return {
-    pose,
+    action,
     frame: fixedFrame,
     playing,
-    loop,
+    playback: playback || (loop ? 'pingpong' : 'once'),
     t,
     startedAt: now,
   };
@@ -26,9 +34,9 @@ export function createEffectPreview({ key, playing = false, t = null, now }) {
   };
 }
 
-export function clearActorPosePreviews(actors) {
+export function clearActorActionPreviews(actors) {
   actors.forEach((actor) => {
-    actor.player.posePreview = null;
+    actor.player.actionPreview = null;
   });
 }
 
@@ -41,7 +49,7 @@ export function clearActorEffectPreviews(actors) {
 export function clearActorEditPreviews(actors) {
   actors.forEach((actor) => {
     actor.player.anchorDebugPart = null;
-    actor.player.posePreview = null;
+    actor.player.actionPreview = null;
     actor.player.effectPreview = null;
   });
 }

@@ -1,13 +1,13 @@
 import { ANCHOR_HANDLE_RADIUS, MOVE_HANDLE_RADIUS, handleLineStart } from './edit_handle_drawing_helper.js';
 import { isMasterPart } from './editor_label_helper.js';
-import { INTERACTION_OBJECT_TARGET_TYPE } from './interaction_object_editor.js';
-import { controlGroupPartKeys, imagePartKeys } from './part_source_registry.js';
-import { clamp } from './utils.js';
+import { INTERACTION_OBJECT_TARGET_TYPE } from './interaction_object_editor_controller.js';
+import { controlGroupPartKeys, imagePartKeys } from './part_source_data.js';
+import { clamp } from './common_helper.js';
 
 export const EFFECT_TARGET_TYPE = 'effect';
 export const EFFECT_EDIT_HANDLE_KEY = 'effect';
 
-export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, poseFrameSelectionActive }) {
+export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo, actionFrameSelectionActive }) {
   if (!editFocusPartKey || !editHandleInfo) return null;
 
   const info = editHandleInfo;
@@ -29,12 +29,12 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
   const opacityDir = normalizeScreenVector(-xAxis.x + yAxis.x, -xAxis.y + yAxis.y);
 
   const handles = {};
-  if (!isMaster || poseFrameSelectionActive) {
+  if (!isMaster || actionFrameSelectionActive) {
     handles.move = { mode: 'move', point: anchor, radius: MOVE_HANDLE_RADIUS };
     handles.rotate = { mode: 'rotate', point: addScreenVector(anchor, rotateDir, 78), radius: 17 };
   }
 
-  if (isScalablePart && (!isMaster || poseFrameSelectionActive)) {
+  if (isScalablePart && (!isMaster || actionFrameSelectionActive)) {
     const boundaryHandles = targetBoundaryHandles(anchor, info.target);
     handles.width = { mode: 'width', point: boundaryHandles?.width || addScreenVector(anchor, left, 70), radius: 18 };
     handles.height = { mode: 'height', point: boundaryHandles?.height || addScreenVector(anchor, up, 70), radius: 18 };
@@ -44,7 +44,7 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
   }
 
   if (
-    (isMaster && !poseFrameSelectionActive) ||
+    (isMaster && !actionFrameSelectionActive) ||
     (!isMaster &&
       (isImagePart || isInteractionObjectPart || isEffect || controlGroupPartKeys().includes(editFocusPartKey)))
   ) {
@@ -151,22 +151,34 @@ function createEditHandleTarget(matrix, key, source, rect) {
 
 export function createGroupEditHandleGeometry({
   editFocusContext,
-  selectedPoseParts,
-  poseFrameSelectionActive,
+  selectedActionParts,
+  actionFrameSelectionActive,
   editHandles,
   hitRegions,
   groupEditValues,
+  partsOverride = null,
+  anchorOverride = null,
+  showAnchorHandle = true,
+  isFrameGroup = false,
 }) {
-  if (editFocusContext !== 'pose' || selectedPoseParts.size() < 2 || !poseFrameSelectionActive) return null;
+  const parts = partsOverride || selectedActionParts?.values?.() || [];
+  if (editFocusContext !== 'action' || parts.length < 2 || !actionFrameSelectionActive) return null;
 
-  const parts = selectedPoseParts.values();
   const infos = parts.map((part) => editHandles?.[part]).filter(Boolean);
   if (infos.length < 2) return null;
 
   const defaultAnchor = groupBoundsCenter(parts, infos, hitRegions);
   const anchor = {
-    x: Number.isFinite(groupEditValues.anchorX) ? groupEditValues.anchorX : defaultAnchor.x,
-    y: Number.isFinite(groupEditValues.anchorY) ? groupEditValues.anchorY : defaultAnchor.y,
+    x: Number.isFinite(anchorOverride?.x)
+      ? anchorOverride.x
+      : Number.isFinite(groupEditValues.anchorX)
+        ? groupEditValues.anchorX
+        : defaultAnchor.x,
+    y: Number.isFinite(anchorOverride?.y)
+      ? anchorOverride.y
+      : Number.isFinite(groupEditValues.anchorY)
+        ? groupEditValues.anchorY
+        : defaultAnchor.y,
   };
   const xAxis = { x: 1, y: 0 };
   const yAxis = { x: 0, y: 1 };
@@ -176,6 +188,7 @@ export function createGroupEditHandleGeometry({
 
   return {
     isGroup: true,
+    isFrameGroup,
     parts: infos.map((info) => info.key),
     anchor,
     xAxis,
@@ -190,11 +203,38 @@ export function createGroupEditHandleGeometry({
     isMaster: false,
     isScalablePart: false,
     handles: {
-      anchor: { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS },
+      anchor: showAnchorHandle ? { mode: 'anchor', point: anchor, radius: ANCHOR_HANDLE_RADIUS } : null,
       move: { mode: 'move', point: anchor, radius: MOVE_HANDLE_RADIUS },
       rotate: { mode: 'rotate', point: addScreenVector(anchor, rotateDir, 82), radius: 17 },
       size: { mode: 'size', point: addScreenVector(anchor, sizeDir, 82), radius: 18 },
       opacity: { mode: 'opacity', point: addScreenVector(anchor, opacityDir, 82), radius: 17 },
+    },
+  };
+}
+
+export function createActionPivotEditHandleGeometry({ anchor, pivot }) {
+  if (!anchor) return null;
+  const point = {
+    x: Number(anchor.x || 0),
+    y: Number(anchor.y || 0),
+  };
+  return {
+    isActionPivot: true,
+    anchor: point,
+    pivot: {
+      x: Number(pivot?.x || 0),
+      y: Number(pivot?.y || 0),
+    },
+    xAxis: { x: 1, y: 0 },
+    yAxis: { x: 0, y: 1 },
+    xUnit: 1,
+    yUnit: 1,
+    moveXAxis: { x: 1, y: 0 },
+    moveYAxis: { x: 0, y: 1 },
+    moveXUnit: 1,
+    moveYUnit: 1,
+    handles: {
+      anchor: { mode: 'anchor', point, radius: ANCHOR_HANDLE_RADIUS },
     },
   };
 }

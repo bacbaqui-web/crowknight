@@ -8,7 +8,7 @@ import {
   isBackgroundControlTarget,
   renderBackgroundLayerSignature,
 } from './background_panel_view.js';
-import { showPanelActionFeedback } from './panel_action_feedback.js';
+import { showPanelActionFeedback } from './panel_feedback_view.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { createDefaultBackground, normalizeSceneBackground } from './scene_session_data.js';
 

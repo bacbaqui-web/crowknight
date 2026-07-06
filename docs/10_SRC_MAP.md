@@ -2,305 +2,217 @@
 
 목적: AI와 사람이 필요한 JS만 빠르게 찾는 프로젝트 인덱스.
 
-SRC_MAP은 설명서가 아니다.
+SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
-목표:
-
-- Codex/GPT가 전체 `src`를 읽지 않고 필요한 그룹만 읽게 한다.
-- 사람이 파일명, 기능명, 관련 JS를 빠르게 찾게 한다.
-- 토큰을 아낀다.
-
-## 네이밍 규칙
+## Naming Rules
 
 - `_engine`: 핵심 규칙 / 계산.
-- `_helper`: 기능 하나 담당.
-- `_adapter`: Action / Effect / Part 차이 연결.
-- `_controller`: 사용자 입력 연결.
-- `_renderer`: 화면 출력.
-- `_view`: 화면 구성.
-- `_state`: 현재 상태.
-- `_data`: 기본 데이터 / 저장 데이터 / 설정 데이터.
+- `_helper`: 작은 기능, 변환, 계산 보조.
+- `_adapter`: 공통 구조와 도메인 데이터 사이 연결.
+- `_controller`: 사용자 입력, 이벤트, 상태 변경 연결.
+- `_renderer`: Canvas / 화면 출력.
+- `_view`: DOM 조립, 표시 전용 UI.
+- `_state`: Editor / Runtime 현재 상태.
+- `_data`: 기본값, 설정값, 정의 목록.
 - `_factory`: 객체 생성.
 - `_reader`: 값 읽기.
-- Value Helper: 값 변환 / clamp / base 계산 / write 보조.
+- 예외: `main.js`는 앱 entry point라 접미사를 붙이지 않는다.
 
-## 프로젝트 그룹
+## Entry
 
-```text
-Entry
-├─ main.js
+- `main.js`: 앱 시작점, runtime loop, editor bootstrap 연결.
 
-Editor
-├─ editor_panel.js
-├─ editor_panel_composition.js
-├─ part_editor_controller.js
-├─ transform_editor_controller.js
-├─ editor_control_setup.js
-├─ editor_panel_sync.js
-└─ editor_workflow_controller.js
+## Selection / EditTarget
 
-Runtime
-├─ actor_factory.js
-├─ actor_runtime_engine.js
-├─ actor_pose_helper.js
-├─ actor_renderer.js
-├─ actor_action_helper.js
-├─ action_trigger_runtime.js
-├─ actor_canvas_renderer.js
-├─ combat_engine.js
-└─ world_renderer.js
+- `selection_state.js`: Setup / Action 선택 상태.
+- `selection_palette_data.js`: 선택 가능한 part / effect palette 정의.
+- `edit_target_helper.js`: `resolveEditTarget(context)` 공통 편집 대상 resolver.
+- `panel_edit_state.js`: group edit 임시값과 Action multi-select focus 계산.
+- `action_edit_state.js`: Action key별 editor-only 선택 / timeline / group edit 상태.
+- `preview_state.js`: Timeline preview 상태.
 
-Timeline
-├─ Engine
-│  ├─ timeline_controller.js
-│  └─ timeline_engine.js
-├─ Helper
-│  ├─ timeline_command_helper.js
-│  ├─ timeline_drag_helper.js
-│  ├─ timeline_selection_helper.js
-│  ├─ timeline_preview_helper.js
-│  ├─ timeline_action_helper.js
-│  ├─ timeline_control_helper.js
-│  ├─ timeline_drag_control_helper.js
-│  ├─ timeline_clipboard_helper.js
-│  ├─ timeline_settings_helper.js
-│  ├─ timeline_panel_sync_helper.js
-│  └─ timeline_playback_helper.js
-├─ Adapter
-│  ├─ timeline_adapter_contract.js
-│  ├─ timeline_pose_adapter.js
-│  └─ timeline_effect_adapter.js
-├─ Controller
-│  ├─ timeline_pose_controller.js
-│  └─ timeline_effect_controller.js
-├─ View
-│  ├─ timeline_view.js
-│  ├─ timeline_dom_helper.js
-│  ├─ timeline_pose_panel_view.js
-│  ├─ timeline_effect_panel_view.js
-│  └─ timeline_renderer.js
-├─ State
-│  └─ timeline_state.js
-├─ Reader
-│  └─ timeline_frame_reader.js
-└─ timeline_keyframe_helper.js
+## Editor Shell
 
-Save
-├─ project_state_controller.js
-├─ project_storage_helper.js
-├─ firebase_asset_storage.js
-└─ firebase_ranking_storage.js
+- `editor_panel_controller.js`: 설정 패널 최상위 조립과 외부 API.
+- `editor_panel_composition_helper.js`: panel 내부 controller 조립.
+- `editor_panel_bootstrap_helper.js`: setting DOM element bootstrap.
+- `editor_panel_dom_helper.js`: panel DOM 표시 / 작은 view helper.
+- `editor_panel_binding_controller.js`: panel 버튼 / 입력 binding.
+- `editor_panel_sync_helper.js`: panel 전체 sync.
+- `editor_control_setup_controller.js`: tuning panel control 초기화.
+- `editor_control_binding_controller.js`: tuning panel control event binding.
+- `editor_lifecycle_controller.js`: actor 변경, panel open/close, lifecycle sync.
+- `editor_workflow_controller.js`: Setup / Action / Effect / Stage workflow 전환.
+- `editor_workflow_data.js`: workflow 기본 session 값.
+- `editor_workflow_navigation_helper.js`: workflow navigation helper.
+- `editor_shortcut_helper.js`: editor keyboard shortcut 판별.
+- `editor_undo_data.js`: tuning undo snapshot.
+- `editor_local_only_helper.js`: local-only 실행 guard.
+- `settings_panel_state.js`: settings panel open/close state.
+- `main_dom_helper.js`: main DOM element lookup helper.
 
-Assets
-├─ asset_loader_helper.js
-├─ asset_refresh_helper.js
-├─ psd_background_helper.js
-└─ background_renderer.js
+## Setup / Action / Effect Authoring
 
-Data
-├─ game_config.js
-├─ player_default_rig_data.js
-├─ player_default_tuning_data.js
-├─ action_trigger_data.js
-├─ project_data_normalizer.js
-├─ animation_frame_data.js
-└─ stageRulesState.js
-```
+- `part_editor_controller.js`: Setup part property, Action target property, modifier / interaction card 연결.
+- `action_authoring_controller.js`: Action 선택 / 생성 / 삭제 / 이름 / trigger UI.
+- `action_authoring_data.js`: Action descriptor와 custom action data helper.
+- `action_trigger_data.js`: Action trigger 저장값 / mode normalize data.
+- `action_group_helper.js`: Action group 값과 label helper.
+- `action_condition_helper.js`: Action condition 값과 label helper.
+- `action_mirror_helper.js`: Action mirror 설정 helper.
+- `action_blend_helper.js`: Action blend 설정 helper.
+- `action_timeline_edit_helper.js`: Action edit pivot normalize / sync helper.
+- `pose_action_authoring_helper.js`: legacy pose/action authoring helper.
+- `pose_action_authoring_controller.js`: legacy pose/action authoring controls.
 
-## Save / Asset 규칙
+## Timeline
 
-- `project_storage_helper.js`: Firestore에 저장할 Project State metadata를 만든다.
-- `firebase_asset_storage.js`: character PSD, effect PNG/PSD, background PSD/WebP/layer asset을 Firebase Storage에 올린다.
-- 상단 Firebase 업로드/다운로드 버튼은 설정 수치 metadata만 Firestore에 저장/불러온다. Storage asset 업로드를 같이 실행하지 않는다.
-- Setup / Effect / Stage 내부의 업로드/새로고침 버튼은 각 섹션의 asset만 처리한다.
-- Firebase metadata 다운로드는 local file을 덮어쓰지 않고, Firestore metadata를 설정 수치 source로 적용한다.
-- Storage 기준 경로는 `crow-knight/assets`다. 하위 폴더는 로컬 `assets`와 맞춰 `backgrounds`, `characters`, `effects`, `icons`를 사용한다.
-- 캐릭터 PSD는 Storage의 `characters/player/player.psd`, `characters/enemy/enemy.psd`가 원본이다. Setup PSD 업로드/새로고침 후에는 선택 캐릭터의 로컬 PNG export만 다시 뽑는다.
+- `timeline_controller.js`: 공통 timeline controller.
+- `timeline_engine.js`: timeline frame / playback 핵심 계산.
+- `timeline_state.js`: timeline selection state.
+- `timeline_action_controller.js`: Action timeline UI controller.
+- `timeline_effect_controller.js`: Effect timeline UI controller.
+- `editor_timeline_section_controller.js`: settings panel timeline section wiring.
+- `timeline_action_adapter.js`: Action timeline data adapter.
+- `timeline_effect_adapter.js`: Effect timeline data adapter.
+- `timeline_pose_adapter.js`: legacy pose timeline adapter.
+- `timeline_pose_controller.js`: legacy pose timeline controller.
+- `timeline_action_panel_view.js`: Action timeline DOM view.
+- `timeline_effect_panel_view.js`: Effect timeline DOM view.
+- `timeline_pose_panel_view.js`: legacy pose timeline DOM view.
+- `timeline_view.js`: shared timeline view.
+- `timeline_renderer.js`: timeline bar renderer.
+- `timeline_frame_reader.js`: current frame reader.
+- `timeline_keyframe_helper.js`: keyframe write / lookup helper.
+- `timeline_action_helper.js`: action timeline small helper.
+- `timeline_command_helper.js`: timeline add/delete/copy/paste commands.
+- `timeline_selection_helper.js`: timeline selection commands.
+- `timeline_drag_helper.js`: keyframe drag helper.
+- `timeline_drag_control_helper.js`: timeline drag control helper.
+- `timeline_preview_helper.js`: timeline preview play / sync helper.
+- `timeline_playback_helper.js`: playback mode helper.
+- `timeline_settings_helper.js`: timeline settings normalize / UI helper.
+- `timeline_panel_sync_helper.js`: timeline panel sync helper.
+- `timeline_clipboard_helper.js`: timeline clipboard helper.
+- `timeline_control_helper.js`: timeline toolbar control helper.
+- `timeline_dom_helper.js`: timeline DOM helper.
+- `timeline_modifier_data.js`: modifier 저장 구조 helper.
+- `timeline_adapter_contract_helper.js`: adapter contract validation helper.
 
-## 기능 그룹
+## Transform / Property / Handle / Drag
 
-### Selection
+- `transform_editor_controller.js`: Canvas drag controller.
+- `transform_edit_state.js`: Canvas edit state factory.
+- `transform_drag_factory.js`: drag object factory.
+- `transform_drag_helper.js`: pointer drag lifecycle helper.
+- `transform_drag_apply_helper.js`: drag 결과 적용 helper.
+- `canvas_drag_math_helper.js`: canvas drag geometry math helper.
+- `canvas_drag_state.js`: canvas drag state.
+- `transform_refresh_helper.js`: drag 후 panel / preview refresh helper.
+- `transform_value_helper.js`: Canvas visual value write / clamp helper.
+- `transform_handle_geometry_helper.js`: active EditTarget handle geometry.
+- `edit_handle_geometry_helper.js`: part / group / pivot handle geometry helper.
+- `edit_handle_renderer.js`: handle renderer.
+- `edit_handle_drawing_helper.js`: handle drawing helper.
+- `editable_object_model_helper.js`: editable transform model helper.
+- `editable_property_helper.js`: property 종류 / anchor pair helper.
+- `property_value_helper.js`: Property 표시값 / 저장값 변환.
+- `property_field_data.js`: Property field group definitions.
+- `property_numeric_input_helper.js`: numeric input helper.
+- `property_scrub_helper.js`: property scrub helper.
+- `editor_scrub_helper.js`: shared scrub UI helper.
+- `editor_card_panel_view.js`: shared editor card panel view.
+- `control_value_transform_helper.js`: control value conversion helper.
+- `number_input_helper.js`: number input clamp / sync helper.
+- `group_transform_adapter.js`: group EditTarget 결과를 여러 part에 분배.
+- `group_edit_state.js`: group 편집 중 임시 transform state.
 
-- 역할: 현재 편집 대상을 결정.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `selection_palette.js`, `part_editor_controller.js`, `selection_state.js`, `panel_edit_state.js`.
-- 주의: Selection과 EditTarget이 달라지면 Handle이 틀어진다.
+## Interaction / Modifier
 
-### Transform Editor (구 Canvas)
+- `interaction_editor_engine.js`: interaction card editor engine.
+- `interaction_object_editor_controller.js`: interaction object edit source controller.
+- `interaction_region_engine.js`: runtime interaction region 계산.
+- `modifier_editor_engine.js`: modifier library / applied modifier card engine.
 
-- 역할: 화면에서 editable object의 transform drag를 처리.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `transform_editor_controller.js`, `transform_edit_state.js`, `transform_drag_helper.js`, `transform_drag_factory.js`, `transform_refresh_helper.js`, `transform_drag_apply_helper.js`, `transform_value_helper.js`.
-- 주의: Property와 같은 저장 규칙을 사용한다.
+## Runtime / Actor
 
-### Property
+- `actor_factory.js`: actor 생성.
+- `actor_state.js`: player action runtime state reset / update helper.
+- `actor_frame_state.js`: frame start / paused actor update helper.
+- `actor_tuning_helper.js`: default tuning과 HP capacity sync.
+- `actor_placement_helper.js`: actor placement / line-up helper.
+- `actor_action_helper.js`: custom Action runtime advance helper.
+- `actor_runtime_engine.js`: actor physics / state runtime update.
+- `action_trigger_engine.js`: trigger matching과 custom Action start.
+- `input_control_controller.js`: runtime input state controller.
+- `combat_engine.js`: hit / guard / collision combat resolve.
+- `roll_ghost_engine.js`: roll ghost update / draw.
+- `particle_effects_engine.js`: dust / hit spark / death particle engine.
+- `actor_pose_helper.js`: neutral pose helper.
 
-- 역할: 선택 대상의 Transform 입력값 표시와 저장.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `editable_property_helper.js`, `property_field_groups.js`, `property_value_helper.js`, `editor_scrub_helper.js`, `property_scrub_helper.js`, `property_numeric_input_helper.js`.
-- 주의: Property는 `x/y`, `w/h`, `rot`, `opacity`, anchor 같은 Transform만 담당한다. Interaction/Modifier 코드를 넣지 않는다.
+## Rendering / Camera / HUD
 
-### Editor Data Cards
+- `actor_renderer.js`: runtime actor renderer.
+- `actor_canvas_renderer.js`: selected actor overlay renderer.
+- `world_renderer.js`: world / background renderer.
+- `background_renderer.js`: background layer renderer.
+- `camera_view.js`: camera / view transform helper.
+- `canvas_layout_helper.js`: canvas layout sync.
+- `character_hud_layout_helper.js`: actor name / HP layout helper.
+- `run_hud_view.js`: run HUD score / text sync.
+- `ranking_view.js`: ranking HUD and ranking DOM view.
+- `ranking_controller.js`: ranking flow controller.
+- `score_format_helper.js`: score / survival time format helper.
+- `puppet_player_geometry_helper.js`: puppet geometry / silhouette helper.
+- `puppet_player_edit_region_helper.js`: puppet edit region / handle recorder.
+- `puppet_player_debug_view.js`: puppet debug drawing.
 
-- 역할: Property / Interaction / Modifiers 패널의 공통 카드 UI.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `editor_card_panel_view.js`, `settingsPanel.css`.
-- 주의: 세 패널은 형제 관계다. Property 아래에 보이더라도 Property의 일부가 아니다.
+## Stage / Background / Assets
 
-### Interaction Editor Engine
+- `background_panel_controller.js`: background panel controller.
+- `background_panel_view.js`: background panel view.
+- `stage_rules_controller.js`: stage rules controller.
+- `stage_rules_panel_controller.js`: stage rules panel input controller.
+- `stage_rules_panel_renderer.js`: stage rules panel renderer.
+- `stage_rules_state.js`: stage rules state / normalize.
+- `scene_session_data.js`: scene session data / world physics sync.
+- `asset_loader_helper.js`: asset load helper.
+- `asset_refresh_helper.js`: local asset refresh helper.
+- `editor_asset_controller.js`: Setup / Effect / Background asset button controller.
+- `firebase_asset_storage_helper.js`: Firebase asset storage helper.
+- `local_api_helper.js`: local API request helper.
+- `local_character_asset_storage_helper.js`: local character asset storage helper.
+- `psd_background_helper.js`: PSD background helper.
 
-- 역할: Interaction 체크 상태, 세부 설정 row, Timeline frame 값 저장.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `interaction_editor_engine.js`, `interaction_object_editor.js`, `editor_scrub_helper.js`, `part_source_registry.js`.
-- 사용처: Action Pose Timeline, Effect Timeline.
-- 주의: Runtime Box를 Editor source로 사용하지 않는다.
+## Save / Project / Data
 
-### Modifiers Editor Engine
-
-- 역할: Modifier 목록, 추가/삭제 기준이 되는 활성화, Modifier별 설정 UI, 저장 정규화.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `modifier_editor_engine.js`, `timeline_modifier_data.js`, `project_data_normalizer.js`, `player_default_tuning_data.js`, `action_trigger_runtime.js`.
-- 사용처: Action Pose Timeline, Effect Timeline.
-- 주의: 현재 Runtime MVP는 Custom Action에서 `move` / `accelerate` / `decelerate`만 해석한다.
-
-### Handle
-
-- 역할: Move/Resize/Rotate handle 위치와 표시.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `transform_handle_geometry.js`, `edit_handle_geometry_helper.js`, `edit_handle_renderer.js`, `edit_handle_drawing_helper.js`.
-- 주의: Handle source와 render source가 같아야 한다.
-
-### Transform
-
-- 역할: x/y, ax/ay, w/h, rot 공통 규칙.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `editable_object_model_helper.js`, `editable_property_helper.js`, `transform_drag_apply_helper.js`, `transform_value_helper.js`, `property_value_helper.js`.
-- 주의: 모든 editable object가 같은 transform 의미를 써야 한다.
-
-### Timeline
-
-- 역할: 시간에 따른 값 저장.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `timeline_controller.js`, `timeline_engine.js`, `timeline_state.js`, `timeline_command_helper.js`, `timeline_drag_helper.js`, `timeline_selection_helper.js`, `timeline_preview_helper.js`, `timeline_pose_adapter.js`, `timeline_effect_adapter.js`, `timeline_pose_controller.js`, `timeline_effect_controller.js`, `timeline_view.js`, `timeline_renderer.js`, `timeline_frame_reader.js`, `timeline_keyframe_helper.js`.
-- 주의: Action/Effect 모두 영향. 공통 engine에 전용 예외를 넣지 않는다.
-
-### Action Authoring
-
-#### Pose Action Authoring
-
-- 파일: `pose_action_authoring.js`
-- 역할: Action descriptor compatibility layer, custom Action 생성/삭제/이름/JSON export/import, 모든 Action key의 trigger 저장 데이터 정규화 연결.
-- 사용처: Action panel.
-- 주의: `runtimeMode`은 migration flag다. 최종 Action 종류로 취급하지 않는다.
-
-#### Action Trigger Data
-
-- 파일: `action_trigger_data.js`
-- 역할: Trigger key/type 목록, Single/Sequence/Hold Combo trigger 정규화, sequence 문자열 parse/format.
-- 사용처: `pose_action_authoring.js`, `pose_action_authoring_controls.js`, `action_trigger_runtime.js`.
-- 주의: 데이터 정규화 helper다. Runtime 판정은 `action_trigger_runtime.js`에 둔다.
-
-#### Action Trigger Runtime
-
-- 파일: `action_trigger_runtime.js`
-- 역할: 통합 Action descriptor의 trigger를 입력 상태와 매칭하고 Trigger Runtime으로 이동한 Action Timeline 실행을 시작한다.
-- 사용처: `actor_action_helper.js`.
-- 주의: Action 이름별 Runtime 분기를 추가하지 않는다. Basic Action legacy migration과 Modifier 해석은 별도 Runtime Task다.
-
-### InteractionObject
-
-- 역할: 공격/피격/충돌/방어 같은 상호작용 영역.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `interaction_object_editor.js`, `interaction_region_engine.js`, `combat_engine.js`, `editable_object_model_helper.js`.
-- 주의: Runtime 계산값을 Editor source처럼 쓰지 않는다.
-
-### Save
-
-- 역할: 프로젝트 저장/불러오기.
-- 공통 여부: 🟦 공통 시스템.
-- 관련 JS: `project_state_controller.js`, `project_storage_helper.js`, `firebase_asset_storage.js`, `firebase_ranking_storage.js`.
-- 주의: Project save와 asset refresh를 섞지 않는다.
-
-### Runtime
-
-- 역할: Editor 데이터를 게임 실행 결과로 계산.
-- 공통 여부: 🟦 공통 경계.
-- 관련 JS: `main.js`, `actor_factory.js`, `actor_runtime_engine.js`, `actor_pose_helper.js`, `actor_renderer.js`, `actor_canvas_renderer.js`, `combat_engine.js`.
-- 주의: Runtime은 Editor 원본을 직접 수정하지 않는다. `actor_pose_helper.js`는 neutral pose만 반환하며 사전 팔/다리 애니메이션을 만들지 않는다.
-
-### Data
-
-- 역할: 기본값, normalize, schema, frame data.
-- 공통 여부: 🟦 공통 경계.
-- 관련 JS: `game_config.js`, `player_default_rig_data.js`, `player_default_tuning_data.js`, `project_data_normalizer.js`, `animation_frame_data.js`.
-- 주의: 저장 구조 변경은 별도 Sprint에서만 한다.
-
-### Stage
-
-- 역할: Stage 편집.
-- 공통 여부: 🟨 전용 구현.
-- 관련 JS: `stageRulesController.js`, `stageRulesPanelController.js`, `stageRulesPanelRenderer.js`, `stageRulesState.js`.
-- 주의: 아직 Common Editing에 흡수 안 됨.
-
-### HUD
-
-- 역할: Runtime HUD와 이름/HP 표시.
-- 공통 여부: 🟨 전용 구현.
-- 관련 JS: `characterHudLayout.js`, `runHud.js`, `rankingUi.js`, `rankingController.js`.
-- 주의: editable object 규칙과 완전히 통합되지 않았다.
-
-### Background
-
-- 역할: 배경 편집과 렌더.
-- 공통 여부: 🟨 전용 구현.
-- 관련 JS: `background_panel_controller.js`, `background_panel_view.js`, `background_renderer.js`, `psd_background_helper.js`.
-- 주의: Stage/Asset 흐름과 연결되어 있어 공통화 전 설계 필요.
-
-### Group Edit
-
-- 역할: 여러 파츠를 임시 Transform 대상으로 묶고 결과를 각 파츠에 분배.
-- 공통 여부: 🟨 전용 구현.
-- 관련 JS: `group_transform_adapter.js`, `group_edit_state.js`.
-- 주의: Group 전용 차이는 adapter에만 남긴다.
-
-## 큰 파일
-
-| 파일                            | 줄 수 | 중심               | 주의                          |
-| ------------------------------- | ----: | ------------------ | ----------------------------- |
-| `background_renderer.js`        |   482 | Background render  | 더 흡수 금지                  |
-| `project_data_normalizer.js`    |   465 | Normalize          | 저장 구조 변경 주의           |
-| `actor_runtime_engine.js`       |   440 | Runtime player     | 더 흡수 금지                  |
-| `editor_panel.js`               |   421 | Editor shell       | controller 연결만 유지        |
-| `actor_renderer.js`             |   394 | Runtime render     | Editor target 기록 경계 주의  |
-| `main.js`                       |   380 | Entry / loop       | 책임 추가 금지                |
-| `timeline_effect_controller.js` |   341 | Effect timeline    | 추가 흡수보다 helper 분리     |
-| `player_default_rig_data.js`    |   336 | Default rig        | 저장 구조 변경 시 별도 Sprint |
-| `part_editor_controller.js`     |   332 | Selection/Property | 무리한 추가 금지              |
-| `combat_engine.js`              |   330 | Runtime combat     | Editor source와 분리          |
-| `timeline_pose_controller.js`   |   320 | Action timeline    | 추가 흡수보다 helper 분리     |
+- `project_state_controller.js`: project state controller.
+- `project_storage_helper.js`: local / remote project metadata storage helper.
+- `firebase_ranking_storage_helper.js`: Firebase ranking storage helper.
+- `game_config_data.js`: game constants and config data.
+- `character_group_data.js`: character group definitions.
+- `player_default_rig_data.js`: default rig data.
+- `player_default_tuning_data.js`: default tuning data.
+- `animation_frame_data.js`: frame default data.
+- `project_data_normalizer_helper.js`: project data normalize helper.
+- `part_source_data.js`: part source registry data.
+- `motion_field_data.js`: motion field row definitions.
+- `firebase_config_data.js`: Firebase config data.
+- `editor_label_helper.js`: editor label helper.
+- `editor_debug_view.js`: editor debug view.
+- `editor_layer_order_helper.js`: layer order helper.
+- `panel_feedback_view.js`: panel feedback view.
+- `common_helper.js`: shared generic helpers.
 
 ## 보류 파일
 
-이번 마지막 Rename 정리 Sprint에서 보류한 파일.
-
-- Stage: `stageRulesController.js`, `stageRulesPanelController.js`, `stageRulesPanelRenderer.js`, `stageRulesState.js`
-  - 이유: Stage는 사용자 지시에 따라 마지막 단계에서 다룬다.
-- HUD/Ranking: `characterHudLayout.js`, `runHud.js`, `rankingUi.js`, `rankingController.js`
-  - 이유: HUD는 이번 rename 범위에서 제외.
-- Runtime 보조: `actorFrameState.js`, `actorPlacement.js`, `actorState.js`, `actorTuning.js`, `puppetPlayerGeometry.js`, `puppetPlayerEditRegions.js`, `puppetPlayerDebug.js`
-  - 이유: 역할 재분류가 필요하다. Runtime 동작 민감 파일은 별도 작은 Sprint에서 검토.
-- Canvas/DOM 보조: `canvasDragMath.js`, `canvasDragState.js`, `canvasLayout.js`, `cameraView.js`, `inputControls.js`, `mainDomElements.js`
-  - 이유: 이번 Sprint 후보가 아니며 함수/DOM 이름과 같이 검토해야 한다.
-- 기타 전용 파일: `particleEffects.js`, `rollGhosts.js`, `scoreFormat.js`, `firebaseConfig.js`
-  - 이유: 현재 기능별 전용 구현. 무리하게 suffix를 붙이지 않는다.
+- 없음. 현재 `main.js`를 제외한 `src/*.js`는 snake_case와 역할 접미사를 따른다.
 
 ## 검색 힌트
 
-- `transform_value_helper`: Transform Editor 저장값 변환.
-- `transform_refresh_helper`: Transform Editor drag 후 context별 반영/렌더 갱신.
-- `timeline_frame_reader`: 현재 frame 읽기.
-- `property_value_helper`: Property 표시값/저장값 변환.
-- `editable_property_helper`: editable object property 종류와 anchor 짝 규칙 판별.
-- `edit_handle_geometry_helper`: Handle 위치 계산.
-- `interaction_region_engine`: Runtime 상호작용 영역 계산.
-- `project_data_normalizer`: 저장 데이터 normalize.
+- Edit target: `edit_target_helper.js`
+- Property 값 변환: `property_value_helper.js`
+- Canvas drag: `transform_editor_controller.js`, `transform_drag_helper.js`
+- Timeline 현재 frame: `timeline_frame_reader.js`
+- Project normalize: `project_data_normalizer_helper.js`
+- Runtime trigger: `action_trigger_engine.js`

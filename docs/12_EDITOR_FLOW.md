@@ -18,7 +18,7 @@ Selection Palette click
 → part_editor_controller.selectPickerPart('part', partKey)
 → selection_state / editor_panel local editing state
 → part_editor_controller.renderPartFields()
-→ part_source_registry.partEditSources(tuning)
+→ part_source_data.partEditSources(tuning)
 → transform_value_helper.updateRigPartValue()
 → tuning.rig[partKey]
 → editor_panel.applySelected()
@@ -45,7 +45,7 @@ pointerdown
 ```text
 Selection Palette fallback interaction object click
 → part_editor_controller.selectPickerPart('part', boxKey)
-→ part_source_registry.partEditSources(tuning)
+→ part_source_data.partEditSources(tuning)
 → tuning.rig[boxKey]
 ```
 
@@ -57,7 +57,7 @@ drawPuppetImagePart(parent)
 → drawPuppetImageLessRectPart()
 → recordPuppetRectPart()
 → player.editHandles[boxKey]
-→ transform_handle_geometry()
+→ transform_handle_geometry_helper()
 → edit_handle_geometry_helper.createPartEditHandleGeometry()
 → edit_handle_renderer
 ```
@@ -77,8 +77,8 @@ canvas/property edit
 ```text
 Action select
 → part_editor_controller.handlePoseChange()
-→ timeline_pose_controller
-→ timeline_pose_adapter
+→ timeline_action_controller
+→ timeline_action_adapter
 ```
 
 Frame 선택:
@@ -87,20 +87,20 @@ Frame 선택:
 Timeline click
 → timeline_controller
 → timeline_state
-→ timeline_pose_adapter.currentFrameValue()
-→ timeline_frame_reader.currentPoseTimelineFrame()
-→ tuning.poseOffsets[poseKey][partKey]
+→ timeline_action_adapter.currentFrameValue()
+→ timeline_frame_reader.currentActionTimelineFrame()
+→ tuning.actionOffsets[actionKey][partKey]
 ```
 
 Property edit:
 
 ```text
 property input
-→ timeline_pose_controller.updateOffset()
+→ timeline_action_controller.updateOffset()
 → property_value_helper.poseFrameValueFromInput()
-→ timeline_pose_adapter.writeFrameValue()
-→ timeline_keyframe_helper.writePoseTimelineFrameValue()
-→ tuning.poseOffsets[poseKey][partKey]
+→ timeline_action_adapter.writeFrameValue()
+→ timeline_keyframe_helper.writeActionTimelineFrameValue()
+→ tuning.actionOffsets[actionKey][partKey]
 → applySelected
 ```
 
@@ -109,10 +109,10 @@ Action object interaction state:
 ```text
 Action object select
 → property active 0/1
-→ poseTimeline.writeFrameValue(partKey, 'active', value)
-→ poseTimeline.writeFrameValue(partKey, interaction setting, value)
-→ tuning.poseOffsets[poseKey][partKey]
-→ animation_frame_data / puppetPlayerGeometry stepped frame value
+→ actionTimeline.writeFrameValue(partKey, 'active', value)
+→ actionTimeline.writeFrameValue(partKey, interaction setting, value)
+→ tuning.actionOffsets[actionKey][partKey]
+→ animation_frame_data / puppet_player_geometry_helper stepped frame value
 → actor.player.getPartOffset(partKey)
 ```
 
@@ -151,8 +151,8 @@ pointer drag
 → transform_edit_state.canvasPartEditState(context: 'pose')
 → transform_drag_apply_helper
 → transform_value_helper.setCanvasVisualValue()
-→ poseTimeline.writeFrameValue()
-→ tuning.poseOffsets[poseKey][partKey]
+→ actionTimeline.writeFrameValue()
+→ tuning.actionOffsets[actionKey][partKey]
 ```
 
 ## Target Action 제작 흐름
@@ -177,8 +177,8 @@ Basic Actions:
 
 ```text
 Action select
-→ 기존 poseSelect / poseTimeline 유지
-→ tuning.poseOffsets / tuning.poseSettings
+→ actionSelect / actionTimeline 사용
+→ tuning.actionOffsets / tuning.actionSettings
 ```
 
 Skills:
@@ -200,6 +200,42 @@ Skills:
 - Interaction Box도 editable object Transform 모델을 따른다.
 - Group Edit은 임시 Transform Target으로만 사용하고 저장 source가 되지 않는다.
 - Runtime 계산값은 Editor source처럼 편집하지 않는다.
+
+### Common EditTarget Resolver
+
+Setup / Action / Effect 편집은 먼저 공통 EditTarget Resolver를 통과한다. Property, Canvas Handle, Drag, Save는 선택 상태를 다시 계산하지 않고 resolver 결과를 사용해야 한다.
+
+```text
+Selection / Timeline selection
+→ resolveEditTarget(context)
+→ EditTarget
+→ Property
+→ Handle
+→ Drag
+→ Save
+→ Renderer
+```
+
+Resolver 반환값은 `context`, `targetType`, `targetKey`, `targetKeys`, `writeTargetKey`, `writeTargetKeys`, `isActionPivot`, `isFrameGroup`, `isGroup`, `isPart`, `isEffect`를 포함한다.
+
+구조 규칙:
+
+- Property는 resolver의 `writeTargetKey`로 값을 읽고 쓴다.
+- Canvas Handle은 resolver의 `targetKey`로 handle geometry source를 고른다.
+- Drag는 resolver의 `writeTargetKey`로 drag target과 save target을 고른다.
+- Save는 resolver 밖에서 active part, selected parts, frameGroup 여부를 다시 판단하지 않는다.
+- `group`도 EditTarget의 한 종류다. Property / Handle / Drag는 `targetKeys` / `writeTargetKeys`를 사용하고, `group_transform_adapter.js`는 여러 파츠에 결과를 분배하는 역할만 맡는다.
+
+### Action Timeline Property / Handle Scope
+
+- `actionPivot`: 키프레임 선택 없음 + 파츠 선택 없음. Action 공통 Pivot만 편집한다. Property에는 기준점 X/Y만 보이고, Canvas에는 Pivot handle만 보인다. 저장 위치는 `actionSettings[actionKey].editPivot`이다.
+- `frameGroup`: 키프레임 선택 있음 + 파츠 선택 없음. 선택한 Action frame의 `master` Parent Transform을 편집한다. 위치 / 크기 / 회전 / 투명도를 편집하며 기준점은 Action 공통 Pivot을 사용한다.
+- `group`: 여러 파츠 선택. 선택한 `targetKeys`를 하나의 임시 Transform target처럼 편집하고, 저장은 각 `writeTargetKeys` 파츠 frame에 분배한다.
+- `part`: 파츠 선택 있음. 기존처럼 선택 파츠만 편집한다.
+
+frameGroup은 이전 part 선택 흔적이 남아 있어도 `writeTargetKey = master`를 유지한다.
+
+`frameGroup`은 각 파츠 transform을 재계산해 분배하지 않는다. 저장 대상은 `tuning.actionOffsets[actionKey].master`이며, 렌더 순서는 `Setup → master frameGroup transform → Part Timeline Transform → Render`다. Pivot 변경은 `actionSettings[actionKey].editPivot`과 `master` frame anchor를 동기화한다.
 
 ## Effect Keyframe 편집
 
@@ -239,18 +275,18 @@ Action select
 → Timeline frame select
 → editable object select
 → canvas/property edit
-→ poseTimeline.writeFrameValue(partKey, prop, value)
-→ tuning.poseOffsets[poseKey][partKey]
+→ actionTimeline.writeFrameValue(partKey, prop, value)
+→ tuning.actionOffsets[actionKey][partKey]
 ```
 
 연결 지점:
 
-- `game_config.POSE_PART_KEYS`
-- `project_data_normalizer.normalizePoseOffsets()`
-- `timeline_pose_adapter.source(part)`
+- `game_config.ACTION_PART_KEYS`
+- `project_data_normalizer.normalizeActionOffsets()`
+- `timeline_action_adapter.source(part)`
 - `timeline_keyframe_helper`
-- `property_field_groups.posePropertyGroups()`
-- `transform_handle_geometry`
+- `property_field_data.posePropertyGroups()`
+- `transform_handle_geometry_helper`
 
 ## Fallback Attack Region Preview
 
@@ -264,7 +300,7 @@ activeAttackSettingsKey()
 
 주의:
 
-- 공통 Action object 판정 설정은 `poseOffsets`에 저장한다.
+- 공통 Action object 판정 설정은 `actionOffsets`에 저장한다.
 - Runtime combat reaction은 `attackInteractionRegion.reaction`을 사용한다.
 - `active`는 선형 보간하지 않는다.
 - `active = 1`이면 강조 표시하고, `0`이면 같은 source를 연하게 표시한다.
@@ -288,7 +324,8 @@ Target data:
 
 - Setup part: `tuning.rig[partKey]`
 - Setup fallback interaction object: `tuning.rig[boxKey]`
-- Action part: `tuning.poseOffsets[poseKey][partKey]`
+- Action part: `tuning.actionOffsets[actionKey][partKey]`
+- Action 공통 Pivot: `tuning.actionSettings[actionKey].editPivot`
 - Effect: `tuning.effectOffsets[effectKey]`
 
 ## 공통 편집 흐름

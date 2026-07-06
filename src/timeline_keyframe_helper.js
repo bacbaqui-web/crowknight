@@ -6,37 +6,37 @@ import {
   interpolateFrameValues,
   syncFrameAliases,
 } from './animation_frame_data.js';
-import { POSE_PART_KEYS } from './game_config.js';
+import { ACTION_PART_KEYS } from './game_config_data.js';
 import {
   effectKeyframesFor,
   ensureEffectOffset,
-  ensurePoseOffset,
-  makePoseKeyframeId,
+  ensureActionOffset,
+  makeActionKeyframeId,
   normalizeEffectOffsets,
-  normalizePoseFrameValue,
-  poseKeyframesFor,
-  sortPoseKeyframes,
-} from './project_data_normalizer.js';
+  normalizeActionFrameValue,
+  actionKeyframesFor,
+  sortActionKeyframes,
+} from './project_data_normalizer_helper.js';
 
-export function addPoseTimelineKeyframe(tuning, poseKey, t) {
-  const id = makePoseKeyframeId();
-  POSE_PART_KEYS.forEach((part) => {
-    ensurePoseOffset(tuning, poseKey, part);
-    const frames = tuning.poseOffsets[poseKey][part];
+export function addActionTimelineKeyframe(tuning, actionKey, t) {
+  const id = makeActionKeyframeId();
+  ACTION_PART_KEYS.forEach((part) => {
+    ensureActionOffset(tuning, actionKey, part);
+    const frames = tuning.actionOffsets[actionKey][part];
     const next = {
       id,
       t,
-      ...interpolateFrameValues(poseKeyframesFor(frames), t),
+      ...interpolateFrameValues(actionKeyframesFor(frames), t),
     };
     frames.keyframes.push(next);
-    sortPoseKeyframes(frames.keyframes);
+    sortActionKeyframes(frames.keyframes);
     syncFrameAliases(frames);
   });
   return id;
 }
 
-export function ensurePoseTimelineKeyframe(frames, id, timelineKeyframes) {
-  const keyframes = poseKeyframesFor(frames);
+export function ensureActionTimelineKeyframe(frames, id, timelineKeyframes) {
+  const keyframes = actionKeyframesFor(frames);
   const found = keyframes.find((frame) => frame.id === id);
   if (found) return found;
 
@@ -44,62 +44,68 @@ export function ensurePoseTimelineKeyframe(frames, id, timelineKeyframes) {
   const t = Number(reference?.t ?? 0.5);
   const created = { id, t, ...interpolateFrameValues(keyframes, t) };
   keyframes.push(created);
-  sortPoseKeyframes(keyframes);
+  sortActionKeyframes(keyframes);
   syncFrameAliases(frames);
   return created;
 }
 
-export function deletePoseTimelineKeyframe(tuning, poseKey, id) {
-  POSE_PART_KEYS.forEach((part) => {
-    const frames = tuning.poseOffsets[poseKey]?.[part];
+export function deleteActionTimelineKeyframe(tuning, actionKey, id) {
+  ACTION_PART_KEYS.forEach((part) => {
+    const frames = tuning.actionOffsets[actionKey]?.[part];
     if (!frames?.keyframes) return;
     frames.keyframes = frames.keyframes.filter((frame) => frame.id !== id);
     syncFrameAliases(frames);
   });
 }
 
-export function movePoseTimelineKeyframe(tuning, poseKey, id, t) {
+export function moveActionTimelineKeyframe(tuning, actionKey, id, t) {
   let moved = false;
-  POSE_PART_KEYS.forEach((part) => {
-    const frames = tuning.poseOffsets[poseKey]?.[part];
+  ACTION_PART_KEYS.forEach((part) => {
+    const frames = tuning.actionOffsets[actionKey]?.[part];
     const keyframe = frames?.keyframes?.find((frame) => frame.id === id);
     if (!keyframe) return;
     keyframe.t = t;
-    sortPoseKeyframes(frames.keyframes);
+    sortActionKeyframes(frames.keyframes);
     syncFrameAliases(frames);
     moved = true;
   });
   return moved;
 }
 
-export function applyPoseTimelineFrameValueDelta(tuning, poseKey, part, prop, delta) {
-  const frames = tuning.poseOffsets[poseKey]?.[part];
+export function applyActionTimelineFrameValueDelta(tuning, actionKey, part, prop, delta) {
+  const frames = tuning.actionOffsets[actionKey]?.[part];
   if (!frames?.keyframes || !Number.isFinite(delta)) return false;
 
-  poseKeyframesFor(frames).forEach((frame) => {
+  actionKeyframesFor(frames).forEach((frame) => {
     frame[prop] = Number(frame[prop] ?? 0) + delta;
   });
   syncFrameAliases(frames);
   return true;
 }
 
-export function applyPoseTimelineAllFrameValueDelta(tuning, poseKey, prop, delta, parts = POSE_PART_KEYS) {
+export function applyActionTimelineAllFrameValueDelta(tuning, actionKey, prop, delta, parts = ACTION_PART_KEYS) {
   if (!Number.isFinite(delta)) return false;
   let changed = false;
   parts.forEach((part) => {
-    ensurePoseOffset(tuning, poseKey, part);
-    if (applyPoseTimelineFrameValueDelta(tuning, poseKey, part, prop, delta)) changed = true;
+    ensureActionOffset(tuning, actionKey, part);
+    if (applyActionTimelineFrameValueDelta(tuning, actionKey, part, prop, delta)) changed = true;
   });
   return changed;
 }
 
-export function applyPoseTimelineAllFrameValueTransform(tuning, poseKey, prop, transformValue, parts = POSE_PART_KEYS) {
+export function applyActionTimelineAllFrameValueTransform(
+  tuning,
+  actionKey,
+  prop,
+  transformValue,
+  parts = ACTION_PART_KEYS
+) {
   let changed = false;
   parts.forEach((part) => {
-    ensurePoseOffset(tuning, poseKey, part);
-    const frames = tuning.poseOffsets[poseKey]?.[part];
+    ensureActionOffset(tuning, actionKey, part);
+    const frames = tuning.actionOffsets[actionKey]?.[part];
     if (!frames?.keyframes) return;
-    poseKeyframesFor(frames).forEach((frame) => {
+    actionKeyframesFor(frames).forEach((frame) => {
       const nextValue = transformValue(Number(frame[prop] ?? 0), part, frame);
       if (!Number.isFinite(nextValue)) return;
       frame[prop] = nextValue;
@@ -113,14 +119,14 @@ export function applyPoseTimelineAllFrameValueTransform(tuning, poseKey, prop, t
 export function addEffectTimelineKeyframe(tuning, effectKey, t) {
   ensureEffectOffset(tuning, effectKey);
   const effect = tuning.effectOffsets[effectKey];
-  const id = makePoseKeyframeId();
+  const id = makeActionKeyframeId();
   const keyframes = effectKeyframesFor(effect, effectKey);
   keyframes.push({
     id,
     t,
     ...interpolateEffectFrameValues(keyframes, t, effectKey),
   });
-  sortPoseKeyframes(effect.keyframes);
+  sortActionKeyframes(effect.keyframes);
   syncFrameAliases(effect);
   return id;
 }
@@ -134,7 +140,7 @@ export function ensureEffectTimelineKeyframe(effect, effectKey, id, timelineKeyf
   const t = Number(reference?.t ?? 0.5);
   const created = { id, t, ...interpolateEffectFrameValues(keyframes, t, effectKey) };
   keyframes.push(created);
-  sortPoseKeyframes(keyframes);
+  sortActionKeyframes(keyframes);
   syncFrameAliases(effect);
   return created;
 }
@@ -150,16 +156,16 @@ export function moveEffectTimelineKeyframe(tuning, effectKey, id, t) {
   const keyframe = effect.keyframes?.find((frame) => frame.id === id);
   if (!keyframe) return false;
   keyframe.t = t;
-  sortPoseKeyframes(effect.keyframes);
+  sortActionKeyframes(effect.keyframes);
   syncFrameAliases(effect);
   return true;
 }
 
-export function resetPoseTimelineAnimation(tuning, poseKey) {
-  tuning.poseOffsets ||= {};
-  tuning.poseOffsets[poseKey] = {};
-  POSE_PART_KEYS.forEach((part) => {
-    tuning.poseOffsets[poseKey][part] = normalizePoseFrameValue();
+export function resetActionTimelineAnimation(tuning, actionKey) {
+  tuning.actionOffsets ||= {};
+  tuning.actionOffsets[actionKey] = {};
+  ACTION_PART_KEYS.forEach((part) => {
+    tuning.actionOffsets[actionKey][part] = normalizeActionFrameValue();
   });
 }
 
@@ -169,7 +175,7 @@ export function resetEffectTimelineAnimation(tuning, effectKey) {
   })[effectKey];
 }
 
-export function pastePoseTimelineFramePart({ frames, id, sourceFrame, ensureKeyframe }) {
+export function pasteActionTimelineFramePart({ frames, id, sourceFrame, ensureKeyframe }) {
   const target = ensureKeyframe(frames, id);
   const keep = { id: target.id, t: target.t };
   Object.assign(target, frameValue(sourceFrame), keep);
@@ -187,7 +193,7 @@ export function pasteEffectTimelineFrame({ effect, effectKey, id, sourceFrame, e
   syncFrameAliases(effect);
 }
 
-export function writePoseTimelineFrameValue({
+export function writeActionTimelineFrameValue({
   frames,
   prop,
   value,
@@ -211,7 +217,7 @@ export function writePoseTimelineFrameValue({
   }
 
   frames[fixedFrame][prop] = value;
-  poseKeyframesFor(frames).find((keyframe) => keyframe.id === fixedFrame)[prop] = value;
+  actionKeyframesFor(frames).find((keyframe) => keyframe.id === fixedFrame)[prop] = value;
   syncFrameAliases(frames);
   return true;
 }

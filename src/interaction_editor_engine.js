@@ -1,10 +1,10 @@
-import { isInteractionObjectPartKey, interactionObjectParentPartKey } from './interaction_object_editor.js';
+import { isInteractionObjectPartKey, interactionObjectParentPartKey } from './interaction_object_editor_controller.js';
 import { partLabel } from './editor_label_helper.js';
 import { renderEditorDataCard } from './editor_card_panel_view.js';
 import { renderScrubGroups } from './editor_scrub_helper.js';
 import { isInteractionPropOn } from './editable_property_helper.js';
-import { interactionFieldLimits } from './part_source_registry.js';
-import { clamp } from './utils.js';
+import { interactionFieldLimits } from './part_source_data.js';
+import { clamp } from './common_helper.js';
 
 const INTERACTION_DEFS = [
   { prop: 'collision', label: '충돌' },

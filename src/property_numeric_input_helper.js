@@ -1,4 +1,4 @@
-import { clamp } from './utils.js';
+import { clamp } from './common_helper.js';
 
 const IN_PROGRESS_NUMERIC_TEXT = new Set(['', '-', '.', '-.', '+', '+.']);
 const NUMERIC_INPUT_LOCK_ATTR = 'numericInputLocked';

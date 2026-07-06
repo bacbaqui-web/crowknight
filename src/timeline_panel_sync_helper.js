@@ -1,16 +1,15 @@
 import { syncTimelinePlaybackControls } from './timeline_dom_helper.js';
 
-export function syncPoseTimelinePlaybackSettings(elements, { frameCount, settings, playing }) {
+export function syncActionTimelinePlaybackSettings(elements, { frameCount, settings, playing }) {
   syncTimelinePlaybackSettings(elements, {
     frameCount,
     settings,
     playing,
-    isLoop: settings.playback !== 'once',
-    playbackTitle: settings.playback === 'loop' ? '반복 재생' : '한 번 재생',
+    playbackMode: settings.playback,
   });
 }
 
-export function syncPoseTimelineToolbar(elements, state) {
+export function syncActionTimelineToolbar(elements, state) {
   syncTimelineFrameToolbarButtons(elements, state);
   return state.hasSelection;
 }
@@ -20,7 +19,7 @@ export function syncEffectTimelinePlaybackSettings(elements, { frameCount, setti
     frameCount,
     settings,
     playing,
-    isLoop: settings.playback === 'loop',
+    playbackMode: settings.playback,
   });
 }
 
@@ -28,11 +27,17 @@ export function syncEffectTimelineToolbar(elements, state) {
   syncTimelineFrameToolbarButtons(elements, state);
 }
 
+export function syncPoseTimelinePlaybackSettings(elements, { frameCount, settings, playing }) {
+  syncTimelinePlaybackSettings(elements, {
+    frameCount,
+    settings,
+    playing,
+    playbackMode: settings.playback,
+  });
+}
+
 function syncTimelinePlaybackSettings(elements, state) {
   syncTimelinePlaybackControls(elements, state);
-  if (state.playbackTitle) {
-    elements.playback.title = state.playbackTitle;
-  }
 }
 
 function syncTimelineFrameToolbarButtons(elements, state) {

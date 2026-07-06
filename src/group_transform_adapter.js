@@ -1,6 +1,6 @@
-import { rotatePointAround, scalePointAround, screenDeltaToLocal } from './canvasDragMath.js';
+import { rotatePointAround, scalePointAround, screenDeltaToLocal } from './canvas_drag_math_helper.js';
 import { isGroupScalablePart, setCanvasVisualValue } from './transform_value_helper.js';
-import { clamp } from './utils.js';
+import { clamp } from './common_helper.js';
 
 export function createGroupTransformTarget(values = {}, geometry = null) {
   return {
@@ -12,43 +12,6 @@ export function createGroupTransformTarget(values = {}, geometry = null) {
     anchorX: Number.isFinite(values.anchorX) ? values.anchorX : geometry?.anchor?.x,
     anchorY: Number.isFinite(values.anchorY) ? values.anchorY : geometry?.anchor?.y,
   };
-}
-
-export function applyGroupTransformPropertyValue({
-  prop,
-  value,
-  groupEditValues,
-  applyMove,
-  applyRotation,
-  applyScale,
-  applyOpacity,
-}) {
-  const target = createGroupTransformTarget(groupEditValues);
-  const nextValue = prop === 'scale' ? clamp(Number(value), 10, 400) : Number(value);
-  if (!Number.isFinite(nextValue)) {
-    return { changed: false, value: groupEditValues[prop] };
-  }
-
-  if (prop === 'x' || prop === 'y') {
-    const dx = prop === 'x' ? nextValue - target.x : 0;
-    const dy = prop === 'y' ? nextValue - target.y : 0;
-    applyMove(dx, dy);
-    groupEditValues[prop] = nextValue;
-  } else if (prop === 'rot') {
-    applyRotation(nextValue - target.rot);
-    groupEditValues.rot = nextValue;
-  } else if (prop === 'scale') {
-    const previousScale = Math.max(0.1, target.scale / 100);
-    const nextScale = Math.max(0.1, nextValue / 100);
-    applyScale(nextScale / previousScale);
-    groupEditValues.scale = nextValue;
-  } else if (prop === 'opacity') {
-    const nextOpacity = nextValue > 0 ? 1 : 0;
-    applyOpacity(nextOpacity);
-    groupEditValues.opacity = nextOpacity;
-  }
-
-  return { changed: true, value: groupEditValues[prop] };
 }
 
 export function applyGroupTransformDrag(drag, dx, dy, groupEditValues) {
@@ -128,10 +91,10 @@ function applyGroupItemTransform(drag, item, { screenDx, screenDy, rotationDelta
 
 function groupItemDrag(drag, item) {
   return {
-    context: 'pose',
+    context: 'action',
     part: item.part,
     target: item.target,
     base: item.base,
-    writePoseFrameValue: drag.writePoseFrameValue,
+    writeActionFrameValue: drag.writeActionFrameValue,
   };
 }

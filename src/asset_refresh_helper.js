@@ -5,61 +5,90 @@ import {
   loadCharacterAssets,
   loadEffectAsset,
 } from './asset_loader_helper.js';
-import {
-  characterPsdStorageFileName,
-  characterPsdStorageUrl,
-  uploadCharacterPsdFileToFirebase,
-} from './firebase_asset_storage.js';
-import { imagePartKeys } from './part_source_registry.js';
+import { characterPsdStorageFileName } from './firebase_asset_storage_helper.js';
+import { imagePartKeys } from './part_source_data.js';
 
 const CHARACTER_REFRESH_API_URL = './api/character/refresh';
 const CHARACTER_CREATE_API_URL = './api/character/create';
 const CHARACTER_MOVE_API_URL = './api/character/move';
+const CHARACTER_COPY_API_URL = './api/character/copy';
 const CHARACTER_DELETE_API_URL = './api/character/delete';
 const EFFECT_REFRESH_API_URL = './api/effect/refresh';
 
 export async function refreshCharacterPsdAssets({ actor, psdFile = null, createFolder = false }) {
-  if (!actor?.folder) return false;
+  const result = await refreshCharacterPsdAssetResult({ actor, psdFile, createFolder });
+  return result.ok;
+}
+
+export async function refreshCharacterPsdAssetResult({ actor, psdFile = null, createFolder = false }) {
+  if (!actor?.folder) return { ok: false, status: 0, error: '선택된 캐릭터 폴더가 없습니다.' };
 
   const url = createFolder ? characterCreateUrl(actor.folder) : characterRefreshUrl(actor.folder);
   if (createFolder && psdFile) {
-    const result = await uploadBinaryAsset({
+    const result = await uploadBinaryAssetResult({
       url,
       file: psdFile,
       headerName: 'X-Character-Filename',
       fallbackFileName: characterPsdStorageFileName(actor),
     });
-    if (!result?.ok) return false;
+    if (!result.ok) return result;
 
-    const storageUrl = await uploadCharacterPsdFileToFirebase(actor, psdFile);
-    if (!storageUrl) return false;
-
-    await applyCharacterRefreshResult(actor, result, storageUrl);
-    return true;
+    return finalizeCharacterRefreshResult(actor, result, { syncRigToAssetSizes: true });
   }
 
-  const storageUrl = psdFile ? await uploadCharacterPsdFileToFirebase(actor, psdFile) : characterPsdStorageUrl(actor);
-  if (!storageUrl) return false;
+  const result = psdFile
+    ? await uploadBinaryAssetResult({
+        url,
+        file: psdFile,
+        headerName: 'X-Character-Filename',
+        fallbackFileName: characterPsdStorageFileName(actor),
+      })
+    : await fetchJsonResult(url);
+  if (!result.ok) return result;
 
-  const sourceFile = psdFile || (await fetchStoragePsdFile(storageUrl, characterPsdStorageFileName(actor)));
-  if (!sourceFile) return false;
+  return finalizeCharacterRefreshResult(actor, result, { syncRigToAssetSizes: false });
+}
 
-  const result = await uploadBinaryAsset({
-    url,
-    file: sourceFile,
+export async function createCharacterPsdAssets({ actor, psdFile }) {
+  if (!actor?.folder || !psdFile) return { ok: false, status: 0, error: 'Missing character data' };
+
+  const result = await uploadBinaryAssetResult({
+    url: characterCreateUrl(actor.folder),
+    file: psdFile,
     headerName: 'X-Character-Filename',
     fallbackFileName: characterPsdStorageFileName(actor),
   });
-  if (!result?.ok) return false;
+  if (!result.ok) return result;
 
-  await applyCharacterRefreshResult(actor, result, storageUrl);
-  return true;
+  return finalizeCharacterRefreshResult(actor, result, { syncRigToAssetSizes: true });
 }
 
 export async function moveCharacterAssetFolder(fromFolder, toFolder) {
   if (!fromFolder || !toFolder || fromFolder === toFolder) return false;
   const response = await window.fetch(characterMoveUrl(fromFolder, toFolder), { method: 'POST' });
-  return response.ok;
+  if (response.ok) return true;
+
+  window.console?.warn('Character folder move failed.', {
+    fromFolder,
+    toFolder,
+    status: response.status,
+    body: await responseText(response),
+  });
+  return false;
+}
+
+export async function copyCharacterAssetFolder(fromFolder, toFolder) {
+  if (!fromFolder || !toFolder || fromFolder === toFolder) return false;
+  const response = await window.fetch(characterCopyUrl(fromFolder, toFolder), { method: 'POST' });
+  if (response.ok) return true;
+
+  window.console?.warn('Character folder copy failed.', {
+    fromFolder,
+    toFolder,
+    status: response.status,
+    body: await responseText(response),
+  });
+  return false;
 }
 
 export async function deleteCharacterAssetFolder(folder) {
@@ -68,11 +97,33 @@ export async function deleteCharacterAssetFolder(folder) {
   return response.ok;
 }
 
-async function applyCharacterRefreshResult(actor, result, storageUrl) {
+async function applyCharacterRefreshResult(actor, result, { syncRigToAssetSizes = false } = {}) {
   const assets = await loadCharacterAssets(actor.folder, result.updatedAt || Date.now());
   if (actor.player) actor.player.assets = assets;
-  actor.assetSources = nextCharacterPsdSources(actor.assetSources, storageUrl);
-  syncCharacterRigToAssetSizes(actor.tuning?.rig, assets);
+  actor.assetSources = nextCharacterPsdSources(actor.assetSources, localCharacterPsdSource(actor, result));
+  if (syncRigToAssetSizes) syncCharacterRigToAssetSizes(actor.tuning?.rig, assets);
+}
+
+async function finalizeCharacterRefreshResult(actor, result, { syncRigToAssetSizes = false } = {}) {
+  if (Number(result.data?.exported || 0) <= 0) {
+    return {
+      ...result,
+      ok: false,
+      error:
+        'PSD에서 내보낼 파츠 레이어를 찾지 못했습니다. 레이어 이름이 body, head, cape, shield, upper_arm_l 같은 규칙과 맞는지 확인해 주세요.',
+    };
+  }
+
+  try {
+    await applyCharacterRefreshResult(actor, result.data, { syncRigToAssetSizes });
+    return { ok: true, data: result.data };
+  } catch (error) {
+    return {
+      ...result,
+      ok: false,
+      error: `PNG 갱신 후 이미지 로딩 실패: ${error?.message || error}`,
+    };
+  }
 }
 
 function nextCharacterPsdSources(currentSources, psdUrl) {
@@ -81,6 +132,11 @@ function nextCharacterPsdSources(currentSources, psdUrl) {
     delete sources[partKey];
   });
   return sources;
+}
+
+function localCharacterPsdSource(actor, result) {
+  const filename = result?.psd || characterPsdStorageFileName(actor);
+  return `./assets/characters/${actor.folder}/${filename}`;
 }
 
 export async function refreshEffectAsset({ effectAssets, effectAssetSources = {}, effectKey, file = null }) {
@@ -130,6 +186,15 @@ function characterMoveUrl(fromFolder, toFolder) {
   return `${CHARACTER_MOVE_API_URL}?${query.toString()}`;
 }
 
+function characterCopyUrl(fromFolder, toFolder) {
+  const query = new window.URLSearchParams({
+    from: fromFolder,
+    to: toFolder,
+    t: String(Date.now()),
+  });
+  return `${CHARACTER_COPY_API_URL}?${query.toString()}`;
+}
+
 function characterDeleteUrl(folder) {
   return `${CHARACTER_DELETE_API_URL}?folder=${encodeURIComponent(folder)}&t=${Date.now()}`;
 }
@@ -139,35 +204,76 @@ function effectRefreshUrl(assetKey) {
 }
 
 async function uploadBinaryAsset({ url, file, headerName, fallbackFileName }) {
-  const response = await window.fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      [headerName]: encodeURIComponent(file.name || fallbackFileName),
-    },
-    body: file,
-  });
-  if (!response.ok) return null;
-  return response.json();
+  const result = await uploadBinaryAssetResult({ url, file, headerName, fallbackFileName });
+  return result.ok ? result.data : null;
+}
+
+async function uploadBinaryAssetResult({ url, file, headerName, fallbackFileName }) {
+  try {
+    const response = await window.fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        [headerName]: encodeURIComponent(file.name || fallbackFileName),
+      },
+      body: file,
+    });
+    const data = await responseJson(response);
+    return {
+      ok: response.ok && Boolean(data?.ok),
+      status: response.status,
+      data,
+      error: data?.error || '',
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      data: null,
+      error: `로컬 dev server 연결 실패: ${error?.message || error}`,
+    };
+  }
+}
+
+async function responseJson(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 async function fetchJson(url) {
-  const response = await window.fetch(url, { cache: 'no-store' });
-  if (!response.ok) return null;
-  return response.json();
+  const result = await fetchJsonResult(url);
+  return result.ok ? result.data : null;
 }
 
-async function fetchStoragePsdFile(url, filename) {
-  const response = await window.fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, { cache: 'no-store' });
-  if (!response.ok) return null;
-
-  const blob = await response.blob();
-  if (typeof window.File === 'function') {
-    return new window.File([blob], filename, { type: blob.type || 'image/vnd.adobe.photoshop' });
+async function fetchJsonResult(url) {
+  try {
+    const response = await window.fetch(url, { cache: 'no-store' });
+    const data = await responseJson(response);
+    return {
+      ok: response.ok && Boolean(data?.ok),
+      status: response.status,
+      data,
+      error: data?.error || '',
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      data: null,
+      error: `로컬 dev server 연결 실패: ${error?.message || error}`,
+    };
   }
+}
 
-  Object.defineProperty(blob, 'name', { value: filename });
-  return blob;
+async function responseText(response) {
+  try {
+    return await response.text();
+  } catch {
+    return '';
+  }
 }
 
 function syncCharacterRigToAssetSizes(rig, assets) {

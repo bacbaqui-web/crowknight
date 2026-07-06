@@ -1,47 +1,66 @@
-import { ensurePoseOffset } from './project_data_normalizer.js';
-import { groupPosePropertyGroups, partPropertyGroups, posePropertyGroups } from './property_field_groups.js';
+import { ensureActionOffset } from './project_data_normalizer_helper.js';
+import { groupActionPropertyGroups, partPropertyGroups, actionPropertyGroups } from './property_field_data.js';
 import { readPartFieldDisplayValue } from './property_value_helper.js';
-import { emptyPartMessage, markPartPicker, renderPosePartHeader } from './editor_panel_dom.js';
+import { emptyPartMessage, markPartPicker, renderActionPartHeader } from './editor_panel_dom_helper.js';
 import { isMasterPart } from './editor_label_helper.js';
-import { isPartWithSize, partEditSources, partPositionSources, poseMotionGroups } from './part_source_registry.js';
-import { posePartFocusAfterMultiSelect } from './panel_edit_state.js';
+import { partEditSources, actionMotionGroups } from './part_source_data.js';
+import { actionPartFocusAfterMultiSelect } from './panel_edit_state.js';
 import { updateRigPartValue } from './transform_value_helper.js';
 import { renderScrubGroups } from './editor_scrub_helper.js';
-import { applyGroupTransformPropertyValue } from './group_transform_adapter.js';
-import { MASTER_PART_KEY } from './game_config.js';
+import { createGroupTransformTarget } from './group_transform_adapter.js';
+import { MASTER_PART_KEY } from './game_config_data.js';
+import { clamp } from './common_helper.js';
 import { renderEditorDataCard } from './editor_card_panel_view.js';
 import {
   interactionFrameValueFromInput,
   readInteractionDisplayValue,
   renderInteractionEditor,
 } from './interaction_editor_engine.js';
-import { renderAppliedModifierEditor, renderModifierLibraryEditor } from './modifier_editor_engine.js';
+import {
+  renderAppliedModifierEditor,
+  renderModifierLibraryEditor,
+  replaceAppliedModifierEditor,
+} from './modifier_editor_engine.js';
 import {
   ensureTimelineModifierTarget,
   writeTimelineModifierEnabled,
   writeTimelineModifierSetting,
 } from './timeline_modifier_data.js';
+import { normalizeActionEditPivot, syncMasterFramePivot, writeActionEditPivot } from './action_timeline_edit_helper.js';
+import { EDIT_CONTEXT_ACTION, EDIT_CONTEXT_SETUP, resolveEditTarget } from './edit_target_helper.js';
+
+const ACTION_PIVOT_PROPERTY_GROUPS = [
+  {
+    label: '기준',
+    props: [
+      { prop: 'x', label: 'X' },
+      { prop: 'y', label: 'Y' },
+    ],
+  },
+];
 
 export function createTuningPanelPartController({
   elements,
-  selectedPoseParts,
+  selectedActionParts,
   scrubCallbacks,
   getSelectedActor,
   getActivePartKey,
   setActivePartKey,
   setActivePartKeyGlobal,
-  getActivePosePartKey,
-  setActivePosePartKey,
+  getActiveActionPartKey,
+  setActiveActionPartKey,
+  getEditTarget,
   getEditFocusPartKey,
   setEditContext,
   getEditFocusContext,
   setEditFocusContext,
   setEditFocusPartKey,
+  setFrameSelectionActive,
   getGroupEditValues,
   resetGroupEditValues,
   clearEditHandleState,
   syncAnchorDebugPart,
-  poseTimeline,
+  actionTimeline,
   effectTimeline,
   getCanvasController,
   beginUndoSnapshot,
@@ -49,35 +68,35 @@ export function createTuningPanelPartController({
 }) {
   const {
     partSection,
-    poseSection,
+    actionSection,
     effectSection,
     partPicker,
-    posePartPicker,
+    actionPartPicker,
     partSelect,
     partFields,
-    poseSelect,
-    posePartSelect,
-    posePartFields,
+    actionSelect,
+    actionPartSelect,
+    actionPartFields,
     motionRows,
   } = elements;
 
   function selectPickerPart(context, partKey, append = false) {
-    if (context === 'pose' && append) {
-      togglePosePartMultiSelection(partKey);
+    if (context === 'action' && append) {
+      toggleActionPartMultiSelection(partKey);
       return;
     }
 
-    if ((context === 'pose' ? getActivePosePartKey() : getActivePartKey()) === partKey) {
+    if ((context === 'action' ? getActiveActionPartKey() : getActivePartKey()) === partKey) {
       clearPartSelection(context);
       return;
     }
 
     setEditFocusPartKey(partKey);
     setEditFocusContext(context);
-    if (context === 'pose') {
-      selectSinglePosePart(partKey);
-      renderPosePartFields();
-      poseTimeline.syncPreview();
+    if (context === 'action') {
+      selectSingleActionPart(partKey);
+      renderActionPartFields();
+      actionTimeline.syncPreview();
     } else {
       setEditContext('part');
       setActivePartKey(partKey);
@@ -91,33 +110,33 @@ export function createTuningPanelPartController({
   }
 
   function openPartSection() {
-    closeEditSection('pose');
+    closeEditSection('action');
     closeEditSection('effect');
     if (!getActivePartKey()) selectRigBasis();
   }
 
-  function openPoseSection() {
+  function openActionSection() {
     closeEditSection('part');
     closeEditSection('effect');
-    setEditContext('pose');
-    setEditFocusContext('pose');
-    setEditFocusPartKey(getActivePosePartKey() || MASTER_PART_KEY);
-    renderPosePartFields();
+    setEditContext('action');
+    setEditFocusContext('action');
+    setEditFocusPartKey(getActiveActionPartKey() || MASTER_PART_KEY);
+    renderActionPartFields();
     syncAnchorDebugPart();
   }
 
   function closeEditSection(context) {
-    const section = context === 'pose' ? poseSection : context === 'effect' ? effectSection : partSection;
+    const section = context === 'action' ? actionSection : context === 'effect' ? effectSection : partSection;
     section.classList.remove('is-open');
     if (context === 'effect') effectTimeline.clearSelection();
     else clearPartSelection(context);
   }
 
   function clearPartSelection(context) {
-    if (context === 'pose') clearPosePartSelection();
+    if (context === 'action') clearActionPartSelection();
     else clearRigPartSelection();
 
-    if (context === getEditFocusContext() && context !== 'pose') {
+    if (context === getEditFocusContext() && context !== 'action') {
       setEditFocusPartKey(MASTER_PART_KEY);
       setEditFocusContext('part');
     }
@@ -127,15 +146,15 @@ export function createTuningPanelPartController({
     syncAnchorDebugPart();
   }
 
-  function clearPosePartSelection() {
-    selectedPoseParts.clear();
-    setActivePosePartKey(null);
+  function clearActionPartSelection() {
+    selectedActionParts.clear();
+    setActiveActionPartKey(null);
     resetGroupEditValues();
-    setEditContext('pose');
-    setEditFocusContext('pose');
+    setEditContext('action');
+    setEditFocusContext('action');
     setEditFocusPartKey(MASTER_PART_KEY);
-    renderPosePartFields();
-    poseTimeline.syncPreview();
+    renderActionPartFields();
+    actionTimeline.syncPreview();
   }
 
   function clearRigPartSelection() {
@@ -157,40 +176,40 @@ export function createTuningPanelPartController({
     clearEditHandleState();
   }
 
-  function togglePosePartMultiSelection(partKey) {
-    setEditContext('pose');
-    setEditFocusContext('pose');
-    selectedPoseParts.toggle(partKey);
+  function toggleActionPartMultiSelection(partKey) {
+    setEditContext('action');
+    setEditFocusContext('action');
+    selectedActionParts.toggle(partKey);
     resetGroupEditValues();
 
-    syncActivePosePartAfterMultiSelect(partKey);
-    if (getActivePosePartKey()) posePartSelect.value = getActivePosePartKey();
-    renderPosePartFields();
-    poseTimeline.syncPreview();
+    syncActiveActionPartAfterMultiSelect(partKey);
+    if (getActiveActionPartKey()) actionPartSelect.value = getActiveActionPartKey();
+    renderActionPartFields();
+    actionTimeline.syncPreview();
     syncPartPickers();
     syncAnchorDebugPart();
   }
 
-  function selectSinglePosePart(partKey) {
-    setEditContext('pose');
-    setActivePosePartKey(selectedPoseParts.selectOnly(partKey));
+  function selectSingleActionPart(partKey) {
+    setEditContext('action');
+    setActiveActionPartKey(selectedActionParts.selectOnly(partKey));
     resetGroupEditValues();
-    posePartSelect.value = partKey;
+    actionPartSelect.value = partKey;
   }
 
-  function syncActivePosePartAfterMultiSelect(partKey) {
-    const nextFocus = posePartFocusAfterMultiSelect(selectedPoseParts, partKey, MASTER_PART_KEY);
-    setActivePosePartKey(nextFocus.activePosePartKey);
+  function syncActiveActionPartAfterMultiSelect(partKey) {
+    const nextFocus = actionPartFocusAfterMultiSelect(selectedActionParts, partKey, MASTER_PART_KEY);
+    setActiveActionPartKey(nextFocus.activeActionPartKey);
     setEditFocusPartKey(nextFocus.editFocusPartKey);
   }
 
   function syncPartPickers() {
     markPartPicker(partPicker, getActivePartKey());
-    markPartPicker(posePartPicker, getActivePosePartKey(), selectedPoseParts);
+    markPartPicker(actionPartPicker, getActiveActionPartKey(), selectedActionParts);
   }
 
   function renderPartFields() {
-    const activePartKey = getActivePartKey() || MASTER_PART_KEY;
+    const activePartKey = getEditTarget?.(EDIT_CONTEXT_SETUP)?.targetKey || getActivePartKey() || MASTER_PART_KEY;
 
     partSelect.value = activePartKey;
     const part = partEditSources(getSelectedActor().tuning)[activePartKey];
@@ -204,115 +223,158 @@ export function createTuningPanelPartController({
     );
   }
 
-  function renderPosePartFields() {
-    poseTimeline.renderTimeline();
-    clearPoseSupplementCards();
-    const frameLabel = poseTimeline.frameLabel();
-    if (selectedPoseParts.size() > 1) {
-      posePartFields.innerHTML = '';
-      renderPosePartHeader(posePartFields, 'group', selectedPoseParts.size(), frameLabel);
-      if (!poseTimeline.hasFrameSelection()) {
-        posePartFields.insertAdjacentHTML('beforeend', emptyPartMessage('그룹을 편집할 프레임을 선택하세요.'));
+  function renderActionPartFields() {
+    actionTimeline.renderTimeline();
+    setFrameSelectionActive?.(actionTimeline.hasFrameTarget());
+    clearActionSupplementCards();
+    const frameLabel = actionTimeline.frameLabel();
+    const editTarget = actionTimelineEditTarget();
+    if (editTarget.isGroup) {
+      actionPartFields.innerHTML = '';
+      renderActionPartHeader(actionPartFields, editTarget.targetType, editTarget.targetKeys.length, frameLabel);
+      if (!actionTimeline.hasFrameSelection()) {
+        actionPartFields.insertAdjacentHTML('beforeend', emptyPartMessage('그룹을 편집할 프레임을 선택하세요.'));
+        renderActionModifierPanels();
         return;
       }
       renderScrubGroups(
-        posePartFields,
-        groupPosePropertyGroups(),
+        actionPartFields,
+        groupActionPropertyGroups(),
         (prop) => getGroupEditValues()[prop],
-        (prop, value) => updateGroupPoseValue(prop, value),
+        (prop, value) => updateGroupActionValue(prop, value),
         scrubCallbacks
       );
+      renderActionModifierPanels();
       return;
     }
 
-    const partKey = getActivePosePartKey() || MASTER_PART_KEY;
-    const hasFrameSelection = poseTimeline.hasFrameSelection();
-    const isWholeTimelineEdit = !poseTimeline.hasFrameTarget();
-    const isAllPartsEdit = isAllPosePartsEdit();
-    if (isAllPartsEdit) {
-      renderAllPosePartsFields(frameLabel);
+    const hasFrameSelection = actionTimeline.hasFrameSelection();
+    const isWholeTimelineEdit = !actionTimeline.hasFrameTarget();
+    if (editTarget.isActionPivot) {
+      renderActionPivotFields(frameLabel);
       return;
     }
+    if (editTarget.isFrameGroup) {
+      renderFrameGroupFields(frameLabel);
+      return;
+    }
+
+    const partKey = editTarget.targetKey || MASTER_PART_KEY;
     if (!hasFrameSelection && !isWholeTimelineEdit && !isMasterPart(partKey)) {
-      posePartFields.innerHTML = emptyPartMessage('편집할 프레임을 선택하세요.');
+      actionPartFields.innerHTML = emptyPartMessage('편집할 프레임을 선택하세요.');
+      renderActionModifierPanels();
       return;
     }
 
-    posePartSelect.value = partKey;
-    ensurePoseOffset(getSelectedActor().tuning, poseSelect.value, partKey);
-    const offset = poseTimeline.currentFrameValue(partKey);
-    posePartFields.innerHTML = '';
-    renderPosePartHeader(posePartFields, partKey, selectedPoseParts.size(), frameLabel);
+    actionPartSelect.value = partKey;
+    ensureActionOffset(getSelectedActor().tuning, actionSelect.value, partKey);
+    const offset = actionTimeline.currentFrameValue(partKey);
+    actionPartFields.innerHTML = '';
+    renderActionPartHeader(actionPartFields, partKey, selectedActionParts.size(), frameLabel);
 
     renderEditorDataCard(
-      posePartFields,
+      actionPartFields,
       { title: 'Property', className: 'property-editor-card', collapsible: false },
       (body) => {
         renderScrubGroups(
           body,
-          posePropertyGroups(partKey, hasFrameSelection),
-          (prop) => poseTimeline.readDisplayValue(partKey, poseTimeline.currentFrameValue(partKey), prop),
-          (prop, value) => updatePosePartValue(prop, value),
+          actionPropertyGroups(partKey, hasFrameSelection),
+          (prop) => actionTimeline.readDisplayValue(partKey, actionTimeline.currentFrameValue(partKey), prop),
+          (prop, value) => updateActionPartValue(prop, value),
           scrubCallbacks
         );
       }
     );
 
-    const supplementContainer = posePartFields.parentElement || posePartFields;
-
-    renderAppliedModifierEditor(supplementContainer, {
-      modifiers: poseModifiers(),
-      onSettingChange: updatePoseModifierSetting,
-    });
+    renderActionAppliedModifierPanel();
 
     if (hasFrameSelection) {
-      renderInteractionEditor(supplementContainer, {
+      renderInteractionEditor(actionSupplementContainer(), {
         frameValue: offset,
         targetKey: partKey,
         scrubCallbacks,
-        onWrite: (prop, value, { rerender = true } = {}) => updatePoseInteractionValue(prop, value, rerender),
+        onWrite: (prop, value, { rerender = true } = {}) => updateActionInteractionValue(prop, value, rerender),
       });
     }
 
-    renderModifierLibraryEditor(supplementContainer, {
-      modifiers: poseModifiers(),
-      onToggle: updatePoseModifierEnabled,
-    });
+    renderActionModifierLibraryPanel();
   }
 
-  function renderAllPosePartsFields(frameLabel) {
-    posePartFields.innerHTML = '';
-    renderPosePartHeader(posePartFields, 'all', 0, frameLabel);
+  function renderActionPivotFields(frameLabel) {
+    actionPartFields.innerHTML = '';
+    renderActionPartHeader(actionPartFields, 'all', 0, frameLabel);
 
     renderEditorDataCard(
-      posePartFields,
+      actionPartFields,
       { title: 'Property', className: 'property-editor-card', collapsible: false },
       (body) => {
         renderScrubGroups(
           body,
-          groupPosePropertyGroups(),
-          (prop) => getGroupEditValues()[prop],
-          (prop, value) => updateAllPosePartsValue(prop, value),
+          ACTION_PIVOT_PROPERTY_GROUPS,
+          (prop) => readActionPivotValue(prop),
+          (prop, value) => updateActionPivotValue(prop, value),
           scrubCallbacks
         );
       }
     );
 
-    const supplementContainer = posePartFields.parentElement || posePartFields;
+    renderActionModifierPanels();
+  }
 
-    renderAppliedModifierEditor(supplementContainer, {
-      modifiers: poseModifiers(),
-      onSettingChange: updatePoseModifierSetting,
-    });
+  function renderFrameGroupFields(frameLabel) {
+    actionPartFields.innerHTML = '';
+    renderActionPartHeader(actionPartFields, 'all', 0, frameLabel);
+    syncMasterPivotToFrames();
 
-    renderModifierLibraryEditor(supplementContainer, {
-      modifiers: poseModifiers(),
-      onToggle: updatePoseModifierEnabled,
+    renderEditorDataCard(
+      actionPartFields,
+      { title: 'Property', className: 'property-editor-card', collapsible: false },
+      (body) => {
+        renderScrubGroups(
+          body,
+          actionPropertyGroups(MASTER_PART_KEY, true),
+          (prop) =>
+            actionTimeline.readDisplayValue(MASTER_PART_KEY, actionTimeline.currentFrameValue(MASTER_PART_KEY), prop),
+          (prop, value) => updateFrameGroupValue(prop, value),
+          scrubCallbacks
+        );
+      }
+    );
+
+    renderActionModifierPanels();
+  }
+
+  function renderActionModifierPanels() {
+    renderActionAppliedModifierPanel();
+    renderActionModifierLibraryPanel();
+  }
+
+  function renderActionAppliedModifierPanel() {
+    renderAppliedModifierEditor(actionSupplementContainer(), {
+      modifiers: actionModifiers(),
+      onSettingChange: updateActionModifierSetting,
+      scrubCallbacks,
+      targetKey: actionSelect.value,
+      totalFrames: actionTimeline.frameCount?.(),
     });
   }
 
-  function clearPoseSupplementCards() {
-    const container = posePartFields.parentElement;
+  function renderActionModifierLibraryPanel() {
+    renderModifierLibraryEditor(actionSupplementContainer(), {
+      modifiers: actionModifiers(),
+      onToggle: updateActionModifierEnabled,
+      onSettingChange: updateActionModifierSetting,
+      scrubCallbacks,
+      targetKey: actionSelect.value,
+    });
+  }
+
+  function actionSupplementContainer() {
+    return actionPartFields.parentElement || actionPartFields;
+  }
+
+  function clearActionSupplementCards() {
+    const container = actionPartFields.parentElement;
     if (!container) return;
     Array.from(container.children).forEach((child) => {
       if (
@@ -325,69 +387,96 @@ export function createTuningPanelPartController({
     });
   }
 
-  function updatePosePartValue(prop, value) {
-    const nextValue = poseTimeline.updateOffset(prop, value);
+  function updateActionPartValue(prop, value) {
+    const partKey = actionTimelineEditTarget().writeTargetKey || MASTER_PART_KEY;
+    const nextValue = actionTimeline.updateOffsetForPart(partKey, prop, value, {
+      applyWholeTimelineDelta: !actionTimeline.hasFrameTarget() && !isMasterPart(partKey),
+    });
     return nextValue;
   }
 
-  function updateAllPosePartsValue(prop, value) {
-    beginUndoSnapshot();
-    poseTimeline.stopPreview();
-    const groupValues = getGroupEditValues();
-    const nextValue = prop === 'opacity' ? (Number(value) > 0 ? 1 : 0) : Number(value);
-    if (!Number.isFinite(nextValue)) return groupValues[prop];
-
-    const parts = allPoseTimelineEditParts();
-    if (prop === 'x' || prop === 'y' || prop === 'rot') {
-      const delta = nextValue - Number(groupValues[prop] || 0);
-      applyAllPosePartsDelta(prop, delta, parts);
-      groupValues[prop] = nextValue;
-    } else if (prop === 'scale') {
-      applyAllPosePartsScale(nextValue, parts);
-      groupValues.scale = nextValue;
-    } else if (prop === 'opacity') {
-      applyAllPosePartsTransform('opacity', () => nextValue, parts);
-      groupValues.opacity = nextValue;
-    }
-
-    poseTimeline.syncPreview();
-    applySelected();
-    return groupValues[prop];
+  function updateFrameGroupValue(prop, value) {
+    syncMasterPivotToFrames();
+    const nextValue = actionTimeline.updateOffsetForPart(MASTER_PART_KEY, prop, value);
+    return nextValue;
   }
 
-  function updatePoseInteractionValue(prop, value, rerender = true) {
+  function readActionPivotValue(prop) {
+    return actionSettings().editPivot?.[prop] ?? 0;
+  }
+
+  function updateActionPivotValue(prop, value) {
     beginUndoSnapshot();
-    poseTimeline.stopPreview();
-    const partKey = getActivePosePartKey() || MASTER_PART_KEY;
+    const nextValue = Number(value);
+    if (!Number.isFinite(nextValue)) return readActionPivotValue(prop);
+    const settings = actionSettings();
+    writeActionEditPivot(settings, masterActionFrames(), { ...settings.editPivot, [prop]: nextValue });
+    applySelected();
+    return settings.editPivot[prop];
+  }
+
+  function actionSettings() {
+    const actor = getSelectedActor();
+    actor.tuning.actionSettings ||= {};
+    actor.tuning.actionSettings[actionSelect.value] ||= {};
+    actor.tuning.actionSettings[actionSelect.value].editPivot = normalizeActionEditPivot(
+      actor.tuning.actionSettings[actionSelect.value].editPivot
+    );
+    return actor.tuning.actionSettings[actionSelect.value];
+  }
+
+  function syncMasterPivotToFrames() {
+    syncMasterFramePivot(masterActionFrames(), actionSettings().editPivot);
+  }
+
+  function masterActionFrames() {
+    const actor = getSelectedActor();
+    ensureActionOffset(actor.tuning, actionSelect.value, MASTER_PART_KEY);
+    return actor.tuning.actionOffsets?.[actionSelect.value]?.[MASTER_PART_KEY];
+  }
+
+  function updateActionInteractionValue(prop, value, rerender = true) {
+    beginUndoSnapshot();
+    actionTimeline.stopPreview();
+    const partKey = actionTimelineEditTarget().writeTargetKey || MASTER_PART_KEY;
     const nextValue = interactionFrameValueFromInput(prop, value);
-    poseTimeline.writeFrameValue(partKey, prop, nextValue);
-    poseTimeline.syncPreview();
+    actionTimeline.writeFrameValue(partKey, prop, nextValue);
+    actionTimeline.syncPreview();
     applySelected();
-    if (rerender) renderPosePartFields();
-    return readInteractionDisplayValue(poseTimeline.currentFrameValue(partKey), prop);
+    if (rerender) renderActionPartFields();
+    return readInteractionDisplayValue(actionTimeline.currentFrameValue(partKey), prop);
   }
 
-  function poseModifiers() {
-    return ensureTimelineModifierTarget(getSelectedActor().tuning, 'pose', poseSelect.value);
+  function actionModifiers(key = actionSelect.value) {
+    return ensureTimelineModifierTarget(getSelectedActor().tuning, 'action', key);
   }
 
-  function updatePoseModifierEnabled(type, enabled) {
+  function updateActionModifierEnabled(type, enabled, targetKey = actionSelect.value) {
     beginUndoSnapshot();
-    writeTimelineModifierEnabled(getSelectedActor().tuning, 'pose', poseSelect.value, type, enabled);
+    writeTimelineModifierEnabled(getSelectedActor().tuning, 'action', targetKey, type, enabled);
     applySelected();
-    renderPosePartFields();
+    if (targetKey === actionSelect.value) {
+      replaceAppliedModifierEditor(actionSupplementContainer(), {
+        modifiers: actionModifiers(targetKey),
+        onSettingChange: updateActionModifierSetting,
+        scrubCallbacks,
+        targetKey,
+        totalFrames: actionTimeline.frameCount?.(),
+      });
+    }
   }
 
-  function updatePoseModifierSetting(type, prop, value) {
+  function updateActionModifierSetting(type, prop, value, targetKey = actionSelect.value) {
     beginUndoSnapshot();
-    writeTimelineModifierSetting(getSelectedActor().tuning, 'pose', poseSelect.value, type, prop, value);
+    const modifier = writeTimelineModifierSetting(getSelectedActor().tuning, 'action', targetKey, type, prop, value);
     applySelected();
+    return modifier.settings?.[prop];
   }
 
-  function updateGroupPoseValue(prop, value) {
-    poseTimeline.stopPreview();
+  function updateGroupActionValue(prop, value) {
+    actionTimeline.stopPreview();
     const canvasController = getCanvasController();
-    const result = applyGroupTransformPropertyValue({
+    const result = applyGroupEditPropertyValue({
       prop,
       value,
       groupEditValues: getGroupEditValues(),
@@ -398,65 +487,62 @@ export function createTuningPanelPartController({
     });
     if (!result.changed) return result.value;
 
-    poseTimeline.syncPreview();
+    actionTimeline.syncPreview();
     applySelected();
     return result.value;
   }
 
-  function applyAllPosePartsDelta(prop, delta, parts) {
-    if (poseTimeline.hasFrameTarget()) {
-      parts.forEach((part) => {
-        const currentValue = Number(poseTimeline.currentFrameValue(part)?.[prop] ?? 0);
-        poseTimeline.writeFrameValue(part, prop, currentValue + delta);
-      });
-      return;
+  function applyGroupEditPropertyValue({
+    prop,
+    value,
+    groupEditValues,
+    applyMove,
+    applyRotation,
+    applyScale,
+    applyOpacity,
+  }) {
+    const target = createGroupTransformTarget(groupEditValues);
+    const nextValue = prop === 'scale' ? clamp(Number(value), 10, 400) : Number(value);
+    if (!Number.isFinite(nextValue)) {
+      return { changed: false, value: groupEditValues[prop] };
     }
-    poseTimeline.updateAllOffsets(prop, delta, parts);
+
+    if (prop === 'x' || prop === 'y') {
+      const dx = prop === 'x' ? nextValue - target.x : 0;
+      const dy = prop === 'y' ? nextValue - target.y : 0;
+      applyMove(dx, dy);
+      groupEditValues[prop] = nextValue;
+    } else if (prop === 'rot') {
+      applyRotation(nextValue - target.rot);
+      groupEditValues.rot = nextValue;
+    } else if (prop === 'scale') {
+      const previousScale = Math.max(0.1, target.scale / 100);
+      const nextScale = Math.max(0.1, nextValue / 100);
+      applyScale(nextScale / previousScale);
+      groupEditValues.scale = nextValue;
+    } else if (prop === 'opacity') {
+      const nextOpacity = nextValue > 0 ? 1 : 0;
+      applyOpacity(nextOpacity);
+      groupEditValues.opacity = nextOpacity;
+    }
+
+    return { changed: true, value: groupEditValues[prop] };
   }
 
-  function applyAllPosePartsTransform(prop, transformValue, parts) {
-    if (poseTimeline.hasFrameTarget()) {
-      parts.forEach((part) => {
-        const currentValue = Number(poseTimeline.currentFrameValue(part)?.[prop] ?? 0);
-        const nextValue = transformValue(currentValue, part);
-        if (Number.isFinite(nextValue)) poseTimeline.writeFrameValue(part, prop, nextValue);
-      });
-      return;
-    }
-    poseTimeline.transformAllOffsets(prop, transformValue, parts);
-  }
-
-  function applyAllPosePartsScale(nextValue, parts) {
-    const groupValues = getGroupEditValues();
-    const previousScale = Math.max(0.1, Number(groupValues.scale || 100) / 100);
-    const nextScale = Math.max(0.1, Number(nextValue) / 100);
-    const ratio = nextScale / previousScale;
-    if (!Number.isFinite(ratio) || ratio === 1) return;
-    ['w', 'h'].forEach((prop) => {
-      applyAllPosePartsTransform(
-        prop,
-        (currentOffset, part) => {
-          if (!isPartWithSize(part)) return currentOffset;
-          const base = Math.max(0.001, Number(poseTimeline.source(part)?.[prop] || 1));
-          return (base + currentOffset) * ratio - base;
-        },
-        parts
-      );
+  function actionTimelineEditTarget() {
+    const editTarget = getEditTarget?.(EDIT_CONTEXT_ACTION);
+    if (editTarget) return editTarget;
+    return resolveEditTarget({
+      context: EDIT_CONTEXT_ACTION,
+      hasFrameTarget: actionTimeline.hasFrameTarget(),
+      selectedActionParts,
+      activeActionPartKey: getActiveActionPartKey(),
     });
-  }
-
-  function isAllPosePartsEdit() {
-    const activePosePartKey = getActivePosePartKey();
-    return selectedPoseParts.size() === 0 && (!activePosePartKey || isMasterPart(activePosePartKey));
-  }
-
-  function allPoseTimelineEditParts() {
-    return Object.keys(partPositionSources(getSelectedActor().tuning.rig));
   }
 
   function updatePartValue(prop, value) {
     beginUndoSnapshot();
-    const activePartKey = getActivePartKey() || MASTER_PART_KEY;
+    const activePartKey = getEditTarget?.(EDIT_CONTEXT_SETUP)?.writeTargetKey || getActivePartKey() || MASTER_PART_KEY;
     const part = partEditSources(getSelectedActor().tuning)[activePartKey];
     updateRigPartValue(part, activePartKey, prop, value, getSelectedActor().tuning);
     applySelected();
@@ -464,11 +550,11 @@ export function createTuningPanelPartController({
   }
 
   function syncMotionRows() {
-    const groups = poseMotionGroups(poseSelect.value);
+    const groups = actionMotionGroups(actionSelect.value);
     motionRows.forEach((row) => {
       row.hidden = !groups.includes(row.dataset.motionGroup);
     });
-    poseTimeline.renderSettings();
+    actionTimeline.renderSettings();
   }
 
   function handlePartChange() {
@@ -482,41 +568,40 @@ export function createTuningPanelPartController({
     syncAnchorDebugPart();
   }
 
-  function handlePoseChange() {
-    setEditContext('pose');
-    poseTimeline.stopPreview();
-    poseTimeline.resetSelectionState();
-    selectedPoseParts.clear();
-    resetGroupEditValues();
-    setActivePosePartKey(null);
-    setEditFocusPartKey(MASTER_PART_KEY);
-    renderPosePartFields();
+  function handleActionChange() {
+    setEditContext('action');
+    setEditFocusContext('action');
+    actionTimeline.stopPreview();
+    setEditFocusPartKey(getActiveActionPartKey() || MASTER_PART_KEY);
+    renderActionPartFields();
     syncMotionRows();
-    poseTimeline.syncPreview();
-  }
-
-  function handlePosePartChange() {
-    setEditContext('pose');
-    setEditFocusContext('pose');
-    setActivePosePartKey(selectedPoseParts.selectOnly(posePartSelect.value));
-    resetGroupEditValues();
-    setEditFocusPartKey(getActivePosePartKey());
-    renderPosePartFields();
     syncPartPickers();
     syncAnchorDebugPart();
-    poseTimeline.syncPreview();
+    actionTimeline.syncPreview();
+  }
+
+  function handleActionPartChange() {
+    setEditContext('action');
+    setEditFocusContext('action');
+    setActiveActionPartKey(selectedActionParts.selectOnly(actionPartSelect.value));
+    resetGroupEditValues();
+    setEditFocusPartKey(getActiveActionPartKey());
+    renderActionPartFields();
+    syncPartPickers();
+    syncAnchorDebugPart();
+    actionTimeline.syncPreview();
   }
 
   return {
     clearPartSelection,
     closeEditSection,
     handlePartChange,
-    handlePoseChange,
-    handlePosePartChange,
+    handleActionChange,
+    handleActionPartChange,
     openPartSection,
-    openPoseSection,
+    openActionSection,
     renderPartFields,
-    renderPosePartFields,
+    renderActionPartFields,
     selectPickerPart,
     syncMotionRows,
     syncPartPickers,

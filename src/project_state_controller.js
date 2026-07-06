@@ -1,5 +1,5 @@
 import { refreshPsdBackground } from './psd_background_helper.js';
-import { uploadScenePsdAssetsToFirebase } from './firebase_asset_storage.js';
+import { uploadCharacterMetadataSetToFirebase } from './firebase_asset_storage_helper.js';
 import {
   downloadSavedStateFromFirebase,
   saveGameState,
@@ -40,13 +40,15 @@ export function createProjectStateController({
 
   async function uploadSettingsToFirebase() {
     syncCurrentSceneSession();
-    return uploadSavedStateToFirebase({
+    const metadataUploaded = await uploadSavedStateToFirebase({
       actors,
       characterDefs,
       activeSessionId: activeSceneSessionId,
       sessions: sceneSessions,
       effectAssetSources,
     });
+    const characterMetadataUploaded = await uploadCharacterMetadataSetToFirebase(actors);
+    return metadataUploaded && characterMetadataUploaded;
   }
 
   async function downloadSettingsFromFirebase() {
@@ -66,9 +68,8 @@ export function createProjectStateController({
 
     const sceneSession = getSceneSession();
     onSceneBackgroundUpdate(sceneSession.background);
-    const uploaded = await uploadScenePsdAssetsToFirebase(sceneSession.background);
     saveState();
-    return uploaded;
+    return true;
   }
 
   return {

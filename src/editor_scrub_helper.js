@@ -296,6 +296,7 @@ function scrubInputValue(value, prop) {
 function scrubStep(prop) {
   if (isToggleProp(prop)) return 0.01;
   if (isInteractionDecimalProp(prop)) return 0.01;
+  if (prop === 'strength') return 0.05;
   if (isPercentDisplayProp(prop)) return 1;
   return 1;
 }

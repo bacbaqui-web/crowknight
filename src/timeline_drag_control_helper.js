@@ -25,7 +25,7 @@ export function timelinePointerValue(event, track, frameCount, lastSlot) {
 }
 
 export function markActiveKeyframeButton(track, id) {
-  track.querySelectorAll('.pose-keyframe').forEach((button) => {
+  track.querySelectorAll('.timeline-keyframe').forEach((button) => {
     button.classList.toggle('is-active', button.dataset.keyframeId === id);
   });
 }

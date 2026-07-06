@@ -1,5 +1,5 @@
-import { replaceObject } from './project_data_normalizer.js';
-import { clone } from './utils.js';
+import { replaceObject } from './project_data_normalizer_helper.js';
+import { clone } from './common_helper.js';
 
 const MAX_UNDO_SNAPSHOTS = 80;
 
@@ -13,7 +13,7 @@ export function createTuningPanelUndoState({
   applyActorTuning,
   saveState,
   syncPanel,
-  syncPoseToolbarButtons,
+  syncActionToolbarButtons,
 }) {
   const undoStack = [];
   let editSnapshotOpen = false;
@@ -60,7 +60,7 @@ export function createTuningPanelUndoState({
     saveState();
     editSnapshotOpen = false;
     syncPanel();
-    syncPoseToolbarButtons();
+    syncActionToolbarButtons();
   }
 
   return {

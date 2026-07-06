@@ -1,5 +1,5 @@
 import { syncPoseTimelinePlaybackSettings, syncPoseTimelineToolbar } from './timeline_panel_sync_helper.js';
-import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './game_config.js';
+import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './game_config_data.js';
 
 export function renderPoseTimelineSettingsView(elements, state) {
   syncPoseTimelinePlaybackSettings(

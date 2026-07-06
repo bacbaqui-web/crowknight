@@ -14,7 +14,6 @@
         --text: #f5f7fb;
         --muted: #aab4c5;
         --accent: #7cc3a2;
-        --warn: #ffd166;
         --radius: 8px;
       }
 
@@ -91,6 +90,12 @@
         color: var(--text);
       }
 
+      ul,
+      ol {
+        margin: 0;
+        padding-left: 20px;
+      }
+
       .updated {
         margin-bottom: 8px;
         color: var(--accent);
@@ -100,7 +105,8 @@
         text-transform: uppercase;
       }
 
-      .grid {
+      .grid,
+      .qa {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
@@ -113,63 +119,22 @@
         padding: 12px;
       }
 
-      ul,
-      ol {
-        margin: 0;
-        padding-left: 20px;
-      }
-
-      li + li {
-        margin-top: 6px;
-      }
-
-      .qa {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .qa h3 {
-        margin-top: 0;
-      }
-
-      .qa-note {
-        margin-bottom: 12px;
-      }
-
-      .qa-list {
-        display: grid;
-        gap: 8px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
       .qa-item {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: auto 1fr;
         gap: 8px;
         align-items: start;
-        color: var(--muted);
-        line-height: 1.45;
         cursor: pointer;
       }
 
       .qa-item input {
-        width: 16px;
-        height: 16px;
-        margin-top: 2px;
+        margin-top: 4px;
         accent-color: var(--accent);
       }
 
       .qa-item.is-checked span {
-        color: #758195;
+        color: #6f7c90;
         text-decoration: line-through;
-      }
-
-      .carryover {
-        margin-top: 12px;
-        border-color: rgba(255, 209, 102, 0.42);
       }
 
       .progress-list {
@@ -177,24 +142,20 @@
         gap: 10px;
       }
 
-      .progress-item {
-        display: grid;
-        gap: 7px;
-      }
-
       .progress-head {
         display: flex;
         justify-content: space-between;
-        gap: 10px;
+        gap: 12px;
         color: var(--text);
-        font-weight: 900;
+        font-weight: 800;
       }
 
       .bar {
-        height: 9px;
-        overflow: hidden;
+        height: 8px;
+        margin-top: 10px;
         border-radius: 999px;
-        background: #273040;
+        background: #263040;
+        overflow: hidden;
       }
 
       .bar i {
@@ -215,7 +176,7 @@
   <body>
     <main>
       <header>
-        <div class="updated">Updated 2026-07-02 12:22 KST</div>
+        <p class="updated">Updated 2026-07-06 KST</p>
         <h1>Current Task Report</h1>
       </header>
 
@@ -224,14 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Action Interaction & Modifiers Sprint</p>
+            <p>Editor Foundation Closing Sprint</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>
-              Crow Knight의 Action 제작 흐름을 하드코딩된 Action 추가 방식에서 Timeline + Interaction + Modifiers +
-              Runtime Rule 데이터 조립 방식으로 전환한다.
-            </p>
+            <p>새 기능 없이 파일명, 역할 접미사, SRC MAP, Architecture 용어를 정리한다.</p>
           </div>
         </div>
       </section>
@@ -241,281 +199,88 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Task Report 파일명 변경</p>
+            <p>Editor Foundation 파일명 / SRC MAP 정리</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>docs/99_CURRENT_SPRINT.md 파일명을 docs/99_TASK_REPORT.md로 변경한다.</li>
-              <li>문서, 대시보드, 히스토리, 개발 규칙의 이전 파일명 참조를 새 파일명으로 정리한다.</li>
-              <li>다음 작업부터 Task Report 갱신 대상이 docs/99_TASK_REPORT.md임을 명확히 한다.</li>
+              <li>src/*.js 파일명을 snake_case + 역할 접미사 규칙으로 맞춘다.</li>
+              <li>docs/10_SRC_MAP.md를 엔진 중심 인덱스로 재정리한다.</li>
+              <li>Architecture / Editor Flow / SRC MAP의 용어와 파일명을 맞춘다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>docs/99_CURRENT_SPRINT.md를 docs/99_TASK_REPORT.md로 이동했다.</li>
-              <li>AGENTS.md와 docs 문서들의 파일명 참조를 새 이름으로 바꿨다.</li>
-              <li>docs/src-map.html의 Task Report 링크를 ./99_TASK_REPORT.md로 갱신했다.</li>
-              <li>이번 파일명 변경 내역을 98_SPRINT_HISTORY.md에 기록했다.</li>
+              <li>camelCase JS 파일명을 snake_case로 정리했다.</li>
+              <li>역할이 애매한 파일명에 engine/helper/controller/view/state/data 접미사를 적용했다.</li>
+              <li>JS import 경로와 문서 참조를 새 파일명으로 갱신했다.</li>
+              <li>SRC_MAP의 역할표 미준수 / 보류 목록을 제거했다.</li>
             </ul>
           </div>
           <div class="block">
-            <p><strong>완료된 QA</strong></p>
+            <p><strong>남겨둔 파일</strong></p>
             <ul>
-              <li>문서 Prettier 완료.</li>
-              <li>npm run check 통과.</li>
-              <li>git diff --check 통과.</li>
-              <li>새 파일 존재와 이전 파일 제거 확인.</li>
-              <li>이전 파일명 참조 제거 확인.</li>
-              <li>sprint-dashboard.html 200 OK 확인.</li>
+              <li>main.js는 앱 entry point라 접미사 예외로 유지한다.</li>
+              <li>과거 Sprint History의 옛 파일명은 역사 기록으로 유지한다.</li>
             </ul>
           </div>
         </div>
       </section>
 
       <section>
-        <h2>3. 해야 할 QA</h2>
-        <p class="qa-note">
-          체크한 QA는 이 브라우저에 저장됩니다. 다음 Task Report 갱신 때 체크된 항목은 제거하고, 체크하지 못한 항목은
-          아래 완료 안 된 QA로 이월합니다.
-        </p>
+        <h2>3. 구조 QA</h2>
         <div class="qa">
           <div class="block">
-            <h3>Editor QA</h3>
-            <ul class="qa-list">
+            <h3>Filename QA</h3>
+            <ul>
               <li>
-                <label class="qa-item" data-qa-id="task-report-dashboard-opens">
+                <label class="qa-item" data-qa-id="no-camelcase-js-files">
                   <input type="checkbox" />
-                  <span
-                    >http://127.0.0.1:4176/docs/sprint-dashboard.html을 열고 대시보드가 정상 표시되는지 확인한다.</span
-                  >
+                  <span>src/*.js에 camelCase 파일명이 없는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="task-report-src-map-link">
+                <label class="qa-item" data-qa-id="suffix-role-rule">
                   <input type="checkbox" />
-                  <span>docs/src-map.html을 열고 Task Report 링크가 99_TASK_REPORT.md로 이동하는지 확인한다.</span>
+                  <span>main.js를 제외한 src/*.js가 역할 접미사 규칙을 따르는지 확인한다.</span>
                 </label>
               </li>
-            </ul>
-          </div>
-          <div class="block">
-            <h3>Runtime QA</h3>
-            <ul class="qa-list">
               <li>
-                <label class="qa-item" data-qa-id="runtime-none-qa-task-report-rename">
+                <label class="qa-item" data-qa-id="imports-exist">
                   <input type="checkbox" />
-                  <span>이번 Task는 문서 파일명 변경이므로 Runtime 동작 확인 대상이 없는지 확인한다.</span>
+                  <span>모든 로컬 JS import 대상 파일이 존재하는지 확인한다.</span>
                 </label>
               </li>
             </ul>
           </div>
           <div class="block">
-            <h3>Save / Load QA</h3>
-            <ul class="qa-list">
+            <h3>Document QA</h3>
+            <ul>
               <li>
-                <label class="qa-item" data-qa-id="save-load-none-qa-task-report-rename">
+                <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>이번 Task가 게임 저장 데이터나 Firebase 저장 구조를 바꾸지 않았는지 확인한다.</span>
+                  <span>docs/10_SRC_MAP.md와 실제 src 파일명이 일치하는지 확인한다.</span>
+                </label>
+              </li>
+              <li>
+                <label class="qa-item" data-qa-id="architecture-terms-current">
+                  <input type="checkbox" />
+                  <span>docs/03_ARCHITECTURE.md와 SRC_MAP의 용어가 충돌하지 않는지 확인한다.</span>
+                </label>
+              </li>
+              <li>
+                <label class="qa-item" data-qa-id="check-commands">
+                  <input type="checkbox" />
+                  <span>npm run check와 git diff --check를 통과하는지 확인한다.</span>
                 </label>
               </li>
             </ul>
-          </div>
-          <div class="block">
-            <h3>Regression QA</h3>
-            <ul class="qa-list">
-              <li>
-                <label class="qa-item" data-qa-id="task-report-fixed-sections-after-rename">
-                  <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 1번부터 5번까지의 고정 섹션 형식을 유지하는지 확인한다.</span>
-                </label>
-              </li>
-              <li>
-                <label class="qa-item" data-qa-id="task-report-rename-history-entry">
-                  <input type="checkbox" />
-                  <span>docs/98_SPRINT_HISTORY.md에 이번 파일명 변경 기록이 시간순으로 남아 있는지 확인한다.</span>
-                </label>
-              </li>
-              <li>
-                <label class="qa-item" data-qa-id="task-report-update-target-renamed">
-                  <input type="checkbox" />
-                  <span>앞으로 Task Report 갱신 대상 파일명이 docs/99_TASK_REPORT.md로 안내되는지 확인한다.</span>
-                </label>
-              </li>
-            </ul>
-          </div>
-          <div class="block">
-            <h3>Migration QA</h3>
-            <ul class="qa-list">
-              <li>
-                <label class="qa-item" data-qa-id="old-current-sprint-link-not-used">
-                  <input type="checkbox" />
-                  <span
-                    >오래된 docs/99_CURRENT_SPRINT.md 링크를 더 이상 작업 기준 문서로 사용하지 않는지 확인한다.</span
-                  >
-                </label>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="block carryover">
-          <h3>완료 안 된 QA</h3>
-          <ul class="qa-list">
-            <li>
-              <label class="qa-item" data-qa-id="carry-dashboard-checkbox-visible">
-                <input type="checkbox" />
-                <span>대시보드의 해야 할 QA 항목 왼쪽에 체크박스가 보이는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-dashboard-checkbox-toggle">
-                <input type="checkbox" />
-                <span
-                  >QA 체크박스를 클릭했을 때 항목이 체크 완료 상태로 바뀌고, 다시 클릭하면 체크가 해제되는지
-                  확인한다.</span
-                >
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-dashboard-checkbox-persist">
-                <input type="checkbox" />
-                <span>체크한 뒤 페이지를 새로고침해도 같은 브라우저에서 체크 상태가 유지되는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-dashboard-friendly-qa-copy">
-                <input type="checkbox" />
-                <span
-                  >QA 문구가 어디에서 무엇을 어떤 기준으로 확인해야 하는지 이해할 수 있을 만큼 구체적인지
-                  확인한다.</span
-                >
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-task-report-fixed-sections">
-                <input type="checkbox" />
-                <span>99_TASK_REPORT.md가 새 고정 형식 1~5번 섹션을 유지하는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-sprint-history-keeps-entries">
-                <input type="checkbox" />
-                <span>98_SPRINT_HISTORY.md에 누적 기록이 남아 있는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-next-task-qa-carryover-rule">
-                <input type="checkbox" />
-                <span
-                  >다음 Task Report를 쓸 때 체크 완료된 QA는 제거하고, 체크되지 않은 QA는 완료 안 된 QA로 이월한다는
-                  규칙이 문서에 남아 있는지 확인한다.</span
-                >
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-setup-group-select-visible">
-                <input type="checkbox" />
-                <span>Setup 화면에서 그룹 드롭다운이 주인공 / 잡몹 / 보스로 보이는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-setup-group-filter">
-                <input type="checkbox" />
-                <span
-                  >Setup 화면에서 그룹을 바꿨을 때 뒤쪽 캐릭터 드롭다운이 해당 그룹 캐릭터만 보여주는지 확인한다.</span
-                >
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-character-create-modal">
-                <input type="checkbox" />
-                <span
-                  >Setup의 ... 메뉴에서 새 캐릭터 추가를 눌렀을 때 영어명 / 한글명 / 폴더 / PSD 선택 모달이 열리는지
-                  확인한다.</span
-                >
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-character-local-folder-metadata">
-                <input type="checkbox" />
-                <span
-                  >새 캐릭터를 만든 뒤 로컬 assets/characters/{group}/{englishName} 폴더와 metadata가 생성되는지
-                  확인한다.</span
-                >
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-character-delete-trash">
-                <input type="checkbox" />
-                <span>player 삭제는 막히고, 다른 캐릭터 삭제는 휴지통으로 이동하는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-character-trash-permanent-delete">
-                <input type="checkbox" />
-                <span>휴지통에서 완전삭제를 실행했을 때 trash 폴더와 metadata가 정리되는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-trash-not-runtime-actor">
-                <input type="checkbox" />
-                <span>휴지통으로 보낸 캐릭터가 Canvas나 전투 Runtime actor로 남지 않는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-character-refresh-metadata">
-                <input type="checkbox" />
-                <span>새 캐릭터 생성 / 휴지통 이동 후 새로고침해도 metadata 상태가 유지되는지 확인한다.</span>
-              </label>
-            </li>
-            <li>
-              <label class="qa-item" data-qa-id="carry-firebase-character-metadata">
-                <input type="checkbox" />
-                <span>Firebase metadata 업로드 / 다운로드 후 캐릭터 그룹과 휴지통 상태가 유지되는지 확인한다.</span>
-              </label>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section>
-        <h2>4. 다음 작업 후보</h2>
-        <ol>
-          <li>Setup 캐릭터 휴지통 복구 버튼 추가 여부 결정.</li>
-          <li>Firebase Storage PNG까지 그룹 / 휴지통 경로로 이동할지 정책 확정.</li>
-          <li>캐릭터 metadata와 Runtime actor 생성 경계를 문서에 반영.</li>
-          <li>editor_asset_actions.js에서 캐릭터 asset 관리 로직을 별도 모듈로 분리.</li>
-        </ol>
-      </section>
-
-      <section>
-        <h2>5. Sprint 진행 현황</h2>
-        <div class="progress-list">
-          <div class="block progress-item">
-            <div class="progress-head"><span>□ 중간 목표 1</span><span>65%</span></div>
-            <p>Action을 Timeline + Interaction + Modifiers + Runtime Rule 데이터 조립 구조로 정리한다.</p>
-            <div class="bar"><i style="width: 65%"></i></div>
-          </div>
-          <div class="block progress-item">
-            <div class="progress-head"><span>□ 중간 목표 2</span><span>80%</span></div>
-            <p>Editor에서 Action / Effect 공통 Interaction, Modifiers UI를 유지한다.</p>
-            <div class="bar"><i style="width: 80%"></i></div>
-          </div>
-          <div class="block progress-item">
-            <div class="progress-head"><span>□ 중간 목표 3</span><span>55%</span></div>
-            <p>Trigger 기반 Action 실행 구조로 Basic / Custom Action 차이를 줄인다.</p>
-            <div class="bar"><i style="width: 55%"></i></div>
-          </div>
-          <div class="block progress-item">
-            <div class="progress-head"><span>□ 중간 목표 4</span><span>60%</span></div>
-            <p>Firebase metadata / asset 저장 흐름을 Setup, Action, Effect, Stage에서 일관되게 만든다.</p>
-            <div class="bar"><i style="width: 60%"></i></div>
           </div>
         </div>
       </section>
     </main>
+
     <script>
       const QA_STORAGE_KEY = 'crowKnight.sprintDashboard.qa.v1';
       const savedQaState = JSON.parse(window.localStorage.getItem(QA_STORAGE_KEY) || '{}');

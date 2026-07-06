@@ -1,33 +1,24 @@
 import { DEFAULT_PLAYER_RIG } from './player_default_rig_data.js';
-import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_editor.js';
 import { defaultTimelineModifiers } from './timeline_modifier_data.js';
-
-const DEFAULT_ATTACK_REACTIONS = {
-  attack1: { stun: 0.22, knockbackX: 330, knockbackY: 110, deathBurst: 1 },
-  attack2: { stun: 0.22, knockbackX: 380, knockbackY: 120, deathBurst: 1.08 },
-  attack3: { stun: 0.28, knockbackX: 520, knockbackY: 190, deathBurst: 1.28 },
-  jumpAttack: { stun: 0.26, knockbackX: 220, knockbackY: 260, deathBurst: 1.18 },
-  roll: { stun: 0.2, knockbackX: 300, knockbackY: 90, deathBurst: 1 },
-};
 
 export const DEFAULT_PLAYER_TUNING = {
   maxHpPips: 5,
-  speed: 400,
-  runAcceleration: 0.16,
-  jumpPower: 132,
-  airFlapPower: 185,
-  airFlapCooldown: 0.1,
-  glideTimeMax: 1.1,
-  glideFallSpeed: 180,
-  dashCooldownMax: 0.45,
-  attackCooldownMax: 0.18,
-  comboResetTime: 0.72,
-  invulnerability: { hurt: 0.45, rollEnd: 0.18 },
+  speed: 0,
+  runAcceleration: 0,
+  jumpPower: 0,
+  airFlapPower: 0,
+  airFlapCooldown: 0,
+  glideTimeMax: 0,
+  glideFallSpeed: 0,
+  dashCooldownMax: 0,
+  attackCooldownMax: 0,
+  comboResetTime: 0,
+  invulnerability: { hurt: 0, rollEnd: 0 },
   transform: { scale: 1, anchorX: 0, anchorY: 0 },
   hud: { offsetY: 0 },
   effects: { hitShake: 1.6, hitSpark: 1 },
   customActions: [],
-  deletedPoseActions: [],
+  deletedActionKeys: [],
   actionNames: {},
   actionTriggers: {},
   modifiers: defaultTimelineModifiers(),
@@ -48,31 +39,24 @@ export const DEFAULT_PLAYER_TUNING = {
     attack3: { image: 'slash3' },
   },
   effectSettings: {
-    idle: { duration: 0.8, playback: 'loop', playbackRate: 1 },
-    run: { duration: 0.58, playback: 'loop', playbackRate: 1 },
-    jump: { duration: 0.42, playback: 'once', playbackRate: 1 },
-    fall: { duration: 0.55, playback: 'loop', playbackRate: 1 },
-    glide: { duration: 0.8, playback: 'loop', playbackRate: 1 },
-    roll: { duration: 0.28, playback: 'once', playbackRate: 1 },
-    guard: { duration: 0.35, playback: 'loop', playbackRate: 1 },
-    guardBreak: { duration: 0.38, playback: 'once', playbackRate: 1 },
-    hurt: { duration: 0.24, playback: 'once', playbackRate: 1 },
-    death: { duration: 1.1, playback: 'once', playbackRate: 1 },
-    jumpAttack: { duration: 0.34, playback: 'once', playbackRate: 1 },
-    attack1: { duration: 0.26, playback: 'once', playbackRate: 1 },
-    attack2: { duration: 0.28, playback: 'once', playbackRate: 1 },
-    attack3: { duration: 0.36, playback: 'once', playbackRate: 1 },
+    idle: { duration: 0.8, playback: 'loop', playbackRate: 1, mirror: true },
+    run: { duration: 0.58, playback: 'loop', playbackRate: 1, mirror: true },
+    jump: { duration: 0.42, playback: 'once', playbackRate: 1, mirror: true },
+    fall: { duration: 0.55, playback: 'loop', playbackRate: 1, mirror: true },
+    glide: { duration: 0.8, playback: 'loop', playbackRate: 1, mirror: true },
+    roll: { duration: 0.28, playback: 'once', playbackRate: 1, mirror: true },
+    guard: { duration: 0.35, playback: 'loop', playbackRate: 1, mirror: true },
+    guardBreak: { duration: 0.38, playback: 'once', playbackRate: 1, mirror: true },
+    hurt: { duration: 0.24, playback: 'once', playbackRate: 1, mirror: true },
+    death: { duration: 1.1, playback: 'once', playbackRate: 1, mirror: true },
+    jumpAttack: { duration: 0.34, playback: 'once', playbackRate: 1, mirror: true },
+    attack1: { duration: 0.26, playback: 'once', playbackRate: 1, mirror: true },
+    attack2: { duration: 0.28, playback: 'once', playbackRate: 1, mirror: true },
+    attack3: { duration: 0.36, playback: 'once', playbackRate: 1, mirror: true },
   },
-  motion: {
-    rollIntensity: 1,
-    rollWeapon: 0,
-    rollGhostCount: 5,
-    rollGhostInterval: 0.035,
-    rollGhostLife: 0.18,
-    rollGhostOpacity: 1,
-  },
+  motion: {},
   layerOrder: ['leftLeg', 'body', 'head', 'cape', 'leftArm', 'rightLeg', 'rightArm', 'shield', 'weapon'],
-  poseOffsets: {
+  actionOffsets: {
     idle: {},
     run: {},
     jump: {},
@@ -83,20 +67,12 @@ export const DEFAULT_PLAYER_TUNING = {
     guardBreak: {},
     hurt: {},
     death: {},
-    jumpAttack: {
-      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.22, 0.58, DEFAULT_ATTACK_REACTIONS.jumpAttack),
-    },
-    attack1: {
-      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.24, 0.58, DEFAULT_ATTACK_REACTIONS.attack1),
-    },
-    attack2: {
-      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.2, 0.62, DEFAULT_ATTACK_REACTIONS.attack2),
-    },
-    attack3: {
-      [ATTACK_INTERACTION_OBJECT_KEY]: defaultAttackActiveFrames(0.18, 0.68, DEFAULT_ATTACK_REACTIONS.attack3),
-    },
+    jumpAttack: {},
+    attack1: {},
+    attack2: {},
+    attack3: {},
   },
-  poseSettings: {
+  actionSettings: {
     idle: { duration: 0.8, playback: 'loop', playbackRate: 1 },
     run: { duration: 0.58, playback: 'loop', playbackRate: 1 },
     jump: { duration: 0.42, playback: 'once', playbackRate: 1 },
@@ -114,16 +90,3 @@ export const DEFAULT_PLAYER_TUNING = {
   },
   rig: DEFAULT_PLAYER_RIG,
 };
-
-function defaultAttackActiveFrames(activeAt, inactiveAt, reaction) {
-  return {
-    start: { active: 0, attack: 1, ...reaction },
-    end: { active: 0, attack: 1, ...reaction },
-    keyframes: [
-      { id: 'start', t: 0, active: 0, attack: 1, ...reaction },
-      { id: 'active', t: activeAt, active: 1, attack: 1, ...reaction },
-      { id: 'inactive', t: inactiveAt, active: 0, attack: 1, ...reaction },
-      { id: 'end', t: 1, active: 0, attack: 1, ...reaction },
-    ],
-  };
-}

@@ -1,4 +1,4 @@
-import { screenDeltaToLocal } from './canvasDragMath.js';
+import { screenDeltaToLocal } from './canvas_drag_math_helper.js';
 import { resizeEditableTransformFromHandle } from './editable_object_model_helper.js';
 import {
   anchorScaleForPart,
@@ -11,6 +11,12 @@ import { isMasterPart } from './editor_label_helper.js';
 import { applyGroupTransformDrag } from './group_transform_adapter.js';
 
 export function applyTuningCanvasDrag(drag, dx, dy, { groupEditValues }) {
+  if (drag.actionPivot) {
+    drag.writeActionPivotValue?.('x', drag.startValues.x + dx);
+    drag.writeActionPivotValue?.('y', drag.startValues.y + dy);
+    return;
+  }
+
   if (drag.group) {
     applyGroupTransformDrag(drag, dx, dy, groupEditValues);
     return;
@@ -35,9 +41,9 @@ export function applyCanvasPartDrag(drag, dx, dy) {
     const scaleY = anchorScaleForPart(drag.target, 'ay', drag.part);
     const nextAx = drag.startValues.ax + moveLocalX / scaleX;
     const nextAy = drag.startValues.ay + moveLocalY / scaleY;
-    if (drag.context === 'pose' && typeof drag.writePoseFrameValue === 'function') {
-      drag.writePoseFrameValue(drag.part, 'ax', nextAx);
-      drag.writePoseFrameValue(drag.part, 'ay', nextAy);
+    if (drag.context === 'action' && typeof drag.writeActionFrameValue === 'function') {
+      drag.writeActionFrameValue(drag.part, 'ax', nextAx);
+      drag.writeActionFrameValue(drag.part, 'ay', nextAy);
       return;
     }
     if (typeof drag.writeValue === 'function') {

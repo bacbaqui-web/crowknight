@@ -55,6 +55,9 @@ const COMMON_TIMELINE_CONTROLLER_METHODS = [
   'syncPreview',
   'togglePlayback',
   'togglePlaybackMode',
+  'toggleMirror',
+  'toggleBlend',
+  'toggleCondition',
   'updatePlaybackRate',
   'updateSetting',
 ];

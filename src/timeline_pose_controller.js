@@ -8,7 +8,7 @@ import { createTimelineSelectionState } from './timeline_state.js';
 import { createTimelineClipboardState } from './timeline_clipboard_helper.js';
 import { createTimelinePreviewControls, syncPoseTimelinePreview } from './timeline_preview_helper.js';
 import { renderPoseTimelineSettingsView, syncPoseTimelineToolbarView } from './timeline_pose_panel_view.js';
-import { MASTER_PART_KEY } from './game_config.js';
+import { MASTER_PART_KEY } from './game_config_data.js';
 import { createTimelineController, createTimelineControllerCommonApi } from './timeline_controller.js';
 import { isMasterPart } from './editor_label_helper.js';
 

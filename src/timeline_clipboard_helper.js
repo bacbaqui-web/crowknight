@@ -1,7 +1,7 @@
-import { POSE_PART_KEYS } from './game_config.js';
-import { ensurePoseOffset, poseKeyframesFor } from './project_data_normalizer.js';
+import { ACTION_PART_KEYS } from './game_config_data.js';
+import { ensureActionOffset, actionKeyframesFor } from './project_data_normalizer_helper.js';
 import { effectFrameValue, frameValue } from './animation_frame_data.js';
-import { pasteEffectTimelineFrame, pastePoseTimelineFramePart } from './timeline_keyframe_helper.js';
+import { pasteEffectTimelineFrame, pasteActionTimelineFramePart } from './timeline_keyframe_helper.js';
 import { isTimelineFrameId } from './timeline_state.js';
 
 export function createTimelineClipboardState() {
@@ -40,15 +40,15 @@ export function timelinePasteTargetFrameId({ selection, keyframes, slotToValue, 
   return createdId;
 }
 
-export function copyActivePoseTimelineFrame({
+export function copyActiveActionTimelineFrame({
   isOpen,
   activeKeyframeId,
   fixedFrame,
   keyframes,
   tuning,
-  poseKey,
-  selectedPoseParts,
-  activePosePartKey,
+  actionKey,
+  selectedActionParts,
+  activeActionPartKey,
 }) {
   const id = activeKeyframeId || fixedFrame;
   return copyTimelineFrame({
@@ -56,39 +56,39 @@ export function copyActivePoseTimelineFrame({
     id,
     keyframes,
     createCopy: (reference) =>
-      createPoseFrameCopy({
+      createActionFrameCopy({
         tuning,
-        poseKey,
+        actionKey,
         id,
         reference,
-        selectedParts: selectedPoseFrameCopyParts(selectedPoseParts, activePosePartKey),
-        mode: selectedPoseFrameCopyMode(selectedPoseParts, activePosePartKey),
-        activePosePartKey,
+        selectedParts: selectedActionFrameCopyParts(selectedActionParts, activeActionPartKey),
+        mode: selectedActionFrameCopyMode(selectedActionParts, activeActionPartKey),
+        activeActionPartKey,
       }),
   });
 }
 
-export function pastePoseTimelineFrameCopy({
-  copiedPoseFrame,
+export function pasteActionTimelineFrameCopy({
+  copiedActionFrame,
   id,
   tuning,
-  poseKey,
-  selectedPoseParts,
-  activePosePartKey,
+  actionKey,
+  selectedActionParts,
+  activeActionPartKey,
   ensureKeyframe,
 }) {
-  if (!copiedPoseFrame || !id) return false;
-  const pasteParts = poseFramePasteParts(copiedPoseFrame, selectedPoseParts, activePosePartKey);
+  if (!copiedActionFrame || !id) return false;
+  const pasteParts = actionFramePasteParts(copiedActionFrame, selectedActionParts, activeActionPartKey);
 
   pasteParts.forEach(({ from, to }) => {
-    if (!from || !to || !copiedPoseFrame.parts[from]) return;
+    if (!from || !to || !copiedActionFrame.parts[from]) return;
 
-    ensurePoseOffset(tuning, poseKey, to);
-    const frames = tuning.poseOffsets[poseKey][to];
-    pastePoseTimelineFramePart({
+    ensureActionOffset(tuning, actionKey, to);
+    const frames = tuning.actionOffsets[actionKey][to];
+    pasteActionTimelineFramePart({
       frames,
       id,
-      sourceFrame: copiedPoseFrame.parts[from],
+      sourceFrame: copiedActionFrame.parts[from],
       ensureKeyframe,
     });
   });
@@ -118,50 +118,50 @@ export function pasteEffectTimelineFrameCopy({ copiedEffectFrame, effect, effect
   return true;
 }
 
-export function selectedPoseFrameCopyParts(selectedPoseParts, activePosePartKey) {
-  if (selectedPoseParts.size() > 1) return selectedPoseParts.values();
-  if (activePosePartKey) return [activePosePartKey];
-  return POSE_PART_KEYS;
+export function selectedActionFrameCopyParts(selectedActionParts, activeActionPartKey) {
+  if (selectedActionParts.size() > 1) return selectedActionParts.values();
+  if (activeActionPartKey) return [activeActionPartKey];
+  return ACTION_PART_KEYS;
 }
 
-export function selectedPoseFrameCopyMode(selectedPoseParts, activePosePartKey) {
-  if (selectedPoseParts.size() > 1) return 'parts';
-  if (activePosePartKey) return 'part';
+export function selectedActionFrameCopyMode(selectedActionParts, activeActionPartKey) {
+  if (selectedActionParts.size() > 1) return 'parts';
+  if (activeActionPartKey) return 'part';
   return 'frame';
 }
 
-export function createPoseFrameCopy({ tuning, poseKey, id, reference, selectedParts, mode, activePosePartKey }) {
+export function createActionFrameCopy({ tuning, actionKey, id, reference, selectedParts, mode, activeActionPartKey }) {
   const copy = {
     mode,
-    pose: poseKey,
+    action: actionKey,
     sourceId: id,
-    sourcePart: activePosePartKey || null,
+    sourcePart: activeActionPartKey || null,
     sourceParts: selectedParts,
     parts: {},
   };
 
   selectedParts.forEach((part) => {
-    ensurePoseOffset(tuning, poseKey, part);
-    const frames = tuning.poseOffsets[poseKey][part];
-    const source = poseKeyframesFor(frames).find((frame) => frame.id === id);
+    ensureActionOffset(tuning, actionKey, part);
+    const frames = tuning.actionOffsets[actionKey][part];
+    const source = actionKeyframesFor(frames).find((frame) => frame.id === id);
     copy.parts[part] = frameValue(source || reference);
   });
 
   return copy;
 }
 
-export function poseFramePasteParts(copiedPoseFrame, selectedPoseParts, activePosePartKey) {
-  if (copiedPoseFrame.mode === 'part') {
-    return [{ from: copiedPoseFrame.sourcePart, to: activePosePartKey || copiedPoseFrame.sourcePart }];
+export function actionFramePasteParts(copiedActionFrame, selectedActionParts, activeActionPartKey) {
+  if (copiedActionFrame.mode === 'part') {
+    return [{ from: copiedActionFrame.sourcePart, to: activeActionPartKey || copiedActionFrame.sourcePart }];
   }
 
-  if (copiedPoseFrame.mode === 'parts') {
-    const sourceParts = copiedPoseFrame.sourceParts || Object.keys(copiedPoseFrame.parts || {});
-    const targetParts = selectedPoseParts.size() > 1 ? selectedPoseParts.values() : sourceParts;
+  if (copiedActionFrame.mode === 'parts') {
+    const sourceParts = copiedActionFrame.sourceParts || Object.keys(copiedActionFrame.parts || {});
+    const targetParts = selectedActionParts.size() > 1 ? selectedActionParts.values() : sourceParts;
     return sourceParts.map((from, index) => ({ from, to: targetParts[index] || from }));
   }
 
-  return POSE_PART_KEYS.map((part) => ({ from: part, to: part }));
+  return ACTION_PART_KEYS.map((part) => ({ from: part, to: part }));
 }
 
 export function createEffectFrameCopy(effectKey, source) {

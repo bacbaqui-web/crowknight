@@ -8,21 +8,22 @@ import {
   isCollisionSectionOpen,
   isSettingsPanelOpen,
 } from './settings_panel_state.js';
-import { effectFrameAt } from './project_data_normalizer.js';
+import { effectFrameAt } from './project_data_normalizer_helper.js';
+import { timelinePlaybackProgress } from './timeline_playback_helper.js';
 import {
   COLLISION_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
   GUARD_INTERACTION_OBJECT_KEY,
   ATTACK_INTERACTION_OBJECT_KEY,
   interactionObjectPartKeysForEditFocus,
-} from './interaction_object_editor.js';
-import { clamp } from './utils.js';
+} from './interaction_object_editor_controller.js';
+import { clamp } from './common_helper.js';
 
 export function drawTuningPanelDebugBoxes(
   ctx,
   selectedActor,
   effectAssets,
-  { activeSetupPartKey = null, activePosePartKey = null } = {}
+  { activeSetupPartKey = null, activeActionPartKey = null } = {}
 ) {
   if (!isSettingsPanelOpen()) return;
 
@@ -30,13 +31,13 @@ export function drawTuningPanelDebugBoxes(
     drawSetupFallbackInteractionPreview(ctx, selectedActor, activeSetupPartKey);
   }
 
-  const activePoseFallbackInteractionKeys = editHandleFallbackInteractionKeysForPosePart(activePosePartKey);
-  activePoseFallbackInteractionKeys.forEach((boxKey) =>
+  const activeActionFallbackInteractionKeys = editHandleFallbackInteractionKeysForActionPart(activeActionPartKey);
+  activeActionFallbackInteractionKeys.forEach((boxKey) =>
     drawSetupFallbackInteractionPreview(ctx, selectedActor, boxKey)
   );
 
   const attackKey = activeAttackSettingsKey();
-  if (attackKey && !activePoseFallbackInteractionKeys.length) {
+  if (attackKey && !activeActionFallbackInteractionKeys.length) {
     drawFallbackAttackRegionPreview(ctx, selectedActor, attackKey);
   }
 
@@ -46,7 +47,7 @@ export function drawTuningPanelDebugBoxes(
   drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
 }
 
-function editHandleFallbackInteractionKeysForPosePart(partKey) {
+function editHandleFallbackInteractionKeysForActionPart(partKey) {
   return interactionObjectPartKeysForEditFocus(partKey);
 }
 
@@ -193,12 +194,7 @@ function effectPreviewTime(actor, key) {
   const settings = actor.tuning.effectSettings?.[key] || {};
   const duration = Math.max(0.05, Number(settings.duration || 0.3) / Math.max(0.1, Number(settings.playbackRate || 1)));
   const elapsed = (performance.now() - Number(preview.startedAt || performance.now())) / 1000;
-  if (settings.playback === 'loop') {
-    const cycle = (elapsed % (duration * 2)) / duration;
-    t = cycle <= 1 ? cycle : 2 - cycle;
-  } else {
-    t = clamp(elapsed / duration, 0, 1);
-  }
+  t = timelinePlaybackProgress(elapsed / duration, settings.playback);
   return t;
 }
 

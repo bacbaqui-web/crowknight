@@ -1,4 +1,4 @@
-import { POSE_MAX_FRAMES } from './game_config.js';
+import { ACTION_MAX_FRAMES } from './game_config_data.js';
 import {
   applyTimelineSelectionAction,
   copyTimelineFrameAction,
@@ -13,8 +13,10 @@ import {
 import { markActiveKeyframeButton } from './timeline_drag_control_helper.js';
 import { hasTimelineSelection } from './timeline_state.js';
 import { formatInputNumber } from './number_input_helper.js';
-import { clampTimelinePlaybackRate } from './timeline_playback_helper.js';
+import { clampTimelinePlaybackRate, nextTimelinePlayback } from './timeline_playback_helper.js';
 import { nextTimelineFrameCount } from './timeline_settings_helper.js';
+import { nextActionBlendFrames } from './action_blend_helper.js';
+import { nextActionCondition } from './action_condition_helper.js';
 
 export function createTimelineSelectionControls({
   selection,
@@ -162,6 +164,10 @@ export function createTimelinePlaybackControls({
       ),
     togglePlayback: () => toggleTimelinePlayback(isPlaying, stopPreview, syncPreview, playPreview),
     togglePlaybackMode: () => toggleTimelinePlaybackMode(settings, beginUndo, updateSetting, commitUndo),
+    toggleMirror: () => toggleActionMirror(settings, beginUndo, updateSetting, commitUndo),
+    toggleInterruptible: () => toggleActionInterruptible(settings, beginUndo, updateSetting, commitUndo),
+    toggleBlend: () => toggleActionBlend(settings, beginUndo, updateSetting, commitUndo),
+    toggleCondition: () => toggleActionCondition(settings, beginUndo, updateSetting, commitUndo),
   };
 }
 
@@ -183,7 +189,7 @@ function stepTimelineDuration(
   minFrames
 ) {
   beginUndo();
-  const next = nextTimelineFrameCount(frameCount, delta, snapToTen, minFrames, POSE_MAX_FRAMES);
+  const next = nextTimelineFrameCount(frameCount, delta, snapToTen, minFrames, ACTION_MAX_FRAMES);
   durationInput.value = next;
   updateSetting('duration', next);
   commitUndo();
@@ -200,6 +206,30 @@ function toggleTimelinePlayback(isPlaying, stopPreview, syncPreview, playPreview
 
 function toggleTimelinePlaybackMode(settings, beginUndo, updateSetting, commitUndo) {
   beginUndo();
-  updateSetting('playback', settings().playback === 'loop' ? 'once' : 'loop');
+  updateSetting('playback', nextTimelinePlayback(settings().playback));
+  commitUndo();
+}
+
+function toggleActionMirror(settings, beginUndo, updateSetting, commitUndo) {
+  beginUndo();
+  updateSetting('mirror', settings().mirror === false);
+  commitUndo();
+}
+
+function toggleActionInterruptible(settings, beginUndo, updateSetting, commitUndo) {
+  beginUndo();
+  updateSetting('interruptible', settings().interruptible === false);
+  commitUndo();
+}
+
+function toggleActionBlend(settings, beginUndo, updateSetting, commitUndo) {
+  beginUndo();
+  updateSetting('blendFrames', nextActionBlendFrames(settings().blendFrames));
+  commitUndo();
+}
+
+function toggleActionCondition(settings, beginUndo, updateSetting, commitUndo) {
+  beginUndo();
+  updateSetting('condition', nextActionCondition(settings().condition));
   commitUndo();
 }

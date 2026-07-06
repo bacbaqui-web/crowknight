@@ -1,5 +1,5 @@
 import { normalizeTuningPanelWorkflowSession, syncTuningPanelWorkflowSession } from './editor_workflow_data.js';
-import { createTuningPanelWorkflowNavigation } from './editor_workflow_navigation.js';
+import { createTuningPanelWorkflowNavigation } from './editor_workflow_navigation_helper.js';
 
 export function createTuningPanelWorkflowController({
   panel,

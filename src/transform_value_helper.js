@@ -12,12 +12,12 @@ import {
   partSizeBase,
   partSizeFromPercent,
   partSizeScale,
-  posePartSizeBase,
+  actionPartSizeBase,
   positiveScaleValue,
   sizeValueFromPercent,
 } from './property_value_helper.js';
-import { imagePartKeys, isControlGroupPartKey, isParentSizedPart, partFieldLimits } from './part_source_registry.js';
-import { clamp } from './utils.js';
+import { imagePartKeys, isControlGroupPartKey, isParentSizedPart, partFieldLimits } from './part_source_data.js';
+import { clamp } from './common_helper.js';
 
 export function isGroupScalablePart(part) {
   return imagePartKeys().includes(part) || isControlGroupPartKey(part) || isParentSizedPart(part) || isMasterPart(part);
@@ -26,19 +26,19 @@ export function isGroupScalablePart(part) {
 export function setCanvasVisualValue(drag, prop, value) {
   const nextValue = isSizeProp(prop) ? clampCanvasVisualSize(drag, prop, value) : value;
 
-  if (drag.context === 'pose') {
-    writePoseCanvasVisualValue(drag, prop, nextValue);
+  if (drag.context === 'action') {
+    writeActionCanvasVisualValue(drag, prop, nextValue);
     return;
   }
 
   writeDirectCanvasVisualValue(drag, prop, nextValue);
 }
 
-function writePoseCanvasVisualValue(drag, prop, value) {
+function writeActionCanvasVisualValue(drag, prop, value) {
   const baseValue = Number(drag.base?.[prop] || 0);
   const offset = value - baseValue;
-  if (typeof drag.writePoseFrameValue === 'function') {
-    drag.writePoseFrameValue(drag.part, prop, offset);
+  if (typeof drag.writeActionFrameValue === 'function') {
+    drag.writeActionFrameValue(drag.part, prop, offset);
     return;
   }
   drag.target[prop] = offset;
@@ -66,8 +66,8 @@ export function clampCanvasVisualSize(drag, prop, value) {
 }
 
 export function canvasSizePercentBase(drag, prop) {
-  if (drag.context === 'pose') {
-    return posePartSizeBase(drag.base, prop);
+  if (drag.context === 'action') {
+    return actionPartSizeBase(drag.base, prop);
   }
   if (isControlGroupPartKey(drag.part)) return 1;
   return canvasDirectSizeBase(drag, prop);

@@ -1,4 +1,4 @@
-import { clamp, clone, deg, lerp } from './utils.js';
+import { clamp, clone, deg, lerp } from './common_helper.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import {
   createAttackInteractionRegions,
@@ -27,17 +27,41 @@ import {
   updatePuppetPlayerState,
 } from './actor_action_helper.js';
 import {
-  applyPoseAnchor,
+  applyActionAnchor,
   identityMatrix,
   interpolateFrameValues,
   multiplyMatrix,
-  pingPongProgress,
   rotationMatrix,
   scaleMatrix,
   translationMatrix,
-} from './puppetPlayerGeometry.js';
+} from './puppet_player_geometry_helper.js';
 import { createPuppetPose } from './actor_pose_helper.js';
-import { poseActionDescriptors } from './pose_action_authoring.js';
+import { actionDescriptors } from './action_authoring_data.js';
+import { timelinePlaybackProgress } from './timeline_playback_helper.js';
+import { actionTimelineMirrorSign, mirrorActionFrameValue } from './action_mirror_helper.js';
+import { ACTION_FPS, ACTION_PART_KEYS } from './game_config_data.js';
+import { normalizeActionBlendFrames } from './action_blend_helper.js';
+import { normalizeActionCondition } from './action_condition_helper.js';
+import { normalizeActionGroup } from './action_group_helper.js';
+
+const ACTION_BLEND_VISUAL_KEYS = ['x', 'y', 'ax', 'ay', 'w', 'h', 'rot', 'opacity', 'anchorX', 'anchorY'];
+
+function blendActionOffset(from = {}, to = {}, current = {}, t = 1) {
+  const next = { ...current };
+  ACTION_BLEND_VISUAL_KEYS.forEach((key) => {
+    const start = Number(from?.[key] ?? next[key] ?? 0);
+    const end = Number(to?.[key] ?? next[key] ?? 0);
+    next[key] = lerp(start, end, t);
+  });
+  return next;
+}
+
+function canRunFallbackCondition(player, key) {
+  const condition = normalizeActionCondition(player.actionSettings?.[key]?.condition);
+  if (condition === 'ground') return player.onGround === true;
+  if (condition === 'air') return player.onGround === false;
+  return true;
+}
 
 export class PuppetPlayer {
   constructor(x, y, assets) {
@@ -45,6 +69,8 @@ export class PuppetPlayer {
     this.y = y;
     this.vx = 0;
     this.vy = 0;
+    this.vxInertia = null;
+    this.vyInertia = null;
     this.assets = assets;
     this.facing = 1;
     this.state = 'idle';
@@ -71,9 +97,15 @@ export class PuppetPlayer {
     this.attackSerial = 0;
     this.attackCarrySpeed = 0;
     this.customActionKey = null;
+    this.customActionFacing = null;
+    this.customActionTriggerMode = 'tap';
+    this.customActionPressCodes = null;
     this.customActionTime = 0;
     this.customActionDuration = 0;
+    this.customActionElapsed = 0;
     this.customActionMoveProgress = 0;
+    this.customActionBlend = null;
+    this.fallbackActionKey = 'idle';
     this.hurtTime = 0;
     this.guardActive = false;
     this.guardHits = 0;
@@ -82,6 +114,7 @@ export class PuppetPlayer {
     this.guardLockedUntilRelease = false;
     this.dead = false;
     this.debugInteractionObjects = false;
+    this.velocityControl = null;
     this.aiTimer = 0;
     this.aiDir = Math.random() > 0.5 ? 1 : -1;
     this.applyTuning(DEFAULT_PLAYER_TUNING);
@@ -89,31 +122,26 @@ export class PuppetPlayer {
 
   applyTuning(tuning) {
     const next = clone(tuning);
-    this.speed = next.speed;
-    this.runAcceleration = clamp(Number(next.runAcceleration ?? DEFAULT_PLAYER_TUNING.runAcceleration), 0.02, 0.4);
-    this.jumpPower = clamp(Number(next.jumpPower ?? DEFAULT_PLAYER_TUNING.jumpPower), 40, 720);
-    this.airFlapPower = next.airFlapPower;
-    this.airFlapCooldown = next.airFlapCooldown;
-    this.glideTimeMax = next.glideTimeMax;
-    this.glideFallSpeed = next.glideFallSpeed;
-    this.dashCooldownMax = next.dashCooldownMax;
-    this.attackCooldownMax = next.attackCooldownMax;
-    this.comboResetTime = next.comboResetTime;
-    this.invulnerability = next.invulnerability;
     this.transform = next.transform;
     this.effects = next.effects;
-    this.motion = next.motion;
     this.layerOrder = next.layerOrder;
-    this.actions = poseActionDescriptors(next);
+    this.actions = actionDescriptors(next);
     this.customActions = next.customActions || [];
-    this.poseOffsets = next.poseOffsets;
-    this.poseSettings = next.poseSettings;
+    this.modifiers = next.modifiers;
+    this.actionOffsets = next.actionOffsets;
+    this.actionSettings = next.actionSettings;
     this.rig = next.rig;
     if (this.customActionKey && !this.customActions.some((action) => action.key === this.customActionKey)) {
       this.customActionKey = null;
+      this.customActionFacing = null;
+      this.customActionTriggerMode = 'tap';
+      this.customActionPressCodes = null;
       this.customActionTime = 0;
       this.customActionDuration = 0;
+      this.customActionElapsed = 0;
       this.customActionMoveProgress = 0;
+      this.customActionBlend = null;
+      this.velocityControl = null;
     }
   }
 
@@ -141,28 +169,19 @@ export class PuppetPlayer {
     if (this.isCustomActionActive) {
       return this.activeAttackInteractionRegions();
     }
-    if (this.jumpAttackTime > 0 && this.isJumpAttackStrikeActive()) {
-      return this.activeAttackInteractionRegions();
-    }
-    if (this.isRolling && this.canRollUseWeapon) {
-      return this.activeAttackInteractionRegions();
-    }
-    if (this.attackTime <= 0 || this.isRolling) return [];
-    if (!this.isAttackStrikeActive()) return [];
-
-    return this.activeAttackInteractionRegions();
+    return [];
   }
 
   get isRolling() {
-    return this.dashTime > 0;
+    return false;
   }
 
   get canRollUseWeapon() {
-    return Number(this.motion?.rollWeapon || 0) >= 0.5;
+    return false;
   }
 
   get isAttacking() {
-    return this.attackTime > 0 || this.jumpAttackTime > 0 || this.isCustomActionActive;
+    return this.isCustomActionActive;
   }
 
   get isCustomActionActive() {
@@ -230,32 +249,23 @@ export class PuppetPlayer {
   }
 
   get isGuarding() {
-    return this.guardActive && this.guardBreakTime <= 0;
+    return false;
   }
 
   isAttackStrikeActive() {
-    if (this.attackTime <= 0) return false;
-
-    const progress = this.attackProgress;
-    const step = this.comboStep || 1;
-    const start = step === 3 ? 0.24 : 0.2;
-    const end = step === 3 ? 0.48 : 0.4;
-    return progress >= start && progress <= end;
+    return false;
   }
 
   isJumpAttackStrikeActive() {
-    if (this.jumpAttackTime <= 0) return false;
-    const progress = this.jumpAttackProgress;
-    return progress >= 0.18 && progress <= 0.62;
+    return false;
   }
 
   get rollSpeed() {
-    return this.speed * Math.max(0, Number(this.motion?.rollIntensity ?? 1));
+    return 0;
   }
 
   get attackLungeSpeed() {
-    const carry = this.attackCarrySpeed * Math.max(0, 1 - this.attackProgress * 0.65);
-    return carry;
+    return 0;
   }
 
   update(dt, keys, pressed, world) {
@@ -287,13 +297,11 @@ export class PuppetPlayer {
   }
 
   get attackProgress() {
-    if (this.attackTime <= 0) return 1;
-    return 1 - Math.max(0, this.attackTime) / Math.max(0.01, this.attackDuration);
+    return 1;
   }
 
   get jumpAttackProgress() {
-    if (this.jumpAttackTime <= 0) return 1;
-    return 1 - Math.max(0, this.jumpAttackTime) / Math.max(0.01, this.jumpAttackDuration);
+    return 1;
   }
 
   updateGuardInput(guardHeld) {
@@ -304,20 +312,35 @@ export class PuppetPlayer {
     return registerPuppetGuardBlock(this);
   }
 
-  get poseKey() {
-    if (this.posePreview?.pose) return this.posePreview.pose;
+  get actionKey() {
+    if (this.actionPreview?.action) return this.actionPreview.action;
     if (this.isCustomActionActive) return this.customActionKey;
-    if (this.state === 'jumpAttack') return 'jumpAttack';
-    if (this.state === 'attack') return `attack${this.comboStep || 1}`;
-    return this.state;
+    return this.fallbackActionKey || this.resolveFallbackActionKey() || 'idle';
   }
 
   getPartOffset(key) {
-    const value = this.poseOffsets?.[this.poseKey]?.[key];
-    return this.resolvePoseOffset(value);
+    const value = this.actionOffsets?.[this.actionKey]?.[key];
+    return this.resolveActionBlendOffset(key, this.resolveActionOffset(value));
   }
 
-  resolvePoseOffset(value) {
+  get actionMirrorSettings() {
+    return this.actionSettings?.[this.actionKey] || {};
+  }
+
+  resolveActionOffset(value) {
+    return this.resolveActionOffsetAt(value, this.getActionFrameProgress(), this.actionMirrorSettings, this.facing);
+  }
+
+  resolveActionOffsetForAction(actionKey, partKey, progress = 0, facing = this.facing) {
+    return this.resolveActionOffsetAt(
+      this.actionOffsets?.[actionKey]?.[partKey],
+      progress,
+      this.actionSettings?.[actionKey] || {},
+      facing
+    );
+  }
+
+  resolveActionOffsetAt(value, progress, settings = {}, facing = this.facing) {
     const empty = {
       x: 0,
       y: 0,
@@ -341,15 +364,16 @@ export class PuppetPlayer {
       pushPower: 0,
     };
     if (!value) return empty;
+    const mirror = (frame) => mirrorActionFrameValue(frame, actionTimelineMirrorSign(settings, facing));
     if (Array.isArray(value.keyframes) && value.keyframes.length) {
-      return applyPoseAnchor(interpolateFrameValues(value.keyframes, this.getPoseFrameProgress(), empty), value);
+      return mirror(applyActionAnchor(interpolateFrameValues(value.keyframes, progress, empty), value));
     }
-    if (!value.start && !value.end) return { ...empty, ...value };
+    if (!value.start && !value.end) return mirror({ ...empty, ...value });
 
     const start = { ...empty, ...(value.start || {}) };
     const end = { ...empty, ...(value.end || start) };
-    const t = this.getPoseFrameProgress();
-    return {
+    const t = progress;
+    return mirror({
       x: lerp(start.x, end.x, t),
       y: lerp(start.y, end.y, t),
       ax: lerp(start.ax, end.ax, t),
@@ -370,53 +394,95 @@ export class PuppetPlayer {
       knockbackY: lerp(start.knockbackY, end.knockbackY, t),
       deathBurst: lerp(start.deathBurst, end.deathBurst, t),
       pushPower: lerp(start.pushPower, end.pushPower, t),
+    });
+  }
+
+  beginCustomActionBlend(nextActionKey, nextFacing = this.facing) {
+    const frames = normalizeActionBlendFrames(this.actionSettings?.[nextActionKey]?.blendFrames);
+    if (frames <= 0) {
+      this.customActionBlend = null;
+      return;
+    }
+    const facing = nextFacing === -1 || nextFacing === 1 ? nextFacing : this.facing;
+    const from = {};
+    const to = {};
+    ACTION_PART_KEYS.forEach((partKey) => {
+      from[partKey] = this.getPartOffset(partKey);
+      to[partKey] = this.resolveActionOffsetForAction(nextActionKey, partKey, 0, facing);
+    });
+    this.customActionBlend = {
+      frames,
+      elapsedFrames: 0,
+      from,
+      to,
     };
   }
 
-  getPoseFrameProgress() {
-    if (Number.isFinite(this.posePreview?.t)) return clamp(this.posePreview.t, 0, 1);
-    if (this.posePreview?.playing) {
-      const settings = this.poseSettings?.[this.posePreview.pose] || {};
+  advanceCustomActionBlendFrame(dt = 0) {
+    if (!this.customActionBlend) return false;
+    const elapsedDeltaFrames = Math.max(0, Number(dt || 0)) * ACTION_FPS;
+    this.customActionBlend.elapsedFrames = Math.max(
+      0,
+      Number(this.customActionBlend.elapsedFrames || 0) + elapsedDeltaFrames
+    );
+    if (this.customActionBlend.elapsedFrames >= this.customActionBlend.frames) this.customActionBlend = null;
+    return Boolean(this.customActionBlend);
+  }
+
+  resolveActionBlendOffset(partKey, current) {
+    const blend = this.customActionBlend;
+    if (!blend) return current;
+    const frames = Math.max(1, Number(blend.frames || 1));
+    const t = clamp(Number(blend.elapsedFrames || 0) / frames, 0, 1);
+    return blendActionOffset(blend.from?.[partKey], blend.to?.[partKey] || current, current, t);
+  }
+
+  getActionFrameProgress() {
+    if (Number.isFinite(this.actionPreview?.t)) return clamp(this.actionPreview.t, 0, 1);
+    if (this.actionPreview?.playing) {
+      const settings = this.actionSettings?.[this.actionPreview.action] || {};
       const duration = Math.max(0.05, Number(settings.duration || 0.6));
-      const startedAt = Number(this.posePreview.startedAt || performance.now());
+      const startedAt = Number(this.actionPreview.startedAt || performance.now());
       const elapsed = (performance.now() - startedAt) / 1000;
-      const raw = (elapsed / duration) * this.getPosePlaybackRate(this.posePreview.pose);
-      return this.posePreview.loop ? pingPongProgress(raw) : clamp(raw, 0, 1);
+      const raw = (elapsed / duration) * this.getActionPlaybackRate(this.actionPreview.action);
+      return timelinePlaybackProgress(raw, this.actionPreview.playback);
     }
 
-    if (this.posePreview?.frame) return this.posePreview.frame === 'end' ? 1 : 0;
+    if (this.actionPreview?.frame) return this.actionPreview.frame === 'end' ? 1 : 0;
     if (this.isCustomActionActive) {
-      return clamp(1 - this.customActionTime / Math.max(0.01, this.customActionDuration || 0.6), 0, 1);
+      const settings = this.actionSettings?.[this.customActionKey] || {};
+      const duration = Math.max(
+        0.01,
+        Number(this.customActionDuration || this.getActionDuration(this.customActionKey, 0.6))
+      );
+      const raw = Math.max(0, Number(this.customActionElapsed || 0)) / duration;
+      const playback = this.customActionTriggerMode === 'pressLoop' ? settings.playback : 'once';
+      return timelinePlaybackProgress(raw, playback);
     }
-    if (this.state === 'attack') return clamp(this.attackProgress, 0, 1);
-    if (this.state === 'jumpAttack') return clamp(this.jumpAttackProgress, 0, 1);
-    if (this.state === 'roll') return clamp(1 - Math.max(0, this.dashTime) / Math.max(0.01, this.rollDuration), 0, 1);
-    if (this.state === 'jump') return Math.max(this.getJumpRiseProgress(), this.getTimelineProgress('jump', false));
-    if (this.state === 'hurt') return this.getTimelineProgress('hurt', false);
-    if (this.state === 'death') return this.getTimelineProgress('death', false);
-    if (this.state === 'guard' || this.state === 'guardBreak') return this.getTimelineProgress(this.state, false);
-    if (this.state === 'run' || this.state === 'idle' || this.state === 'fall' || this.state === 'glide') {
-      return this.getTimelineProgress(this.state, false);
-    }
-    return 0;
+    return this.getTimelineProgress(this.actionKey, false);
   }
 
   getTimelineProgress(key, forceLoop = false) {
-    const settings = this.poseSettings?.[key] || {};
+    const settings = this.actionSettings?.[key] || {};
     const duration = Math.max(0.05, Number(settings.duration || 0.6));
-    const raw = (this.stateTime / duration) * this.getPosePlaybackRate(key);
-    if (forceLoop || settings.playback !== 'once') return pingPongProgress(raw);
-    return clamp(raw, 0, 1);
+    const raw = (this.stateTime / duration) * this.getActionPlaybackRate(key);
+    return timelinePlaybackProgress(raw, forceLoop ? 'loop' : settings.playback);
   }
 
-  getPosePlaybackRate(key) {
-    return Math.max(0.1, Number(this.poseSettings?.[key]?.playbackRate || 1));
+  getActionPlaybackRate(key) {
+    return Math.max(0.1, Number(this.actionSettings?.[key]?.playbackRate || 1));
   }
 
-  getPoseActionDuration(key, fallback) {
-    const settings = this.poseSettings?.[key] || {};
+  getActionDuration(key, fallback) {
+    const settings = this.actionSettings?.[key] || {};
     const duration = Math.max(0.05, Number(settings.duration || fallback));
-    return duration / this.getPosePlaybackRate(key);
+    return duration / this.getActionPlaybackRate(key);
+  }
+
+  resolveFallbackActionKey() {
+    const candidates = (this.actions || []).filter((action) => normalizeActionGroup(action.group) === 'base');
+    const matched = candidates.find((action) => canRunFallbackCondition(this, action.key));
+    return matched?.key || (this.actionSettings?.idle || this.actionOffsets?.idle ? 'idle' : null);
   }
 
   getPose() {

@@ -15,17 +15,25 @@
 | Setup   | 캐릭터 기본 상태 제작 | Selection, Canvas, Layer, Save                      |
 | Action  | 캐릭터 행동 제작      | Timeline, Interaction, Modifiers, Preview           |
 | Effect  | 시각 효과 제작        | Timeline, Property, Interaction, Modifiers, Preview |
-| Stage   | 배경과 월드 규칙 제작 | Background, Stage Rules, Scene                      |
+| Stage   | 배경과 월드 규칙 제작 | Background, Stage Rules, World Physics, Scene       |
 | Common  | 미리보기와 저장       | Canvas, Project State, Assets                       |
 
 ## State
 
 - Selection State: 현재 선택된 편집 대상을 가진다.
+- EditTarget Resolver: Setup / Action / Effect 선택 상태를 공통 `EditTarget` object로 변환한다.
 - Editing State: 현재 Canvas/Property 편집 초점을 가진다.
 - Group Edit State: 여러 대상을 함께 편집할 때의 임시 값을 가진다.
 - Workflow State: 현재 활성 Session을 가진다.
 - Undo State: 편집 전후 snapshot을 가진다.
 - Project State: 저장 가능한 actors, scene, assets 상태를 가진다.
+
+## Stage
+
+- Stage는 배경 설정과 Stage Rules를 가진다.
+- Stage Rules 안의 World Physics는 제작자가 이해하기 쉬운 `Gravity`와 `Inertia` 설정을 저장한다.
+- World Physics는 Action Modifier가 아니라 모든 Runtime actor가 공유할 수 있는 Stage / World Runtime Rule이다.
+- World Physics 단위는 Action Timeline frame 기준이다. Position은 `px`, Velocity는 `px/f`, Gravity는 `px/f²`, Inertia는 `frame`이다.
 
 ## Timeline
 
@@ -47,16 +55,32 @@ Timeline Target
 
 - `Property`는 Transform 전용이다. `x/y`, `w/h`, `rot`, `opacity`, anchor 편집만 담당한다.
 - `Interaction`은 충돌, 피격, 공격, 방어 같은 상호작용 state와 세부 값을 담당한다.
-- `Modifiers`는 Action 실행 중 적용되는 수식 목록과 설정값을 담당한다. 현재 MVP는 이동, 가속, 감속만 노출한다.
+- `Modifiers`는 Action 실행 중 적용되는 수식 목록과 설정값을 담당한다. 현재 MVP는 Move, Velocity, Accelerate, Decelerate를 노출한다.
+- Modifier Mini Timeline은 Action Timeline 길이를 기준으로 modifier 작동 구간을 표시하는 공통 UI다.
+- Modifier 방향은 Velocity를 중심으로 통합한다. Velocity 값은 Action Timeline frame 기준 `px/f`로 표현하고, Runtime FPS 변환 없이 World Physics velocity state에 적용한다.
+- Move/Accelerate/Decelerate는 장기적으로 같은 Velocity + Graph + Mini Timeline 구조로 수렴시킨다.
 - Interaction/Modifiers는 Action 전용이 아니며 Effect도 같은 Editor Engine을 사용한다.
 - Projectile, Stage 같은 미래 target도 adapter로 같은 패널 구조에 연결할 수 있어야 한다.
 
+공통 편집 흐름은 다음 순서를 따른다.
+
+```text
+Selection
+→ resolveEditTarget(context)
+→ EditTarget
+→ Property / Handle / Drag / Save
+```
+
+`Property`, `Handle`, `Drag`, `Save`는 Setup / Action / Effect 선택 상태를 다시 판단하지 않고 `EditTarget`의 `targetKey`와 `writeTargetKey`를 사용한다.
+
 ## Action
 
-목표 구조:
+Action은 제작 가능한 행동 단위다.
 
 ```text
 Action
+├── Group
+├── Condition
 ├── Timeline
 ├── Interaction
 └── Modifiers
@@ -70,12 +94,12 @@ Combat
 Renderer
 ```
 
-- Timeline은 part/effect transform과 frame 값을 저장한다.
-- Interaction은 충돌, 피격, 공격, 방어 같은 상호작용 box와 frame state를 저장한다.
-- Modifiers는 이동, 가속, 감속 같은 실행 수식을 저장한다.
-- Basic Actions는 기존 기본 상태를 보존한다.
-- Skills는 사용자가 추가하는 Action 데이터다.
+- 원칙: Action은 `Group + Condition + Timeline + Interaction + Modifiers` 데이터 조합이다.
+- Runtime 실행 순서는 `Input → Trigger → Condition → Action`이다.
+- 아무 Trigger Action도 실행되지 않을 때는 `base` 그룹 Action 중 현재 Condition이 맞는 Action을 기본자세로 실행한다.
 - Runtime은 Action 데이터를 해석하고 실행 상태를 계산한다.
+- Trigger, Skill, Modifier, Runtime migration 세부 설계는 `13_ACTION_MODEL.md`를 본다.
+- 실제 저장 key와 schema는 `11_DATA_MODEL.md`를 본다.
 
 ## Editor Engines
 
@@ -94,8 +118,9 @@ Project Data
 - Property Editor Engine은 Interaction/Modifier의 존재를 모른다.
 - Interaction Editor Engine은 체크 상태, 세부 row 표시, frame 값 저장을 담당한다.
 - Modifiers Editor Engine은 modifier 목록, 활성화, 설정 UI, 저장을 담당한다.
+- Modifiers Editor Engine은 Velocity/Accelerate/Decelerate처럼 작동 구간이 있는 modifier에 공통 Mini Timeline UI를 붙인다.
 - 공통 카드 UI는 `editor_card_panel_view.js`에서 공유한다.
-- Runtime 해석과 Action Modifier Engine 연결은 다음 Task 범위다.
+- Action/Effect별 데이터 연결은 각 Timeline adapter가 담당한다.
 
 ## Canvas
 
@@ -129,7 +154,7 @@ drawRect(-ax, -ay, w, h)
 - 캐릭터 렌더링, 행동 상태, 효과, 전투 판정, HUD, 배경을 실행 화면에서 처리한다.
 - Runtime 판정 데이터는 Editor 원본에서 실행 중 계산한다.
 - Runtime은 새 Action을 만드는 곳이 아니다.
-- Action별 하드코딩 규칙은 유지/제거/Modifier Engine 이동 대상으로 분류한다.
+- Action별 하드코딩 제거 기준은 `13_ACTION_MODEL.md`를 본다.
 - Runtime은 팔, 다리, 몸통의 사전 포즈 애니메이션을 만들지 않는다. `actor_pose_helper.js`는 neutral pose만 제공하고 실제 자세는 Timeline data에서 온다.
 
 ## Save / Assets

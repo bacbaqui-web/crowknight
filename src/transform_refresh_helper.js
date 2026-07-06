@@ -5,15 +5,15 @@ export function createCanvasEditRefresh({
   renderEffectFields,
   syncEffectPreview,
   renderPartFields,
-  renderPosePartFields,
+  renderActionPartFields,
 }) {
   const renderEffect = () => {
     renderEffectFields();
     syncEffectPreview();
   };
-  const renderPartAndPose = () => {
+  const renderPartAndAction = () => {
     renderPartFields();
-    renderPosePartFields();
+    renderActionPartFields();
   };
 
   function renderContext(context) {
@@ -21,7 +21,7 @@ export function createCanvasEditRefresh({
       renderEffect();
       return;
     }
-    renderPartAndPose();
+    renderPartAndAction();
   }
 
   return {
@@ -36,17 +36,17 @@ export function createCanvasEditRefresh({
     },
     applyAndRenderGroup() {
       applySelected();
-      renderPosePartFields();
+      renderActionPartFields();
     },
     renderDragMove(drag, shouldApplyImmediately) {
       if (drag.context === 'effect') {
         renderEffect();
         return;
       }
-      if (shouldApplyImmediately) renderPartAndPose();
+      if (shouldApplyImmediately) renderPartAndAction();
     },
-    renderGroupPoseFields() {
-      renderPosePartFields();
+    renderGroupActionFields() {
+      renderActionPartFields();
     },
   };
 }

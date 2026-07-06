@@ -1,31 +1,50 @@
 /* Timeline and compact toolbar controls for the tuning panel. */
 
-.pose-timeline-settings {
+.timeline-settings {
   display: grid;
-  grid-template-columns: 54px 30px 30px minmax(0, 1fr) 30px;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
   gap: 5px;
   align-items: center;
-  justify-content: stretch;
-  overflow: hidden;
+  justify-content: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
-.setting-section[data-section='pose'] .pose-timeline-settings {
-  grid-template-columns: 54px 30px 30px minmax(0, 1fr) 30px;
-  justify-content: stretch;
+.setting-section[data-section='action'] .timeline-settings {
+  grid-template-columns: 54px repeat(8, minmax(0, 30px));
 }
 
-.setting-section[data-section='pose'] .pose-timeline-settings .number-stepper-control {
+.setting-section[data-section='effect'] .timeline-settings {
+  grid-template-columns: 54px repeat(3, minmax(0, 30px));
+}
+
+.timeline-settings > * {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.timeline-settings .control-more-menu,
+.timeline-settings .icon-button {
+  width: 30px;
+  max-width: 30px;
+}
+
+.setting-section[data-section='action'] .timeline-settings .number-stepper-control {
   width: 54px;
   min-width: 54px;
 }
 
-.pose-frame-input {
+.timeline-frame-input {
   position: relative;
   display: block;
   width: 54px;
 }
 
-.pose-frame-input input {
+.timeline-frame-input input {
   height: 30px;
   padding: 0 17px 0 6px;
   font-size: 16px;
@@ -34,17 +53,32 @@
 
 .timeline-speed-control {
   display: grid;
-  grid-template-columns: minmax(64px, 1fr) 54px;
+  grid-template-columns: minmax(0, 1fr) 54px;
   gap: 5px;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.timeline-speed-control input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .timeline-speed-control input[type='range'] {
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 .timeline-speed-control input[type='number'] {
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
   height: 30px;
   padding: 0 5px;
   border: 1px solid rgba(51, 56, 70, 0.9);
@@ -57,7 +91,7 @@
   text-align: right;
 }
 
-.pose-frame-steppers {
+.timeline-frame-steppers {
   position: absolute;
   top: 1px;
   right: 1px;
@@ -68,7 +102,7 @@
   border-left: 1px solid #353b49;
 }
 
-.pose-frame-steppers button {
+.timeline-frame-steppers button {
   display: grid;
   place-items: center;
   min-width: 0;
@@ -82,7 +116,7 @@
   padding: 0;
 }
 
-.pose-frame-steppers button:hover {
+.timeline-frame-steppers button:hover {
   color: #7cc3a2;
 }
 
@@ -114,7 +148,32 @@
   stroke-linejoin: round;
 }
 
-#posePlayback svg path,
+#actionTriggerRepeat svg {
+  width: 18px;
+  height: 18px;
+}
+
+.action-blend-button {
+  position: relative;
+}
+
+.action-blend-badge {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  min-width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--panel-bg, #10151d);
+  color: currentColor;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
+#actionPlayback svg path,
 #effectPlayback svg path {
   fill: currentColor;
   stroke: none;
@@ -125,11 +184,11 @@
   color: #7cc3a2;
 }
 
-.pose-timeline {
+.timeline-view {
   display: block;
 }
 
-.pose-timeline-track {
+.timeline-track {
   position: relative;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
@@ -140,21 +199,21 @@
   overflow: hidden;
 }
 
-.pose-slot {
+.timeline-slot {
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
 }
 
-.pose-slot:last-child {
+.timeline-slot:last-child {
   border-right: 0;
 }
 
-.pose-slot.is-active {
+.timeline-slot.is-active {
   background: rgba(124, 195, 162, 0.14);
   box-shadow: inset 0 0 0 1px rgba(124, 195, 162, 0.38);
 }
 
-.pose-keyframe {
+.timeline-keyframe {
   position: absolute;
   top: 0;
   height: 100%;
@@ -171,19 +230,19 @@
   padding: 0;
 }
 
-.pose-keyframe svg {
+.timeline-keyframe svg {
   width: 18px;
   height: 18px;
   fill: currentColor;
 }
 
-.pose-keyframe[data-fixed='true'] {
+.timeline-keyframe[data-fixed='true'] {
   cursor: pointer;
   background: #202632;
   color: #d9deec;
 }
 
-.pose-keyframe.is-active {
+.timeline-keyframe.is-active {
   background: #214b3c;
   color: #7cc3a2;
 }

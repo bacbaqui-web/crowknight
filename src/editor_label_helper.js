@@ -1,10 +1,10 @@
-import { MASTER_PART_KEY } from './game_config.js';
+import { MASTER_PART_KEY } from './game_config_data.js';
 import {
   ATTACK_INTERACTION_OBJECT_KEY,
   COLLISION_INTERACTION_OBJECT_KEY,
   GUARD_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
-} from './interaction_object_editor.js';
+} from './interaction_object_editor_controller.js';
 
 export const isMasterPart = (partKey) => partKey === MASTER_PART_KEY;
 
@@ -45,16 +45,20 @@ export function partLabel(key) {
   );
 }
 
-export function poseLabel(key) {
+export function actionLabel(key) {
   return (
     {
       idle: '대기',
       run: '이동',
       jump: '점프',
+      doubleJump: '이단점프',
+      sprint: '질주',
       fall: '낙하',
       glide: '활강',
       roll: '구르기',
+      evade: '회피',
       guard: '방어',
+      parry: '패링',
       guardBreak: '방어 풀림',
       hurt: '피격',
       death: '사망',

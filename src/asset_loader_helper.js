@@ -1,4 +1,4 @@
-import { loadImages } from './utils.js';
+import { loadImages } from './common_helper.js';
 
 export const CHARACTER_ASSET_PATHS = {
   body: 'body.png',

@@ -1,9 +1,9 @@
 export function createTuningPanelSelectionState() {
   let activePartKey = null;
   let activePartKeyGlobal = null;
-  let activePosePartKey = null;
+  let activeActionPartKey = null;
   let editContext = 'part';
-  const selectedPosePartKeys = new Set();
+  const selectedActionPartKeys = new Set();
 
   return {
     getActivePartKey: () => activePartKey,
@@ -14,35 +14,35 @@ export function createTuningPanelSelectionState() {
     setActivePartKeyGlobal: (value) => {
       activePartKeyGlobal = value;
     },
-    getActivePosePartKey: () => activePosePartKey,
-    setActivePosePartKey: (value) => {
-      activePosePartKey = value;
+    getActiveActionPartKey: () => activeActionPartKey,
+    setActiveActionPartKey: (value) => {
+      activeActionPartKey = value;
     },
     getEditContext: () => editContext,
     setEditContext: (value) => {
       editContext = value;
     },
-    poseParts: {
+    actionParts: {
       clear: () => {
-        selectedPosePartKeys.clear();
+        selectedActionPartKeys.clear();
       },
       toggle: (partKey) => {
-        if (selectedPosePartKeys.has(partKey)) {
-          selectedPosePartKeys.delete(partKey);
+        if (selectedActionPartKeys.has(partKey)) {
+          selectedActionPartKeys.delete(partKey);
           return;
         }
-        selectedPosePartKeys.add(partKey);
+        selectedActionPartKeys.add(partKey);
       },
       selectOnly: (partKey) => {
-        selectedPosePartKeys.clear();
-        selectedPosePartKeys.add(partKey);
+        selectedActionPartKeys.clear();
+        selectedActionPartKeys.add(partKey);
         return partKey;
       },
-      has: (partKey) => selectedPosePartKeys.has(partKey),
-      size: () => selectedPosePartKeys.size,
-      values: () => [...selectedPosePartKeys],
+      has: (partKey) => selectedActionPartKeys.has(partKey),
+      size: () => selectedActionPartKeys.size,
+      values: () => [...selectedActionPartKeys],
       forEach: (callback) => {
-        selectedPosePartKeys.forEach(callback);
+        selectedActionPartKeys.forEach(callback);
       },
     },
   };

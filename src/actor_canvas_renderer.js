@@ -1,12 +1,12 @@
 import { defaultEffectSize } from './animation_frame_data.js';
-import { actorHudLayout } from './characterHudLayout.js';
+import { actorHudLayout } from './character_hud_layout_helper.js';
 import { createEditableTransform, editableTransformDrawRect } from './editable_object_model_helper.js';
-import { recordPuppetImageRegion } from './puppetPlayerEditRegions.js';
+import { recordPuppetImageRegion } from './puppet_player_edit_region_helper.js';
 import { isSettingsPanelOpen } from './settings_panel_state.js';
 import { isMasterPart } from './editor_label_helper.js';
-import { effectFrameAt } from './project_data_normalizer.js';
-import { controlGroupPartKeys, imagePartKeys } from './part_source_registry.js';
-import { clamp } from './utils.js';
+import { effectFrameAt } from './project_data_normalizer_helper.js';
+import { controlGroupPartKeys, imagePartKeys } from './part_source_data.js';
+import { clamp } from './common_helper.js';
 
 export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey, activeEditPartKeys }) {
   drawActorShadow(ctx, world, actor);

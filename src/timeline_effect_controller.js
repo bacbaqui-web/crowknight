@@ -1,6 +1,6 @@
 import { createEffectTimelineAdapter } from './timeline_effect_adapter.js';
-import { effectPropertyGroups } from './property_field_groups.js';
-import { renderEffectImagePreview } from './editor_panel_dom.js';
+import { effectPropertyGroups } from './property_field_data.js';
+import { renderEffectImagePreview } from './editor_panel_dom_helper.js';
 import { isEmptyEditableSlot } from './timeline_dom_helper.js';
 import { finishTimelineMutationAction } from './timeline_action_helper.js';
 import { createTimelineFrameCommands } from './timeline_command_helper.js';
@@ -20,12 +20,17 @@ import {
   readInteractionDisplayValue,
   renderInteractionEditor,
 } from './interaction_editor_engine.js';
-import { renderAppliedModifierEditor, renderModifierLibraryEditor } from './modifier_editor_engine.js';
+import {
+  renderAppliedModifierEditor,
+  renderModifierLibraryEditor,
+  replaceAppliedModifierEditor,
+} from './modifier_editor_engine.js';
 import {
   ensureTimelineModifierTarget,
   writeTimelineModifierEnabled,
   writeTimelineModifierSetting,
 } from './timeline_modifier_data.js';
+import { EDIT_CONTEXT_EFFECT, EDIT_TARGET_EFFECT } from './edit_target_helper.js';
 
 export function createEffectTimelineController({
   actors,
@@ -34,6 +39,7 @@ export function createEffectTimelineController({
   undoState,
   scrubCallbacks,
   getSelectedActor,
+  getEditTarget,
   setEditContext,
   beginUndoSnapshot,
   commitUndoSnapshot,
@@ -117,6 +123,7 @@ export function createEffectTimelineController({
     ensureActiveFrame();
     renderTimeline();
     effectTimeline.ensureOffset();
+    const editTarget = effectEditTarget();
     renderEffectImagePreview(effectImagePreview, effectTimeline.key(), effectAssets);
     clearEffectSupplementCards();
     effectFields.innerHTML = '';
@@ -127,24 +134,32 @@ export function createEffectTimelineController({
         renderScrubGroups(body, effectPropertyGroups(), readDisplayValue, updateOffset, scrubCallbacks);
       }
     );
-    const supplementContainer = effectFields.parentElement || effectFields;
-
-    renderAppliedModifierEditor(supplementContainer, {
+    renderAppliedModifierEditor(effectSupplementContainer(), {
       modifiers: effectModifiers(),
       onSettingChange: updateEffectModifierSetting,
+      scrubCallbacks,
+      targetKey: effectTimeline.key(),
+      totalFrames: getFrameCount(),
     });
 
-    renderInteractionEditor(supplementContainer, {
+    renderInteractionEditor(effectSupplementContainer(), {
       frameValue: currentFrameValue(),
-      targetKey: 'effect',
+      targetKey: editTarget.targetKey,
       scrubCallbacks,
       onWrite: (prop, value, { rerender = true } = {}) => updateInteractionValue(prop, value, rerender),
     });
 
-    renderModifierLibraryEditor(supplementContainer, {
+    renderModifierLibraryEditor(effectSupplementContainer(), {
       modifiers: effectModifiers(),
       onToggle: updateEffectModifierEnabled,
+      onSettingChange: updateEffectModifierSetting,
+      scrubCallbacks,
+      targetKey: effectTimeline.key(),
     });
+  }
+
+  function effectSupplementContainer() {
+    return effectFields.parentElement || effectFields;
   }
 
   function clearEffectSupplementCards() {
@@ -162,6 +177,8 @@ export function createEffectTimelineController({
   }
 
   function readDisplayValue(prop) {
+    const editTarget = effectEditTarget();
+    if (!isEffectEditTarget(editTarget)) return readEffectFrameDisplayValue(effectTimeline.key(), null, prop);
     const frame = currentFrameValue();
     return readEffectFrameDisplayValue(effectTimeline.key(), frame, prop);
   }
@@ -170,6 +187,8 @@ export function createEffectTimelineController({
     beginUndoSnapshot();
     stopPreview();
     effectTimeline.ensureOffset();
+    const editTarget = effectEditTarget();
+    if (!isEffectEditTarget(editTarget)) return readDisplayValue(prop);
     const frame = currentFrameValue();
     if (!frame) return readDisplayValue(prop);
 
@@ -183,6 +202,8 @@ export function createEffectTimelineController({
     beginUndoSnapshot();
     stopPreview();
     effectTimeline.ensureOffset();
+    const editTarget = effectEditTarget();
+    if (!isEffectEditTarget(editTarget)) return readInteractionDisplayValue(null, prop);
     if (!currentFrameValue()) return readInteractionDisplayValue(null, prop);
 
     writeFrameValue(prop, interactionFrameValueFromInput(prop, value));
@@ -192,21 +213,30 @@ export function createEffectTimelineController({
     return readInteractionDisplayValue(currentFrameValue(), prop);
   }
 
-  function effectModifiers() {
-    return ensureTimelineModifierTarget(actor().tuning, 'effect', effectTimeline.key());
+  function effectModifiers(key = effectTimeline.key()) {
+    return ensureTimelineModifierTarget(actor().tuning, 'effect', key);
   }
 
-  function updateEffectModifierEnabled(type, enabled) {
+  function updateEffectModifierEnabled(type, enabled, targetKey = effectTimeline.key()) {
     beginUndoSnapshot();
-    writeTimelineModifierEnabled(actor().tuning, 'effect', effectTimeline.key(), type, enabled);
+    writeTimelineModifierEnabled(actor().tuning, 'effect', targetKey, type, enabled);
     applySelected();
-    renderFields();
+    if (targetKey === effectTimeline.key()) {
+      replaceAppliedModifierEditor(effectSupplementContainer(), {
+        modifiers: effectModifiers(targetKey),
+        onSettingChange: updateEffectModifierSetting,
+        scrubCallbacks,
+        targetKey,
+        totalFrames: getFrameCount(),
+      });
+    }
   }
 
-  function updateEffectModifierSetting(type, prop, value) {
+  function updateEffectModifierSetting(type, prop, value, targetKey = effectTimeline.key()) {
     beginUndoSnapshot();
-    writeTimelineModifierSetting(actor().tuning, 'effect', effectTimeline.key(), type, prop, value);
+    const modifier = writeTimelineModifierSetting(actor().tuning, 'effect', targetKey, type, prop, value);
     applySelected();
+    return modifier.settings?.[prop];
   }
 
   function currentFrameValue() {
@@ -214,6 +244,21 @@ export function createEffectTimelineController({
       activeT: getActiveT(),
       setFixedFrame,
     });
+  }
+
+  function effectEditTarget() {
+    return (
+      getEditTarget?.(EDIT_CONTEXT_EFFECT) || {
+        context: EDIT_CONTEXT_EFFECT,
+        targetType: EDIT_TARGET_EFFECT,
+        targetKey: EDIT_TARGET_EFFECT,
+        writeTargetKey: EDIT_TARGET_EFFECT,
+      }
+    );
+  }
+
+  function isEffectEditTarget(editTarget) {
+    return editTarget?.context === EDIT_CONTEXT_EFFECT && editTarget.writeTargetKey === EDIT_TARGET_EFFECT;
   }
 
   function writeFrameValue(prop, value) {
@@ -262,7 +307,7 @@ export function createEffectTimelineController({
     resetSelection: resetSelectionState,
     syncPreview,
     settings: effectTimeline.settings,
-    shouldAutoStop: (settings) => settings.playback !== 'loop',
+    shouldAutoStop: (settings) => settings.playback === 'once',
   });
 
   const timelineFrameCommands = createTimelineFrameCommands({

@@ -1,5 +1,5 @@
-import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './project_data_normalizer.js';
-import { partPositionSources } from './part_source_registry.js';
+import { ensurePoseOffset, ensurePoseSettings, poseKeyframesFor } from './project_data_normalizer_helper.js';
+import { partPositionSources } from './part_source_data.js';
 import {
   addPoseTimelineKeyframe,
   applyPoseTimelineAllFrameValueDelta,
@@ -12,10 +12,10 @@ import {
   writePoseTimelineFrameValue,
 } from './timeline_keyframe_helper.js';
 import { preserveTimelineKeyframeSlots, writePoseTimelineSetting } from './timeline_settings_helper.js';
-import { POSE_PART_KEYS } from './game_config.js';
+import { POSE_PART_KEYS } from './game_config_data.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { createPosePreview } from './preview_state.js';
-import { defineTimelineAdapter } from './timeline_adapter_contract.js';
+import { defineTimelineAdapter } from './timeline_adapter_contract_helper.js';
 import { activeTimelineT } from './timeline_state.js';
 import { currentPoseTimelineFrame } from './timeline_frame_reader.js';
 import {

@@ -1,5 +1,5 @@
-import { FIREBASE_PROJECT_STATE_CONFIG } from './firebaseConfig.js';
-import { OBSOLETE_STORAGE_KEYS, STORAGE_KEY } from './game_config.js';
+import { FIREBASE_PROJECT_STATE_CONFIG } from './firebase_config_data.js';
+import { OBSOLETE_STORAGE_KEYS, STORAGE_KEY } from './game_config_data.js';
 import { createActorDefsSnapshot } from './actor_factory.js';
 import {
   DEFAULT_SCENE_SESSION_ID,
@@ -10,15 +10,11 @@ import {
 
 const FIRESTORE_BASE_URL = 'https://firestore.googleapis.com/v1';
 const PROJECT_DEFAULT_STATE_URL = './runtime/project-default-state.json';
+const PROJECT_DEFAULT_STATE_SAVE_URL = './api/state/default';
+const LOCAL_CHARACTER_INDEX_SAVE_URL = './api/characters/index';
 
 export async function loadSavedState() {
   removeObsoleteLocalTuningState();
-
-  const remoteState = normalizeNullableSavedState(await loadRemoteProjectState());
-  if (remoteState) {
-    saveLocalState(remoteState);
-    return remoteState;
-  }
 
   let localState = null;
   try {
@@ -153,11 +149,44 @@ function saveLocalState(state) {
   try {
     removeObsoleteLocalTuningState();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveLocalStateFile(state);
     return true;
   } catch (error) {
-    window.console?.warn('Local metadata save failed. Firebase upload will continue.', error);
+    window.console?.warn('Local metadata save failed.', error);
     return false;
   }
+}
+
+function saveLocalStateFile(state) {
+  if (!window.fetch || !state) return;
+  window
+    .fetch(PROJECT_DEFAULT_STATE_SAVE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    })
+    .catch(() => {
+      // The local file save API only exists on the dev server.
+    });
+  saveLocalCharacterIndexFile(state.characters);
+}
+
+function saveLocalCharacterIndexFile(characters) {
+  if (!window.fetch || !Array.isArray(characters)) return;
+  const index = {
+    version: 1,
+    updatedAt: Date.now(),
+    characters,
+  };
+  window
+    .fetch(LOCAL_CHARACTER_INDEX_SAVE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(index),
+    })
+    .catch(() => {
+      // The local character index save API only exists on the dev server.
+    });
 }
 
 function removeObsoleteLocalTuningState() {
@@ -191,16 +220,19 @@ async function saveRemoteProjectState(state) {
   try {
     const stateJson = JSON.stringify(state);
     const stateFields = await createFirestoreStateFields(stateJson);
-    const response = await window.fetch(remoteProjectStateDocumentUrl(), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          ...stateFields,
-          savedAt: { integerValue: String(state.savedAt || Date.now()) },
-        },
-      }),
-    });
+    const response = await window.fetch(
+      remoteProjectStateDocumentUrl(['stateEncoding', 'stateData', 'stateJson', 'savedAt']),
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            ...stateFields,
+            savedAt: { integerValue: String(state.savedAt || Date.now()) },
+          },
+        }),
+      }
+    );
     if (!response.ok) {
       window.console?.warn('Firebase metadata upload failed.', response.status, await responseText(response));
       return false;
@@ -299,11 +331,13 @@ function isFirebaseProjectStateEnabled() {
   );
 }
 
-function remoteProjectStateDocumentUrl() {
+function remoteProjectStateDocumentUrl(updateMaskFields = []) {
   const { projectId, collection, documentId } = FIREBASE_PROJECT_STATE_CONFIG;
-  return `${FIRESTORE_BASE_URL}/projects/${encodeURIComponent(
+  const baseUrl = `${FIRESTORE_BASE_URL}/projects/${encodeURIComponent(
     projectId.trim()
   )}/databases/(default)/documents/${encodeURIComponent(collection.trim())}/${encodeURIComponent(
     documentId.trim()
   )}?key=${encodeURIComponent(FIREBASE_PROJECT_STATE_CONFIG.apiKey)}`;
+  const updateMask = updateMaskFields.map((field) => `updateMask.fieldPaths=${encodeURIComponent(field)}`).join('&');
+  return updateMask ? `${baseUrl}&${updateMask}` : baseUrl;
 }

@@ -109,7 +109,8 @@
 }
 
 .section-action-row .character-menu-item:hover,
-.section-action-row .character-menu-item:focus-visible {
+.section-action-row .character-menu-item:focus-visible,
+.section-action-row .character-menu-item.is-active {
   background: #252a36;
 }
 

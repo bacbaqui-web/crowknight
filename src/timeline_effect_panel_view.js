@@ -1,5 +1,5 @@
 import { syncEffectTimelinePlaybackSettings, syncEffectTimelineToolbar } from './timeline_panel_sync_helper.js';
-import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './game_config.js';
+import { ACTION_MAX_FRAMES, ACTION_MIN_FRAMES } from './game_config_data.js';
 
 export function renderEffectTimelineSettingsView(elements, state) {
   syncEffectTimelinePlaybackSettings(
@@ -34,8 +34,8 @@ export function syncEffectTimelineToolbarView(elements, state) {
       hasCopiedFrame: state.hasCopiedFrame,
       undoCount: state.undoCount,
       frameCount: state.frameCount,
-      minFrames: state.minFrameCount ?? POSE_MIN_FRAMES,
-      maxFrames: POSE_MAX_FRAMES,
+      minFrames: state.minFrameCount ?? ACTION_MIN_FRAMES,
+      maxFrames: ACTION_MAX_FRAMES,
     }
   );
 }

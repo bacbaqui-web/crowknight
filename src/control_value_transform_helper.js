@@ -1,5 +1,5 @@
 import { formatNumericDecimalValue } from './property_numeric_input_helper.js';
-import { clampFinite } from './utils.js';
+import { clampFinite } from './common_helper.js';
 
 export const SPEED_LEVEL_MIN = 1;
 export const SPEED_LEVEL_MAX = 10;

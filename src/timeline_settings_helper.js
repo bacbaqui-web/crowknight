@@ -1,13 +1,20 @@
-import { clampTimelinePlaybackRate, timelineDurationFromFrames } from './timeline_playback_helper.js';
+import {
+  clampTimelinePlaybackRate,
+  normalizeTimelinePlayback,
+  timelineDurationFromFrames,
+} from './timeline_playback_helper.js';
+import { normalizeActionBlendFrames } from './action_blend_helper.js';
+import { normalizeActionCondition } from './action_condition_helper.js';
+import { normalizeActionEditPivot } from './action_timeline_edit_helper.js';
 import { stepTimelineDurationValue } from './number_input_helper.js';
 import { timelineSlotToT, timelineTToSlot } from './timeline_dom_helper.js';
 
-export function writePoseTimelineSetting(settingsByKey, key, prop, value) {
-  writeTimelineSetting(settingsByKey[key], prop, value, (next) => (next === 'once' ? 'once' : 'loop'));
+export function writeActionTimelineSetting(settingsByKey, key, prop, value) {
+  writeTimelineSetting(settingsByKey[key], prop, value, (next) => normalizeTimelinePlayback(next, 'loop'));
 }
 
 export function writeEffectTimelineSetting(settingsByKey, key, prop, value) {
-  writeTimelineSetting(settingsByKey[key], prop, value, (next) => (next === 'loop' ? 'loop' : 'once'));
+  writeTimelineSetting(settingsByKey[key], prop, value, (next) => normalizeTimelinePlayback(next, 'once'));
 }
 
 export function nextTimelineFrameCount(frameCount, delta, snapToTen, minFrames, maxFrames) {
@@ -44,6 +51,11 @@ function writeTimelineSetting(settings, prop, value, normalizePlayback) {
   if (prop === 'duration') settings.duration = timelineDurationFromFrames(value);
   if (prop === 'playback') settings.playback = normalizePlayback(value);
   if (prop === 'playbackRate') settings.playbackRate = clampTimelinePlaybackRate(value);
+  if (prop === 'mirror') settings.mirror = value !== false;
+  if (prop === 'interruptible') settings.interruptible = value !== false;
+  if (prop === 'blendFrames') settings.blendFrames = normalizeActionBlendFrames(value);
+  if (prop === 'condition') settings.condition = normalizeActionCondition(value);
+  if (prop === 'editPivot') settings.editPivot = normalizeActionEditPivot(value, settings.editPivot);
 }
 
 function isMiddleTimelineKeyframe(frame) {

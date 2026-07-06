@@ -6,12 +6,12 @@
 
 Actor별 제작 데이터의 중심 객체다.
 
-- 현재 Action 데이터는 별도 `actions` 컬렉션이 아니라 `poseOffsets`, `poseSettings`, `effectOffsets`, `effectSettings`, 일부 `motion/invulnerability` 필드에 나뉘어 있다.
+- 현재 Action 데이터는 별도 `actions` 컬렉션이 아니라 `actionOffsets`, `actionSettings`, `effectOffsets`, `effectSettings`, 일부 `motion/invulnerability` 필드에 나뉘어 있다.
 - `tuning.rig`: Setup base rig.
-- `tuning.poseOffsets`: Action Timeline frame data.
-- `tuning.poseSettings`: Action duration/playback settings.
+- `tuning.actionOffsets`: Action Timeline frame data.
+- `tuning.actionSettings`: Action duration/playback settings.
 - `tuning.customActions`: 사용자 제작 Action 목록. MVP에서는 custom Action의 `key`, `name`과 legacy mirror `trigger`를 저장한다.
-- `tuning.deletedPoseActions`: Editor 목록에서 숨긴 Basic Action key 목록. `idle`은 삭제할 수 없고 이 목록에 들어가지 않는다.
+- `tuning.deletedActionKeys`: Editor 목록에서 숨긴 Basic Action key 목록. `idle`은 삭제할 수 없고 이 목록에 들어가지 않는다.
 - `tuning.actionTriggers`: 모든 Action key의 Trigger override map. Basic/Custom을 같은 방식으로 다루는 compatibility 저장소다.
 - `tuning.effectOffsets`: Effect Timeline frame data.
 - `tuning.effectSettings`: Effect duration/playback settings.
@@ -20,58 +20,80 @@ Actor별 제작 데이터의 중심 객체다.
 - `tuning.transform`: actor scale/anchor.
 - `tuning.maxHpPips`: HP 설정.
 
-## Target Action Model
+## Action 저장 경계
 
-아직 구현하지 않은 목표 구조다.
+Action 제작 모델의 목표와 migration 원칙은 `13_ACTION_MODEL.md`를 본다. 이 문서는 현재 저장 위치만 기록한다.
+
+현재 Action 관련 저장 source:
+
+- `tuning.customActions`: 사용자 제작 Action 목록.
+- `tuning.deletedActionKeys`: Editor 목록에서 숨긴 Basic Action key.
+- `tuning.actionTriggers`: Action 발동 입력 조건.
+- `tuning.actionSettings`: Action duration/playback/runtime option.
+- `tuning.actionOffsets`: Action Timeline frame data.
+- `tuning.modifiers.action`: Action 실행 중 적용되는 modifier 목록.
+
+현재 Effect 관련 저장 source:
+
+- `tuning.effectSettings`: Effect duration/playback option.
+- `tuning.effectOffsets`: Effect Timeline frame data.
+- `tuning.modifiers.effect`: Effect modifier 목록.
+
+## `actionSettings`
+
+Action 재생과 Runtime option 저장 위치다.
 
 ```text
-Action
-├─ type
-├─ trigger
-├─ timeline
-├─ interaction
-└─ modifiers
+tuning.actionSettings[actionKey]
 ```
 
-후보 형태:
+현재 필드:
 
 ```js
 {
-  id: "skill_001",
-  type: "skill",
-  name: "Fire Slash",
-  trigger: { type: "single", keys: ["Q"] },
-  timeline: {
-    pose: {},
-    effect: {}
-  },
-  interaction: {
-    collision: { enabled: false, boxes: [] },
-    hurt: { enabled: false, boxes: [] },
-    attack: { enabled: false, boxes: [] },
-    guard: { enabled: false, boxes: [] }
-  },
-  modifiers: []
+  duration: 0.6,
+  playback: "loop",
+  playbackRate: 1,
+  mirror: true,
+  interruptible: true,
+  interruptPriority: 0,
+  blendFrames: 0,
+  condition: "any",
+  group: "movement",
+  editPivot: { x: 0, y: 0 }
 }
 ```
 
-현재 저장 구조와 충돌하는 지점:
+- `duration`: Timeline 기본 길이.
+- `playback`: `once`, `loop`, `pingpong` 중 하나. UI에서는 Timeline의 "재생 방식" 버튼으로 순환 선택한다.
+- `playbackRate`: 재생 속도.
+- `mirror`: 좌우 자동 거울상 적용 여부. 기본값은 `true`이며, `false`일 때만 Runtime이 자동 좌우 반전을 사용하지 않는다.
+- `interruptible`: 실행 중 다른 Trigger Action으로 교체 가능한지 여부. UI에서는 Cancel 버튼으로 표시한다.
+- `interruptPriority`: Trigger Action 교체 우선순위.
+- `blendFrames`: Action 전환 시 이전 표시 포즈에서 새 Action 첫 프레임 포즈까지 연결하는 프레임 수. `0~5` 값을 사용하며 기본값은 `0`이다. Runtime MVP에서는 Action Timeline FPS 기준으로 Blend를 먼저 재생한 뒤 새 Action Timeline을 시작한다.
+- `condition`: Trigger가 맞은 뒤 Action 실행 가능 여부를 판단하는 조건. `any`, `ground`, `air` 중 하나이며 기본값은 `any`다. Runtime은 World Physics의 `onGround` 상태만 사용해 판정한다.
+- `group`: Editor 목록과 기본자세 fallback 선택에 쓰는 Action 그룹. `base`, `movement`, `attack`, `special` 중 하나이며 custom Action 기본값은 `movement`다. 기존 `idle`은 `base`로 normalize한다.
+- `editPivot`: Action Timeline에서 파츠 선택 없이 전체 키프레임을 그룹처럼 편집할 때 쓰는 Action 공통 Pivot이다. `{ x, y }` 형태이며 기본값은 `{ x: 0, y: 0 }`이다. Pivot은 Action별로 하나만 저장하고 키프레임별로 저장하지 않는다.
 
-- `POSE_KEYS` / `EFFECT_KEYS`가 고정 배열이라 사용자 정의 Skill key를 바로 담기 어렵다.
-- `poseOffsets[poseKey][partKey]`는 Basic Action 중심 구조다.
-- Interaction은 현재 frame value의 `active/attack/hurt/collision/guard`와 fallback rig object에 섞여 있다.
-- Runtime modifier 전용 저장 위치가 없다.
-- 입력 trigger는 `GAME_KEYS`와 `actor_action_helper` 분기에 하드코딩되어 있다.
+Action group 허용값:
 
-권장 확장 방향:
+```js
+group: 'base' | 'movement' | 'attack' | 'special';
+```
 
-- 기존 `poseOffsets` / `poseSettings`는 Basic Actions 호환 layer로 유지한다.
-- 새 Skill은 별도 `tuning.actions.skills[]` 또는 `tuning.actions.byId` 후보를 별도 저장 구조 Sprint에서 확정한다.
-- 저장 migration 전까지는 `13_ACTION_MODEL.md`의 target model을 설계 기준으로만 사용한다.
+- `base`: 아무 Trigger Action도 없을 때 Condition으로 기본자세 후보를 고르는 그룹.
+- `movement`: 이동, 점프, 회피처럼 이동 계열 Action.
+- `attack`: 공격 계열 Action.
+- `special`: 방어, 패링, 활강, 피격 같은 특수 Action.
+
+기본 fallback Action 기본값:
+
+- `idle`: `group = "base"`, `condition = "ground"`
+- `fall`: `group = "base"`, `condition = "air"`
 
 ## `actionTriggers`
 
-모든 Action의 Editor 발동 조건이다.
+Action 발동 입력 조건 저장 위치다. Trigger 설계 원칙은 `13_ACTION_MODEL.md`를 본다.
 
 MVP 저장 위치:
 
@@ -96,15 +118,17 @@ tuning.customActions[]
 { type: "holdCombo", hold: "ArrowUp", press: "W" }
 ```
 
-Trigger 실행 옵션:
+Trigger 실행 모드:
 
 ```js
-repeatWhileHeld: true;
+triggerMode: 'tap' | 'press' | 'pressLoop';
 ```
 
-- 없거나 `false`이면 Trigger가 맞는 순간 한 번 실행한다.
-- `true`이면 Action이 끝난 뒤에도 Trigger 입력이 계속 눌려 있을 때 같은 Action을 다시 실행한다.
-- 이 값은 Action 이름별 분기가 아니라 Trigger Runtime Rule이 읽는 실행 정책이다.
+- `tap`: Trigger가 맞는 순간 Action을 끝까지 한 번 실행한다. release와 관계없다.
+- `press`: Trigger 입력이 유지되는 동안만 Action을 진행한다. release하면 즉시 종료하고, duration 끝에 도달해도 종료한다.
+- `pressLoop`: Trigger 입력이 유지되는 동안 Action을 유지한다. release하면 즉시 종료하고, duration 이후 progress는 Timeline playback 값을 따른다.
+- `repeatWhileHeld: true`는 legacy compatibility 입력으로 읽는다. 명시적 `triggerMode`가 없으면 현재 normalize 단계에서 `press`로 해석한다.
+- `actionSettings[actionKey].mirror`가 `true`이면 Runtime Trigger matching에서 `ArrowLeft` / `ArrowRight`를 좌우 대칭 입력으로 해석할 수 있다. 반대 방향 Trigger를 `actionTriggers`에 추가 저장하지 않는다.
 
 지원 key:
 
@@ -117,12 +141,7 @@ repeatWhileHeld: true;
 - `ArrowLeft`
 - `ArrowRight`
 
-주의:
-
-- Basic Action은 기존 Runtime 입력을 유지한다.
-- Runtime 발동 판정은 통합 Action descriptor의 `trigger` 데이터를 해석한다.
-- Trigger는 Action 이름별 Runtime 분기를 늘리기 위한 데이터가 아니라 Runtime Rule이 읽는 입력 조건 데이터다.
-- Sequence가 서로 겹치는 경우, 예를 들어 `QQ`와 `QQQ`를 동시에 만들면 짧은 trigger가 먼저 발동할 수 있다. 겹치는 입력의 우선순위/지연 판정은 다음 Trigger 정교화 단계에서 다룬다.
+Runtime 해석 규칙과 겹치는 Sequence 처리 방향은 `13_ACTION_MODEL.md`를 본다.
 
 ## `modifiers`
 
@@ -131,7 +150,7 @@ Action / Effect Timeline Target에 붙는 수식 데이터다.
 MVP 저장 위치:
 
 ```text
-tuning.modifiers.pose[actionKey]
+tuning.modifiers.action[actionKey]
 tuning.modifiers.effect[effectKey]
 ```
 
@@ -142,26 +161,52 @@ tuning.modifiers.effect[effectKey]
   {
     type: 'move',
     enabled: true,
-    settings: { x: 50, y: 0 },
+    settings: { x: 50, y: 0, frames: 10 },
+  },
+  {
+    type: 'velocity',
+    enabled: true,
+    settings: { x: 500, y: 0, mode: 'set', startFrame: 1, endFrame: 10 },
   },
   {
     type: 'accelerate',
     enabled: true,
-    settings: { strength: 1 },
+    settings: { graph: 'linear', startFrame: 1, endFrame: 4 },
   },
   {
     type: 'decelerate',
     enabled: false,
-    settings: { strength: 1 },
+    settings: { graph: 'linear', startFrame: 7, endFrame: 10 },
   },
 ];
 ```
 
-주의:
+Modifier Runtime 해석 원칙은 `13_ACTION_MODEL.md`를 본다.
 
-- `move`는 Action Timeline 전체 길이 동안 X/Y 이동량을 적용한다.
-- `accelerate`와 `decelerate`는 이동 진행률만 보정한다.
-- Runtime은 Custom Action 실행 중 modifier 데이터의 진행률 차분만 actor 위치에 더하고, Timeline 원본 pose offset은 수정하지 않는다.
+공통 구간 필드:
+
+- `startFrame`: modifier가 시작되는 Action frame. 1-based 값이다.
+- `endFrame`: modifier가 끝나는 Action frame. 1-based 값이다.
+
+`velocity`:
+
+- `x`, `y`: Action Timeline frame 기준 velocity 값. 단위는 `px/f`다.
+- `mode`: `set` 또는 `add`.
+- `startFrame`, `endFrame`: 적용 구간.
+- Runtime은 `px/f`를 초당 속도나 Runtime FPS 기준 값으로 변환하지 않는다.
+- Runtime은 `px/f` 값을 World Physics velocity state에 적용하고, 위치 계산은 Action Timeline frame delta로 적분한다.
+
+Velocity UI 표시 규칙:
+
+- Velocity 카드 제목 오른쪽에는 `1s = {ACTION_FPS}f`를 표시한다.
+- `{ACTION_FPS}`는 `game_config_data.js`의 `ACTION_FPS` 값을 읽어 표시한다.
+- X/Y Velocity 입력 오른쪽에는 `px/f` 단위를 표시한다.
+
+지원 graph 값:
+
+- `linear`
+- `easeIn`
+- `easeOut`
 
 ## Action Descriptor Compatibility Layer
 
@@ -182,12 +227,7 @@ Runtime과 Editor가 앞으로 공통으로 볼 임시 Action descriptor다.
 }
 ```
 
-주의:
-
-- `runtimeMode`은 Action 종류가 아니라 migration 상태다.
-- `legacy`는 아직 기존 Basic Action Runtime 물리를 사용한다.
-- `trigger`는 Trigger Runtime으로 이동한 Action을 뜻한다.
-- 최종 목표는 `runtimeMode`를 제거하고 모든 Action을 동일한 Runtime 실행 경로로 보내는 것이다.
+`runtimeMode` migration 의미와 최종 목표는 `13_ACTION_MODEL.md`를 본다.
 
 ## `tuning.rig`
 
@@ -242,21 +282,21 @@ active + attack object recorded region
 Runtime 공격 효과:
 
 ```text
-tuning.poseOffsets[poseKey][partKey].stun/knockbackX/knockbackY/deathBurst
+tuning.actionOffsets[actionKey][partKey].stun/knockbackX/knockbackY/deathBurst
 → actor.player.attackInteractionRegion.reaction
 → combat_engine.applyHitReaction()
 ```
 
 Runtime mirror field는 저장하지 않는다.
 
-## `poseOffsets`
+## `actionOffsets`
 
 Action Timeline frame data다.
 
 형태:
 
 ```text
-tuning.poseOffsets[poseKey][partKey]
+tuning.actionOffsets[actionKey][partKey]
 ```
 
 Frame container:
@@ -335,9 +375,27 @@ sceneSession.stageRules
 구조:
 
 - `progression`
+- `worldPhysics`
 - `enemy`
 - `reward`
 - `score`
+
+`worldPhysics`:
+
+```js
+{
+  gravity: 1,
+  inertia: 30
+}
+```
+
+- `gravity`: 공중 상태에서 매 Action Timeline frame `vy`에 더하는 값. 단위는 `px/f²`다.
+- `inertia`: 입력이나 impulse가 멈춘 뒤 현재 velocity가 0이 되기까지 걸리는 frame 수. `0`이면 즉시 멈추고, 값이 클수록 더 오래 미끄러진다.
+
+World Physics UI 표시 규칙:
+
+- Gravity 입력 오른쪽에는 `px/f²`를 표시한다.
+- Inertia 입력 오른쪽에는 `frame`을 표시한다.
 
 ## Project State
 

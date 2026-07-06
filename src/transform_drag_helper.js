@@ -1,5 +1,6 @@
-import { canvasPointFromEvent } from './canvasDragMath.js';
+import { canvasPointFromEvent } from './canvas_drag_math_helper.js';
 import {
+  createCanvasActionPivotDrag,
   createCanvasGroupDrag,
   createCanvasPartDrag,
   isTemporaryCanvasGroupAnchorDrag,
@@ -23,7 +24,8 @@ export function handleCanvasPointerDown(
     canvasRefresh,
     createGroupDragItems,
     canvasEditState,
-    writePoseFrameValue,
+    writeActionFrameValue,
+    writeActionPivotValue,
     pushUndoSnapshot,
     beginUndoSnapshot,
     setEditContext,
@@ -43,6 +45,22 @@ export function handleCanvasPointerDown(
   if (!handleHit) return;
 
   event.preventDefault();
+  if (handleHit.geometry.isActionPivot) {
+    setEditContext('action');
+    setEditHandleActiveMode(handleHit.mode);
+    setCanvasDrag(
+      beginCanvasActionPivotPointerDrag({
+        event,
+        canvas,
+        point,
+        handle: handleHit.geometry,
+        writeActionPivotValue,
+        beginUndoSnapshot,
+      })
+    );
+    return;
+  }
+
   if (handleHit.geometry.isGroup) {
     if (handleHit.mode === 'opacity') {
       pushUndoSnapshot();
@@ -64,7 +82,7 @@ export function handleCanvasPointerDown(
         parts: createGroupDragItems(handleHit.geometry.parts),
         beginUndoSnapshot,
         groupEditValues,
-        writePoseFrameValue,
+        writeActionFrameValue,
       })
     );
     return;
@@ -79,7 +97,9 @@ export function handleCanvasPointerDown(
   if (handleMode === 'opacity') {
     pushUndoSnapshot();
     const nextOpacity = toggleCanvasOpacity(target.opacity);
-    if (typeof editState.writeValue === 'function') editState.writeValue('opacity', nextOpacity);
+    if (canvasContext === 'action' && typeof writeActionFrameValue === 'function') {
+      writeActionFrameValue(activePart, 'opacity', nextOpacity);
+    } else if (typeof editState.writeValue === 'function') editState.writeValue('opacity', nextOpacity);
     else target.opacity = nextOpacity;
     canvasRefresh.applyAndRenderContext(canvasContext);
     return;
@@ -96,11 +116,30 @@ export function handleCanvasPointerDown(
       editState,
       handle: handleHit.geometry,
       mode: handleMode,
-      writePoseFrameValue,
+      writeActionFrameValue,
       writeValue: editState.writeValue,
       beginUndoSnapshot,
     })
   );
+}
+
+export function beginCanvasActionPivotPointerDrag({
+  event,
+  canvas,
+  point,
+  handle,
+  writeActionPivotValue,
+  beginUndoSnapshot,
+}) {
+  beginUndoSnapshot();
+  canvas.style.cursor = 'grabbing';
+  canvas.setPointerCapture(event.pointerId);
+  return createCanvasActionPivotDrag({
+    pointerId: event.pointerId,
+    point,
+    handle,
+    writeActionPivotValue,
+  });
 }
 
 export function beginCanvasGroupPointerDrag({
@@ -112,7 +151,7 @@ export function beginCanvasGroupPointerDrag({
   parts,
   beginUndoSnapshot,
   groupEditValues,
-  writePoseFrameValue,
+  writeActionFrameValue,
 }) {
   beginUndoSnapshot();
   canvas.style.cursor = 'grabbing';
@@ -124,7 +163,7 @@ export function beginCanvasGroupPointerDrag({
     mode,
     parts,
     startValues: createGroupTransformTarget(groupEditValues, handle),
-    writePoseFrameValue,
+    writeActionFrameValue,
   });
 }
 
@@ -137,7 +176,7 @@ export function beginCanvasPartPointerDrag({
   editState,
   handle,
   mode,
-  writePoseFrameValue,
+  writeActionFrameValue,
   writeValue,
   beginUndoSnapshot,
 }) {
@@ -152,7 +191,7 @@ export function beginCanvasPartPointerDrag({
     editState,
     handle,
     mode,
-    writePoseFrameValue,
+    writeActionFrameValue,
     writeValue,
   });
 }
@@ -194,7 +233,7 @@ export function finishCanvasPointerDrag(
   const { wasGroupDrag, wasTemporaryAnchorDrag } = completedCanvasDragState(drag);
   clearCanvasDrag();
   clearEditHandleActiveMode();
-  if (wasGroupDrag && !wasTemporaryAnchorDrag) canvasRefresh.renderGroupPoseFields();
+  if (wasGroupDrag && !wasTemporaryAnchorDrag) canvasRefresh.renderGroupActionFields();
   updateCanvasHandleHover(event);
   commitUndoSnapshot();
 }

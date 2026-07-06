@@ -3,9 +3,9 @@ export function isCollisionSectionOpen() {
 }
 
 export function activeAttackSettingsKey() {
-  if (!isSettingsSectionOpen('pose')) return null;
+  if (!isSettingsSectionOpen('action')) return null;
 
-  const key = document.querySelector('#poseSelect')?.value || '';
+  const key = document.querySelector('#actionSelect')?.value || '';
   return /^attack[123]$/.test(key) || key === 'jumpAttack' || key === 'roll' ? key : null;
 }
 
@@ -24,28 +24,28 @@ export function currentSettingsEditContext({ editFocusContext, activePartKey }) 
 
   if (isPanelSectionOpen(panel, 'effect')) return 'effect';
   if (editFocusContext === 'part' && isPanelSectionOpen(panel, 'part') && activePartKey) return 'part';
-  if (editFocusContext === 'pose' && isPanelSectionOpen(panel, 'pose')) return 'pose';
+  if (editFocusContext === 'action' && isPanelSectionOpen(panel, 'action')) return 'action';
   return null;
 }
 
 export function currentCanvasSettingsEditContext({
   partSection,
-  poseSection,
+  actionSection,
   effectSection,
   editFocusContext,
   editContext,
   activePartKey,
 }) {
   const partOpen = isOpenVisibleSection(partSection);
-  const poseOpen = isOpenVisibleSection(poseSection);
+  const actionOpen = isOpenVisibleSection(actionSection);
   const effectOpen = isOpenVisibleSection(effectSection);
   if (effectOpen) return 'effect';
-  if (editFocusContext === 'pose' && poseOpen) return 'pose';
+  if (editFocusContext === 'action' && actionOpen) return 'action';
   if (editFocusContext === 'part' && partOpen && activePartKey) return 'part';
-  if (editContext === 'pose' && poseOpen) return 'pose';
+  if (editContext === 'action' && actionOpen) return 'action';
   if (editContext === 'part' && partOpen && activePartKey) return 'part';
   if (partOpen) return 'part';
-  if (poseOpen) return 'pose';
+  if (actionOpen) return 'action';
   return null;
 }
 

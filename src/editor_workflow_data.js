@@ -26,8 +26,8 @@ export const TUNING_PANEL_WORKFLOW_SECTIONS = Object.freeze({
     part: 'character',
     session: 'setup',
   },
-  pose: {
-    key: 'pose',
+  action: {
+    key: 'action',
     part: 'character',
     session: 'animation',
   },
@@ -41,23 +41,8 @@ export const TUNING_PANEL_WORKFLOW_SECTIONS = Object.freeze({
     part: 'stage',
     session: 'stage',
   },
-  progression: {
-    key: 'progression',
-    part: 'stage',
-    session: 'stage',
-  },
-  enemy: {
-    key: 'enemy',
-    part: 'stage',
-    session: 'stage',
-  },
-  reward: {
-    key: 'reward',
-    part: 'stage',
-    session: 'stage',
-  },
-  score: {
-    key: 'score',
+  worldPhysics: {
+    key: 'worldPhysics',
     part: 'stage',
     session: 'stage',
   },

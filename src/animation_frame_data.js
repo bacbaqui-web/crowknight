@@ -1,5 +1,5 @@
-import { EFFECT_IMAGE_OPTIONS } from './game_config.js';
-import { clamp, lerp } from './utils.js';
+import { EFFECT_IMAGE_OPTIONS } from './game_config_data.js';
+import { clamp, lerp } from './common_helper.js';
 
 export function interpolateEffectFrameValues(keyframes = [], t = 0, key = 'attack1') {
   const empty = effectFrameValue({}, key);
@@ -90,7 +90,7 @@ export function validEffectImageKey(key) {
   return EFFECT_IMAGE_OPTIONS.some((option) => option.key === key);
 }
 
-export function poseAnchorValue(value = {}, fallback = frameValue()) {
+export function actionAnchorValue(value = {}, fallback = frameValue()) {
   let source = fallback;
   if (value?.anchorX !== undefined || value?.anchorY !== undefined) {
     source = value;

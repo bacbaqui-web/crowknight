@@ -4,16 +4,16 @@ import {
   HURT_INTERACTION_OBJECT_KEY,
   COLLISION_INTERACTION_OBJECT_KEY,
   GUARD_INTERACTION_OBJECT_KEY,
-} from './interaction_object_editor.js';
+} from './interaction_object_editor_controller.js';
 import { scaledEditableAnchor } from './editable_object_model_helper.js';
-import { deg } from './utils.js';
+import { deg } from './common_helper.js';
 import {
   multiplyMatrix,
   rotationMatrix,
   scaleMatrix,
   transformMatrixPoint,
   translationMatrix,
-} from './puppetPlayerGeometry.js';
+} from './puppet_player_geometry_helper.js';
 
 export function createInteractionRegion({
   key,

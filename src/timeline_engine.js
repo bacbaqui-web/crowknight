@@ -17,9 +17,9 @@ import {
   timelineSlotToValue,
   timelineValueToSlot,
 } from './timeline_state.js';
-import { POSE_MAX_FRAMES, POSE_MIN_FRAMES } from './game_config.js';
+import { ACTION_MAX_FRAMES, ACTION_MIN_FRAMES } from './game_config_data.js';
 import { minTimelineFrameCountForKeyframes } from './timeline_settings_helper.js';
-import { clamp } from './utils.js';
+import { clamp } from './common_helper.js';
 
 export function createTimelineControllerCore({
   timeline,
@@ -55,10 +55,10 @@ export function createTimelineControllerCore({
   const currentFrameValue = (options = {}) => timeline.currentFrameValue({ selection, ...options });
   const writeFrameValue = (options = {}) => timeline.writeFrameValue({ selection, ...options });
   const minFrameCount = () =>
-    minTimelineFrameCountForKeyframes(keyframesForTimeline(), accessors.frameCount(), POSE_MIN_FRAMES);
+    minTimelineFrameCountForKeyframes(keyframesForTimeline(), accessors.frameCount(), ACTION_MIN_FRAMES);
   const normalizeSettingValue = (prop, value) => {
     if (prop !== 'duration') return value;
-    return clamp(Math.round(Number(value)), minFrameCount(), POSE_MAX_FRAMES);
+    return clamp(Math.round(Number(value)), minFrameCount(), ACTION_MAX_FRAMES);
   };
   const beforeSettingWrite = (prop, value) => {
     if (prop !== 'duration') return;
@@ -207,6 +207,10 @@ export function createTimelineControllerCommonMethods({
     syncPreview,
     togglePlayback: playbackControls.togglePlayback,
     togglePlaybackMode: playbackControls.togglePlaybackMode,
+    toggleMirror: playbackControls.toggleMirror,
+    toggleInterruptible: playbackControls.toggleInterruptible,
+    toggleBlend: playbackControls.toggleBlend,
+    toggleCondition: playbackControls.toggleCondition,
     updatePlaybackRate: playbackControls.updatePlaybackRate,
     updateSetting,
   };

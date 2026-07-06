@@ -205,6 +205,60 @@
         color: #ffc6ce;
       }
 
+      .action-map {
+        display: grid;
+        gap: 12px;
+      }
+
+      .action-flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .action-flow span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(112, 226, 162, 0.28);
+        border-radius: 999px;
+        background: rgba(112, 226, 162, 0.1);
+        color: #d5f7dc;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .action-flow i {
+        color: var(--muted);
+        font-style: normal;
+        font-weight: 900;
+      }
+
+      .action-map-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .action-map-card {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid rgba(43, 58, 88, 0.82);
+        border-radius: 8px;
+        background: rgba(8, 14, 26, 0.46);
+      }
+
+      .action-map-card h3 {
+        font-size: 16px;
+      }
+
+      .action-map-card p {
+        font-size: 13px;
+      }
+
       .suffix-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -391,6 +445,7 @@
         .top,
         .summary,
         .filters,
+        .action-map-grid,
         .groups {
           grid-template-columns: 1fr;
         }
@@ -452,8 +507,36 @@
       </section>
 
       <section class="panel">
+        <h2>Action 파트 지도</h2>
+        <div class="action-map">
+          <div class="action-flow" aria-label="Action 데이터 흐름">
+            <span>Authoring</span>
+            <i>→</i>
+            <span>Trigger</span>
+            <i>→</i>
+            <span>Timeline</span>
+            <i>→</i>
+            <span>Property / Interaction / Modifier</span>
+            <i>→</i>
+            <span>Runtime</span>
+          </div>
+          <p>
+            Action은 하나의 전용 엔진이 아니라 아래 JS들이 연결된 편집/저장/실행 흐름이다. `pose` 명칭은 Editor Action
+            계층에서는 제거했고, 실제 렌더링 자세 계산 계층에만 남긴다.
+          </p>
+          <div id="actionMap" class="action-map-grid"></div>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>접미사 역할표</h2>
         <div id="suffixRoles" class="suffix-grid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>역할표 미준수 / 보류 파일</h2>
+        <p>현재 보류 파일은 없다. main.js는 앱 entry point라 접미사 예외로 둔다.</p>
+        <div id="namingExceptions" class="groups" style="margin-top: 12px"></div>
       </section>
 
       <section id="groups" class="groups"></section>
@@ -461,12 +544,164 @@
     </main>
 
     <script>
+      const ACTION_PARTS = [
+        {
+          name: '1. Action Authoring / Trigger 입력',
+          role: 'Action 생성, 삭제, 이름, JSON import/export, Trigger 녹화와 normalize를 담당한다.',
+          js: ['action_authoring_controller.js', 'action_authoring_data.js', 'action_trigger_data.js'],
+          caution:
+            'UI label과 저장 key는 action 기준이다. Runtime 이름별 분기를 늘리지 않고 trigger 데이터만 저장한다.',
+        },
+        {
+          name: '2. Editor Shell / DOM 연결',
+          role: 'setting.html의 Action DOM을 읽고, Action 탭 변경을 전체 Editor 흐름에 연결한다.',
+          js: [
+            'editor_panel_controller.js',
+            'editor_panel_dom_helper.js',
+            'editor_panel_binding_controller.js',
+            'editor_panel_composition_helper.js',
+            'editor_panel_sync_helper.js',
+            'editor_control_setup_controller.js',
+            'editor_control_binding_controller.js',
+            'editor_timeline_section_controller.js',
+            'editor_lifecycle_controller.js',
+            'settings_panel_state.js',
+          ],
+          caution:
+            'Action DOM id는 actionSelect / actionName / actionTrigger* / actionPartFields 기준이다. CSS는 settingsPanel.css와 settingsTimeline.css를 공유한다.',
+        },
+        {
+          name: '3. Action별 편집 세션',
+          role: 'Action을 바꿔도 타임라인 선택, 파츠 선택, 그룹 편집 상태가 서로 섞이지 않게 보관한다.',
+          js: [
+            'action_edit_state.js',
+            'selection_state.js',
+            'panel_edit_state.js',
+            'group_edit_state.js',
+            'group_transform_adapter.js',
+            'editor_undo_data.js',
+            'preview_state.js',
+          ],
+          caution: '공통 Property / Timeline / Modifier 엔진은 유지하고, Action key별 임시 선택 상태만 분리한다.',
+        },
+        {
+          name: '4. Action Timeline',
+          role: 'Action frame 수, keyframe 선택/추가/삭제/이동, playback, preview, clipboard를 처리한다.',
+          js: [
+            'timeline_action_controller.js',
+            'timeline_action_adapter.js',
+            'timeline_action_panel_view.js',
+            'timeline_controller.js',
+            'timeline_engine.js',
+            'timeline_adapter_contract_helper.js',
+            'timeline_state.js',
+            'timeline_command_helper.js',
+            'timeline_selection_helper.js',
+            'timeline_drag_helper.js',
+            'timeline_drag_control_helper.js',
+            'timeline_dom_helper.js',
+            'timeline_view.js',
+            'timeline_renderer.js',
+            'timeline_frame_reader.js',
+            'timeline_keyframe_helper.js',
+            'timeline_playback_helper.js',
+            'timeline_preview_helper.js',
+            'timeline_settings_helper.js',
+            'timeline_panel_sync_helper.js',
+            'timeline_action_helper.js',
+            'timeline_control_helper.js',
+            'timeline_clipboard_helper.js',
+          ],
+          caution: '공통 Timeline helper는 Effect도 사용한다. Action 전용 예외는 adapter/controller 쪽에만 둔다.',
+        },
+        {
+          name: '5. Action Property / Transform / Canvas',
+          role: 'Action 파츠, 전체 프레임/전체 파츠, 그룹 편집, Canvas handle drag 값을 actionOffsets에 쓴다.',
+          js: [
+            'part_editor_controller.js',
+            'part_source_data.js',
+            'property_field_data.js',
+            'property_value_helper.js',
+            'editable_property_helper.js',
+            'editable_object_model_helper.js',
+            'editor_scrub_helper.js',
+            'property_scrub_helper.js',
+            'property_numeric_input_helper.js',
+            'number_input_helper.js',
+            'transform_editor_controller.js',
+            'transform_edit_state.js',
+            'transform_value_helper.js',
+            'transform_drag_factory.js',
+            'transform_drag_helper.js',
+            'transform_drag_apply_helper.js',
+            'transform_handle_geometry_helper.js',
+            'transform_refresh_helper.js',
+            'edit_handle_geometry_helper.js',
+            'edit_handle_renderer.js',
+            'edit_handle_drawing_helper.js',
+          ],
+          caution: 'Property는 Transform만 담당한다. Interaction / Modifier는 별도 engine으로 렌더하고 저장한다.',
+        },
+        {
+          name: '6. Interaction / Modifier 공통 패널',
+          role: 'Action에 붙는 상호작용 박스와 수식 라이브러리 UI를 공통 카드 패턴으로 표시한다.',
+          js: [
+            'editor_card_panel_view.js',
+            'interaction_editor_engine.js',
+            'interaction_object_editor_controller.js',
+            'interaction_region_engine.js',
+            'modifier_editor_engine.js',
+            'timeline_modifier_data.js',
+          ],
+          caution:
+            'Action / Effect가 같은 engine을 사용한다. modifier 저장은 player.modifiers.action[actionKey] 기준이다.',
+        },
+        {
+          name: '7. Action 저장 / 기본값 / Normalize',
+          role: 'Action 목록, 이름, trigger, timeline settings, offsets, modifiers를 저장 구조로 정규화한다.',
+          js: [
+            'game_config_data.js',
+            'player_default_tuning_data.js',
+            'player_default_rig_data.js',
+            'project_data_normalizer_helper.js',
+            'project_state_controller.js',
+            'project_storage_helper.js',
+            'animation_frame_data.js',
+          ],
+          caution:
+            '현재 저장 key는 actionSettings / actionOffsets / deletedActionKeys / modifiers.action이다. v2 pose 저장 키는 사용하지 않는다.',
+        },
+        {
+          name: '8. Action Runtime',
+          role: '입력을 Trigger와 매칭하고, 실행 중인 Action Timeline / Modifier를 actor 위치와 렌더링에 반영한다.',
+          js: [
+            'input_control_controller.js',
+            'action_trigger_engine.js',
+            'actor_action_helper.js',
+            'actor_runtime_engine.js',
+            'actor_factory.js',
+            'actor_state.js',
+            'actor_frame_state.js',
+            'actor_tuning_helper.js',
+            'actor_placement_helper.js',
+            'actor_pose_helper.js',
+            'actor_renderer.js',
+            'actor_canvas_renderer.js',
+            'combat_engine.js',
+            'particle_effects_engine.js',
+            'main.js',
+          ],
+          caution:
+            'actor_pose_helper.js의 pose는 최종 렌더 자세 의미다. Runtime은 새 Action 이름별 if 분기를 추가하지 않는다.',
+        },
+      ];
+
       const GROUPS = [
         {
           name: 'Selection',
           role: '현재 편집 대상을 결정.',
           status: 'common',
-          js: ['selection_palette.js', 'part_editor_controller.js', 'selection_state.js', 'panel_edit_state.js'],
+          js: ['selection_palette_data.js', 'part_editor_controller.js', 'selection_state.js', 'panel_edit_state.js'],
           caution: 'Selection과 EditTarget이 달라지면 Handle이 틀어진다.',
         },
         {
@@ -490,7 +725,7 @@
           status: 'common',
           js: [
             'editable_property_helper.js',
-            'property_field_groups.js',
+            'property_field_data.js',
             'property_value_helper.js',
             'editor_scrub_helper.js',
             'property_scrub_helper.js',
@@ -511,9 +746,9 @@
           status: 'common',
           js: [
             'interaction_editor_engine.js',
-            'interaction_object_editor.js',
+            'interaction_object_editor_controller.js',
             'editor_scrub_helper.js',
-            'part_source_registry.js',
+            'part_source_data.js',
           ],
           caution: 'Runtime Box를 Editor source로 사용하지 않는다.',
         },
@@ -524,9 +759,9 @@
           js: [
             'modifier_editor_engine.js',
             'timeline_modifier_data.js',
-            'project_data_normalizer.js',
+            'project_data_normalizer_helper.js',
             'player_default_tuning_data.js',
-            'action_trigger_runtime.js',
+            'action_trigger_engine.js',
           ],
           caution: '현재 Runtime MVP는 Custom Action에서 move / accelerate / decelerate만 해석한다.',
         },
@@ -535,7 +770,7 @@
           role: 'Move/Resize/Rotate handle 위치와 표시.',
           status: 'common',
           js: [
-            'transform_handle_geometry.js',
+            'transform_handle_geometry_helper.js',
             'edit_handle_geometry_helper.js',
             'edit_handle_renderer.js',
             'edit_handle_drawing_helper.js',
@@ -568,9 +803,9 @@
             'timeline_preview_helper.js',
             'timeline_frame_reader.js',
             'timeline_keyframe_helper.js',
-            'timeline_pose_adapter.js',
+            'timeline_action_adapter.js',
             'timeline_effect_adapter.js',
-            'timeline_pose_controller.js',
+            'timeline_action_controller.js',
             'timeline_effect_controller.js',
             'timeline_view.js',
             'timeline_renderer.js',
@@ -578,11 +813,29 @@
           caution: 'Action/Effect 모두 영향. 공통 engine에 전용 예외를 넣지 않는다.',
         },
         {
+          name: 'Action Authoring',
+          role: 'Action 선택, 이름, Trigger, JSON import/export, Timeline/Modifier 저장 source 연결.',
+          status: 'common',
+          js: [
+            'action_authoring_controller.js',
+            'action_authoring_data.js',
+            'action_trigger_data.js',
+            'timeline_action_controller.js',
+            'timeline_action_adapter.js',
+            'timeline_action_panel_view.js',
+            'part_editor_controller.js',
+            'modifier_editor_engine.js',
+            'timeline_modifier_data.js',
+          ],
+          caution:
+            '저장 source는 actionSettings / actionOffsets / deletedActionKeys / modifiers.action이다. Action UI/edit context도 actionSelect, actionPartFields, edit context action 기준으로 정리했다.',
+        },
+        {
           name: 'InteractionObject',
           role: '공격/피격/충돌/방어 같은 상호작용 영역.',
           status: 'common',
           js: [
-            'interaction_object_editor.js',
+            'interaction_object_editor_controller.js',
             'interaction_region_engine.js',
             'combat_engine.js',
             'editable_object_model_helper.js',
@@ -596,8 +849,8 @@
           js: [
             'project_state_controller.js',
             'project_storage_helper.js',
-            'firebase_asset_storage.js',
-            'firebase_ranking_storage.js',
+            'firebase_asset_storage_helper.js',
+            'firebase_ranking_storage_helper.js',
           ],
           caution: 'Project save와 asset refresh를 섞지 않는다.',
         },
@@ -624,10 +877,13 @@
           role: '기본값, normalize, schema, frame data.',
           status: 'common',
           js: [
-            'game_config.js',
+            'game_config_data.js',
             'player_default_rig_data.js',
             'player_default_tuning_data.js',
-            'project_data_normalizer.js',
+            'action_authoring_data.js',
+            'action_trigger_data.js',
+            'timeline_modifier_data.js',
+            'project_data_normalizer_helper.js',
             'animation_frame_data.js',
           ],
           caution: '저장 구조 변경은 별도 Sprint에서만 한다.',
@@ -637,10 +893,10 @@
           role: 'Stage 편집.',
           status: 'dedicated',
           js: [
-            'stageRulesController.js',
-            'stageRulesPanelController.js',
-            'stageRulesPanelRenderer.js',
-            'stageRulesState.js',
+            'stage_rules_controller.js',
+            'stage_rules_panel_controller.js',
+            'stage_rules_panel_renderer.js',
+            'stage_rules_state.js',
           ],
           caution: '아직 Common Editing에 흡수 안 됨.',
         },
@@ -648,7 +904,7 @@
           name: 'HUD',
           role: 'Runtime HUD와 이름/HP 표시.',
           status: 'dedicated',
-          js: ['characterHudLayout.js', 'runHud.js', 'rankingUi.js', 'rankingController.js'],
+          js: ['character_hud_layout_helper.js', 'run_hud_view.js', 'ranking_view.js', 'ranking_controller.js'],
           caution: 'editable object 규칙과 완전히 통합되지 않았다.',
         },
         {
@@ -673,18 +929,21 @@
       ];
 
       const LARGE_FILES = [
+        ['part_editor_controller.js', '548', 'Selection/Property', 'Modifier/Interaction 추가 흡수 주의'],
+        ['project_data_normalizer_helper.js', '525', 'Normalize', '저장 구조 변경 주의'],
         ['background_renderer.js', '482', 'Background render', '더 흡수 금지'],
-        ['project_data_normalizer.js', '465', 'Normalize', '저장 구조 변경 주의'],
-        ['actor_runtime_engine.js', '440', 'Runtime player', '더 흡수 금지'],
-        ['editor_panel.js', '421', 'Editor shell', 'controller 연결만 유지'],
+        ['editor_panel_controller.js', '450', 'Editor shell', 'controller 연결만 유지'],
+        ['main.js', '433', 'Entry / loop', '책임 추가 금지'],
+        ['timeline_effect_controller.js', '430', 'Effect timeline', '추가 흡수보다 helper 분리 유지'],
+        ['actor_runtime_engine.js', '410', 'Runtime player', '더 흡수 금지'],
+        ['action_authoring_controller.js', '406', 'Action UI binding', 'Trigger/Action UI 분리 후보'],
         ['actor_renderer.js', '394', 'Runtime render', 'Editor target 기록 경계 주의'],
-        ['main.js', '380', 'Entry / loop', '책임 추가 금지'],
-        ['timeline_effect_controller.js', '341', 'Effect timeline', '추가 흡수보다 glue 분리 유지'],
+        ['timeline_action_controller.js', '347', 'Action timeline', '추가 흡수보다 helper 분리 유지'],
         ['player_default_rig_data.js', '336', 'Default rig', '저장 구조 변경 시 별도 Sprint'],
-        ['part_editor_controller.js', '332', 'Selection/Property', '무리한 추가 금지'],
-        ['combat_engine.js', '330', 'Runtime combat', 'Editor source와 분리'],
-        ['timeline_pose_controller.js', '320', 'Action timeline', '추가 흡수보다 glue 분리 유지'],
+        ['action_trigger_engine.js', '256', 'Action runtime', 'Modifier runtime 분리 후보'],
       ];
+
+      const NAMING_EXCEPTIONS = [];
 
       const SUFFIX_ROLES = [
         ['engine', '핵심 계산 / 규칙'],
@@ -737,6 +996,19 @@
         return `<span class="js"><span>${escapeHtml(file)}</span>${renderSuffixBadge(file)}</span>`;
       }
 
+      function renderActionMap() {
+        document.getElementById('actionMap').innerHTML = ACTION_PARTS.map(
+          (part) => `
+        <article class="action-map-card">
+          <h3>${escapeHtml(part.name)}</h3>
+          <p>${escapeHtml(part.role)}</p>
+          <div class="js-list">${part.js.map(renderJsFile).join('')}</div>
+          <p><b>주의:</b> ${escapeHtml(part.caution)}</p>
+        </article>
+      `
+        ).join('');
+      }
+
       function renderSuffixRoles() {
         document.getElementById('suffixRoles').innerHTML = SUFFIX_ROLES.map(
           ([suffix, role]) => `
@@ -748,10 +1020,28 @@
         ).join('');
       }
 
+      function renderNamingExceptions() {
+        document.getElementById('namingExceptions').innerHTML = NAMING_EXCEPTIONS.map(
+          ([file, role, plan]) => `
+        <article class="group-card">
+          <div class="group-head">
+            <h2>${escapeHtml(file)}</h2>
+            <div class="pill-row"><span class="pill dedicated">보류</span></div>
+          </div>
+          <div class="info">
+            <div class="info-row"><b>현재 하는 일</b><span>${escapeHtml(role)}</span></div>
+            <div class="info-row"><b>권장 이름 / 처리</b><span>${escapeHtml(plan)}</span></div>
+          </div>
+        </article>
+      `
+        ).join('');
+      }
+
       function renderSummary() {
         const common = GROUPS.filter((group) => group.status === 'common').length;
         const dedicated = GROUPS.length - common;
-        const jsCount = new Set(GROUPS.flatMap((group) => group.js)).size;
+        const jsCount = new Set([...GROUPS.flatMap((group) => group.js), ...ACTION_PARTS.flatMap((part) => part.js)])
+          .size;
         document.getElementById('summary').innerHTML = [
           ['기능 그룹', GROUPS.length],
           ['관련 JS', jsCount],
@@ -823,7 +1113,9 @@
       }
 
       renderSummary();
+      renderActionMap();
       renderSuffixRoles();
+      renderNamingExceptions();
       renderGroupOptions();
       renderGroups();
 

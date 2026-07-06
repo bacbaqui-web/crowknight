@@ -2,11 +2,13 @@ export const CHARACTER_GROUPS = [
   { key: 'players', label: '주인공' },
   { key: 'mobs', label: '잡몹' },
   { key: 'bosses', label: '보스' },
+  { key: 'trash', label: '휴지통' },
 ];
 
 export const CHARACTER_TRASH_GROUP = 'trash';
 
 const CHARACTER_GROUP_KEYS = new Set(CHARACTER_GROUPS.map((group) => group.key));
+const CREATE_CHARACTER_GROUPS = CHARACTER_GROUPS.filter((group) => group.key !== CHARACTER_TRASH_GROUP);
 
 export function normalizeCharacterGroup(value, fallback = 'mobs') {
   const key = String(value || '').trim();
@@ -19,9 +21,18 @@ export function visibleCharacterGroups() {
   return CHARACTER_GROUPS;
 }
 
+export function creatableCharacterGroups() {
+  return CREATE_CHARACTER_GROUPS;
+}
+
 export function characterGroupLabel(value) {
-  if (value === CHARACTER_TRASH_GROUP) return '휴지통';
   return CHARACTER_GROUPS.find((group) => group.key === value)?.label || '잡몹';
+}
+
+export function normalizeCharacterGroupInput(value, fallback = 'mobs') {
+  const raw = String(value || '').trim();
+  const match = CHARACTER_GROUPS.find((group) => group.key === raw || group.label === raw);
+  return match ? match.key : normalizeCharacterGroup(raw, fallback);
 }
 
 export function inferCharacterGroup(def) {
@@ -41,8 +52,23 @@ export function isTrashCharacter(def) {
   return Boolean(def?.deleted) || normalizeCharacterGroup(def?.group, '') === CHARACTER_TRASH_GROUP;
 }
 
+export function isPlayerCharacter(def) {
+  return def?.id === 'player' || def?.type === 'player' || normalizeCharacterGroup(def?.group, '') === 'players';
+}
+
 export function characterAssetFolder(group, englishName) {
   return `${normalizeCharacterGroup(group)}/${sanitizeCharacterAssetName(englishName)}`;
+}
+
+export function characterPsdFileNameForGroup(group) {
+  return normalizeCharacterGroup(group) === 'players' ? 'player.psd' : 'enemy.psd';
+}
+
+export function legacyCharacterFolder(value) {
+  const folder = String(value || '').trim();
+  if (folder === 'player') return 'players/player_01';
+  if (folder === 'enemy' || /^enemy\d*$/.test(folder)) return 'mobs/enemy_01';
+  return folder;
 }
 
 export function sanitizeCharacterAssetName(value) {

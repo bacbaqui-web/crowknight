@@ -1,14 +1,9 @@
 import { defaultEffectSize } from './animation_frame_data.js';
-import { interactionObjectParentPart } from './interaction_object_editor.js';
+import { interactionObjectParentPart } from './interaction_object_editor_controller.js';
 import { isMasterPart } from './editor_label_helper.js';
-import {
-  effectFieldLimits,
-  isControlGroupPartKey,
-  isParentSizedPart,
-  poseFieldLimits,
-} from './part_source_registry.js';
+import { effectFieldLimits, isControlGroupPartKey, isParentSizedPart, actionFieldLimits } from './part_source_data.js';
 import { SIZE_PERCENT_MAX, SIZE_PERCENT_MIN, isSizeProp, sizeBaseProp } from './editable_property_helper.js';
-import { clamp } from './utils.js';
+import { clamp } from './common_helper.js';
 
 const ACTION_BASE_TRANSFORM_DISPLAY = {
   x: 0,
@@ -37,11 +32,11 @@ export function parentSizedPartSizeBase(tuning, partKey, prop, fallback) {
   return Math.max(1, Number(parent?.[prop] || parent?.[sizeBaseProp(prop)] || fallback || 1));
 }
 
-export function readPoseFrameDisplayValue(partKey, offset, prop, basePart) {
+export function readActionFrameDisplayValue(partKey, offset, prop, basePart) {
   return readActionBaseTransformDisplayValue(partKey, offset, prop, basePart);
 }
 
-export function poseFrameValueFromInput(partKey, prop, value, basePart) {
+export function actionFrameValueFromInput(partKey, prop, value, basePart) {
   return actionBaseTransformValueFromInput(partKey, prop, value, basePart);
 }
 
@@ -63,7 +58,7 @@ export function partSizeScale(part, prop, fallbackPart = null) {
   return Math.max(0.001, Number(part?.[prop] || base) / base);
 }
 
-export function posePartSizeBase(basePart, prop) {
+export function actionPartSizeBase(basePart, prop) {
   return Math.max(0.001, Number(basePart?.[prop] ?? 1));
 }
 
@@ -104,11 +99,11 @@ export function scaleOffsetFromPercent(percent) {
   return Number(percent) / 100 - 1;
 }
 
-export function poseSizeToPercent(partKey, offset, prop, basePart) {
+export function actionSizeToPercent(partKey, offset, prop, basePart) {
   return actionPartSizeToPercent(partKey, offset, prop, basePart);
 }
 
-export function poseSizeOffsetFromPercent(partKey, prop, percent, basePart) {
+export function actionSizeOffsetFromPercent(partKey, prop, percent, basePart) {
   return actionPartSizeOffsetFromPercent(partKey, prop, percent, basePart);
 }
 
@@ -148,7 +143,7 @@ function readActionBaseTransformDisplayValue(partKey, frameValue, prop, basePart
 }
 
 function actionBaseTransformValueFromInput(partKey, prop, value, basePart) {
-  const limits = poseFieldLimits(prop, partKey);
+  const limits = actionFieldLimits(prop, partKey);
   const nextValue = clamp(Number(value), limits.min, limits.max);
   if (isSizeProp(prop)) return actionPartSizeOffsetFromPercent(partKey, prop, nextValue, basePart);
   return nextValue;
@@ -157,14 +152,14 @@ function actionBaseTransformValueFromInput(partKey, prop, value, basePart) {
 function actionPartSizeToPercent(partKey, frameValue, prop, basePart) {
   if (isMasterPart(partKey)) return scaleOffsetToPercent(frameValue?.[prop]);
 
-  const baseSize = posePartSizeBase(basePart, prop);
+  const baseSize = actionPartSizeBase(basePart, prop);
   return sizeOffsetToPercent(frameValue?.[prop], baseSize);
 }
 
 function actionPartSizeOffsetFromPercent(partKey, prop, percent, basePart) {
   if (isMasterPart(partKey)) return scaleOffsetFromPercent(percent);
 
-  const baseSize = posePartSizeBase(basePart, prop);
+  const baseSize = actionPartSizeBase(basePart, prop);
   return sizeOffsetFromPercent(baseSize, percent);
 }
 

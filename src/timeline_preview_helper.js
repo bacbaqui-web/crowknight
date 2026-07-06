@@ -1,13 +1,13 @@
 import {
   clearActorEffectPreviews,
-  clearActorPosePreviews,
+  clearActorActionPreviews,
   shouldPreviewEffect,
-  shouldPreviewPose,
+  shouldPreviewAction,
 } from './preview_state.js';
-import { renderInactivePreviewTimeline } from './editor_panel_dom.js';
+import { renderInactivePreviewTimeline } from './editor_panel_dom_helper.js';
 import { previewTimeoutMs } from './timeline_playback_helper.js';
 
-export function syncPoseTimelinePreview({
+export function syncActionTimelinePreview({
   actors,
   actor,
   section,
@@ -30,13 +30,13 @@ export function syncPoseTimelinePreview({
     activeKeyframeId,
     fixedFrame,
     selectedSlot,
-    clearPreviews: clearActorPosePreviews,
-    shouldPreview: shouldPreviewPose,
+    clearPreviews: clearActorActionPreviews,
+    shouldPreview: shouldPreviewAction,
     assignPreview: () => {
-      actor.player.posePreview = createPreview({
+      actor.player.actionPreview = createPreview({
         fixedFrame: activeKeyframeId ? null : fixedFrame,
         playing,
-        loop: settings.playback !== 'once',
+        playback: settings.playback,
         t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
       });
     },

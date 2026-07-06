@@ -1,5 +1,5 @@
 import { normalizeSceneBackground } from './scene_session_data.js';
-import { clamp } from './utils.js';
+import { clamp } from './common_helper.js';
 
 const imageCache = new Map();
 const metricsCache = new WeakMap();
