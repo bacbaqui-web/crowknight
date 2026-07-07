@@ -17,6 +17,7 @@ import {
   actionKeyframesFor,
   sortActionKeyframes,
 } from './project_data_normalizer_helper.js';
+import { actionKeyframeTargetId, hasActionKeyframeTarget } from './action_keyframe_target_helper.js';
 
 export function addActionTimelineKeyframe(tuning, actionKey, t) {
   const id = makeActionKeyframeId();
@@ -36,6 +37,9 @@ export function addActionTimelineKeyframe(tuning, actionKey, t) {
 }
 
 export function ensureActionTimelineKeyframe(frames, id, timelineKeyframes) {
+  const existing = Array.isArray(frames?.keyframes) ? frames.keyframes.find((frame) => frame.id === id) : null;
+  if (existing) return existing;
+
   const keyframes = actionKeyframesFor(frames);
   const found = keyframes.find((frame) => frame.id === id);
   if (found) return found;
@@ -197,27 +201,20 @@ export function writeActionTimelineFrameValue({
   frames,
   prop,
   value,
-  activeKeyframeId,
-  fixedFrame,
+  actionKeyframeTarget,
   allowRootAnchorWrite,
   ensureKeyframe,
 }) {
-  if (allowRootAnchorWrite && !activeKeyframeId && !fixedFrame && (prop === 'anchorX' || prop === 'anchorY')) {
+  const hasTarget = hasActionKeyframeTarget(actionKeyframeTarget);
+  if (allowRootAnchorWrite && !hasTarget && (prop === 'anchorX' || prop === 'anchorY')) {
     frames[prop] = value;
     return true;
   }
 
-  if (!activeKeyframeId && !fixedFrame) return false;
+  if (!hasTarget) return false;
 
-  if (activeKeyframeId) {
-    const keyframe = ensureKeyframe(frames, activeKeyframeId);
-    keyframe[prop] = value;
-    syncFrameAliases(frames);
-    return true;
-  }
-
-  frames[fixedFrame][prop] = value;
-  actionKeyframesFor(frames).find((keyframe) => keyframe.id === fixedFrame)[prop] = value;
+  const keyframe = ensureKeyframe(frames, actionKeyframeTargetId(actionKeyframeTarget));
+  keyframe[prop] = value;
   syncFrameAliases(frames);
   return true;
 }

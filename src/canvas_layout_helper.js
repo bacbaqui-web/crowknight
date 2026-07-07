@@ -1,4 +1,5 @@
 const INITIAL_DEVICE_PIXEL_RATIO = currentDevicePixelRatio();
+let fullStageLayoutSize = null;
 
 export function syncCanvasToLayout({ canvas, world, actors = [], isFullStage, adjustActors = false }) {
   if (!isFullStage) {
@@ -7,15 +8,15 @@ export function syncCanvasToLayout({ canvas, world, actors = [], isFullStage, ad
     return;
   }
 
-  const rect = canvas.getBoundingClientRect();
-  const pageZoomCompensation = currentDevicePixelRatio() / INITIAL_DEVICE_PIXEL_RATIO;
-  const width = Math.max(320, Math.round((rect.width || window.innerWidth || world.viewW) * pageZoomCompensation));
-  const height = Math.max(320, Math.round((rect.height || window.innerHeight || world.viewH) * pageZoomCompensation));
+  fullStageLayoutSize ||= measureFullStageLayoutSize(canvas, world);
+  const { width, height } = fullStageLayoutSize;
   const previousFloorY = world.floorY;
   const nextFloorY = height - 110;
 
   if (canvas.width !== width) canvas.width = width;
   if (canvas.height !== height) canvas.height = height;
+  canvas.style.setProperty('--stage-canvas-width', `${width}px`);
+  canvas.style.setProperty('--stage-canvas-height', `${height}px`);
   world.viewW = width;
   world.viewH = height;
   world.floorY = nextFloorY;
@@ -31,4 +32,13 @@ export function syncCanvasToLayout({ canvas, world, actors = [], isFullStage, ad
 
 function currentDevicePixelRatio() {
   return Number.isFinite(window.devicePixelRatio) && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+}
+
+function measureFullStageLayoutSize(canvas, world) {
+  const rect = canvas.getBoundingClientRect();
+  const pageZoomCompensation = currentDevicePixelRatio() / INITIAL_DEVICE_PIXEL_RATIO;
+  return {
+    width: Math.max(320, Math.round((rect.width || window.innerWidth || world.viewW) * pageZoomCompensation)),
+    height: Math.max(320, Math.round((rect.height || window.innerHeight || world.viewH) * pageZoomCompensation)),
+  };
 }

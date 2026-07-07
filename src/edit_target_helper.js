@@ -108,8 +108,7 @@ function resolvePartWriteTarget(selectedActionParts, activePartKey, fallbackPart
 }
 
 function selectedPartCount(selectedParts) {
-  if (Array.isArray(selectedParts)) return selectedParts.length;
-  return selectedParts?.size?.() ?? selectedParts?.size ?? 0;
+  return selectedPartValues(selectedParts).filter((partKey) => partKey && !isMasterPart(partKey)).length;
 }
 
 function selectedPartValues(selectedParts) {

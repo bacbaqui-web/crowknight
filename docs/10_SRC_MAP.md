@@ -62,6 +62,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `action_condition_helper.js`: Action condition 값과 label helper.
 - `action_mirror_helper.js`: Action mirror 설정 helper.
 - `action_blend_helper.js`: Action blend 설정 helper.
+- `action_keyframe_target_helper.js`: Action start/end/custom keyframe target compatibility helper.
 - `action_runtime_rule_helper.js`: Action Runtime Rule normalize / frame window helper.
 - `action_runtime_rule_panel_controller.js`: Action Runtime Rule card / Mini Timeline UI controller.
 - `action_timeline_edit_helper.js`: Action edit pivot normalize / sync helper.

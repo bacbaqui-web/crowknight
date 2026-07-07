@@ -1,11 +1,7 @@
-import {
-  clearActorEffectPreviews,
-  clearActorActionPreviews,
-  shouldPreviewEffect,
-  shouldPreviewAction,
-} from './preview_state.js';
+import { clearActorEffectPreviews, clearActorActionPreviews, shouldPreviewEffect } from './preview_state.js';
 import { renderInactivePreviewTimeline } from './editor_panel_dom_helper.js';
 import { previewTimeoutMs } from './timeline_playback_helper.js';
+import { actionKeyframeTargetT, hasActionKeyframeTarget } from './action_keyframe_target_helper.js';
 
 export function syncActionTimelinePreview({
   actors,
@@ -14,30 +10,24 @@ export function syncActionTimelinePreview({
   playbackButton,
   renderTimeline,
   playing,
-  activeKeyframeId,
-  fixedFrame,
-  selectedSlot,
+  actionKeyframeTarget,
   settings,
   createPreview,
-  getActiveT,
 }) {
+  const previewTarget = actionPreviewTarget(actionKeyframeTarget);
   syncTimelinePreview({
     actors,
     section,
     playbackButton,
     renderTimeline,
-    playing,
-    activeKeyframeId,
-    fixedFrame,
-    selectedSlot,
     clearPreviews: clearActorActionPreviews,
-    shouldPreview: shouldPreviewAction,
+    hasPreview: playing || previewTarget.hasTarget,
     assignPreview: () => {
       actor.player.actionPreview = createPreview({
-        fixedFrame: activeKeyframeId ? null : fixedFrame,
+        fixedFrame: playing ? null : previewTarget.fixedFrame,
         playing,
         playback: settings.playback,
-        t: activeKeyframeId || selectedSlot !== null ? getActiveT() : null,
+        t: playing ? null : previewTarget.t,
       });
     },
   });
@@ -61,12 +51,13 @@ export function syncEffectTimelinePreview({
     section,
     playbackButton,
     renderTimeline,
-    playing,
-    activeKeyframeId,
-    fixedFrame,
-    selectedSlot,
     clearPreviews: clearActorEffectPreviews,
-    shouldPreview: shouldPreviewEffect,
+    hasPreview: shouldPreviewEffect({
+      playing,
+      activeKeyframeId,
+      fixedFrame,
+      selectedSlot,
+    }),
     assignPreview: () => {
       actor.player.effectPreview = createPreview({ playing, t: playing ? null : getActiveT() });
     },
@@ -78,26 +69,16 @@ function syncTimelinePreview({
   section,
   playbackButton,
   renderTimeline,
-  playing,
-  activeKeyframeId,
-  fixedFrame,
-  selectedSlot,
   clearPreviews,
-  shouldPreview,
+  hasPreview,
   assignPreview,
 }) {
   clearPreviews(actors);
-  if (!section.classList.contains('is-open')) {
+  if (!isTimelinePreviewSectionActive(section)) {
     renderInactivePreviewTimeline(playbackButton, renderTimeline);
     return;
   }
 
-  const hasPreview = shouldPreview({
-    playing,
-    activeKeyframeId,
-    fixedFrame,
-    selectedSlot,
-  });
   if (!hasPreview) {
     renderInactivePreviewTimeline(playbackButton, renderTimeline);
     return;
@@ -105,6 +86,25 @@ function syncTimelinePreview({
 
   assignPreview();
   renderTimeline();
+}
+
+function actionPreviewTarget(target) {
+  const hasTarget = hasActionKeyframeTarget(target);
+  const hasSlot = target?.selectedSlot !== null && target?.selectedSlot !== undefined;
+  const fixedFrame = hasTarget && (target.role === 'start' || target.role === 'end') ? target.id : null;
+  return {
+    fixedFrame,
+    hasTarget: hasTarget || hasSlot,
+    t: hasTarget || hasSlot ? actionKeyframeTargetT(target) : null,
+  };
+}
+
+function isTimelinePreviewSectionActive(section) {
+  if (!section) return false;
+  if (section.hidden) return false;
+  if (section.dataset.workflowSessionActive === 'true') return true;
+  if (section.dataset.workflowSessionActive === 'false') return false;
+  return section.classList.contains('is-open');
 }
 
 export function restartTimelinePreviewTimer({ timer, settings, shouldAutoStop, onStop }) {

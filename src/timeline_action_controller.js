@@ -12,6 +12,11 @@ import { MASTER_PART_KEY } from './game_config_data.js';
 import { createTimelineController, createTimelineControllerCommonApi } from './timeline_controller.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { isEmptyEditableSlot } from './timeline_dom_helper.js';
+import {
+  hasActionKeyframeTarget,
+  legacySelectionFromActionKeyframeId,
+  resolveActionKeyframeTarget,
+} from './action_keyframe_target_helper.js';
 
 export function createActionTimelineController({
   actors,
@@ -255,8 +260,9 @@ export function createActionTimelineController({
   }
 
   function writeFrameValue(part, prop, value) {
-    if (!actionSelection.activeKeyframeId && !actionSelection.fixedFrame && actionSelection.selectedSlot !== null) {
-      actionSelection.activeKeyframeId = createKeyframeAtSelectedSlot();
+    const target = currentActionKeyframeTarget(actionSelection);
+    if (!hasActionKeyframeTarget(target) && target.selectedSlot !== null) {
+      createKeyframeAtSelectedSlot(target);
     }
     timelineWriteFrameValue({
       part,
@@ -265,17 +271,23 @@ export function createActionTimelineController({
     });
   }
 
-  function createKeyframeAtSelectedSlot() {
+  function createKeyframeAtSelectedSlot(target = currentActionKeyframeTarget(actionSelection)) {
     const keyframes = keyframesForTimeline();
-    const slot = isEmptyEditableSlot(actionSelection.selectedSlot, keyframes, getLastSlot(), toSlot)
-      ? actionSelection.selectedSlot
+    const slot = isEmptyEditableSlot(target.selectedSlot, keyframes, getLastSlot(), toSlot)
+      ? target.selectedSlot
       : null;
     if (slot === null) return null;
     const t = slotToValue(slot);
     const id = actionTimeline.addKeyframe(t);
-    actionSelection.activeKeyframeId = id;
-    actionSelection.fixedFrame = null;
-    actionSelection.selectedSlot = slot;
+    Object.assign(
+      actionSelection,
+      legacySelectionFromActionKeyframeId({
+        id,
+        selectedSlot: slot,
+        keyframes: keyframesForTimeline(),
+        frameCount: getFrameCount(),
+      })
+    );
     return id;
   }
 
@@ -303,9 +315,8 @@ export function createActionTimelineController({
   }
 
   function hasFrameTarget() {
-    return Boolean(
-      actionSelection.activeKeyframeId || actionSelection.fixedFrame || actionSelection.selectedSlot !== null
-    );
+    const target = currentActionKeyframeTarget(actionSelection);
+    return hasActionKeyframeTarget(target) || target.selectedSlot !== null;
   }
 
   function applyTimelineSelection(nextSelection, { resetGroup = false } = {}) {
@@ -319,13 +330,15 @@ export function createActionTimelineController({
   }
 
   function getActiveT() {
+    const target = currentActionKeyframeTarget();
+    if (!hasActionKeyframeTarget(target) && target.selectedSlot === null) return 0;
     return timelineActiveT({
       activeActionPartKey: getActiveActionPartKey(),
     });
   }
 
   function syncPreview() {
-    const selectionState = frameSelectionState();
+    const target = currentActionKeyframeTarget();
     syncActionTimelinePreview({
       actors,
       actor: actor(),
@@ -333,12 +346,17 @@ export function createActionTimelineController({
       playbackButton: actionPlayback,
       renderTimeline,
       playing: previewControls.isPlaying(),
-      activeKeyframeId: selectionState.activeKeyframeId,
-      fixedFrame: selectionState.fixedFrame,
-      selectedSlot: selectionState.selectedSlot,
+      actionKeyframeTarget: target,
       settings: actionTimeline.settings() || {},
       createPreview: actionTimeline.createPreview,
-      getActiveT,
+    });
+  }
+
+  function currentActionKeyframeTarget(selection = frameSelectionState()) {
+    return resolveActionKeyframeTarget({
+      selection,
+      keyframes: keyframesForTimeline(),
+      frameCount: getFrameCount(),
     });
   }
 

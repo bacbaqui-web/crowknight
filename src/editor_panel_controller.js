@@ -64,6 +64,7 @@ export function createTuningPanel({
   let actionFrameCopyGlobal = null;
   let actionFramePasteGlobal = null;
   let actionFrameSelectionActive = false;
+  let actionFrameTargetCheckGlobal = () => actionFrameSelectionActive;
   let frameSelectionCheckGlobal = () => actionFrameSelectionActive;
   let actionEditSessions = null;
   let getCurrentActionKey = () => null;
@@ -98,7 +99,7 @@ export function createTuningPanel({
       isPanelOpen: isSettingsPanelOpen(),
       openEditContext,
       selectedActor,
-      actionFrameSelectionActive,
+      actionFrameSelectionActive: currentActionFrameTargetActive(),
       editFocusContext: editingState.getEditFocusContext(),
       groupEditValues: currentActionGroupEditValues(),
       actionSettings: selectedActor.tuning.actionSettings?.[getCurrentActionKey()],
@@ -109,7 +110,7 @@ export function createTuningPanel({
   function getGroupEditHandleGeometry() {
     return tuningGroupEditHandleGeometry({
       editFocusContext: editingState.getEditFocusContext(),
-      actionFrameSelectionActive,
+      actionFrameSelectionActive: currentActionFrameTargetActive(),
       selectedActor,
       groupEditValues: currentActionGroupEditValues(),
       editTarget: getEditTarget(EDIT_CONTEXT_ACTION),
@@ -121,7 +122,7 @@ export function createTuningPanel({
       context: normalizedEditTargetContext(context),
       activePartKey: selectionState.getActivePartKeyGlobal(),
       editFocusPartKey: editingState.getEditFocusPartKey(),
-      hasFrameTarget: actionFrameSelectionActive,
+      hasFrameTarget: currentActionFrameTargetActive(),
       selectedActionParts: currentActionSelectedActionParts(),
       activeActionPartKey: currentActionActiveActionPartKey(),
     });
@@ -145,6 +146,10 @@ export function createTuningPanel({
     return actionEditSessions?.getGroupValues() || groupEditState.getValues();
   }
 
+  function currentActionFrameTargetActive() {
+    return Boolean(actionFrameTargetCheckGlobal?.());
+  }
+
   function getEditHandleAt(point) {
     return findTuningEditHandleAt(point, getEditHandleGeometry()) || getEditHandleTargetAt(point);
   }
@@ -161,7 +166,7 @@ export function createTuningPanel({
     const geometry = createPartEditHandleGeometry({
       editFocusPartKey: hitRegion.key,
       editHandleInfo: selectedActor.player.editHandles?.[hitRegion.key],
-      actionFrameSelectionActive,
+      actionFrameSelectionActive: currentActionFrameTargetActive(),
     });
     return geometry ? { mode: 'move', geometry } : null;
   }
@@ -293,6 +298,7 @@ export function createTuningPanel({
     });
     actionFrameCopyGlobal = timelineFrameActions.copyCurrentFrame;
     actionFramePasteGlobal = timelineFrameActions.pasteCurrentFrame;
+    actionFrameTargetCheckGlobal = timelineFrameActions.hasActionFrameTarget;
     frameSelectionCheckGlobal = timelineFrameActions.hasCurrentFrameSelection;
     bindTuningPanelAssetActions({
       elements: panelElements,

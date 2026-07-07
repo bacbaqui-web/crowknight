@@ -176,7 +176,7 @@
   <body>
     <main>
       <header>
-        <p class="updated">Updated 2026-07-07 KST</p>
+        <p class="updated">Updated 2026-07-08 KST</p>
         <h1>Current Task Report</h1>
       </header>
 
@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>고정 수식 Runtime 적용 순서 수정</p>
+            <p>custom keyframe frameGroup/master preview 적용 수정</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>고정 Formula가 Action 실행 중 지정 구간에서 방향을 실제로 유지하게 한다.</p>
+            <p>custom keyframe의 master transform도 start / end와 같은 preview pose에 적용한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,31 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>고정 수식 Runtime 적용 순서 수정</p>
+            <p>custom keyframe frameGroup/master preview 적용 수정</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>고정 Formula가 Runtime에서 실제 facing 유지에 적용되게 한다.</li>
-              <li>Velocity / Mirror 계산보다 먼저 고정을 적용한다.</li>
-              <li>Blend 중에도 고정 수식이 우회되지 않게 한다.</li>
+              <li>custom keyframe의 part edit과 master edit 경로 차이를 확인한다.</li>
+              <li>custom master keyframe 값이 preview pose 전체에 적용되게 한다.</li>
+              <li>Runtime / Renderer / 저장 구조 변경 없이 preview source만 보정한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`advanceCustomActionRuntime()`에서 view lock 적용 순서를 앞으로 당겼다.</li>
-              <li>Velocity Formula 적용 전 고정 facing을 먼저 복원한다.</li>
-              <li>customActionBlend 처리 중에도 고정 수식 적용을 유지한다.</li>
+              <li>
+                `timeline_preview_helper.js`가 workflow active metadata를 기준으로 Action preview를 유지하게 했다.
+              </li>
+              <li>custom keyframe 선택 후 `actionPreview.t`가 custom frame 값을 가리키는 것을 확인했다.</li>
+              <li>`player.getPartOffset('master')`가 custom master keyframe 값을 반환하는 데이터 QA를 확인했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 고정 ON 구간 동안 방향이 유지되는지 수동 QA가 필요하다.</li>
-              <li>Blend가 있는 Action 시작 구간에서도 고정이 유지되는지 수동 QA가 필요하다.</li>
+              <li>사용자 브라우저에서 custom frameGroup Properties 입력 / handle drag 체감 QA가 필요하다.</li>
+              <li>복사/붙여넣기 수동 QA는 직전 Task의 남은 범위로 유지한다.</li>
             </ul>
           </div>
         </div>

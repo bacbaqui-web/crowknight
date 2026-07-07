@@ -56,7 +56,19 @@ export function hasTimelineSelection(selection, { includeSelectedSlot = true } =
 
 export function selectedTimelineFrameSelection({ id, activeKeyframeId, fixedFrame, keyframes, toSlot, lastSlot }) {
   if (isTimelineFrameSelectionActive({ activeKeyframeId, fixedFrame, id })) {
-    return { kind: 'clear', selection: clearedTimelineSelection() };
+    if (id === 'start' || id === 'end') {
+      return { kind: 'fixed', selection: fixedTimelineFrameSelection(id, lastSlot) };
+    }
+
+    const keyframe = keyframes.find((frame) => frame.id === id);
+    return {
+      kind: 'keyframe',
+      selection: {
+        activeKeyframeId: id,
+        fixedFrame: null,
+        selectedSlot: toSlot(keyframe?.t ?? 0),
+      },
+    };
   }
 
   if (id === 'start' || id === 'end') {

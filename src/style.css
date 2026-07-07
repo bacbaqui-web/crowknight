@@ -55,6 +55,7 @@ select {
 .full-stage .stage-wrap {
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
 }
 
 .player-stage {
@@ -75,9 +76,9 @@ canvas {
 }
 
 .full-stage canvas {
-  width: 100vw;
+  width: var(--stage-canvas-width, 100vw);
   max-width: none;
-  height: 100vh;
+  height: var(--stage-canvas-height, 100vh);
   aspect-ratio: auto;
   border: 0;
 }

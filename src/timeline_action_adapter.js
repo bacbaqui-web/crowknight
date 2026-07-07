@@ -16,13 +16,18 @@ import { ACTION_PART_KEYS } from './game_config_data.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { createActionPreview } from './preview_state.js';
 import { defineTimelineAdapter } from './timeline_adapter_contract_helper.js';
-import { activeTimelineT, timelineFrameCountFor, timelineSlotToValue } from './timeline_state.js';
+import { timelineFrameCountFor } from './timeline_state.js';
 import { currentActionTimelineFrame } from './timeline_frame_reader.js';
 import {
+  actionTimelinePasteTargetFrameId,
   copyActiveActionTimelineFrame,
   pasteActionTimelineFrameCopy,
-  timelinePasteTargetFrameId,
 } from './timeline_clipboard_helper.js';
+import {
+  actionKeyframeTargetT,
+  legacySelectionFromActionKeyframeId,
+  resolveActionKeyframeTarget,
+} from './action_keyframe_target_helper.js';
 
 export function createActionTimelineAdapter({ getActor, actionSelect }) {
   const key = () => actionSelect.value;
@@ -41,6 +46,7 @@ export function createActionTimelineAdapter({ getActor, actionSelect }) {
   }
 
   function ensureOffset(part) {
+    if (tuning().actionOffsets?.[key()]?.[part]) return;
     ensureActionOffset(tuning(), key(), part);
   }
 
@@ -62,30 +68,16 @@ export function createActionTimelineAdapter({ getActor, actionSelect }) {
   }
 
   function activeT({ selection, frameCount, activeActionPartKey = null }) {
-    const part = activeActionPartKey || ACTION_PART_KEYS[0];
-    return activeTimelineT({
-      activeKeyframeId: selection.activeKeyframeId,
-      selectedSlot: selection.selectedSlot,
-      fixedFrame: selection.fixedFrame,
-      keyframes: keyframes(),
-      selectedKeyframe: selection.activeKeyframeId ? selectedKeyframe(part, selection.activeKeyframeId) : null,
-      frameCount,
-    });
+    return actionKeyframeTargetT(actionKeyframeTarget(selection, frameCount, activeActionPartKey)) ?? 0;
   }
 
   function currentFrameValue({ part, selection }) {
-    const activeSlotT =
-      !selection.activeKeyframeId && !selection.fixedFrame && selection.selectedSlot !== null
-        ? timelineSlotToValue(selection.selectedSlot, timelineFrameCountFor(settingsByKey(), key()))
-        : null;
+    const target = actionKeyframeTarget(selection);
     return currentActionTimelineFrame({
       tuning: tuning(),
       actionKey: key(),
       part,
-      activeKeyframeId: selection.activeKeyframeId,
-      fixedFrame: selection.fixedFrame,
-      selectedSlot: selection.selectedSlot,
-      activeT: activeSlotT,
+      actionKeyframeTarget: target,
       isMasterPart: isMasterPart(part),
       ensureKeyframe,
     });
@@ -125,12 +117,12 @@ export function createActionTimelineAdapter({ getActor, actionSelect }) {
   }
 
   function writeFrameValue({ part, prop, value, selection }) {
+    const target = actionKeyframeTarget(selection);
     return writeActionTimelineFrameValue({
       frames: offset(part),
       prop,
       value,
-      activeKeyframeId: selection.activeKeyframeId,
-      fixedFrame: selection.fixedFrame,
+      actionKeyframeTarget: target,
       allowRootAnchorWrite: isMasterPart(part),
       ensureKeyframe,
     });
@@ -169,10 +161,10 @@ export function createActionTimelineAdapter({ getActor, actionSelect }) {
   }
 
   function copyFrame({ isOpen, selection, selectedActionParts, activeActionPartKey }) {
+    const target = actionKeyframeTarget(selection);
     return copyActiveActionTimelineFrame({
       isOpen,
-      activeKeyframeId: selection.activeKeyframeId,
-      fixedFrame: selection.fixedFrame,
+      actionKeyframeTarget: target,
       keyframes: keyframes(),
       tuning: tuning(),
       actionKey: key(),
@@ -193,13 +185,38 @@ export function createActionTimelineAdapter({ getActor, actionSelect }) {
     });
   }
 
-  function pasteTargetFrameId({ selection, slotToValue }) {
-    return timelinePasteTargetFrameId({
-      selection,
-      keyframes: keyframes(),
-      slotToValue,
+  function pasteTargetFrameId({ selection }) {
+    const target = actionKeyframeTarget(selection);
+    const id = actionTimelinePasteTargetFrameId({
+      actionKeyframeTarget: target,
       addKeyframe,
     });
+    if (id) {
+      Object.assign(
+        selection,
+        legacySelectionFromActionKeyframeId({
+          id,
+          selectedSlot: target.selectedSlot,
+          keyframes: keyframes(),
+          frameCount: timelineFrameCountFor(settingsByKey(), key()),
+        })
+      );
+    }
+    return id;
+  }
+
+  function actionKeyframeTarget(selection, frameCount = timelineFrameCountFor(settingsByKey(), key()), part = null) {
+    return resolveActionKeyframeTarget({
+      selection,
+      keyframes: actionKeyframesForPart(part),
+      frameCount,
+    });
+  }
+
+  function actionKeyframesForPart(part) {
+    if (!part) return keyframes();
+    ensureOffset(part);
+    return actionKeyframesFor(offset(part));
   }
 
   return defineTimelineAdapter(

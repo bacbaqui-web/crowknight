@@ -1,8 +1,14 @@
 import { ACTION_PART_KEYS } from './game_config_data.js';
+import { isMasterPart } from './editor_label_helper.js';
 import { ensureActionOffset, actionKeyframesFor } from './project_data_normalizer_helper.js';
 import { effectFrameValue, frameValue } from './animation_frame_data.js';
 import { pasteEffectTimelineFrame, pasteActionTimelineFramePart } from './timeline_keyframe_helper.js';
 import { isTimelineFrameId } from './timeline_state.js';
+import {
+  actionKeyframeTargetId,
+  actionKeyframeTargetT,
+  hasActionKeyframeTarget,
+} from './action_keyframe_target_helper.js';
 
 export function createTimelineClipboardState() {
   let copiedFrame = null;
@@ -42,15 +48,14 @@ export function timelinePasteTargetFrameId({ selection, keyframes, slotToValue, 
 
 export function copyActiveActionTimelineFrame({
   isOpen,
-  activeKeyframeId,
-  fixedFrame,
+  actionKeyframeTarget,
   keyframes,
   tuning,
   actionKey,
   selectedActionParts,
   activeActionPartKey,
 }) {
-  const id = activeKeyframeId || fixedFrame;
+  const id = actionKeyframeTargetId(actionKeyframeTarget);
   return copyTimelineFrame({
     isOpen,
     id,
@@ -66,6 +71,14 @@ export function copyActiveActionTimelineFrame({
         activeActionPartKey,
       }),
   });
+}
+
+export function actionTimelinePasteTargetFrameId({ actionKeyframeTarget, addKeyframe }) {
+  if (hasActionKeyframeTarget(actionKeyframeTarget)) return actionKeyframeTargetId(actionKeyframeTarget);
+
+  const t = actionKeyframeTargetT(actionKeyframeTarget);
+  if (t === null) return null;
+  return addKeyframe(t);
 }
 
 export function pasteActionTimelineFrameCopy({
@@ -119,14 +132,17 @@ export function pasteEffectTimelineFrameCopy({ copiedEffectFrame, effect, effect
 }
 
 export function selectedActionFrameCopyParts(selectedActionParts, activeActionPartKey) {
-  if (selectedActionParts.size() > 1) return selectedActionParts.values();
-  if (activeActionPartKey) return [activeActionPartKey];
+  const selectedParts = explicitSelectedActionParts(selectedActionParts);
+  const activePartKey = explicitActionPartKey(activeActionPartKey);
+  if (selectedParts.length > 1) return selectedParts;
+  if (activePartKey) return [activePartKey];
   return ACTION_PART_KEYS;
 }
 
 export function selectedActionFrameCopyMode(selectedActionParts, activeActionPartKey) {
-  if (selectedActionParts.size() > 1) return 'parts';
-  if (activeActionPartKey) return 'part';
+  const selectedParts = explicitSelectedActionParts(selectedActionParts);
+  if (selectedParts.length > 1) return 'parts';
+  if (explicitActionPartKey(activeActionPartKey)) return 'part';
   return 'frame';
 }
 
@@ -152,16 +168,27 @@ export function createActionFrameCopy({ tuning, actionKey, id, reference, select
 
 export function actionFramePasteParts(copiedActionFrame, selectedActionParts, activeActionPartKey) {
   if (copiedActionFrame.mode === 'part') {
-    return [{ from: copiedActionFrame.sourcePart, to: activeActionPartKey || copiedActionFrame.sourcePart }];
+    const activePartKey = explicitActionPartKey(activeActionPartKey);
+    return [{ from: copiedActionFrame.sourcePart, to: activePartKey || copiedActionFrame.sourcePart }];
   }
 
   if (copiedActionFrame.mode === 'parts') {
     const sourceParts = copiedActionFrame.sourceParts || Object.keys(copiedActionFrame.parts || {});
-    const targetParts = selectedActionParts.size() > 1 ? selectedActionParts.values() : sourceParts;
+    const selectedParts = explicitSelectedActionParts(selectedActionParts);
+    const targetParts = selectedParts.length > 1 ? selectedParts : sourceParts;
     return sourceParts.map((from, index) => ({ from, to: targetParts[index] || from }));
   }
 
   return ACTION_PART_KEYS.map((part) => ({ from: part, to: part }));
+}
+
+function explicitActionPartKey(partKey) {
+  return partKey && !isMasterPart(partKey) ? partKey : null;
+}
+
+function explicitSelectedActionParts(selectedActionParts) {
+  const values = Array.isArray(selectedActionParts) ? selectedActionParts : (selectedActionParts?.values?.() ?? []);
+  return values.filter((partKey) => partKey && !isMasterPart(partKey));
 }
 
 export function createEffectFrameCopy(effectKey, source) {

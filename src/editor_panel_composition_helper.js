@@ -220,6 +220,9 @@ function createTuningPanelTimelineFrameActions({ getOpenEditContext, getActionTi
     copyCurrentFrame() {
       activeTimelineController().copyFrame();
     },
+    hasActionFrameTarget() {
+      return Boolean(getActionTimeline().hasFrameTarget?.());
+    },
     pasteCurrentFrame() {
       activeTimelineController().pasteFrame();
     },
