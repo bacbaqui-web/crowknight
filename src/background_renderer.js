@@ -30,9 +30,11 @@ export function drawSceneBackground(ctx, world, view, background) {
   drawPsdBackgroundRoleLayers(ctx, world, view, normalized, ['back', 'ground']);
 
   if (!hasPsdBackground) {
-    if (normalized.type === 'preset') drawPresetBackground(ctx, world, view, normalized);
-    if (normalized.type === 'image') drawImageBackground(ctx, world, normalized);
-    if (normalized.type === 'layers') drawLayeredBackground(ctx, world, view, normalized);
+    drawWithScreenZoom(ctx, world, view.zoom, () => {
+      if (normalized.type === 'preset') drawPresetBackground(ctx, world, view, normalized);
+      if (normalized.type === 'image') drawImageBackground(ctx, world, normalized);
+      if (normalized.type === 'layers') drawLayeredBackground(ctx, world, view, normalized);
+    });
     if (normalized.type === 'color') drawBaseColor(ctx, world, normalized.color);
   }
 
@@ -47,7 +49,7 @@ export function drawSceneForeground(ctx, world, view, background) {
 function drawPsdBackgroundRoleLayers(ctx, world, view, background, roles) {
   const layersWithImages = background.psdLayers.filter((layer) => layer.enabled && layer.imageSrc.trim());
   if (!layersWithImages.length) {
-    if (roles.includes('back')) drawPsdPreviewBackground(ctx, world, background);
+    if (roles.includes('back')) drawPsdPreviewBackground(ctx, world, view, background);
     return;
   }
 
@@ -60,13 +62,15 @@ function hasActivePsdBackground(background) {
   return hasLayer || Boolean(background.psdPreview.enabled && background.psdPreview.url.trim());
 }
 
-function drawPsdPreviewBackground(ctx, world, background) {
+function drawPsdPreviewBackground(ctx, world, view, background) {
   if (!background.psdPreview.enabled || !background.psdPreview.url.trim()) return;
 
   const imageState = getCachedImage(background.psdPreview.url);
   if (!imageState.loaded || imageState.error) return;
 
-  drawCoverImage(ctx, world, imageState.image, { opacity: 1, offsetX: 0, offsetY: 0, scale: 1 });
+  drawWithScreenZoom(ctx, world, view.zoom, () =>
+    drawCoverImage(ctx, world, imageState.image, { opacity: 1, offsetX: 0, offsetY: 0, scale: 1 })
+  );
 }
 
 function drawClipLayerImage(ctx, world, view, background, layer) {
@@ -97,19 +101,46 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
     baseLayout.y + metrics.y * imageScaleY + layer.offsetY + getClipLayerVerticalDeltaY(world, view, layer);
   const startX = naturalX - scrollOffset - width;
 
-  ctx.save();
-  ctx.globalAlpha = clamp(layer.opacity, 0, 1);
-  for (let x = startX; x < world.viewW + width; x += width) {
-    const left = Math.round(x);
-    const right = Math.round(x + width);
-    const drawWidth = Math.max(1, right - left + REPEATED_TILE_OVERLAP_PX);
-    ctx.drawImage(imageState.image, sourceX, sourceY, sourceWidth, sourceHeight, left, naturalY, drawWidth, height);
+  drawWithScreenZoom(ctx, world, getPsdLayerScreenZoom(view, layer), () => {
+    ctx.save();
+    ctx.globalAlpha = clamp(layer.opacity, 0, 1);
+    for (let x = startX; x < world.viewW + width; x += width) {
+      const left = Math.round(x);
+      const right = Math.round(x + width);
+      const drawWidth = Math.max(1, right - left + REPEATED_TILE_OVERLAP_PX);
+      ctx.drawImage(imageState.image, sourceX, sourceY, sourceWidth, sourceHeight, left, naturalY, drawWidth, height);
+    }
+    ctx.restore();
+  });
+}
+
+function getPsdLayerScreenZoom(view, layer) {
+  const zoom = getScreenZoom(view);
+  const depth = clamp(Number(layer?.verticalInfluence ?? 1), 0, 1);
+  return 1 + (zoom - 1) * depth;
+}
+
+function drawWithScreenZoom(ctx, world, zoom, draw) {
+  const safeZoom = clamp(Number(zoom || 1), 1, 3);
+  if (safeZoom <= 1.001) {
+    draw();
+    return;
   }
+
+  ctx.save();
+  ctx.translate(world.viewW / 2, world.viewH / 2);
+  ctx.scale(safeZoom, safeZoom);
+  ctx.translate(-world.viewW / 2, -world.viewH / 2);
+  draw();
   ctx.restore();
 }
 
+function getScreenZoom(view) {
+  return clamp(Number(view?.zoom || 1), 1, 3);
+}
+
 function getGroundScrollX(world, view) {
-  return view.focusX - world.viewW / (2 * view.zoom);
+  return view.focusX - world.viewW / 2;
 }
 
 function getClipLayerVerticalDeltaY(world, view, layer) {
@@ -118,8 +149,8 @@ function getClipLayerVerticalDeltaY(world, view, layer) {
 
 function getCameraScreenDeltaY(world, view) {
   const defaultFocusY = clamp(world.floorY - 120, world.viewH * 0.35, world.floorY - 120);
-  const defaultFloorY = (world.floorY - defaultFocusY) * view.zoom + world.viewH / 2;
-  const currentFloorY = (world.floorY - view.focusY) * view.zoom + world.viewH / 2;
+  const defaultFloorY = world.floorY - defaultFocusY + world.viewH / 2;
+  const currentFloorY = world.floorY - view.focusY + world.viewH / 2;
   return currentFloorY - defaultFloorY;
 }
 
