@@ -5,6 +5,7 @@ const imageCache = new Map();
 const metricsCache = new WeakMap();
 const REPEATED_TILE_OVERLAP_PX = 1;
 const REPEATED_TILE_ALPHA_THRESHOLD = 128;
+const PSD_LAYER_ZOOM_DEPTH_POWER = 4;
 
 export function preloadSceneBackground(background) {
   const normalized = normalizeSceneBackground(background);
@@ -116,8 +117,13 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
 
 function getPsdLayerScreenZoom(view, layer) {
   const zoom = getScreenZoom(view);
-  const depth = clamp(Number(layer?.verticalInfluence ?? 1), 0, 1);
+  const depth = psdLayerZoomDepth(layer);
   return 1 + (zoom - 1) * depth;
+}
+
+function psdLayerZoomDepth(layer) {
+  const verticalInfluence = clamp(Number(layer?.verticalInfluence ?? 1), 0, 1);
+  return verticalInfluence ** PSD_LAYER_ZOOM_DEPTH_POWER;
 }
 
 function drawWithScreenZoom(ctx, world, zoom, draw) {
