@@ -6,6 +6,7 @@ import {
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
 import { normalizeActionCondition } from './action_condition_helper.js';
 import { normalizeActionEditPivot } from './action_timeline_edit_helper.js';
+import { writeActionRuntimeRuleSetting } from './action_runtime_rule_helper.js';
 import { stepTimelineDurationValue } from './number_input_helper.js';
 import { timelineSlotToT, timelineTToSlot } from './timeline_dom_helper.js';
 
@@ -52,8 +53,14 @@ function writeTimelineSetting(settings, prop, value, normalizePlayback) {
   if (prop === 'playback') settings.playback = normalizePlayback(value);
   if (prop === 'playbackRate') settings.playbackRate = clampTimelinePlaybackRate(value);
   if (prop === 'mirror') settings.mirror = value !== false;
-  if (prop === 'interruptible') settings.interruptible = value !== false;
-  if (prop === 'blendFrames') settings.blendFrames = normalizeActionBlendFrames(value);
+  if (prop === 'interruptible') {
+    settings.interruptible = value !== false;
+    writeActionRuntimeRuleSetting(settings, 'cancel', 'enabled', settings.interruptible);
+  }
+  if (prop === 'blendFrames') {
+    settings.blendFrames = normalizeActionBlendFrames(value);
+    writeActionRuntimeRuleSetting(settings, 'blend', 'frames', settings.blendFrames);
+  }
   if (prop === 'condition') settings.condition = normalizeActionCondition(value);
   if (prop === 'editPivot') settings.editPivot = normalizeActionEditPivot(value, settings.editPivot);
 }

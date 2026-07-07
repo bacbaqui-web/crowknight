@@ -1,11 +1,8 @@
 import { preloadSceneBackground } from './background_renderer.js';
 import {
-  animateBackgroundLayersFromRects,
-  captureBackgroundLayerRects,
   clampBackgroundNumber,
   createBackgroundLayerItem,
   formatBackgroundInputValue,
-  isBackgroundControlTarget,
   renderBackgroundLayerSignature,
 } from './background_panel_view.js';
 import { showPanelActionFeedback } from './panel_feedback_view.js';
@@ -18,7 +15,6 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
   const { backgroundPsdUpload, backgroundPsdFile, backgroundRefresh, backgroundReset, backgroundLayerList } = elements;
   if (!backgroundLayerList) return { sync: () => {} };
 
-  let draggedLayerId = null;
   let lastRenderedSignature = '';
   let numberDrag = null;
   let refreshInFlight = false;
@@ -57,10 +53,6 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
   window.addEventListener('pointermove', handlePointerMove);
   window.addEventListener('pointerup', handlePointerUp);
   window.addEventListener('pointercancel', handlePointerUp);
-  backgroundLayerList.addEventListener('dragstart', handleDragStart);
-  backgroundLayerList.addEventListener('dragover', handleDragOver);
-  backgroundLayerList.addEventListener('drop', handleDrop);
-  backgroundLayerList.addEventListener('dragend', handleDragEnd);
 
   async function runClipRefresh({ button, label, psdFile = null }) {
     if (refreshInFlight) return;
@@ -113,51 +105,19 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
       return;
     }
 
+    const orderButton = event.target.closest('[data-background-move]');
+    if (orderButton) {
+      const layerId = orderButton.closest('[data-layer-id]')?.dataset.layerId;
+      moveLayerByStep(layerId, Number(orderButton.dataset.backgroundMove) || 0);
+      return;
+    }
+
     const roleButton = event.target.closest('[data-background-role]');
     if (!roleButton) return;
 
     const layerId = roleButton.closest('[data-layer-id]')?.dataset.layerId;
     updateLayer(layerId, { role: roleButton.dataset.role, enabled: true });
     sync({ force: true });
-  }
-
-  function handleDragStart(event) {
-    if (isBackgroundControlTarget(event.target)) {
-      event.preventDefault();
-      return;
-    }
-
-    const item = event.target.closest('[data-layer-id]');
-    draggedLayerId = item?.dataset.layerId || null;
-    if (!draggedLayerId) return;
-    item.classList.add('is-dragging');
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', draggedLayerId);
-  }
-
-  function handleDragOver(event) {
-    if (!draggedLayerId || !event.target.closest('[data-layer-id]')) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-
-    const targetId = event.target.closest('[data-layer-id]')?.dataset.layerId;
-    if (targetId && targetId !== draggedLayerId) {
-      animateLayerMove(() => moveLayer(draggedLayerId, targetId));
-    }
-  }
-
-  function handleDrop(event) {
-    const targetItem = event.target.closest('[data-layer-id]');
-    if (!draggedLayerId || !targetItem) return;
-
-    event.preventDefault();
-    moveLayer(draggedLayerId, targetItem.dataset.layerId);
-    sync({ force: true });
-  }
-
-  function handleDragEnd() {
-    draggedLayerId = null;
-    backgroundLayerList.querySelectorAll('.is-dragging').forEach((item) => item.classList.remove('is-dragging'));
   }
 
   function updateLayer(layerId, patch) {
@@ -173,25 +133,28 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     saveState();
   }
 
-  function moveLayer(fromId, toId) {
-    if (!fromId || !toId || fromId === toId) return;
+  function moveLayerByStep(layerId, direction) {
+    if (!layerId || !direction) return;
 
     const session = getSceneSession();
     const background = normalizeSceneBackground({ ...session.background, type: 'layers' });
-    const layers = [...background.psdLayers];
-    const fromIndex = layers.findIndex((layer) => layer.id === fromId);
-    const toIndex = layers.findIndex((layer) => layer.id === toId);
-    if (fromIndex < 0 || toIndex < 0) return;
+    const panelLayers = panelOrderLayers(background.psdLayers);
+    const fromIndex = panelLayers.findIndex((layer) => layer.id === layerId);
+    const toIndex = fromIndex + direction;
+    if (fromIndex < 0 || toIndex < 0 || toIndex >= panelLayers.length) return;
 
-    const [moved] = layers.splice(fromIndex, 1);
-    layers.splice(toIndex, 0, moved);
-    layers.forEach((layer, index) => {
+    const [moved] = panelLayers.splice(fromIndex, 1);
+    panelLayers.splice(toIndex, 0, moved);
+    const drawOrderLayers = drawOrderLayersFromPanel(panelLayers);
+    drawOrderLayers.forEach((layer, index) => {
       layer.order = index;
     });
 
-    background.psdLayers = layers;
+    background.psdLayers = drawOrderLayers;
     session.background = background;
+    preloadSceneBackground(session.background);
     saveState();
+    sync({ force: true });
   }
 
   function syncLayerFieldInputs(target) {
@@ -293,13 +256,6 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     }, 1200);
   }
 
-  function animateLayerMove(update) {
-    const before = captureBackgroundLayerRects();
-    update();
-    sync({ force: true });
-    animateBackgroundLayersFromRects(before);
-  }
-
   function render(layers) {
     backgroundLayerList.innerHTML = '';
 
@@ -311,12 +267,21 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
       return;
     }
 
-    layers.forEach((layer, index) => {
-      backgroundLayerList.append(createBackgroundLayerItem(layer, index));
+    const panelLayers = panelOrderLayers(layers);
+    panelLayers.forEach((layer, index) => {
+      backgroundLayerList.append(createBackgroundLayerItem(layer, index, panelLayers.length));
     });
   }
 
   sync({ force: true });
 
   return { sync };
+}
+
+function panelOrderLayers(layers) {
+  return [...layers].reverse();
+}
+
+function drawOrderLayersFromPanel(layers) {
+  return [...layers].reverse();
 }

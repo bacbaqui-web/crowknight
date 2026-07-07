@@ -145,6 +145,8 @@ export function interactionFieldLimits(prop) {
     return { min: 0, max: 1, step: 1 };
   }
   if (isInteractionDecimalProp(prop)) return interactionDecimalFieldLimits(prop);
+  if (prop === 'damage') return { min: 0, max: 999 };
+  if (prop === 'knockback') return { min: 0, max: 1200 };
   if (isInteractionKnockbackProp(prop)) return { min: -1200, max: 1200 };
   if (isInteractionPushPowerProp(prop)) return { min: 0, max: 1200 };
   return null;
@@ -156,6 +158,8 @@ function interactionDecimalFieldLimits(prop) {
 }
 
 function setupInteractionObjectFieldLimits(prop) {
+  const interactionLimits = interactionFieldLimits(prop);
+  if (interactionLimits) return interactionLimits;
   if (isSizeProp(prop)) return { min: 1, max: 320 };
   if (isRotationProp(prop)) return { min: -360, max: 360 };
   return wideAxisFieldLimits();

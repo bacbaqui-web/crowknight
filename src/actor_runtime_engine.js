@@ -1,4 +1,9 @@
 import { clamp, clone, deg, lerp } from './common_helper.js';
+import {
+  INTERACTION_NUMERIC_PROPS,
+  INTERACTION_TOGGLE_PROPS,
+  interactionDefaultValue,
+} from './interaction_field_data.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import {
   createAttackInteractionRegions,
@@ -41,8 +46,10 @@ import { timelinePlaybackProgress } from './timeline_playback_helper.js';
 import { actionTimelineMirrorSign, mirrorActionFrameValue } from './action_mirror_helper.js';
 import { ACTION_FPS, ACTION_PART_KEYS } from './game_config_data.js';
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
+import { actionFormula } from './formula_runtime_engine.js';
 import { normalizeActionCondition } from './action_condition_helper.js';
 import { normalizeActionGroup } from './action_group_helper.js';
+import { interactionObjectRole, isInteractionObjectPartKey } from './interaction_object_editor_controller.js';
 
 const ACTION_BLEND_VISUAL_KEYS = ['x', 'y', 'ax', 'ay', 'w', 'h', 'rot', 'opacity', 'anchorX', 'anchorY'];
 
@@ -61,6 +68,10 @@ function canRunFallbackCondition(player, key) {
   if (condition === 'ground') return player.onGround === true;
   if (condition === 'air') return player.onGround === false;
   return true;
+}
+
+function interactionValueEnabled(value = {}, role) {
+  return Number(value?.active || 0) >= 0.5 && Number(value?.[role] || 0) >= 0.5;
 }
 
 export class PuppetPlayer {
@@ -98,6 +109,7 @@ export class PuppetPlayer {
     this.attackCarrySpeed = 0;
     this.customActionKey = null;
     this.customActionFacing = null;
+    this.customActionViewFacing = null;
     this.customActionTriggerMode = 'tap';
     this.customActionPressCodes = null;
     this.customActionTime = 0;
@@ -134,6 +146,7 @@ export class PuppetPlayer {
     if (this.customActionKey && !this.customActions.some((action) => action.key === this.customActionKey)) {
       this.customActionKey = null;
       this.customActionFacing = null;
+      this.customActionViewFacing = null;
       this.customActionTriggerMode = 'tap';
       this.customActionPressCodes = null;
       this.customActionTime = 0;
@@ -166,10 +179,7 @@ export class PuppetPlayer {
   }
 
   get attackInteractionRegions() {
-    if (this.isCustomActionActive) {
-      return this.activeAttackInteractionRegions();
-    }
-    return [];
+    return this.activeAttackInteractionRegions();
   }
 
   get isRolling() {
@@ -320,7 +330,8 @@ export class PuppetPlayer {
 
   getPartOffset(key) {
     const value = this.actionOffsets?.[this.actionKey]?.[key];
-    return this.resolveActionBlendOffset(key, this.resolveActionOffset(value));
+    const resolved = this.resolveInteractionActionLevelOffset(key, this.resolveActionOffset(value));
+    return this.resolveActionBlendOffset(key, resolved);
   }
 
   get actionMirrorSettings() {
@@ -329,6 +340,16 @@ export class PuppetPlayer {
 
   resolveActionOffset(value) {
     return this.resolveActionOffsetAt(value, this.getActionFrameProgress(), this.actionMirrorSettings, this.facing);
+  }
+
+  resolveInteractionActionLevelOffset(key, timelineOffset) {
+    if (!isInteractionObjectPartKey(key)) return timelineOffset;
+    const role = interactionObjectRole(key);
+    const actionValue = this.actionSettings?.[this.actionKey]?.interactions?.[key];
+    if (!role || !actionValue) return timelineOffset;
+    if (interactionValueEnabled(timelineOffset, role)) return timelineOffset;
+    if (!interactionValueEnabled(actionValue, role)) return timelineOffset;
+    return { ...timelineOffset, ...actionValue };
   }
 
   resolveActionOffsetForAction(actionKey, partKey, progress = 0, facing = this.facing) {
@@ -357,11 +378,7 @@ export class PuppetPlayer {
       hurt: 0,
       collision: 0,
       guard: 0,
-      stun: 0,
-      knockbackX: 0,
-      knockbackY: 0,
-      deathBurst: 1,
-      pushPower: 0,
+      ...emptyInteractionValues(),
     };
     if (!value) return empty;
     const mirror = (frame) => mirrorActionFrameValue(frame, actionTimelineMirrorSign(settings, facing));
@@ -389,16 +406,20 @@ export class PuppetPlayer {
       hurt: Number(start.hurt || 0) >= 0.5 ? 1 : 0,
       collision: Number(start.collision || 0) >= 0.5 ? 1 : 0,
       guard: Number(start.guard || 0) >= 0.5 ? 1 : 0,
-      stun: lerp(start.stun, end.stun, t),
-      knockbackX: lerp(start.knockbackX, end.knockbackX, t),
-      knockbackY: lerp(start.knockbackY, end.knockbackY, t),
-      deathBurst: lerp(start.deathBurst, end.deathBurst, t),
-      pushPower: lerp(start.pushPower, end.pushPower, t),
+      ...interpolateInteractionValues(start, end, t),
     });
   }
 
   beginCustomActionBlend(nextActionKey, nextFacing = this.facing) {
-    const frames = normalizeActionBlendFrames(this.actionSettings?.[nextActionKey]?.blendFrames);
+    const settings = this.actionSettings?.[nextActionKey] || {};
+    const blendRule = actionFormula(settings, 'blend');
+    const hasBlendRule = Boolean(blendRule);
+    const legacyFrames = normalizeActionBlendFrames(settings.blendFrames);
+    const frames = hasBlendRule
+      ? blendRule?.enabled && Number(blendRule.startFrame || 1) <= 1
+        ? normalizeActionBlendFrames(blendRule.frames)
+        : 0
+      : legacyFrames;
     if (frames <= 0) {
       this.customActionBlend = null;
       return;
@@ -516,4 +537,30 @@ export class PuppetPlayer {
   drawImageGlow(ctx, image, x, y, w, h) {
     drawPuppetImageGlow(ctx, image, x, y, w, h);
   }
+}
+
+function emptyInteractionValues() {
+  const values = {};
+  INTERACTION_TOGGLE_PROPS.forEach((prop) => {
+    values[prop] = Number(interactionDefaultValue(prop)) >= 0.5 ? 1 : 0;
+  });
+  INTERACTION_NUMERIC_PROPS.forEach((prop) => {
+    values[prop] = Number(interactionDefaultValue(prop));
+  });
+  return values;
+}
+
+function interpolateInteractionValues(start = {}, end = {}, t = 0) {
+  const values = {};
+  INTERACTION_TOGGLE_PROPS.forEach((prop) => {
+    values[prop] = Number(start[prop] ?? interactionDefaultValue(prop)) >= 0.5 ? 1 : 0;
+  });
+  INTERACTION_NUMERIC_PROPS.forEach((prop) => {
+    values[prop] = lerp(
+      Number(start[prop] ?? interactionDefaultValue(prop)),
+      Number(end[prop] ?? interactionDefaultValue(prop)),
+      t
+    );
+  });
+  return values;
 }

@@ -1,6 +1,7 @@
 import { syncActorHealthCapacity } from './actor_tuning_helper.js';
 import { syncActorAnchorDebugPart } from './preview_state.js';
 import { renderEditHandles as renderEditHandlesView } from './edit_handle_renderer.js';
+import { createPartEditHandleGeometry } from './edit_handle_geometry_helper.js';
 import {
   findTuningEditHandleAt,
   tuningEditHandleGeometry,
@@ -145,7 +146,32 @@ export function createTuningPanel({
   }
 
   function getEditHandleAt(point) {
-    return findTuningEditHandleAt(point, getEditHandleGeometry());
+    return findTuningEditHandleAt(point, getEditHandleGeometry()) || getEditHandleTargetAt(point);
+  }
+
+  function getEditHandleTargetAt(point) {
+    const openEditContext = currentOpenEditContext();
+    if (openEditContext !== 'part' && openEditContext !== EDIT_CONTEXT_ACTION) return null;
+
+    const hitRegion = [...(selectedActor.player.hitRegions || [])]
+      .reverse()
+      .find((region) => pointInRegion(point, region));
+    if (!hitRegion?.key) return null;
+
+    const geometry = createPartEditHandleGeometry({
+      editFocusPartKey: hitRegion.key,
+      editHandleInfo: selectedActor.player.editHandles?.[hitRegion.key],
+      actionFrameSelectionActive,
+    });
+    return geometry ? { mode: 'move', geometry } : null;
+  }
+
+  function pointInRegion(point, region) {
+    const bounds = region?.bounds;
+    if (!bounds) return false;
+    return (
+      point.x >= bounds.x && point.x <= bounds.x + bounds.w && point.y >= bounds.y && point.y <= bounds.y + bounds.h
+    );
   }
 
   function buildTuningPanel() {

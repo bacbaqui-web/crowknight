@@ -13,36 +13,10 @@ const ROLE_TITLES = {
   front: '앞 배경',
 };
 
-export function captureBackgroundLayerRects() {
-  return new Map(
-    [...document.querySelectorAll('.background-layer-item')].map((item) => [
-      item.dataset.layerId,
-      item.getBoundingClientRect(),
-    ])
-  );
-}
-
-export function animateBackgroundLayersFromRects(before) {
-  document.querySelectorAll('.background-layer-item').forEach((item) => {
-    const previous = before.get(item.dataset.layerId);
-    if (!previous) return;
-
-    const current = item.getBoundingClientRect();
-    const deltaY = previous.top - current.top;
-    if (!deltaY) return;
-
-    item.animate([{ transform: `translateY(${deltaY}px)` }, { transform: 'translateY(0)' }], {
-      duration: 150,
-      easing: 'ease-out',
-    });
-  });
-}
-
-export function createBackgroundLayerItem(layer, index) {
+export function createBackgroundLayerItem(layer, index, layerCount) {
   const item = document.createElement('article');
   item.className = `background-layer-item is-${layer.role}`;
   item.dataset.layerId = layer.id;
-  item.draggable = true;
 
   const header = document.createElement('div');
   header.className = 'background-layer-header';
@@ -63,7 +37,14 @@ export function createBackgroundLayerItem(layer, index) {
   enabled.setAttribute('aria-pressed', String(layer.enabled));
   enabled.innerHTML = enabledIcon(layer.enabled);
 
-  header.append(name, roleGroup, enabled);
+  const orderGroup = document.createElement('div');
+  orderGroup.className = 'background-order-group';
+  orderGroup.append(
+    createMoveButton(layer, '위로', -1, index <= 0),
+    createMoveButton(layer, '아래로', 1, index >= layerCount - 1)
+  );
+
+  header.append(name, orderGroup, roleGroup, enabled);
 
   const controls = document.createElement('div');
   controls.className = 'background-layer-controls';
@@ -97,27 +78,24 @@ export function renderBackgroundLayerSignature(layers) {
     .join('|');
 }
 
-export function isBackgroundControlTarget(target) {
-  return Boolean(
-    target.closest(
-      [
-        'button',
-        'input',
-        '.background-layer-controls',
-        '.background-compact-input',
-        '.background-role-group',
-        '.background-layer-enabled',
-      ].join(',')
-    )
-  );
-}
-
 export function clampBackgroundNumber(value, min, max) {
   return clampFinite(value, min, max);
 }
 
 export function formatBackgroundInputValue(value, step) {
   return formatNumericDecimalValue(value, step >= 1 ? 0 : 2);
+}
+
+function createMoveButton(layer, label, direction, disabled) {
+  const button = document.createElement('button');
+  button.className = 'background-layer-move';
+  button.type = 'button';
+  button.dataset.backgroundMove = String(direction);
+  button.disabled = disabled;
+  button.title = `${layer.name} ${label}`;
+  button.setAttribute('aria-label', `${layer.name} ${label}`);
+  button.textContent = label;
+  return button;
 }
 
 function createCompactInput(labelText, field, value, min, max, step) {

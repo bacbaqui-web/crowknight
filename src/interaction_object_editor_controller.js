@@ -50,6 +50,14 @@ export function interactionObjectParentPartKey(partKey) {
   return INTERACTION_OBJECT_DEFS[partKey]?.parent || null;
 }
 
+export function interactionObjectRole(partKey) {
+  return INTERACTION_OBJECT_DEFS[partKey]?.role || null;
+}
+
+export function interactionObjectPartKeyForRole(role) {
+  return INTERACTION_OBJECT_PART_KEYS.find((partKey) => interactionObjectRole(partKey) === role) || null;
+}
+
 export function interactionObjectPartKeysForParent(parentKey) {
   return INTERACTION_OBJECT_PART_KEYS.filter((partKey) => interactionObjectParentPartKey(partKey) === parentKey);
 }
@@ -57,6 +65,11 @@ export function interactionObjectPartKeysForParent(parentKey) {
 export function interactionObjectPartKeysForEditFocus(partKey) {
   if (isInteractionObjectPartKey(partKey)) return [partKey];
   return interactionObjectPartKeysForParent(partKey);
+}
+
+export function primaryInteractionObjectPartKeyForEditFocus(partKey) {
+  const keys = interactionObjectPartKeysForEditFocus(partKey);
+  return keys.length === 1 ? keys[0] : partKey;
 }
 
 export function interactionObjectParentPart(tuning, partKey) {

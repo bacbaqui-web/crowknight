@@ -7,6 +7,7 @@ import {
 } from './interaction_object_editor_controller.js';
 import { scaledEditableAnchor } from './editable_object_model_helper.js';
 import { deg } from './common_helper.js';
+import { timelineFrameCount } from './timeline_playback_helper.js';
 import {
   multiplyMatrix,
   rotationMatrix,
@@ -14,6 +15,13 @@ import {
   transformMatrixPoint,
   translationMatrix,
 } from './puppet_player_geometry_helper.js';
+import { isRuntimeDebugEnabled, recordRuntimeDebugEvent } from './runtime_debug_state.js';
+
+export function debugInteractionRuntimeLog(type, payload = {}) {
+  if (!isRuntimeDebugEnabled()) return;
+  recordRuntimeDebugEvent(type, payload);
+  globalThis.console?.debug?.('[interaction-runtime]', type, payload);
+}
 
 export function createInteractionRegion({
   key,
@@ -58,34 +66,21 @@ export function createInteractionRegion({
 
 export function interactionReactionFromValue(value = {}) {
   return {
+    damage: Math.max(0, Number(value?.damage ?? 1)),
     stun: Math.max(0, Number(value?.stun || 0)),
     knockbackX: Number(value?.knockbackX || 0),
     knockbackY: Number(value?.knockbackY || 0),
+    knockback: Math.max(0, Number(value?.knockback || 0)),
     deathBurst: Math.max(0, Number(value?.deathBurst ?? 1)),
     pushPower: Math.max(0, Number(value?.pushPower || 0)),
-  };
-}
-
-export function createActiveInteractionRegions(player, role) {
-  return (player.hitRegions || [])
-    .map((region) => createRecordedInteractionRegion(player, region, role))
-    .filter(Boolean);
-}
-
-export function createRecordedInteractionRegion(player, region, role) {
-  const interaction = region?.interaction || player.getPartOffset(region?.key);
-  if (Number(interaction?.active || 0) < 0.5 || Number(interaction?.[role] || 0) < 0.5) return null;
-  const bounds = region.bounds || {};
-  return {
-    key: region.key,
-    role,
-    active: true,
-    x: bounds.x,
-    y: bounds.y,
-    w: bounds.w,
-    h: bounds.h,
-    points: region.points,
-    reaction: interactionReactionFromValue(interaction),
+    resistance: Math.max(0, Number(value?.resistance ?? 1)),
+    noOverlap: Number(value?.noOverlap ?? 1) >= 0.5,
+    hurtByAttack: Number(value?.hurtByAttack ?? 1) >= 0.5,
+    hurtByCollision: Number(value?.hurtByCollision || 0) >= 0.5,
+    invincibleTime: Math.max(0, Number(value?.invincibleTime || 0)),
+    block: Number(value?.block ?? 1) >= 0.5,
+    deflect: Number(value?.deflect || 0) >= 0.5,
+    parry: Number(value?.parry || 0) >= 0.5,
   };
 }
 
@@ -140,17 +135,32 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
     ax: attackAnchor.ax,
     ay: attackAnchor.ay,
     rot,
-    interaction: offset,
+    interaction: activeInteractionValue(attackPart, offset, INTERACTION_OBJECT_ROLES.ATTACK),
   });
 }
 
 export function createAttackInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.ATTACK);
-  if (regions.length) return regions;
-
   const offset = player.getPartOffset(ATTACK_INTERACTION_OBJECT_KEY);
-  if (Number(offset.active || 0) < 0.5 || Number(offset.attack || 0) < 0.5) return [];
+  const flags = interactionFlagSnapshot(offset);
+  if (!flags.active || !flags.attack) {
+    logAttackRegionDecision({
+      player,
+      source: 'runtime',
+      key: ATTACK_INTERACTION_OBJECT_KEY,
+      flags,
+      created: false,
+    });
+    return [];
+  }
   const fallback = createAttackInteractionRegion(player, offset);
+  logAttackRegionDecision({
+    player,
+    source: 'runtime',
+    key: ATTACK_INTERACTION_OBJECT_KEY,
+    flags,
+    created: Boolean(fallback),
+    reason: fallback ? null : 'active=true attack=true but attack geometry is missing',
+  });
   return fallback ? [fallback] : [];
 }
 
@@ -159,19 +169,35 @@ export function createHurtInteractionRegion(player) {
 }
 
 export function createHurtInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.HURT);
-  if (regions.length) return regions;
-
+  if (!shouldCreateInteractionRegion(player, HURT_INTERACTION_OBJECT_KEY, INTERACTION_OBJECT_ROLES.HURT)) {
+    if (isRuntimeDebugEnabled()) {
+      debugInteractionRuntimeLog('hurt-region', {
+        source: 'runtime',
+        actionKey: player.actionKey,
+        count: 0,
+        hurtByAttack: false,
+        hurtByCollision: false,
+      });
+    }
+    return [];
+  }
   const fallback = createHurtInteractionRegion(player);
+  if (isRuntimeDebugEnabled()) {
+    debugInteractionRuntimeLog('hurt-region', {
+      source: 'runtime',
+      actionKey: player.actionKey,
+      count: fallback ? 1 : 0,
+      hurtByAttack: fallback?.reaction?.hurtByAttack === true,
+      hurtByCollision: fallback?.reaction?.hurtByCollision === true,
+    });
+  }
   return fallback ? [fallback] : [];
 }
 
 export function createCollisionInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.COLLISION);
-  if (regions.length) return regions;
-
-  const offset = player.getPartOffset(COLLISION_INTERACTION_OBJECT_KEY);
-  if (Number(offset.active || 0) < 0.5 || Number(offset.collision || 0) < 0.5) return [];
+  if (!shouldCreateInteractionRegion(player, COLLISION_INTERACTION_OBJECT_KEY, INTERACTION_OBJECT_ROLES.COLLISION)) {
+    return [];
+  }
   const fallback = createParentedInteractionRegion(
     player,
     COLLISION_INTERACTION_OBJECT_KEY,
@@ -181,9 +207,6 @@ export function createCollisionInteractionRegions(player) {
 }
 
 export function createGuardInteractionRegions(player) {
-  const regions = createActiveInteractionRegions(player, INTERACTION_OBJECT_ROLES.GUARD);
-  if (regions.length) return regions;
-
   const offset = player.getPartOffset(GUARD_INTERACTION_OBJECT_KEY);
   if (Number(offset.active || 0) < 0.5 || Number(offset.guard || 0) < 0.5) return [];
   const fallback = createParentedInteractionRegion(
@@ -224,7 +247,71 @@ function createParentedInteractionRegion(player, boxKey, role) {
     ax: boxAnchor.ax,
     ay: boxAnchor.ay,
     rot: Number(boxPart.rot || 0) + Number(offset.rot || 0),
+    interaction: activeInteractionValue(boxPart, offset, role),
   });
+}
+
+function activeInteractionValue(boxPart, offset, role) {
+  if (Number(offset?.active || 0) >= 0.5 && Number(offset?.[role] || 0) >= 0.5) {
+    return { ...boxPart, ...offset };
+  }
+  return boxPart;
+}
+
+function shouldCreateInteractionRegion(player, boxKey, role) {
+  const actionSetting = player.actionSettings?.[player.actionKey]?.interactions?.[boxKey];
+  if (!actionSetting) return true;
+  const offset = player.getPartOffset(boxKey);
+  return Number(offset?.active || 0) >= 0.5 && Number(offset?.[role] || 0) >= 0.5;
+}
+
+function interactionFlagSnapshot(value = {}) {
+  return {
+    active: Number(value?.active || 0) >= 0.5,
+    attack: Number(value?.attack || 0) >= 0.5,
+    hurt: Number(value?.hurt || 0) >= 0.5,
+    collision: Number(value?.collision || 0) >= 0.5,
+    guard: Number(value?.guard || 0) >= 0.5,
+  };
+}
+
+function logAttackRegionDecision({ player, source, key, flags, created, reason = null }) {
+  if (!isRuntimeDebugEnabled()) return;
+  const frame = currentActionDebugFrame(player);
+  const offset = player.getPartOffset?.(ATTACK_INTERACTION_OBJECT_KEY) || {};
+  debugInteractionRuntimeLog(created ? 'attack-region-created' : 'attack-region-skipped', {
+    actionKey: player.actionKey,
+    frame: frame.frame,
+    frameCount: frame.frameCount,
+    progress: frame.progress,
+    source,
+    key,
+    active: flags.active,
+    attack: flags.attack,
+    rawActive: Number(offset.active || 0),
+    rawAttack: Number(offset.attack || 0),
+    hurt: flags.hurt,
+    collision: flags.collision,
+    guard: flags.guard,
+    reason: reason || attackRegionDecisionReason(flags, created),
+  });
+}
+
+function currentActionDebugFrame(player) {
+  const actionKey = player.actionKey;
+  const settings = player.actionSettings?.[actionKey] || {};
+  const frameCount = timelineFrameCount(settings);
+  const progress = Number(player.getActionFrameProgress?.() || 0);
+  const frame = Math.min(frameCount, Math.max(1, Math.round(progress * Math.max(0, frameCount - 1)) + 1));
+  return { frame, frameCount, progress: Number(progress.toFixed(4)) };
+}
+
+function attackRegionDecisionReason(flags, created) {
+  if (created) return 'active=true and attack=true';
+  if (!flags.active && !flags.attack) return 'active=false and attack=false';
+  if (!flags.active) return 'active=false';
+  if (!flags.attack) return 'attack=false';
+  return 'attack region was not created';
 }
 
 function parentImageTransform(player, parentKey) {

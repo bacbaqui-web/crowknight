@@ -37,7 +37,7 @@ function createAppliedModifierCards({ modifiers, onSettingChange, scrubCallbacks
   return fragment;
 }
 
-export function renderModifierLibraryEditor(container, { modifiers, onToggle, targetKey }) {
+export function renderModifierLibraryEditor(container, { modifiers, onToggle, targetKey, extraItems = [] }) {
   const card = renderEditorDataCard(
     container,
     { title: '수식 라이브러리', className: 'modifier-library-card' },
@@ -50,6 +50,7 @@ export function renderModifierLibraryEditor(container, { modifiers, onToggle, ta
           targetKey,
         })
       );
+      extraItems.forEach((item) => renderModifierLibraryExtraItem(grid, item, targetKey));
       body.append(grid);
     }
   );
@@ -109,6 +110,24 @@ function renderModifierLibraryItem(body, def, modifiers, { onToggle, targetKey }
   body.append(button);
 }
 
+function renderModifierLibraryExtraItem(body, item, targetKey) {
+  const button = document.createElement('button');
+  const enabled = Boolean(item.enabled);
+  button.type = 'button';
+  button.className = 'modifier-tag-pill';
+  button.classList.toggle('is-active', enabled);
+  button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  button.textContent = item.label;
+  if (item.title) button.title = item.title;
+  button.addEventListener('click', () => {
+    const nextEnabled = !button.classList.contains('is-active');
+    button.classList.toggle('is-active', nextEnabled);
+    button.setAttribute('aria-pressed', nextEnabled ? 'true' : 'false');
+    item.onToggle?.(nextEnabled, targetKey);
+  });
+  body.append(button);
+}
+
 function ensureLocalModifier(modifiers, def) {
   let modifier = modifiers.find((item) => item.type === def.type);
   if (modifier) return modifier;
@@ -133,6 +152,15 @@ function renderModifierSettings(def, modifier, onSettingChange, scrubCallbacks, 
       totalFrames: totalFrames || ACTION_MAX_FRAMES,
       startFrame: modifier?.settings?.startFrame ?? defaultSettingValue(def, { prop: 'startFrame' }),
       endFrame: modifier?.settings?.endFrame ?? defaultSettingValue(def, { prop: 'endFrame' }),
+      onRangeChange: ({ startFrame, endFrame }) => {
+        modifier.settings ||= {};
+        modifier.settings.startFrame = onSettingChange(def.type, 'startFrame', startFrame, targetKey) ?? startFrame;
+        modifier.settings.endFrame = onSettingChange(def.type, 'endFrame', endFrame, targetKey) ?? endFrame;
+        return {
+          startFrame: modifier.settings.startFrame,
+          endFrame: modifier.settings.endFrame,
+        };
+      },
     });
   };
   if (numericSettings.length) {

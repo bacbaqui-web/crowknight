@@ -53,14 +53,17 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 
 ## Setup / Action / Effect Authoring
 
-- `part_editor_controller.js`: Setup part property, Action target property, modifier / interaction card 연결.
+- `part_editor_controller.js`: Setup / Action part 선택과 panel controller 연결.
 - `action_authoring_controller.js`: Action 선택 / 생성 / 삭제 / 이름 / trigger UI.
 - `action_authoring_data.js`: Action descriptor와 custom action data helper.
+- `action_trigger_controller.js`: Action Trigger UI / 녹화 controller.
 - `action_trigger_data.js`: Action trigger 저장값 / mode normalize data.
 - `action_group_helper.js`: Action group 값과 label helper.
 - `action_condition_helper.js`: Action condition 값과 label helper.
 - `action_mirror_helper.js`: Action mirror 설정 helper.
 - `action_blend_helper.js`: Action blend 설정 helper.
+- `action_runtime_rule_helper.js`: Action Runtime Rule normalize / frame window helper.
+- `action_runtime_rule_panel_controller.js`: Action Runtime Rule card / Mini Timeline UI controller.
 - `action_timeline_edit_helper.js`: Action edit pivot normalize / sync helper.
 - `pose_action_authoring_helper.js`: legacy pose/action authoring helper.
 - `pose_action_authoring_controller.js`: legacy pose/action authoring controls.
@@ -118,6 +121,8 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `editable_property_helper.js`: property 종류 / anchor pair helper.
 - `property_value_helper.js`: Property 표시값 / 저장값 변환.
 - `property_field_data.js`: Property field group definitions.
+- `property_panel_controller.js`: Setup / Action Property panel 렌더/write controller.
+- `property_group_edit_helper.js`: group edit Property 값 적용 helper.
 - `property_numeric_input_helper.js`: numeric input helper.
 - `property_scrub_helper.js`: property scrub helper.
 - `editor_scrub_helper.js`: shared scrub UI helper.
@@ -127,12 +132,24 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `group_transform_adapter.js`: group EditTarget 결과를 여러 part에 분배.
 - `group_edit_state.js`: group 편집 중 임시 transform state.
 
-## Interaction / Modifier
+## Interaction / Formula
 
 - `interaction_editor_engine.js`: interaction card editor engine.
+- `action_interaction_panel_controller.js`: Action interaction panel 연결 controller.
+- `interaction_field_data.js`: collision / hurt / attack / guard option field definitions and defaults.
 - `interaction_object_editor_controller.js`: interaction object edit source controller.
 - `interaction_region_engine.js`: runtime interaction region 계산.
-- `modifier_editor_engine.js`: modifier library / applied modifier card engine.
+- `action_modifier_panel_controller.js`: Action Formula panel 연결 controller.
+- `formula_registry.js`: Formula module registry / normalize / migration.
+- `formula_editor_engine.js`: Formula library / applied Formula card 공통 renderer.
+- `formula_runtime_engine.js`: Runtime이 현재 frame의 Formula를 읽는 helper.
+- `formulas/velocity_formula.js`: 속도 Formula definition / editor / runtime metadata.
+- `formulas/lock_formula.js`: 고정 Formula definition.
+- `formulas/blend_formula.js`: 보간 Formula definition.
+- `formulas/cancel_formula.js`: 캔슬 Formula definition.
+- `formulas/link_formula.js`: 연계 Formula definition.
+- `formulas/formula_editor_fields.js`: Formula option field renderer helper.
+- `modifier_editor_engine.js`: Effect legacy modifier library / applied modifier card engine.
 
 ## Runtime / Actor
 
@@ -146,9 +163,38 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `action_trigger_engine.js`: trigger matching과 custom Action start.
 - `input_control_controller.js`: runtime input state controller.
 - `combat_engine.js`: hit / guard / collision combat resolve.
+- `runtime_debug_state.js`: runtime debug ON/OFF, action snapshot, event buffer state.
 - `roll_ghost_engine.js`: roll ghost update / draw.
 - `particle_effects_engine.js`: dust / hit spark / death particle engine.
 - `actor_pose_helper.js`: neutral pose helper.
+
+## Runtime Flow Map
+
+```text
+Input
+→ Trigger
+→ Action Runtime
+→ Current Frame
+→ Interaction Region
+→ Combat
+→ Render
+→ Debug HUD
+```
+
+- Input: `input_control_controller.js` - keyboard/touch input을 `keys` / `pressed`로 모은다.
+- Trigger: `action_trigger_engine.js` - Trigger match, Condition, interrupt를 보고 Action start를 결정한다.
+- Action Runtime: `actor_action_helper.js`, `actor_runtime_engine.js` - Action 시간, physics, actor 상태를 갱신한다.
+- Current Frame: `actor_runtime_engine.js` - `actionKey`, `getActionFrameProgress()`, `getPartOffset()`로 현재 frame 값을 읽는다.
+- Interaction Region: `interaction_region_engine.js` - 현재 Runtime frame에서 Attack/Hurt/Collision/Guard region을 계산한다.
+- Combat: `combat_engine.js` - InteractionRegion overlap, damage, guard, collision push를 처리한다.
+- Render: `actor_renderer.js`, `actor_canvas_renderer.js` - actor와 edit/debug overlay를 그린다.
+- Debug HUD: `runtime_debug_state.js`, `runtime_debug_hud_view.js` - Runtime snapshot과 최근 판정 이벤트를 표시한다.
+
+중요:
+
+- `player.hitRegions`는 Combat source가 아니다.
+- `player.hitRegions`는 draw/edit/debug overlay용이다.
+- Combat은 `interaction_region_engine.js`가 현재 Runtime frame에서 계산한 InteractionRegion을 읽는다.
 
 ## Rendering / Camera / HUD
 
@@ -160,6 +206,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `canvas_layout_helper.js`: canvas layout sync.
 - `character_hud_layout_helper.js`: actor name / HP layout helper.
 - `run_hud_view.js`: run HUD score / text sync.
+- `runtime_debug_hud_view.js`: runtime debug HUD DOM view.
 - `ranking_view.js`: ranking HUD and ranking DOM view.
 - `ranking_controller.js`: ranking flow controller.
 - `score_format_helper.js`: score / survival time format helper.

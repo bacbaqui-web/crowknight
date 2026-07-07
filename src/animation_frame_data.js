@@ -1,5 +1,10 @@
 import { EFFECT_IMAGE_OPTIONS } from './game_config_data.js';
 import { clamp, lerp } from './common_helper.js';
+import {
+  INTERACTION_NUMERIC_PROPS,
+  INTERACTION_TOGGLE_PROPS,
+  interactionDefaultValue,
+} from './interaction_field_data.js';
 
 export function interpolateEffectFrameValues(keyframes = [], t = 0, key = 'attack1') {
   const empty = effectFrameValue({}, key);
@@ -24,16 +29,7 @@ export function interpolateEffectFrameValues(keyframes = [], t = 0, key = 'attac
       h: lerp(a.h || 0, b.h || 0, localT),
       rot: lerp(a.rot || 0, b.rot || 0, localT),
       opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, localT),
-      active: steppedFrameFlag(a.active),
-      attack: steppedFrameFlag(a.attack),
-      hurt: steppedFrameFlag(a.hurt),
-      collision: steppedFrameFlag(a.collision),
-      guard: steppedFrameFlag(a.guard),
-      stun: lerp(a.stun || 0, b.stun || 0, localT),
-      knockbackX: lerp(a.knockbackX || 0, b.knockbackX || 0, localT),
-      knockbackY: lerp(a.knockbackY || 0, b.knockbackY || 0, localT),
-      deathBurst: lerp(a.deathBurst ?? 1, b.deathBurst ?? 1, localT),
-      pushPower: lerp(a.pushPower || 0, b.pushPower || 0, localT),
+      ...interpolateInteractionValues(a, b, localT),
     };
   }
 
@@ -56,16 +52,7 @@ export function effectFrameValue(value = {}, key = 'attack1') {
     h: height,
     rot: Number(value?.rot || 0),
     opacity: Number(value?.opacity ?? 1),
-    active: steppedFrameFlag(value?.active),
-    attack: steppedFrameFlag(value?.attack),
-    hurt: steppedFrameFlag(value?.hurt),
-    collision: steppedFrameFlag(value?.collision),
-    guard: steppedFrameFlag(value?.guard),
-    stun: Number(value?.stun || 0),
-    knockbackX: Number(value?.knockbackX || 0),
-    knockbackY: Number(value?.knockbackY || 0),
-    deathBurst: Number(value?.deathBurst ?? 1),
-    pushPower: Number(value?.pushPower || 0),
+    ...normalizeInteractionValues(value),
   };
 }
 
@@ -142,16 +129,7 @@ export function interpolateFrameValues(keyframes = [], t = 0) {
       opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, localT),
       anchorX: lerp(a.anchorX || 0, b.anchorX || 0, localT),
       anchorY: lerp(a.anchorY || 0, b.anchorY || 0, localT),
-      active: steppedFrameFlag(a.active),
-      attack: steppedFrameFlag(a.attack),
-      hurt: steppedFrameFlag(a.hurt),
-      collision: steppedFrameFlag(a.collision),
-      guard: steppedFrameFlag(a.guard),
-      stun: lerp(a.stun || 0, b.stun || 0, localT),
-      knockbackX: lerp(a.knockbackX || 0, b.knockbackX || 0, localT),
-      knockbackY: lerp(a.knockbackY || 0, b.knockbackY || 0, localT),
-      deathBurst: lerp(a.deathBurst ?? 1, b.deathBurst ?? 1, localT),
-      pushPower: lerp(a.pushPower || 0, b.pushPower || 0, localT),
+      ...interpolateInteractionValues(a, b, localT),
     };
   }
 
@@ -170,15 +148,32 @@ export function frameValue(value = {}) {
     opacity: Number(value?.opacity ?? 1),
     anchorX: Number(value?.anchorX || 0),
     anchorY: Number(value?.anchorY || 0),
-    active: steppedFrameFlag(value?.active),
-    attack: steppedFrameFlag(value?.attack),
-    hurt: steppedFrameFlag(value?.hurt),
-    collision: steppedFrameFlag(value?.collision),
-    guard: steppedFrameFlag(value?.guard),
-    stun: Number(value?.stun || 0),
-    knockbackX: Number(value?.knockbackX || 0),
-    knockbackY: Number(value?.knockbackY || 0),
-    deathBurst: Number(value?.deathBurst ?? 1),
-    pushPower: Number(value?.pushPower || 0),
+    ...normalizeInteractionValues(value),
   };
+}
+
+function normalizeInteractionValues(value = {}) {
+  const normalized = {};
+  INTERACTION_TOGGLE_PROPS.forEach((prop) => {
+    normalized[prop] = steppedFrameFlag(value?.[prop] ?? interactionDefaultValue(prop));
+  });
+  INTERACTION_NUMERIC_PROPS.forEach((prop) => {
+    normalized[prop] = Number(value?.[prop] ?? interactionDefaultValue(prop));
+  });
+  return normalized;
+}
+
+function interpolateInteractionValues(a = {}, b = {}, t = 0) {
+  const interpolated = {};
+  INTERACTION_TOGGLE_PROPS.forEach((prop) => {
+    interpolated[prop] = steppedFrameFlag(a[prop] ?? interactionDefaultValue(prop));
+  });
+  INTERACTION_NUMERIC_PROPS.forEach((prop) => {
+    interpolated[prop] = lerp(
+      Number(a[prop] ?? interactionDefaultValue(prop)),
+      Number(b[prop] ?? interactionDefaultValue(prop)),
+      t
+    );
+  });
+  return interpolated;
 }

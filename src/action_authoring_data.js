@@ -3,6 +3,8 @@ import { actionLabel } from './editor_label_helper.js';
 import { defaultActionGroup, normalizeActionGroup, normalizeActionGroupInput } from './action_group_helper.js';
 import { defaultActionCondition, normalizeActionCondition } from './action_condition_helper.js';
 import { normalizeActionEditPivot } from './action_timeline_edit_helper.js';
+import { defaultActionRuntimeRules } from './action_runtime_rule_helper.js';
+import { migrateActionFormulasFromModifiers, normalizeActionFormulas } from './formula_registry.js';
 import {
   defaultActionTrigger,
   defaultActionTriggerForKey,
@@ -44,6 +46,7 @@ export function ensureActionAuthoringData(tuning) {
   tuning.actionOffsets ||= {};
   tuning.modifiers ||= {};
   tuning.modifiers.action ||= {};
+  migrateActionFormulaSettings(tuning);
   return tuning;
 }
 
@@ -306,7 +309,24 @@ export function defaultActionSettings(group = 'movement', condition = 'any') {
     condition: normalizeActionCondition(condition),
     group: normalizeActionGroup(group),
     editPivot: normalizeActionEditPivot(),
+    interactions: {},
+    formulas: [],
+    runtimeRules: defaultActionRuntimeRules(),
   };
+}
+
+function migrateActionFormulaSettings(tuning) {
+  const deleted = new Set(tuning.deletedActionKeys);
+  uniqueActionKeys([
+    ...ACTION_KEYS.filter((key) => !deleted.has(key)),
+    ...tuning.customActions.map((action) => action.key),
+  ]).forEach((key) => {
+    tuning.actionSettings[key] ||= defaultActionSettings(defaultActionGroup(key), defaultActionCondition(key));
+    tuning.actionSettings[key].formulas = normalizeActionFormulas(
+      migrateActionFormulasFromModifiers(tuning.actionSettings[key], tuning.modifiers?.action?.[key] || []),
+      tuning.actionSettings[key]
+    );
+  });
 }
 
 function uniqueActionKey(tuning, preferredKey) {

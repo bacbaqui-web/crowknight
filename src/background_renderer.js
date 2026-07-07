@@ -3,6 +3,8 @@ import { clamp } from './common_helper.js';
 
 const imageCache = new Map();
 const metricsCache = new WeakMap();
+const REPEATED_TILE_OVERLAP_PX = 1;
+const REPEATED_TILE_ALPHA_THRESHOLD = 128;
 
 export function preloadSceneBackground(background) {
   const normalized = normalizeSceneBackground(background);
@@ -50,7 +52,7 @@ function drawPsdBackgroundRoleLayers(ctx, world, view, background, roles) {
   }
 
   const roleLayers = layersWithImages.filter((layer) => roles.includes(layer.role));
-  [...roleLayers].reverse().forEach((layer) => drawClipLayerImage(ctx, world, view, background, layer));
+  roleLayers.forEach((layer) => drawClipLayerImage(ctx, world, view, background, layer));
 }
 
 function hasActivePsdBackground(background) {
@@ -71,7 +73,7 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   const imageState = getCachedImage(layer.imageSrc);
   if (!imageState.loaded || imageState.error) return;
 
-  const metrics = getImageMetrics(imageState.image);
+  const metrics = getImageMetrics(imageState.image, REPEATED_TILE_ALPHA_THRESHOLD);
   const baseLayout = getCoverImageLayout(world, imageState.image, {
     opacity: 1,
     offsetX: 0,
@@ -100,7 +102,7 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   for (let x = startX; x < world.viewW + width; x += width) {
     const left = Math.round(x);
     const right = Math.round(x + width);
-    const drawWidth = Math.max(1, right - left);
+    const drawWidth = Math.max(1, right - left + REPEATED_TILE_OVERLAP_PX);
     ctx.drawImage(imageState.image, sourceX, sourceY, sourceWidth, sourceHeight, left, naturalY, drawWidth, height);
   }
   ctx.restore();
@@ -146,7 +148,7 @@ function drawParallaxLayer(ctx, world, view, image, layer) {
   ctx.save();
   ctx.globalAlpha = clamp(layer.opacity, 0, 1);
   for (let x = startX; x < world.viewW + width; x += width) {
-    ctx.drawImage(image, x, y, width, height);
+    ctx.drawImage(image, x, y, width + REPEATED_TILE_OVERLAP_PX, height);
   }
   ctx.restore();
 }
@@ -410,8 +412,9 @@ function drawRepeatedImage(ctx, world, image, background) {
   );
 }
 
-function getImageMetrics(image) {
-  if (metricsCache.has(image)) return metricsCache.get(image);
+function getImageMetrics(image, alphaThreshold = 8) {
+  const cached = metricsCache.get(image);
+  if (cached?.alphaThreshold === alphaThreshold) return cached.metrics;
 
   const fallback = {
     x: 0,
@@ -435,7 +438,7 @@ function getImageMetrics(image) {
     for (let y = 0; y < image.height; y += 1) {
       for (let x = 0; x < image.width; x += 1) {
         const alpha = pixels[(y * image.width + x) * 4 + 3];
-        if (alpha <= 8) continue;
+        if (alpha <= alphaThreshold) continue;
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x);
@@ -452,10 +455,10 @@ function getImageMetrics(image) {
             height: maxY - minY + 1,
           }
         : fallback;
-    metricsCache.set(image, metrics);
+    metricsCache.set(image, { alphaThreshold, metrics });
     return metrics;
   } catch {
-    metricsCache.set(image, fallback);
+    metricsCache.set(image, { alphaThreshold, metrics: fallback });
     return fallback;
   }
 }

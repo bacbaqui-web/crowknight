@@ -49,6 +49,9 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/character/move":
             self.handle_character_move(parsed)
             return
+        if parsed.path == "/api/character/copy":
+            self.handle_character_copy(parsed)
+            return
         if parsed.path == "/api/character/delete":
             self.handle_character_delete(parsed)
             return
@@ -57,6 +60,9 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
             return
         if parsed.path == "/api/state/default":
             self.handle_default_state_save()
+            return
+        if parsed.path == "/api/characters/index":
+            self.handle_character_index_save()
             return
         self.send_json(404, {"error": "Not found"})
 
@@ -110,15 +116,35 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
                 return
 
             self.default_state_path.parent.mkdir(parents=True, exist_ok=True)
-            self.default_state_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            self.default_state_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             self.send_json(200, {"ok": True, "path": str(self.default_state_path)})
+        except Exception as exc:
+            self.send_json(500, {"error": str(exc)})
+
+    def handle_character_index_save(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length <= 0:
+                self.send_json(400, {"error": "Empty request body"})
+                return
+
+            body = self.rfile.read(content_length)
+            payload = json.loads(body.decode("utf-8"))
+            characters = payload.get("characters") if isinstance(payload, dict) else None
+            if not isinstance(characters, list):
+                self.send_json(400, {"error": "Character index must contain a characters array"})
+                return
+
+            index_path = self.characters_dir / "index.json"
+            index_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            self.send_json(200, {"ok": True, "path": str(index_path), "count": len(characters)})
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
     def handle_character_refresh(self, parsed):
         try:
             folder_path = self.character_folder_from_request(parsed)
-            psd_path = find_character_psd(folder_path)
+            psd_path = find_preferred_character_psd(folder_path)
             if not psd_path:
                 self.send_json(404, {"error": "PSD file not found"})
                 return
@@ -129,6 +155,7 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
             self.send_json(500, {"error": str(exc)})
 
     def handle_character_upload_refresh(self, parsed):
+        temp_path = None
         try:
             folder_path = self.character_folder_from_request(parsed)
             content_length = int(self.headers.get("Content-Length", "0"))
@@ -136,14 +163,21 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
                 self.send_json(400, {"error": "Empty PSD file"})
                 return
 
-            filename = self.headers.get("X-Character-Filename", f"{folder_path.name}.psd")
-            uploaded_name = sanitize_psd_filename(filename)
-            target_path = find_character_psd(folder_path) or folder_path / uploaded_name
-            target_path.write_bytes(self.rfile.read(content_length))
-            exported = export_character_parts(target_path, folder_path)
+            target_path = folder_path / character_psd_filename_for_folder(folder_path)
+            temp_path = target_path.with_name(f".{target_path.name}.upload")
+            temp_path.write_bytes(self.rfile.read(content_length))
+            exported = export_character_parts(temp_path, folder_path)
+            if exported <= 0:
+                temp_path.unlink(missing_ok=True)
+                self.send_json(400, {"error": "No character part layers exported from PSD"})
+                return
+
+            temp_path.replace(target_path)
             self.send_json(200, {"ok": True, "folder": folder_path.name, "psd": target_path.name, "exported": exported, "updatedAt": int(target_path.stat().st_mtime * 1000)})
         except Exception as exc:
-            self.send_json(500, {"error": str(exc)})
+            if temp_path:
+                temp_path.unlink(missing_ok=True)
+            self.send_json(400 if temp_path else 500, {"error": f"PSD export failed: {exc}"})
 
     def handle_character_create(self, parsed):
         try:
@@ -157,11 +191,14 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
                 self.send_json(409, {"error": "Character folder already exists"})
                 return
 
-            filename = self.headers.get("X-Character-Filename", f"{folder_path.name}.psd")
-            uploaded_name = sanitize_psd_filename(filename)
-            target_path = folder_path / uploaded_name
+            target_path = folder_path / character_psd_filename_for_folder(folder_path)
             target_path.write_bytes(self.rfile.read(content_length))
             exported = export_character_parts(target_path, folder_path)
+            if exported <= 0:
+                shutil.rmtree(folder_path)
+                self.send_json(400, {"error": "No character part layers exported from PSD"})
+                return
+
             self.send_json(200, {"ok": True, "folder": folder_path.name, "psd": target_path.name, "exported": exported, "updatedAt": int(target_path.stat().st_mtime * 1000)})
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
@@ -182,10 +219,27 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
+    def handle_character_copy(self, parsed):
+        try:
+            source_path = self.character_folder_from_named_request(parsed, "from")
+            target_path = self.character_folder_from_named_request(parsed, "to", allow_create=True)
+            if target_path.exists() and any(target_path.iterdir()):
+                self.send_json(409, {"error": "Target character folder already exists"})
+                return
+
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            if target_path.exists():
+                target_path.rmdir()
+            shutil.copytree(str(source_path), str(target_path))
+            self.send_json(200, {"ok": True, "from": str(source_path), "to": str(target_path)})
+        except Exception as exc:
+            self.send_json(500, {"error": str(exc)})
+
     def handle_character_delete(self, parsed):
         try:
-            folder_path = self.character_folder_from_request(parsed)
-            shutil.rmtree(folder_path)
+            folder_path = self.character_folder_from_request(parsed, allow_missing=True)
+            if folder_path.exists():
+                shutil.rmtree(folder_path)
             self.send_json(200, {"ok": True, "folder": str(folder_path)})
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
@@ -226,10 +280,10 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
 
-    def character_folder_from_request(self, parsed, allow_create=False):
-        return self.character_folder_from_named_request(parsed, "folder", allow_create)
+    def character_folder_from_request(self, parsed, allow_create=False, allow_missing=False):
+        return self.character_folder_from_named_request(parsed, "folder", allow_create, allow_missing)
 
-    def character_folder_from_named_request(self, parsed, name, allow_create=False):
+    def character_folder_from_named_request(self, parsed, name, allow_create=False, allow_missing=False):
         folder = ""
         for item in parsed.query.split("&"):
             key, _, value = item.partition("=")
@@ -242,6 +296,8 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
             raise RuntimeError("Invalid character folder")
         if allow_create:
             folder_path.mkdir(parents=True, exist_ok=True)
+            return folder_path
+        if allow_missing:
             return folder_path
         if not folder_path.is_dir():
             raise RuntimeError("Invalid character folder")
@@ -305,6 +361,16 @@ def sanitize_character_folder(folder):
     return safe
 
 
+def character_psd_filename_for_folder(folder_path):
+    parts = folder_path.relative_to(CrowKnightHandler.characters_dir).parts
+    return "player.psd" if parts and parts[0] == "players" else "enemy.psd"
+
+
+def find_preferred_character_psd(folder_path):
+    preferred = folder_path / character_psd_filename_for_folder(folder_path)
+    return preferred if preferred.exists() else find_character_psd(folder_path)
+
+
 def sanitize_effect_filename(filename):
     name = Path(unquote(filename)).name.strip() or "effect.psd"
     return "".join(char if char.isalnum() or char in "._-" else "_" for char in name) or "effect.psd"
@@ -331,7 +397,7 @@ def export_background_preview(source_path, output_path, manifest_path, layer_out
         manifest["sourceUrl"] = f"./{source_path.resolve().relative_to(CrowKnightHandler.root_dir).as_posix()}"
     except ValueError:
         manifest["sourceUrl"] = ""
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return manifest
 
 

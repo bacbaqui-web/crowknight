@@ -60,7 +60,15 @@ tuning.actionSettings[actionKey]
   blendFrames: 0,
   condition: "any",
   group: "movement",
-  editPivot: { x: 0, y: 0 }
+  editPivot: { x: 0, y: 0 },
+  interactions: {},
+  formulas: [
+    { type: "velocity", enabled: true, startFrame: 1, endFrame: 10, x: 5, y: 0, mode: "set" },
+    { type: "lock", enabled: true, startFrame: 1, endFrame: 8 },
+    { type: "blend", enabled: true, startFrame: 1, endFrame: 3, frames: 3 },
+    { type: "cancel", enabled: true, startFrame: 5, endFrame: 12, priority: 0 },
+    { type: "link", enabled: true, fromActions: ["attack1"], startFrame: 6, endFrame: 12 }
+  ]
 }
 ```
 
@@ -74,6 +82,18 @@ tuning.actionSettings[actionKey]
 - `condition`: Trigger가 맞은 뒤 Action 실행 가능 여부를 판단하는 조건. `any`, `ground`, `air` 중 하나이며 기본값은 `any`다. Runtime은 World Physics의 `onGround` 상태만 사용해 판정한다.
 - `group`: Editor 목록과 기본자세 fallback 선택에 쓰는 Action 그룹. `base`, `movement`, `attack`, `special` 중 하나이며 custom Action 기본값은 `movement`다. 기존 `idle`은 `base`로 normalize한다.
 - `editPivot`: Action Timeline에서 파츠 선택 없이 전체 키프레임을 그룹처럼 편집할 때 쓰는 Action 공통 Pivot이다. `{ x, y }` 형태이며 기본값은 `{ x: 0, y: 0 }`이다. Pivot은 Action별로 하나만 저장하고 키프레임별로 저장하지 않는다.
+- `interactions`: Action 단위 Interaction 설정이다. Interaction box를 Action 탭에서 클릭하면 Timeline keyframe 선택과 무관하게 이 위치에 저장한다.
+- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `속도`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
+- `runtimeRules`: legacy compatibility 저장 위치다. UI에는 직접 표시하지 않으며 normalize/migration 단계에서 `formulas[]`로 변환한다.
+
+Formula Card:
+
+- `velocity` / UI `속도`: `startFrame~endFrame` 동안 `px/f` velocity를 적용한다. `x`, `y`, `mode`를 가진다.
+- `lock` / UI `고정`: 구간 동안 Action 시작 시점 facing/view direction을 유지한다.
+- `blend` / UI `보간`: Action 전환 포즈 연결을 적용한다. `frames`를 가진다.
+- `cancel` / UI `캔슬`: 구간 동안만 다른 Action으로 interrupt 가능하다. `priority`를 가진다.
+- `link` / UI `연계`: Trigger가 맞은 뒤 현재 실행 중인 Action과 frame 구간을 검사한다. `fromActions`, `startFrame`, `endFrame`을 가진다.
+- compatibility: 기존 `runtimeRules`와 `tuning.modifiers.action[actionKey]`의 `velocity`는 normalize/migration 단계에서 `formulas[]`로 변환한다.
 
 Action group 허용값:
 
@@ -145,66 +165,16 @@ Runtime 해석 규칙과 겹치는 Sequence 처리 방향은 `13_ACTION_MODEL.md
 
 ## `modifiers`
 
-Action / Effect Timeline Target에 붙는 수식 데이터다.
+Effect Timeline Target에 남아 있는 legacy modifier 데이터다. Action 수식은 `actionSettings[actionKey].formulas[]`를 사용한다.
 
 MVP 저장 위치:
 
 ```text
-tuning.modifiers.action[actionKey]
 tuning.modifiers.effect[effectKey]
 ```
 
-현재 MVP 수식:
+Action Formula Runtime 해석 원칙은 `13_ACTION_MODEL.md`를 본다.
 
-```js
-[
-  {
-    type: 'move',
-    enabled: true,
-    settings: { x: 50, y: 0, frames: 10 },
-  },
-  {
-    type: 'velocity',
-    enabled: true,
-    settings: { x: 500, y: 0, mode: 'set', startFrame: 1, endFrame: 10 },
-  },
-  {
-    type: 'accelerate',
-    enabled: true,
-    settings: { graph: 'linear', startFrame: 1, endFrame: 4 },
-  },
-  {
-    type: 'decelerate',
-    enabled: false,
-    settings: { graph: 'linear', startFrame: 7, endFrame: 10 },
-  },
-];
-```
-
-Modifier Runtime 해석 원칙은 `13_ACTION_MODEL.md`를 본다.
-
-공통 구간 필드:
-
-- `startFrame`: modifier가 시작되는 Action frame. 1-based 값이다.
-- `endFrame`: modifier가 끝나는 Action frame. 1-based 값이다.
-
-`velocity`:
-
-- `x`, `y`: Action Timeline frame 기준 velocity 값. 단위는 `px/f`다.
-- `mode`: `set` 또는 `add`.
-- `startFrame`, `endFrame`: 적용 구간.
-- Runtime은 `px/f`를 초당 속도나 Runtime FPS 기준 값으로 변환하지 않는다.
-- Runtime은 `px/f` 값을 World Physics velocity state에 적용하고, 위치 계산은 Action Timeline frame delta로 적분한다.
-
-Velocity UI 표시 규칙:
-
-- Velocity 카드 제목 오른쪽에는 `1s = {ACTION_FPS}f`를 표시한다.
-- `{ACTION_FPS}`는 `game_config_data.js`의 `ACTION_FPS` 값을 읽어 표시한다.
-- X/Y Velocity 입력 오른쪽에는 `px/f` 단위를 표시한다.
-
-지원 graph 값:
-
-- `linear`
 - `easeIn`
 - `easeOut`
 
@@ -250,41 +220,76 @@ Setup에서 직접 편집하는 base rig다.
 
 Editor 기준 fallback interaction object 저장 위치다.
 
-| Key                          | Role        | Parent   | 저장 필드                                                                            |
-| ---------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------ |
-| `collisionInteractionObject` | `collision` | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
-| `hurtInteractionObject`      | `hurt`      | `body`   | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
-| `attackInteractionObject`    | `attack`    | `weapon` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
-| `guardInteractionObject`     | `guard`     | `shield` | `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity` |
+| Key                          | Role        | Parent   | 저장 필드                                                              |
+| ---------------------------- | ----------- | -------- | ---------------------------------------------------------------------- |
+| `collisionInteractionObject` | `collision` | `body`   | Transform fields + `noOverlap`, `pushPower`, `resistance`              |
+| `hurtInteractionObject`      | `hurt`      | `body`   | Transform fields + `hurtByAttack`, `hurtByCollision`, `invincibleTime` |
+| `attackInteractionObject`    | `attack`    | `weapon` | Transform fields + `damage`, `knockback`                               |
+| `guardInteractionObject`     | `guard`     | `shield` | Transform fields + `block`, `deflect`, `parry`                         |
 
 저장 key는 InteractionObject 용어를 사용한다.
+
+Transform fields는 `type`, `parent`, `x`, `y`, `ax`, `ay`, `w`, `h`, `baseW`, `baseH`, `rot`, `opacity`를 뜻한다.
 
 ## Runtime InteractionRegion
 
 Runtime/Combat 계산값이다.
 
+Interaction source 우선순위:
+
+```text
+Action frame override
+→ actionSettings[actionKey].interactions[interactionObjectKey]
+→ tuning.rig[interactionObjectKey]
+```
+
+Action frame override는 해당 frame에서 `active + role`이 켜진 경우에만 Action-level 설정보다 우선한다.
+Action-level interaction 설정이 존재하면 그 Action은 해당 설정을 따른다. 이 설정에서 `active + role`이 꺼져 있으면 Hurt/Collision/Attack/Guard region은 생성되지 않는다.
+Action-level 설정이 아예 없을 때만 `tuning.rig[interactionObjectKey]`를 fallback으로 사용한다.
+
 Runtime 피격 판정 geometry:
 
 ```text
-active + hurt object recorded region
+tuning.rig.hurtInteractionObject
+→ tuning.actionSettings[actionKey].interactions.hurtInteractionObject action-level setting
+→ tuning.actionOffsets[actionKey].hurtInteractionObject 현재 frame override
 → actor.player.hurtInteractionRegions
-→ fallback: tuning.rig.hurtInteractionObject
+→ interaction_region_engine 직접 계산
 ```
 
 Runtime 공격 판정 geometry:
 
 ```text
-active + attack object recorded region
+tuning.rig.attackInteractionObject
+→ tuning.actionSettings[actionKey].interactions.attackInteractionObject action-level setting
+→ tuning.actionOffsets[actionKey].attackInteractionObject 현재 frame override
 → actor.player.attackInteractionRegions
-→ fallback: tuning.rig.attackInteractionObject
+→ interaction_region_engine 직접 계산
 ```
+
+`player.hitRegions`는 `actor_renderer`가 draw 단계에서 기록하는 Canvas/Edit overlay용 geometry다.
+Combat은 draw 순서에 의존하지 않도록 `player.hitRegions`를 Runtime source로 사용하지 않는다.
 
 Runtime 공격 효과:
 
 ```text
-tuning.actionOffsets[actionKey][partKey].stun/knockbackX/knockbackY/deathBurst
+tuning.actionOffsets[actionKey][partKey].damage/knockback
+legacy: stun/knockbackX/knockbackY/deathBurst
 → actor.player.attackInteractionRegion.reaction
 → combat_engine.applyHitReaction()
+```
+
+Runtime collision / hurt / guard 효과:
+
+```text
+collision.noOverlap / pushPower / resistance
+→ combat_engine.resolveCollisionInteractions()
+
+hurt.hurtByAttack / hurtByCollision / invincibleTime
+→ combat_engine.applyInteractionDamage()
+
+guard.block
+→ combat_engine.isAttackBlocked()
 ```
 
 Runtime mirror field는 저장하지 않는다.
@@ -316,8 +321,14 @@ Frame value:
 - `opacity`
 - `active` (common interaction state)
 - `attack`, `hurt`, `collision`, `guard` (interaction role switches)
-- `stun`, `knockbackX`, `knockbackY`, `deathBurst` (attack reaction settings)
-- `pushPower` (collision push setting)
+- `damage`, `knockback` (attack MVP settings)
+- `stun`, `knockbackX`, `knockbackY`, `deathBurst` (legacy attack reaction compatibility)
+- `noOverlap`, `pushPower`, `resistance` (collision settings)
+- `hurtByAttack`, `hurtByCollision`, `invincibleTime` (hurt settings)
+- `block`, `deflect`, `parry` (guard concept flags)
+
+Setup fallback interaction object는 박스 모양과 기본 옵션이다. Action 단위 `actionSettings[actionKey].interactions`가 있으면 해당 Action 전체의 사용 여부를 결정한다. Action frame에서 `active + role`을 켠 경우 해당 frame 값이 가장 우선하는 override로 쓰인다. MVP에서는 frame에서 OFF를 찍어 Action-level ON을 끄는 per-frame disable은 아직 사용하지 않는다.
+
 - root anchor field 일부
 
 ## `effectOffsets`

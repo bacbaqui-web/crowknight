@@ -893,8 +893,13 @@
 .setting-section[data-section='effect'] .section-content > .interaction-editor-card,
 .setting-section[data-section='effect'] .section-content > .modifier-editor-card,
 .setting-section[data-section='effect'] .section-content > .modifier-applied-card,
-.setting-section[data-section='effect'] .section-content > .modifier-library-card {
+.setting-section[data-section='effect'] .section-content > .modifier-library-card,
+.setup-section .part-position-layout > .interaction-editor-card {
   grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .editor-data-empty {
@@ -987,6 +992,21 @@
   padding: 7px;
 }
 
+.interaction-editor-card > .editor-data-card-body {
+  gap: 6px;
+}
+
+.interaction-detail-section {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.interaction-detail-section .ae-prop-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .modifier-applied-item {
   border-color: #3f4d5f;
   background: #151b24;
@@ -1050,7 +1070,7 @@
 
 .modifier-setting-row {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 92px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   min-height: 32px;
@@ -1127,9 +1147,20 @@
   cursor: default;
 }
 
+.modifier-mini-timeline-track.is-click-editable .timeline-slot {
+  cursor: pointer;
+}
+
 .modifier-mini-timeline-track .timeline-slot.is-in-range {
   background: rgba(124, 195, 162, 0.78);
   box-shadow: inset 0 0 0 1px rgba(222, 255, 238, 0.3);
+}
+
+.action-runtime-rule-link-targets {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 8px;
+  min-width: 0;
 }
 
 .modifier-select-field {

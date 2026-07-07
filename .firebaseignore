@@ -1,0 +1,5 @@
+setting.html
+src/editor_local_only_guard.js
+tools/**
+docs/**
+runtime/uploaded-psds/**

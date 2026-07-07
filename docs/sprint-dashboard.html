@@ -176,7 +176,7 @@
   <body>
     <main>
       <header>
-        <p class="updated">Updated 2026-07-06 KST</p>
+        <p class="updated">Updated 2026-07-07 KST</p>
         <h1>Current Task Report</h1>
       </header>
 
@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Editor Foundation Closing Sprint</p>
+            <p>고정 수식 Runtime 적용 순서 수정</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>새 기능 없이 파일명, 역할 접미사, SRC MAP, Architecture 용어를 정리한다.</p>
+            <p>고정 Formula가 Action 실행 중 지정 구간에서 방향을 실제로 유지하게 한다.</p>
           </div>
         </div>
       </section>
@@ -199,30 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Editor Foundation 파일명 / SRC MAP 정리</p>
+            <p>고정 수식 Runtime 적용 순서 수정</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>src/*.js 파일명을 snake_case + 역할 접미사 규칙으로 맞춘다.</li>
-              <li>docs/10_SRC_MAP.md를 엔진 중심 인덱스로 재정리한다.</li>
-              <li>Architecture / Editor Flow / SRC MAP의 용어와 파일명을 맞춘다.</li>
+              <li>고정 Formula가 Runtime에서 실제 facing 유지에 적용되게 한다.</li>
+              <li>Velocity / Mirror 계산보다 먼저 고정을 적용한다.</li>
+              <li>Blend 중에도 고정 수식이 우회되지 않게 한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>camelCase JS 파일명을 snake_case로 정리했다.</li>
-              <li>역할이 애매한 파일명에 engine/helper/controller/view/state/data 접미사를 적용했다.</li>
-              <li>JS import 경로와 문서 참조를 새 파일명으로 갱신했다.</li>
-              <li>SRC_MAP의 역할표 미준수 / 보류 목록을 제거했다.</li>
+              <li>`advanceCustomActionRuntime()`에서 view lock 적용 순서를 앞으로 당겼다.</li>
+              <li>Velocity Formula 적용 전 고정 facing을 먼저 복원한다.</li>
+              <li>customActionBlend 처리 중에도 고정 수식 적용을 유지한다.</li>
             </ul>
           </div>
           <div class="block">
-            <p><strong>남겨둔 파일</strong></p>
+            <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>main.js는 앱 entry point라 접미사 예외로 유지한다.</li>
-              <li>과거 Sprint History의 옛 파일명은 역사 기록으로 유지한다.</li>
+              <li>브라우저에서 고정 ON 구간 동안 방향이 유지되는지 수동 QA가 필요하다.</li>
+              <li>Blend가 있는 Action 시작 구간에서도 고정이 유지되는지 수동 QA가 필요하다.</li>
             </ul>
           </div>
         </div>
@@ -232,24 +231,30 @@
         <h2>3. 구조 QA</h2>
         <div class="qa">
           <div class="block">
-            <h3>Filename QA</h3>
+            <h3>View QA</h3>
             <ul>
               <li>
-                <label class="qa-item" data-qa-id="no-camelcase-js-files">
+                <label class="qa-item" data-qa-id="psd-panel-order">
                   <input type="checkbox" />
-                  <span>src/*.js에 camelCase 파일명이 없는지 확인한다.</span>
+                  <span>PSD 레이어 목록이 Photoshop 패널 위→아래 순서로 보이는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="suffix-role-rule">
+                <label class="qa-item" data-qa-id="psd-visual-order">
                   <input type="checkbox" />
-                  <span>main.js를 제외한 src/*.js가 역할 접미사 규칙을 따르는지 확인한다.</span>
+                  <span>Photoshop에서 위에 보이는 레이어가 게임 화면에서도 위에 보이는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="imports-exist">
+                <label class="qa-item" data-qa-id="psd-runtime-manifest-order">
                   <input type="checkbox" />
-                  <span>모든 로컬 JS import 대상 파일이 존재하는지 확인한다.</span>
+                  <span>runtime/background-preview.json의 layerOrder와 레이어 순서가 최신인지 확인한다.</span>
+                </label>
+              </li>
+              <li>
+                <label class="qa-item" data-qa-id="psd-layer-buttons">
+                  <input type="checkbox" />
+                  <span>위/아래 버튼으로 바꾼 순서가 목록과 화면에 같이 반영되는지 확인한다.</span>
                 </label>
               </li>
             </ul>

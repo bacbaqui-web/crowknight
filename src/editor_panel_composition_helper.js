@@ -166,6 +166,7 @@ export function createTuningPanelComposition({
     saveState,
     renderPartFields: partController.renderPartFields,
     renderActionPartFields: partController.renderActionPartFields,
+    selectCanvasPart: partController.selectCanvasPart,
     pushUndoSnapshot,
     beginUndoSnapshot,
     commitUndoSnapshot,

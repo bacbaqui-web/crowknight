@@ -52,6 +52,7 @@ export function createPartEditHandleGeometry({ editFocusPartKey, editHandleInfo,
   }
 
   return {
+    key: editFocusPartKey,
     anchor,
     xAxis,
     yAxis,

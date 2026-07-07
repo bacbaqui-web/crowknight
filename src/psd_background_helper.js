@@ -21,9 +21,12 @@ export async function refreshPsdBackground({ getSceneSession, onUpdate, force = 
       width: manifest.width,
       height: manifest.height,
     };
+    const savedLayers = Array.isArray(session.background.psdLayers) ? session.background.psdLayers : [];
+    const useManifestOrder = Boolean(psdFile) || savedLayers.length === 0;
     session.background.psdLayers = mergePsdBackgroundLayers(
-      session.background.psdLayers,
-      versionPsdLayerImages(manifest.layers, manifest.updatedAt)
+      savedLayers,
+      versionPsdLayerImages(manifest.layers, manifest.updatedAt),
+      { useManifestOrder }
     );
     onUpdate?.(session.background);
     return true;

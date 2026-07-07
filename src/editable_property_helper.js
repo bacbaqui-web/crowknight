@@ -1,6 +1,10 @@
-const INTERACTION_TOGGLE_PROPS = new Set(['active', 'attack', 'hurt', 'collision', 'guard']);
-const INTERACTION_DECIMAL_PROPS = new Set(['stun', 'deathBurst']);
-const INTERACTION_KNOCKBACK_PROPS = new Set(['knockbackX', 'knockbackY']);
+import {
+  INTERACTION_DECIMAL_PROPS,
+  INTERACTION_KNOCKBACK_PROPS,
+  INTERACTION_PUSH_POWER_PROPS,
+  INTERACTION_TOGGLE_PROPS,
+} from './interaction_field_data.js';
+
 export const SIZE_PERCENT_MIN = 5;
 export const SIZE_PERCENT_MAX = 300;
 
@@ -21,7 +25,7 @@ export function isInteractionKnockbackProp(prop) {
 }
 
 export function isInteractionPushPowerProp(prop) {
-  return prop === 'pushPower';
+  return INTERACTION_PUSH_POWER_PROPS.has(prop);
 }
 
 export function isSizeProp(prop) {

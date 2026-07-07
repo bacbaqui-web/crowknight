@@ -22,7 +22,7 @@ export function renderTimelineSlots(track, frameCount, selectedSlot, onSelectSlo
   }
 }
 
-export function renderMiniTimelineRange(track, { totalFrames, startFrame, endFrame }) {
+export function renderMiniTimelineRange(track, { totalFrames, startFrame, endFrame, onRangeChange = null }) {
   const frameCount = Math.max(1, Math.round(Number(totalFrames || 1)));
   const start = clampModifierFrame(startFrame, frameCount);
   const end = clampModifierFrame(endFrame, frameCount);
@@ -31,7 +31,19 @@ export function renderMiniTimelineRange(track, { totalFrames, startFrame, endFra
   track.dataset.miniTimeline = 'true';
   track.dataset.startFrame = String(startFrame ?? start);
   track.dataset.endFrame = String(endFrame ?? end);
-  renderTimelineSlots(track, frameCount, null, () => {});
+  track.classList.toggle('is-click-editable', Boolean(onRangeChange));
+  renderTimelineSlots(track, frameCount, null, (slot) => {
+    if (!onRangeChange) return;
+    const nextRange = clickedMiniTimelineRange(slot + 1, minFrame, maxFrame);
+    if (nextRange.startFrame === minFrame && nextRange.endFrame === maxFrame) return;
+    const confirmedRange = onRangeChange(nextRange) || nextRange;
+    renderMiniTimelineRange(track, {
+      totalFrames: frameCount,
+      startFrame: confirmedRange.startFrame,
+      endFrame: confirmedRange.endFrame,
+      onRangeChange,
+    });
+  });
   track.querySelectorAll('.timeline-slot').forEach((cell, index) => {
     const frame = index + 1;
     cell.classList.toggle('is-in-range', frame >= minFrame && frame <= maxFrame);
@@ -50,6 +62,22 @@ export function syncMiniTimelineTracks(root, totalFrames) {
 
 function clampModifierFrame(value, frameCount) {
   return clamp(Math.round(Number(value || 1)), 1, frameCount);
+}
+
+function clickedMiniTimelineRange(clickedFrame, startFrame, endFrame) {
+  const startDistance = Math.abs(clickedFrame - startFrame);
+  const endDistance = Math.abs(clickedFrame - endFrame);
+  const useStart = startDistance < endDistance || (startDistance === endDistance && clickedFrame <= startFrame);
+  if (useStart) {
+    return {
+      startFrame: Math.min(clickedFrame, endFrame),
+      endFrame,
+    };
+  }
+  return {
+    startFrame,
+    endFrame: Math.max(clickedFrame, startFrame),
+  };
 }
 
 export function timelineTToSlot(t, lastSlot) {

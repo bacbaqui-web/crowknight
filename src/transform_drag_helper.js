@@ -30,6 +30,7 @@ export function handleCanvasPointerDown(
     beginUndoSnapshot,
     setEditContext,
     setEditFocusPartKey,
+    selectCanvasPart,
     setEditHandleActiveMode,
     setCanvasDrag,
   }
@@ -43,6 +44,8 @@ export function handleCanvasPointerDown(
   const point = canvasPointFromEvent(canvas, event);
   const handleHit = getEditHandleAt(point);
   if (!handleHit) return;
+  const hitPart = handleHit.geometry.key || activePart;
+  if (!hitPart) return;
 
   event.preventDefault();
   if (handleHit.geometry.isActionPivot) {
@@ -89,8 +92,11 @@ export function handleCanvasPointerDown(
   }
 
   setEditContext(canvasContext);
-  if (canvasContext !== 'effect') setEditFocusPartKey(activePart);
-  const editState = canvasEditState(activePart, canvasContext);
+  if (canvasContext !== 'effect') {
+    selectCanvasPart?.(canvasContext, hitPart);
+    setEditFocusPartKey(hitPart);
+  }
+  const editState = canvasEditState(hitPart, canvasContext);
   const target = editState.target;
   const handleMode = handleHit.mode;
 
@@ -98,7 +104,7 @@ export function handleCanvasPointerDown(
     pushUndoSnapshot();
     const nextOpacity = toggleCanvasOpacity(target.opacity);
     if (canvasContext === 'action' && typeof writeActionFrameValue === 'function') {
-      writeActionFrameValue(activePart, 'opacity', nextOpacity);
+      writeActionFrameValue(hitPart, 'opacity', nextOpacity);
     } else if (typeof editState.writeValue === 'function') editState.writeValue('opacity', nextOpacity);
     else target.opacity = nextOpacity;
     canvasRefresh.applyAndRenderContext(canvasContext);
@@ -111,7 +117,7 @@ export function handleCanvasPointerDown(
       event,
       canvas,
       point,
-      part: activePart,
+      part: hitPart,
       context: canvasContext,
       editState,
       handle: handleHit.geometry,

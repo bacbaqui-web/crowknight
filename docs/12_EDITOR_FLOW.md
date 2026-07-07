@@ -18,6 +18,7 @@ Selection Palette click
 → part_editor_controller.selectPickerPart('part', partKey)
 → selection_state / editor_panel local editing state
 → part_editor_controller.renderPartFields()
+→ property_panel_controller.renderSetupPartFields()
 → part_source_data.partEditSources(tuning)
 → transform_value_helper.updateRigPartValue()
 → tuning.rig[partKey]
@@ -46,6 +47,8 @@ pointerdown
 Selection Palette fallback interaction object click
 → part_editor_controller.selectPickerPart('part', boxKey)
 → part_source_data.partEditSources(tuning)
+→ property_panel_controller.renderSetupPartFields()
+→ interaction_editor_engine.renderInteractionEditor(fixedRole)
 → tuning.rig[boxKey]
 ```
 
@@ -96,6 +99,7 @@ Property edit:
 
 ```text
 property input
+→ property_panel_controller.renderActionPartFields()
 → timeline_action_controller.updateOffset()
 → property_value_helper.poseFrameValueFromInput()
 → timeline_action_adapter.writeFrameValue()
@@ -108,11 +112,10 @@ Action object interaction state:
 
 ```text
 Action object select
-→ property active 0/1
-→ actionTimeline.writeFrameValue(partKey, 'active', value)
-→ actionTimeline.writeFrameValue(partKey, interaction setting, value)
-→ tuning.actionOffsets[actionKey][partKey]
-→ animation_frame_data / puppet_player_geometry_helper stepped frame value
+→ action_interaction_panel_controller
+→ interaction_editor_engine.renderInteractionEditor(fixedRole)
+→ actionSettings[actionKey].interactions[interactionObjectKey]
+→ active + role ON이면 Setup fallback object 위에 Action-level 값 적용
 → actor.player.getPartOffset(partKey)
 ```
 
@@ -121,13 +124,32 @@ Runtime attack:
 ```text
 combat_engine
 → attacker.player.attackInteractionRegions
-→ interaction_region_engine.createActiveInteractionRegions(player, 'attack')
-→ active + attack object의 recorded region
+→ interaction_region_engine.createAttackInteractionRegions(player)
+→ 현재 action frame의 attackInteractionObject 직접 계산
 → Runtime attack regions
 → combat_engine.interactionRegionsOverlap()
 → attackInteractionRegion.reaction
 → combat_engine.applyHitReaction()
 ```
+
+Action trigger / formula 실행:
+
+```text
+input_control_controller
+→ action_trigger_engine trigger match
+→ actionSettings[actionKey].condition 검사
+→ actionSettings[actionKey].formulas[] link 검사
+→ actionSettings[currentActionKey].formulas[] cancel 검사
+→ actor_action_helper.startCustomAction()
+→ actor_runtime_engine current frame 진행
+```
+
+저장/읽기 기준:
+
+- Trigger는 `tuning.actionTriggers[actionKey]`에서 "무슨 키를 눌렀는가"를 읽는다.
+- Link Formula는 `tuning.actionSettings[actionKey].formulas[]`의 `type: "link"`에서 "지금 어떤 Action 중이라 실행 가능한가"를 읽는다.
+- Formula는 Timeline keyframe이나 `actionOffsets`에 저장하지 않는다.
+- 기존 sequence trigger는 compatibility 입력으로 유지한다.
 
 Runtime collision / guard:
 
@@ -135,12 +157,14 @@ Runtime collision / guard:
 active + collision object
 → player.collisionInteractionRegions
 → combat_engine resolveCollisionInteractions()
+→ noOverlap이면 pushPower / resistance로 actor position 보정
+→ target hurtByCollision이면 damage + hurt Action
 ```
 
 ```text
 active + guard object
 → player.guardInteractionRegions
-→ attack region overlap 시 guard block
+→ attack region overlap 시 block이면 damage 무시
 ```
 
 Canvas drag:
@@ -264,19 +288,21 @@ Effect interaction:
 tuning.effectOffsets[effectKey].active / attack / hurt / collision / guard
 → actor_canvas_renderer.drawAttackTrail()
 → player.hitRegions[effect:effectKey].interaction
-→ interaction_region_engine.createActiveInteractionRegions()
-→ combat_engine
+→ draw/debug 기록용 geometry
 ```
+
+Combat은 `player.hitRegions`를 판정 source로 사용하지 않는다.
+Action InteractionObject는 `interaction_region_engine`이 현재 Runtime frame에서 직접 계산한다.
 
 ## Action Object Interaction 편집
 
 ```text
 Action select
-→ Timeline frame select
-→ editable object select
-→ canvas/property edit
-→ actionTimeline.writeFrameValue(partKey, prop, value)
-→ tuning.actionOffsets[actionKey][partKey]
+→ interaction box select
+→ property_panel_controller.renderActionPartFields()
+→ action_interaction_panel_controller.render()
+→ interaction_editor_engine.renderInteractionEditor()
+→ actionSettings[actionKey].interactions[interactionObjectKey]
 ```
 
 연결 지점:
@@ -284,7 +310,7 @@ Action select
 - `game_config.ACTION_PART_KEYS`
 - `project_data_normalizer.normalizeActionOffsets()`
 - `timeline_action_adapter.source(part)`
-- `timeline_keyframe_helper`
+- `action_interaction_panel_controller`
 - `property_field_data.posePropertyGroups()`
 - `transform_handle_geometry_helper`
 
@@ -300,7 +326,9 @@ activeAttackSettingsKey()
 
 주의:
 
-- 공통 Action object 판정 설정은 `actionOffsets`에 저장한다.
+- 공통 Action object 판정 설정은 `actionSettings[actionKey].interactions`에 저장한다.
+- `actionOffsets[actionKey][interactionObjectKey]`는 frame override가 필요할 때만 우선한다.
+- Interaction box key가 이미 role을 가지므로 box 클릭 시 해당 role 세부 설정을 기본으로 펼친다.
 - Runtime combat reaction은 `attackInteractionRegion.reaction`을 사용한다.
 - `active`는 선형 보간하지 않는다.
 - `active = 1`이면 강조 표시하고, `0`이면 같은 source를 연하게 표시한다.

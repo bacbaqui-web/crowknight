@@ -50,7 +50,6 @@
   border-radius: 6px;
   background: rgba(17, 19, 26, 0.86);
   padding: 6px;
-  cursor: grab;
 }
 
 .background-layer-item.is-back {
@@ -68,15 +67,35 @@
   background: rgba(72, 53, 30, 0.7);
 }
 
-.background-layer-item.is-dragging {
-  opacity: 0.55;
-}
-
 .background-layer-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 24px;
+  grid-template-columns: minmax(0, 1fr) auto auto 24px;
   gap: 5px;
   align-items: center;
+}
+
+.background-order-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(30px, auto));
+  gap: 3px;
+}
+
+.background-layer-move {
+  min-width: 30px;
+  height: 24px;
+  border: 1px solid #444b5d;
+  border-radius: 5px;
+  background: #151820;
+  color: #dfe5f3;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0 5px;
+}
+
+.background-layer-move:disabled {
+  cursor: default;
+  opacity: 0.35;
 }
 
 .background-layer-role {

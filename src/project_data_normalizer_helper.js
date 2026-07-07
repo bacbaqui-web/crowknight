@@ -20,6 +20,8 @@ import {
   normalizeDeletedActionKeys,
 } from './action_authoring_data.js';
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
+import { normalizeActionRuntimeRules } from './action_runtime_rule_helper.js';
+import { normalizeActionFormulas, migrateActionFormulasFromModifiers } from './formula_registry.js';
 import { defaultActionCondition, normalizeActionCondition } from './action_condition_helper.js';
 import { defaultActionGroup, normalizeActionGroup } from './action_group_helper.js';
 import { normalizeActionEditPivot } from './action_timeline_edit_helper.js';
@@ -30,8 +32,15 @@ import {
   GUARD_INTERACTION_OBJECT_KEY,
   ATTACK_INTERACTION_OBJECT_KEY,
   INTERACTION_OBJECT_PART_TYPE,
+  INTERACTION_OBJECT_PART_KEYS,
+  interactionObjectRole,
   interactionObjectParentPartKey,
 } from './interaction_object_editor_controller.js';
+import {
+  INTERACTION_NUMERIC_PROPS,
+  INTERACTION_TOGGLE_PROPS,
+  interactionDefaultValue,
+} from './interaction_field_data.js';
 import { clamp, clone, lerp } from './common_helper.js';
 
 export function mergeTuning(base, saved) {
@@ -51,6 +60,7 @@ export function mergeTuning(base, saved) {
     fresh.effectOffsets = normalizeEffectOffsets(fresh.effectOffsets);
     fresh.effectSettings = normalizeEffectSettings(fresh.effectSettings, base.effectSettings || base.actionSettings);
     fresh.modifiers = normalizeTimelineModifiers(fresh.modifiers);
+    migrateNormalizedActionFormulas(fresh);
     normalizeControlGroups(fresh.rig);
     normalizeRigImageAnchors(fresh.rig);
     normalizeRigRotations(fresh.rig, base.rig);
@@ -84,6 +94,7 @@ export function mergeTuning(base, saved) {
     base.effectSettings || base.actionSettings
   );
   merged.modifiers = normalizeTimelineModifiers(saved.modifiers || merged.modifiers);
+  migrateNormalizedActionFormulas(merged);
   normalizeControlGroups(merged.rig);
   normalizeRigImageAnchors(merged.rig, saved.rig);
   normalizeRigRotations(merged.rig, base.rig);
@@ -135,6 +146,7 @@ function normalizeRigInteractionObjectPart({ current, fallback = {}, parent = {}
     baseH,
     rot: Number(source.rot ?? fallback.rot ?? 0),
     opacity: clamp(Number(source.opacity ?? fallback.opacity ?? 1), 0, 1),
+    ...normalizeInteractionFields(source, fallback),
   };
 }
 
@@ -190,9 +202,44 @@ function normalizeActionSettings(current = {}, fallback = {}, customActions = []
       condition: normalizeActionCondition(source.condition ?? base.condition ?? defaultSettings.condition),
       group: normalizeActionGroup(source.group ?? base.group ?? defaultSettings.group, defaultActionGroup(key)),
       editPivot: normalizeActionEditPivot(source.editPivot, base.editPivot ?? defaultSettings.editPivot),
+      interactions: normalizeActionInteractions(
+        source.interactions ?? base.interactions ?? defaultSettings.interactions
+      ),
+      formulas: normalizeActionFormulas(source.formulas ?? base.formulas, {
+        ...source,
+        runtimeRules: source.runtimeRules ?? base.runtimeRules ?? defaultSettings.runtimeRules,
+      }),
     };
+    normalized[key].runtimeRules = normalizeActionRuntimeRules(
+      source.runtimeRules ?? base.runtimeRules ?? defaultSettings.runtimeRules,
+      normalized[key]
+    );
     normalized[key].mirror = normalized[key].mirror !== false;
     normalized[key].interruptible = normalized[key].interruptible !== false;
+  });
+  return normalized;
+}
+
+function migrateNormalizedActionFormulas(tuning) {
+  Object.keys(tuning.actionSettings || {}).forEach((key) => {
+    tuning.actionSettings[key].formulas = normalizeActionFormulas(
+      migrateActionFormulasFromModifiers(tuning.actionSettings[key], tuning.modifiers?.action?.[key] || []),
+      tuning.actionSettings[key]
+    );
+  });
+}
+
+function normalizeActionInteractions(current = {}) {
+  const normalized = {};
+  INTERACTION_OBJECT_PART_KEYS.forEach((partKey) => {
+    const source = current?.[partKey];
+    if (!source) return;
+    const role = interactionObjectRole(partKey);
+    normalized[partKey] = {
+      active: Number(source.active || 0) >= 0.5 ? 1 : 0,
+      [role]: Number(source[role] || 0) >= 0.5 ? 1 : 0,
+      ...normalizeInteractionFields(source),
+    };
   });
   return normalized;
 }
@@ -387,11 +434,7 @@ function withInteractionFrameDefault(frame = {}, fallback = {}) {
     hurt: frame.hurt ?? fallback.hurt ?? 0,
     collision: frame.collision ?? fallback.collision ?? 0,
     guard: frame.guard ?? fallback.guard ?? 0,
-    stun: frame.stun ?? fallback.stun ?? 0,
-    knockbackX: frame.knockbackX ?? fallback.knockbackX ?? 0,
-    knockbackY: frame.knockbackY ?? fallback.knockbackY ?? 0,
-    deathBurst: frame.deathBurst ?? fallback.deathBurst ?? 1,
-    pushPower: frame.pushPower ?? fallback.pushPower ?? 0,
+    ...normalizeInteractionFields(frame, fallback),
   };
 }
 
@@ -426,6 +469,17 @@ function interpolateActionFrameDefaults(value = {}, t = 0) {
     rot: lerp(start.rot, end.rot, amount),
     opacity: lerp(start.opacity, end.opacity, amount),
   };
+}
+
+function normalizeInteractionFields(source = {}, fallback = {}) {
+  const normalized = {};
+  INTERACTION_TOGGLE_PROPS.forEach((prop) => {
+    normalized[prop] = Number(source[prop] ?? fallback[prop] ?? interactionDefaultValue(prop)) >= 0.5 ? 1 : 0;
+  });
+  INTERACTION_NUMERIC_PROPS.forEach((prop) => {
+    normalized[prop] = Number(source[prop] ?? fallback[prop] ?? interactionDefaultValue(prop));
+  });
+  return normalized;
 }
 
 function legacyActionPartKey(part) {

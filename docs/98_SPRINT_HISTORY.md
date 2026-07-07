@@ -10,6 +10,203 @@
 
 ---
 
+## 2026-07-06 11:45 KST
+
+### Task
+
+Editor 책임 분리 리팩토링 2차
+
+### 목표
+
+- `part_editor_controller.js`를 선택과 panel controller 연결 중심으로 더 줄인다.
+- Interaction / Modifier 기능을 추가할 때 `part_editor_controller.js`가 다시 커지지 않게 만든다.
+
+### part_editor_controller.js 재조사
+
+| 영역           | 남아 있던 내용                                                                                           | 문제                                        | 처리                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------- |
+| Selection      | `selectPickerPart`, `clearPartSelection`, `toggleActionPartMultiSelection`, `handle*Change`, picker sync | controller 책임으로 유지 가능               | 유지                                                     |
+| Property       | Setup/Action/Group/FrameGroup/Pivot property 렌더와 저장                                                 | controller가 실제 Property 업무를 들고 있음 | `property_panel_controller.js`로 분리                    |
+| Interaction    | `actionInteractionPanel.render(...)` 호출                                                                | 직접 로직 없음                              | 유지                                                     |
+| Modifier       | modifier panel wrapper 호출                                                                              | 직접 로직 거의 없음                         | `property_panel_controller.js`에서 panel controller 호출 |
+| Group          | Group Edit property wrapper                                                                              | 계산은 helper로 분리됐지만 연결이 남음      | `property_panel_controller.js`로 이동                    |
+| Timeline/Pivot | action edit pivot read/write, master frame pivot sync                                                    | Action Property/Pivot 업무                  | `property_panel_controller.js`로 이동                    |
+
+### 완료 내용
+
+- `property_panel_controller.js`를 추가했다.
+- Setup Property 렌더/write를 `property_panel_controller.js`로 옮겼다.
+- Action part Property 렌더/write를 `property_panel_controller.js`로 옮겼다.
+- Action pivot, frameGroup master, Group Edit Property 연결을 `property_panel_controller.js`로 옮겼다.
+- `part_editor_controller.js`는 선택 변경, section open/close, picker sync, panel controller 호출 중심으로 줄였다.
+- `docs/10_SRC_MAP.md`, `docs/12_EDITOR_FLOW.md`, `docs/src-map.html`을 새 구조 기준으로 갱신했다.
+
+### 줄어든 책임 혼합
+
+- `part_editor_controller.js`: 522 lines → 312 lines
+- `property_panel_controller.js`: 270 lines
+
+### 아직 남은 큰 파일
+
+- `firebase_asset_storage_helper.js`: Asset 전용 Sprint에서 분리하는 편이 안전하다.
+- `editor_asset_controller.js`: Setup / Effect / Background asset UI 흐름이 함께 있어 Asset 전용 Sprint 후보로 남긴다.
+- `action_trigger_engine.js`: Runtime 대개편 금지 범위라 이번 Sprint에서는 남겼다.
+- `actor_runtime_engine.js`: Runtime 대개편 금지 범위라 이번 Sprint에서는 남겼다.
+
+### 다음 Interaction / Modifier 작업 안전성
+
+- 다음 Interaction 기능은 `action_interaction_panel_controller.js`, `interaction_editor_engine.js`, `interaction_object_editor_controller.js`에서 확장하면 된다.
+- 다음 Modifier 기능은 `action_modifier_panel_controller.js`, `modifier_editor_engine.js`, `timeline_modifier_data.js`에서 확장하면 된다.
+- `part_editor_controller.js`가 새 Interaction / Modifier 기능 때문에 다시 커질 필요는 줄었다.
+
+### 완료된 QA
+
+- 변경 JS `node --check` 통과.
+- 로컬 JS import 대상 파일 존재 확인.
+- `docs/src-map.html` script syntax 확인.
+- `docs/10_SRC_MAP.md`와 실제 `src` 파일명 일치 확인.
+- `npm run check`
+- `git diff --check`
+
+### 남은 확인 사항
+
+- 없음.
+
+---
+
+## 2026-07-06 11:10 KST
+
+### Task
+
+Editor 책임 분리 리팩토링
+
+### 목표
+
+- 새 기능 없이 “한 파일 = 한 책임” 원칙으로 Editor 쪽 큰 파일과 책임이 섞인 파일을 정리한다.
+- `part_editor_controller.js`와 `action_authoring_controller.js`에서 실제 업무 로직을 분리하고 controller는 연결 중심으로 줄인다.
+
+### 작업 전 조사
+
+| 파일                             | 줄 수 | 현재 책임                                                                                            | 문제                                                       | 분리 후보                                                                                                        | 우선순위 |
+| -------------------------------- | ----: | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------- |
+| `part_editor_controller.js`      |   609 | Setup Property, Action Property, Interaction 카드 연결, Modifier 카드 연결, Group edit property 처리 | Property / Interaction / Modifier가 같은 controller에 섞임 | `action_interaction_panel_controller.js`, `action_modifier_panel_controller.js`, `property_group_edit_helper.js` | 1        |
+| `action_authoring_controller.js` |   514 | Action 선택/생성/삭제/이름, Trigger UI, Group 이동                                                   | Action UI와 Trigger UI가 한 파일에 있음                    | `action_trigger_controller.js`                                                                                   | 2        |
+| `timeline_effect_controller.js`  |   456 | Effect timeline UI binding, frame write, preview sync                                                | Effect 전용 controller가 write/binding/preview를 함께 가짐 | frame write helper, panel sync helper                                                                            | 3        |
+| `timeline_action_controller.js`  |   373 | Action timeline UI binding, frame write, playback/settings sync                                      | Action 전용 예외와 binding이 같이 있음                     | timeline settings/write helper                                                                                   | 3        |
+| `action_trigger_engine.js`       |   532 | Trigger matching, Action start/restart, modifier runtime 일부                                        | Runtime 대개편 금지 대상이지만 책임 경계 큼                | 순수 modifier math/helper만 후보                                                                                 | 4        |
+| `actor_runtime_engine.js`        |   519 | Actor physics, action advance, world physics state                                                   | Runtime 핵심이라 리스크 큼                                 | 순수 계산 helper만 후보                                                                                          | 4        |
+
+### 완료 내용
+
+- `action_interaction_panel_controller.js`를 추가해 Action Interaction panel 렌더링과 frame write 연결을 분리했다.
+- `action_modifier_panel_controller.js`를 추가해 Action Modifier applied/library panel 렌더링과 modifier write 연결을 분리했다.
+- `property_group_edit_helper.js`를 추가해 Group Edit Property 계산을 순수 helper로 분리했다.
+- `action_trigger_controller.js`를 추가해 Trigger UI sync, Trigger recording, Trigger Mode icon sync를 Action authoring controller에서 분리했다.
+- `part_editor_controller.js`는 선택과 Property / Interaction / Modifier 패널 연결 중심으로 줄였다.
+- `action_authoring_controller.js`는 Action 선택 / 생성 / 삭제 / 이름 / group 이동 중심으로 줄였다.
+- `docs/10_SRC_MAP.md`와 `docs/src-map.html`에 새 파일을 반영했다.
+- `docs/src-map.html`에서 그룹 카드와 구조 위험 파일 카드를 분리했다.
+
+### 줄어든 책임 혼합
+
+- `part_editor_controller.js`: 609 lines → 522 lines
+- `action_authoring_controller.js`: 514 lines → 177 lines
+
+### 아직 남은 큰 파일
+
+- `firebase_asset_storage_helper.js`: Asset 전용 Sprint에서 분리하는 편이 안전하다.
+- `editor_asset_controller.js`: Setup / Effect / Background asset UI 흐름이 함께 있어 Asset 전용 Sprint 후보로 남긴다.
+- `part_editor_controller.js`: 아직 크지만 Interaction / Modifier 실제 업무는 분리했다.
+- `action_trigger_controller.js`: Trigger UI/녹화 전용으로 책임은 모였으나, 커지면 icon/render helper 분리를 검토한다.
+
+### 다음 Interaction / Modifier 작업 안전성
+
+- 다음 Interaction 기능은 `interaction_editor_engine.js` 또는 `action_interaction_panel_controller.js`에서 확장하면 된다.
+- 다음 Modifier 기능은 `modifier_editor_engine.js`, `timeline_modifier_data.js`, `action_modifier_panel_controller.js`에서 확장하면 된다.
+- `part_editor_controller.js`가 다시 커질 가능성은 줄었다.
+
+### 완료된 QA
+
+- 변경 JS `node --check` 통과.
+- 로컬 JS import 대상 파일 존재 확인.
+- `docs/src-map.html` script syntax 확인.
+- `docs/10_SRC_MAP.md`와 실제 `src` 파일명 일치 확인.
+- `npm run check`
+- `git diff --check`
+
+### 남은 확인 사항
+
+- 없음.
+
+---
+
+## 2026-07-06 10:20 KST
+
+### Task
+
+`src-map.html` JS 구조 감사 도구화
+
+### 목표
+
+- `docs/src-map.html`을 프로젝트 소개 화면이 아니라 사람이 JS 구조 건강 상태를 빠르게 점검하는 Audit 도구로 정리한다.
+- 새 기능, Runtime, Editor 구조 변경 없이 HTML 내부 표시 정보만 보강한다.
+
+### 완료 내용
+
+- 작업 시작 전 `docs/20_IMPLEMENTATION_RULES.md`를 확인했다.
+- 상단 제목과 설명을 `SRC Index`에서 `JS Structure Audit`으로 바꿨다.
+- 각 그룹에 `의존하는 그룹`, `책임 검사`, `섞인 JS`, `큰 파일`, `위험도` 표시를 추가했다.
+- `🟦 Common Engine` / `🟨 Dedicated` 상태 pill을 더 명확하게 표시했다.
+- `🟢 안정`, `🟡 주의`, `🔴 리팩토링 후보` 위험도를 추가했다.
+- 위험도 필터를 추가했다.
+- 큰 파일 목록을 현재 `wc -l src/*.js` 기준으로 갱신하고, 왜 큰지 설명을 추가했다.
+
+### 책임이 겹치는 JS
+
+- `part_editor_controller.js`: Property / Interaction / Modifier
+- `action_authoring_controller.js`: Action UI / Trigger UI
+- `editor_asset_controller.js`: Setup Asset / Effect Asset / Background Asset
+- `firebase_asset_storage_helper.js`: Asset Storage / Metadata Upload / Local Asset Bridge
+- `actor_runtime_engine.js`: World Physics / Action Runtime / Actor State
+- `action_trigger_engine.js`: Trigger Matching / Action Start / Modifier Runtime
+- `modifier_editor_engine.js`: Modifier Library / Modifier Card UI / Mini Timeline
+- `project_data_normalizer_helper.js`: Project Normalize / Action Schema / Effect Schema
+- `background_renderer.js`: Background Render / Layer Render
+
+### 큰 파일 후보
+
+- `firebase_asset_storage_helper.js`: 682 lines
+- `editor_asset_controller.js`: 663 lines
+- `part_editor_controller.js`: 609 lines
+- `project_data_normalizer_helper.js`: 540 lines
+- `action_trigger_engine.js`: 532 lines
+- `actor_runtime_engine.js`: 519 lines
+- `action_authoring_controller.js`: 514 lines
+
+### 현재 가장 위험한 JS
+
+- `firebase_asset_storage_helper.js`
+- `editor_asset_controller.js`
+- `part_editor_controller.js`
+
+### 구조 판단
+
+- 현재 구조는 큰 방향에서는 건강하다.
+- 큰 파일과 경계 파일은 Audit 화면에서 계속 감시해야 한다.
+
+### 완료된 QA
+
+- `docs/src-map.html` script syntax 확인.
+- `npx prettier --write docs/src-map.html`
+- `npm run check`
+- `git diff --check`
+
+### 남은 확인 사항
+
+- 없음.
+
+---
+
 ## 2026-07-06 09:40 KST
 
 ### Task
@@ -3104,3 +3301,101 @@ Action UI / Edit Context 명칭 정리
 - Setup / Action / Effect Property scrub UI를 compact 숫자형 구조로 통일했다.
 - Firebase metadata는 Firestore 단일 문서 저장 흐름으로 정리했다.
 - Firebase asset은 backgrounds / characters / effects / icons root 규칙을 따른다.
+
+---
+
+## 2026-07-06 KST
+
+### Task
+
+Interaction MVP
+
+### 목표
+
+- 기존 Property / Interaction Editor 구조를 확장해 Collision / Hurt / Attack / Guard Box의 기본 데이터와 UI를 만든다.
+- Setup fallback object를 기본값으로 두고 Action frame에서 override할 수 있게 한다.
+- 새 Engine이나 복잡한 전투 규칙은 만들지 않는다.
+
+### 완료 내용
+
+- `interaction_field_data.js`를 추가해 Interaction role별 옵션 필드와 기본값을 한 곳에 모았다.
+- Setup Interaction Object 선택 시 `상호작용 기본값` 카드가 보이도록 연결했다.
+- Action Interaction 카드에서 role을 켜면 Setup 기본값을 frame override 시작값으로 복사하도록 연결했다.
+- Collision / Hurt / Attack / Guard 기본 필드를 default rig와 normalize 경로에 추가했다.
+- Action frame value / Effect frame value / Runtime pose interpolation 경로에 새 Interaction 필드를 포함했다.
+- Runtime `InteractionRegion.reaction`에 `damage`, `knockback`, `invincibleTime` 등 MVP 값을 포함했다.
+- Combat damage가 Attack Box의 `damage` 값을 읽도록 최소 반영했다.
+- `hurt` Basic Action은 기존 기본 Action으로 이미 존재함을 확인했다.
+
+### 남은 QA
+
+- 실제 브라우저에서 Setup 기본값 저장/복원 확인.
+- Action role ON 시 기본값 복사와 frame override 확인.
+- Guard 세부 규칙과 Collision Box 피격은 후속 Sprint에서 별도 구현한다.
+
+---
+
+## 2026-07-06 KST
+
+### Task
+
+Interaction Card Layout
+
+### 목표
+
+- Interaction Box 설정 UI가 Property 하위처럼 보이지 않게 한다.
+- Interaction 카드를 Modifiers / 수식 라이브러리 카드와 같은 폭과 스타일로 맞춘다.
+- CSS / Layout만 수정하고 Interaction 기능, Runtime, 저장 구조는 변경하지 않는다.
+
+### 완료 내용
+
+- Setup Interaction 카드를 `partFields` 내부가 아니라 `part-position-layout`의 full-width supplement card로 렌더하도록 연결했다.
+- Action Interaction 카드는 기존 section-level 렌더 경로를 유지했다.
+- `settingsPanel.css`에서 Setup / Action / Effect Interaction 카드가 modifier card와 같은 full-width grid 규칙을 타게 했다.
+- Interaction detail row가 카드 안에서 overflow를 만들지 않도록 width/min-width를 보정했다.
+
+### QA
+
+- `node --check` 통과.
+- `npm run check` 통과.
+- `git diff --check` 통과.
+
+### 남은 QA
+
+- 실제 브라우저에서 Setup fallback object와 Action override 카드 폭을 확인한다.
+- 인앱 브라우저 연결이 현재 세션에서 unavailable 상태라 스크린샷 QA는 수행하지 못했다.
+
+---
+
+## 2026-07-06 KST
+
+### Task
+
+Interaction Runtime MVP
+
+### 목표
+
+- Collision / Hurt / Attack / Guard 데이터를 실제 Runtime / Combat 규칙으로 사용한다.
+- 새 Engine을 만들지 않고 기존 Combat / InteractionRegion / Action Runtime 경로를 재사용한다.
+
+### 완료 내용
+
+- Collision region overlap 시 `noOverlap`, `pushPower`, `resistance`를 사용해 actor position을 보정한다.
+- `hurtByAttack` / `hurtByCollision`을 Runtime 피격 조건에 연결했다.
+- `invincibleTime`을 피격 후 추가 damage 방지 시간으로 사용한다.
+- Attack `damage`와 `knockback`을 실제 HP 감소와 velocity knockback에 반영했다.
+- Guard `block`이 true이면 Attack damage를 막는다.
+- 피격 시 `hurt` Action을 기존 Runtime Action 시작 경로로 요청한다.
+- `requestRuntimeAction()`을 추가해 Combat에서도 공통 Action 시작 경로를 재사용하게 했다.
+
+### 아직 남은 범위
+
+- Guard `deflect` / `parry` 세부 규칙.
+- 공격박스 이동 벡터 기반 knockback 방향.
+- 여러 Interaction Box 목록 구조.
+
+### QA
+
+- `node --check` 통과.
+- `npm run check` 통과.
+- `git diff --check` 통과.

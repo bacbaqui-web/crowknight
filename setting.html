@@ -46,6 +46,11 @@
           <button type="button" data-tap-code="KeyQ"><kbd>Q</kbd><span>공격</span></button>
           <button type="button" data-tap-code="KeyW"><kbd>W</kbd><span>구르기</span></button>
           <button type="button" data-hold-code="KeyE"><kbd>E</kbd><span>방어</span></button>
+          <label class="screen-zoom-control" title="화면 확대">
+            <span>화면</span>
+            <input id="screenZoomRange" type="range" min="1" max="3" step="0.1" value="1" />
+            <output id="screenZoomValue" for="screenZoomRange">1.0x</output>
+          </label>
         </div>
         <div class="battle-controls" aria-label="전투 제어">
           <button id="startBattle" type="button">전투 시작</button>
@@ -383,36 +388,6 @@
                 </svg>
               </button>
               <button
-                id="actionCancel"
-                class="icon-button is-active"
-                type="button"
-                aria-label="다른 액션으로 즉시 전환"
-                title="다른 액션으로 즉시 전환"
-                aria-pressed="true"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 7h6v10H5z"></path>
-                  <path d="M15 5v14"></path>
-                  <path d="M11 12h4"></path>
-                  <path d="M19 8l-4 4 4 4"></path>
-                </svg>
-              </button>
-              <button
-                id="actionBlend"
-                class="icon-button action-blend-button"
-                type="button"
-                aria-label="즉시 전환"
-                title="즉시 전환"
-                aria-pressed="false"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9.5 7.5l-2 2a3.5 3.5 0 0 0 5 5l1.5-1.5"></path>
-                  <path d="M14.5 16.5l2-2a3.5 3.5 0 0 0-5-5L10 11"></path>
-                  <path d="M9 15l6-6"></path>
-                </svg>
-                <span class="action-blend-badge">0</span>
-              </button>
-              <button
                 id="actionTriggerRepeat"
                 class="icon-button"
                 type="button"
@@ -442,31 +417,34 @@
                   <circle cx="12" cy="12" r="2"></circle>
                 </svg>
               </button>
-              <div class="control-more-menu">
-                <button
-                  id="actionTimelineMenuToggle"
-                  class="icon-button"
-                  type="button"
-                  aria-haspopup="menu"
-                  aria-expanded="false"
-                  aria-label="Action 타임라인 작업 메뉴"
-                  title="Action 타임라인 작업"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="5" cy="12" r="1.5"></circle>
-                    <circle cx="12" cy="12" r="1.5"></circle>
-                    <circle cx="19" cy="12" r="1.5"></circle>
-                  </svg>
-                </button>
-                <div id="actionTimelineMenu" class="control-more-menu-panel" role="menu" hidden>
-                  <button id="actionAddKeyframe" class="control-menu-item" type="button" role="menuitem">
-                    새 키프레임
-                  </button>
-                  <button id="actionDeleteKeyframe" class="control-menu-item danger" type="button" role="menuitem">
-                    키프레임 삭제
-                  </button>
-                </div>
-              </div>
+              <button
+                id="actionAddKeyframe"
+                class="icon-button"
+                type="button"
+                aria-label="새 키프레임"
+                title="새 키프레임"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14"></path>
+                  <path d="M5 12h14"></path>
+                  <path d="M6 5h12"></path>
+                </svg>
+              </button>
+              <button
+                id="actionDeleteKeyframe"
+                class="icon-button danger"
+                type="button"
+                aria-label="키프레임 삭제"
+                title="키프레임 삭제"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 7h14"></path>
+                  <path d="M9 7V5h6v2"></path>
+                  <path d="M8 10l1 9h6l1-9"></path>
+                  <path d="M10.5 13.5l3 3"></path>
+                  <path d="M13.5 13.5l-3 3"></path>
+                </svg>
+              </button>
             </div>
             <div class="timeline-view" aria-label="Action 키프레임 타임라인">
               <div id="actionTimelineTrack" class="timeline-track"></div>

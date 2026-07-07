@@ -9,10 +9,6 @@ export function getCameraY(playerActor, world) {
   return clamp(playerActor.player.y - 120, world.viewH * 0.35, world.floorY - 120);
 }
 
-export function getEditZoom(isEditPanelOpen, hasActiveEditPart) {
-  return isEditPanelOpen && hasActiveEditPart ? 1.85 : 1;
-}
-
 export function getViewTransform({
   world,
   playerActor,
@@ -21,19 +17,19 @@ export function getViewTransform({
   playerDeathPending,
   resultOpen,
   isEditPanelOpen,
-  hasActiveEditPart,
+  screenZoom = 1,
 }) {
   const editFocusActor = selectedActor || playerActor;
+  const zoom = clamp(Number(screenZoom || 1), 1, 3);
   if (playerDeathPending || resultOpen) {
     const shake = particleEffects.getScreenShakeOffset();
     return {
-      zoom: 1.72,
+      zoom,
       focusX: playerActor.player.x - shake.x,
       focusY: playerActor.player.y - 72 - shake.y,
     };
   }
 
-  const zoom = getEditZoom(isEditPanelOpen, hasActiveEditPart);
   const shake = particleEffects.getScreenShakeOffset();
   if (zoom > 1) {
     return {

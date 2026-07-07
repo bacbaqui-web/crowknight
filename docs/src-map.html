@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Crow Knight SRC Index</title>
+    <title>Crow Knight JS Structure Audit</title>
     <style>
       :root {
         --bg: #0b1020;
@@ -135,7 +135,7 @@
         top: 0;
         z-index: 5;
         display: grid;
-        grid-template-columns: minmax(260px, 1fr) 190px 160px 160px;
+        grid-template-columns: minmax(260px, 1fr) 180px 150px 150px 150px;
         gap: 10px;
         margin-bottom: 12px;
         padding: 12px;
@@ -202,6 +202,24 @@
       .pill.large {
         border-color: rgba(255, 107, 122, 0.38);
         background: rgba(255, 107, 122, 0.12);
+        color: #ffc6ce;
+      }
+
+      .pill.safe {
+        border-color: rgba(112, 226, 162, 0.4);
+        background: rgba(112, 226, 162, 0.13);
+        color: #ccf8dd;
+      }
+
+      .pill.warn {
+        border-color: rgba(255, 209, 102, 0.42);
+        background: rgba(255, 209, 102, 0.14);
+        color: #ffe4a6;
+      }
+
+      .pill.danger {
+        border-color: rgba(255, 107, 122, 0.44);
+        background: rgba(255, 107, 122, 0.14);
         color: #ffc6ce;
       }
 
@@ -286,7 +304,14 @@
         gap: 12px;
       }
 
-      .group-card {
+      .file-audit-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .group-card,
+      .file-audit-card {
         display: grid;
         gap: 12px;
         padding: 14px;
@@ -323,6 +348,69 @@
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.06em;
+      }
+
+      .audit-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .audit-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+        color: #dbeeff;
+      }
+
+      .audit-item.warn {
+        color: #ffe4a6;
+      }
+
+      .audit-item.danger {
+        color: #ffc6ce;
+      }
+
+      .dependency-flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .large-list {
+        display: grid;
+        gap: 7px;
+      }
+
+      .large-file {
+        display: grid;
+        gap: 2px;
+        padding: 8px;
+        border: 1px solid rgba(255, 107, 122, 0.22);
+        border-radius: 7px;
+        background: rgba(255, 107, 122, 0.07);
+      }
+
+      .large-file b {
+        color: #ffc6ce;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .large-file span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .file-audit-card {
+        border: 1px solid rgba(43, 58, 88, 0.82);
+        border-radius: 8px;
+        background: rgba(8, 14, 26, 0.46);
+      }
+
+      .file-audit-card h3 {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
       }
 
       .js-list {
@@ -446,7 +534,8 @@
         .summary,
         .filters,
         .action-map-grid,
-        .groups {
+        .groups,
+        .file-audit-grid {
           grid-template-columns: 1fr;
         }
 
@@ -464,9 +553,9 @@
     <main class="page">
       <header class="top">
         <div>
-          <div class="eyebrow">Crow Knight SRC Index</div>
-          <h1>프로젝트 인덱스</h1>
-          <p>필요한 JS 그룹만 빠르게 찾기 위한 화면이다. 설명서가 아니다.</p>
+          <div class="eyebrow">Crow Knight JS Structure Audit</div>
+          <h1>JS 구조 감사</h1>
+          <p>각 JS 그룹이 자기 역할만 하는지, 공통 시스템을 재사용하는지, 리팩토링 위험이 있는지 점검한다.</p>
         </div>
         <nav class="doc-links" aria-label="문서 링크">
           <a class="doc-link" href="./10_SRC_MAP.md">10_SRC_MAP 원본</a>
@@ -491,18 +580,22 @@
           <option value="">전체</option>
           <option value="large">큰 파일 포함</option>
         </select>
+        <select id="riskFilter" aria-label="위험도 필터">
+          <option value="">전체 위험도</option>
+          <option value="safe">안정</option>
+          <option value="warn">주의</option>
+          <option value="danger">리팩토링 후보</option>
+        </select>
       </section>
 
       <section class="panel">
-        <h2>프로젝트 그룹</h2>
+        <h2>Audit 질문</h2>
         <div class="pill-row">
-          <span class="pill">Entry</span>
-          <span class="pill">Editor</span>
-          <span class="pill">Runtime</span>
-          <span class="pill">Timeline</span>
-          <span class="pill">Save</span>
-          <span class="pill">Assets</span>
-          <span class="pill">Data</span>
+          <span class="pill">자기 역할만 하는가?</span>
+          <span class="pill">이름과 접미사가 맞는가?</span>
+          <span class="pill">너무 커졌는가?</span>
+          <span class="pill">다른 Engine 책임을 침범했는가?</span>
+          <span class="pill">공통 시스템을 재사용하는가?</span>
         </div>
       </section>
 
@@ -529,6 +622,34 @@
       </section>
 
       <section class="panel">
+        <h2>Runtime Flow</h2>
+        <div class="action-map">
+          <div class="action-flow" aria-label="Runtime 실행 흐름">
+            <span>Input</span>
+            <i>→</i>
+            <span>Trigger</span>
+            <i>→</i>
+            <span>Action Runtime</span>
+            <i>→</i>
+            <span>Current Frame</span>
+            <i>→</i>
+            <span>Interaction Region</span>
+            <i>→</i>
+            <span>Combat</span>
+            <i>→</i>
+            <span>Render</span>
+            <i>→</i>
+            <span>Debug HUD</span>
+          </div>
+          <p>
+            player.hitRegions는 Combat source가 아니다. player.hitRegions는 draw/edit/debug overlay용이며, Combat은
+            interaction_region_engine.js가 현재 Runtime frame에서 계산한 InteractionRegion을 읽는다.
+          </p>
+          <div id="runtimeFlow" class="action-map-grid"></div>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>접미사 역할표</h2>
         <div id="suffixRoles" class="suffix-grid"></div>
       </section>
@@ -537,6 +658,12 @@
         <h2>역할표 미준수 / 보류 파일</h2>
         <p>현재 보류 파일은 없다. main.js는 앱 entry point라 접미사 예외로 둔다.</p>
         <div id="namingExceptions" class="groups" style="margin-top: 12px"></div>
+      </section>
+
+      <section class="panel">
+        <h2>구조 위험 파일</h2>
+        <p>책임 개수, 섞인 책임, 줄 수, 리팩토링 후보 여부를 파일 단위로 확인한다.</p>
+        <div id="fileAudit" class="file-audit-grid" style="margin-top: 12px"></div>
       </section>
 
       <section id="groups" class="groups"></section>
@@ -620,8 +747,10 @@
           js: [
             'part_editor_controller.js',
             'part_source_data.js',
+            'property_panel_controller.js',
             'property_field_data.js',
             'property_value_helper.js',
+            'property_group_edit_helper.js',
             'editable_property_helper.js',
             'editable_object_model_helper.js',
             'editor_scrub_helper.js',
@@ -640,21 +769,32 @@
             'edit_handle_renderer.js',
             'edit_handle_drawing_helper.js',
           ],
-          caution: 'Property는 Transform만 담당한다. Interaction / Modifier는 별도 engine으로 렌더하고 저장한다.',
+          caution: 'Property는 Transform만 담당한다. Interaction / Formula는 별도 engine으로 렌더하고 저장한다.',
         },
         {
-          name: '6. Interaction / Modifier 공통 패널',
+          name: '6. Interaction / Formula 공통 패널',
           role: 'Action에 붙는 상호작용 박스와 수식 라이브러리 UI를 공통 카드 패턴으로 표시한다.',
           js: [
             'editor_card_panel_view.js',
+            'action_interaction_panel_controller.js',
             'interaction_editor_engine.js',
+            'interaction_field_data.js',
             'interaction_object_editor_controller.js',
             'interaction_region_engine.js',
+            'action_modifier_panel_controller.js',
+            'formula_registry.js',
+            'formula_editor_engine.js',
+            'formula_runtime_engine.js',
+            'formulas/velocity_formula.js',
+            'formulas/lock_formula.js',
+            'formulas/blend_formula.js',
+            'formulas/cancel_formula.js',
+            'formulas/link_formula.js',
+            'formulas/formula_editor_fields.js',
             'modifier_editor_engine.js',
             'timeline_modifier_data.js',
           ],
-          caution:
-            'Action / Effect가 같은 engine을 사용한다. modifier 저장은 player.modifiers.action[actionKey] 기준이다.',
+          caution: 'Action은 formulas[]를 사용하고, Effect는 legacy modifier engine을 유지한다.',
         },
         {
           name: '7. Action 저장 / 기본값 / Normalize',
@@ -667,6 +807,7 @@
             'project_state_controller.js',
             'project_storage_helper.js',
             'animation_frame_data.js',
+            'interaction_field_data.js',
           ],
           caution:
             '현재 저장 key는 actionSettings / actionOffsets / deletedActionKeys / modifiers.action이다. v2 pose 저장 키는 사용하지 않는다.',
@@ -693,6 +834,49 @@
           ],
           caution:
             'actor_pose_helper.js의 pose는 최종 렌더 자세 의미다. Runtime은 새 Action 이름별 if 분기를 추가하지 않는다.',
+        },
+      ];
+
+      const RUNTIME_FLOW = [
+        {
+          name: 'Input',
+          role: 'keyboard/touch input을 keys / pressed로 모은다.',
+          js: ['input_control_controller.js', 'main.js'],
+        },
+        {
+          name: 'Trigger',
+          role: 'Trigger match, Condition, interrupt를 보고 Action start를 결정한다.',
+          js: ['action_trigger_engine.js'],
+        },
+        {
+          name: 'Action Runtime',
+          role: 'Action 시간, modifier, physics, actor 상태를 갱신한다.',
+          js: ['actor_action_helper.js', 'actor_runtime_engine.js'],
+        },
+        {
+          name: 'Current Frame',
+          role: 'actionKey, progress, frame value를 읽는다.',
+          js: ['actor_runtime_engine.js'],
+        },
+        {
+          name: 'Interaction Region',
+          role: '현재 Runtime frame에서 Attack/Hurt/Collision/Guard region을 계산한다.',
+          js: ['interaction_region_engine.js'],
+        },
+        {
+          name: 'Combat',
+          role: 'InteractionRegion overlap, damage, guard, collision push를 처리한다.',
+          js: ['combat_engine.js'],
+        },
+        {
+          name: 'Render',
+          role: 'actor와 draw/edit/debug overlay를 그린다.',
+          js: ['actor_renderer.js', 'actor_canvas_renderer.js'],
+        },
+        {
+          name: 'Debug HUD',
+          role: 'Runtime snapshot과 최근 판정 이벤트를 표시한다.',
+          js: ['runtime_debug_state.js', 'runtime_debug_hud_view.js'],
         },
       ];
 
@@ -746,6 +930,7 @@
           status: 'common',
           js: [
             'interaction_editor_engine.js',
+            'interaction_field_data.js',
             'interaction_object_editor_controller.js',
             'editor_scrub_helper.js',
             'part_source_data.js',
@@ -819,6 +1004,7 @@
           js: [
             'action_authoring_controller.js',
             'action_authoring_data.js',
+            'action_trigger_controller.js',
             'action_trigger_data.js',
             'timeline_action_controller.js',
             'timeline_action_adapter.js',
@@ -928,19 +1114,171 @@
         },
       ];
 
+      const GROUP_AUDIT = {
+        Selection: {
+          dependsOn: ['EditTarget', 'Property', 'Handle'],
+          responsibility: ['✔ 역할 하나만 담당', '선택 상태와 편집 대상 연결만 감시'],
+          risk: 'safe',
+          riskReason: '선택 상태 책임이 비교적 명확하다.',
+        },
+        'Transform Editor (구 Canvas)': {
+          dependsOn: ['Selection', 'EditTarget', 'Transform', 'Property'],
+          responsibility: ['✔ 공통 Drag 흐름 담당', '⚠ 여러 context drag를 받아 크기가 커질 수 있음'],
+          risk: 'warn',
+          riskReason: '공통 Drag 중심이라 안정적이지만 context별 분기가 계속 늘면 위험하다.',
+        },
+        Property: {
+          dependsOn: ['Selection', 'EditTarget', 'Transform', 'Timeline'],
+          responsibility: ['✔ Transform 입력 표시/저장 담당', '✔ property_panel_controller.js가 Property panel을 담당'],
+          risk: 'safe',
+          riskReason: 'Property panel 책임이 part editor controller에서 분리됐다.',
+        },
+        'Editor Data Cards': {
+          dependsOn: ['Property', 'Interaction Editor Engine', 'Modifiers Editor Engine'],
+          responsibility: ['✔ 카드 UI 표시만 담당'],
+          risk: 'safe',
+          riskReason: 'view 책임이 작고 명확하다.',
+        },
+        'Interaction Editor Engine': {
+          dependsOn: ['Timeline', 'Property', 'InteractionObject', 'Data'],
+          responsibility: ['✔ Interaction 카드/row 담당', '✔ interaction_field_data.js의 field 정의 재사용'],
+          risk: 'safe',
+          riskReason: 'Interaction 편집 책임은 분리되어 있다.',
+        },
+        'Modifiers Editor Engine': {
+          dependsOn: ['Timeline', 'Data', 'Runtime'],
+          responsibility: ['✔ Modifier UI / 저장 정규화 담당', '⚠ Runtime trigger helper와 연결 지점 존재'],
+          risk: 'warn',
+          riskReason: 'Velocity / Runtime 연결이 늘면 Editor와 Runtime 경계 점검이 필요하다.',
+        },
+        Handle: {
+          dependsOn: ['Selection', 'EditTarget', 'Transform'],
+          responsibility: ['✔ Handle geometry / drawing 담당'],
+          risk: 'safe',
+          riskReason: 'EditTarget 기준으로 정리되어 책임이 명확하다.',
+        },
+        Transform: {
+          dependsOn: ['Property', 'Handle', 'Drag'],
+          responsibility: ['✔ x/y, anchor, size, rotation 규칙 담당'],
+          risk: 'safe',
+          riskReason: '공통 transform 의미를 유지한다.',
+        },
+        Timeline: {
+          dependsOn: ['Data', 'Property', 'Action Authoring'],
+          responsibility: ['✔ 시간 기반 값 저장 담당', '⚠ Action / Effect / Pose controller가 함께 존재'],
+          risk: 'warn',
+          riskReason: '공통 engine은 안정적이나 controller 파일들이 큰 편이다.',
+        },
+        'Action Authoring': {
+          dependsOn: ['Timeline', 'Data', 'Modifier', 'Interaction', 'Runtime'],
+          responsibility: ['⚠ Action UI', '⚠ Trigger UI', '⚠ Timeline/Modifier 연결'],
+          risk: 'danger',
+          riskReason: 'action_authoring_controller.js가 Action 선택과 Trigger UI를 함께 맡아 가장 먼저 감시해야 한다.',
+        },
+        InteractionObject: {
+          dependsOn: ['Interaction Editor Engine', 'Runtime', 'Transform'],
+          responsibility: [
+            '✔ Interaction key/type과 Runtime region 계산 담당',
+            '⚠ combat_engine.js와 Runtime 책임 연결',
+          ],
+          risk: 'warn',
+          riskReason: 'Editor 정의와 Runtime 판정이 만나는 경계다.',
+        },
+        Save: {
+          dependsOn: ['Data', 'Assets', 'Project State'],
+          responsibility: ['⚠ Project 저장', '⚠ Firebase asset 저장', '⚠ ranking 저장'],
+          risk: 'danger',
+          riskReason: 'firebase_asset_storage_helper.js가 매우 크고 asset 저장 책임이 넓다.',
+        },
+        Runtime: {
+          dependsOn: ['Action Trigger', 'Timeline', 'Data', 'World'],
+          responsibility: ['⚠ actor runtime', '⚠ action runtime', '⚠ combat / renderer 연결'],
+          risk: 'danger',
+          riskReason: 'actor_runtime_engine.js와 action_trigger_engine.js가 크고 Editor 데이터 해석 경계가 중요하다.',
+        },
+        Data: {
+          dependsOn: ['Save', 'Timeline', 'Runtime'],
+          responsibility: ['⚠ normalize', '⚠ default schema', '⚠ frame data'],
+          risk: 'warn',
+          riskReason: 'project_data_normalizer_helper.js가 커서 저장 구조 변경 때 집중 감시가 필요하다.',
+        },
+        Stage: {
+          dependsOn: ['Background', 'Data', 'Runtime World'],
+          responsibility: ['✔ Stage rules / World Physics 설정 담당', '🟨 Dedicated'],
+          risk: 'warn',
+          riskReason: '전용 구현이지만 현재 범위가 작다. 공통 Editing 흡수 후보는 아니다.',
+        },
+        HUD: {
+          dependsOn: ['Runtime', 'Ranking', 'Actor State'],
+          responsibility: ['🟨 Dedicated', '⚠ ranking view/controller와 HUD 표시가 연결'],
+          risk: 'warn',
+          riskReason: 'Runtime HUD와 ranking UI가 함께 보여 유지보수 감시가 필요하다.',
+        },
+        Background: {
+          dependsOn: ['Stage', 'Assets', 'Renderer'],
+          responsibility: ['🟨 Dedicated', '⚠ background_renderer.js가 큼'],
+          risk: 'warn',
+          riskReason: '전용 구현이며 renderer가 큰 편이다.',
+        },
+        'Group Edit': {
+          dependsOn: ['EditTarget', 'Transform', 'Property'],
+          responsibility: ['✔ 여러 part에 결과 분배만 담당', '🟨 Dedicated'],
+          risk: 'safe',
+          riskReason: '전용 차이가 adapter/state로 제한되어 있다.',
+        },
+      };
+
+      const FILE_RESPONSIBILITY_AUDIT = {
+        'part_editor_controller.js': ['Selection', 'Panel Wiring'],
+        'property_panel_controller.js': ['Setup Property', 'Action Property', 'Group Property'],
+        'action_authoring_controller.js': ['Action UI', 'Trigger UI'],
+        'action_trigger_controller.js': ['Trigger UI', 'Trigger Recording', 'Trigger Mode Icon'],
+        'editor_asset_controller.js': ['Setup Asset', 'Effect Asset', 'Background Asset'],
+        'firebase_asset_storage_helper.js': ['Asset Storage', 'Metadata Upload', 'Local Asset Bridge'],
+        'actor_runtime_engine.js': ['World Physics', 'Action Runtime', 'Actor State'],
+        'action_trigger_engine.js': ['Trigger Matching', 'Action Start', 'Formula Runtime'],
+        'formula_editor_engine.js': ['Formula Library', 'Formula Card UI', 'Mini Timeline'],
+        'formula_runtime_engine.js': ['Formula Runtime Resolve'],
+        'formula_registry.js': ['Formula Registry', 'Formula Normalize', 'Formula Migration'],
+        'modifier_editor_engine.js': ['Effect Modifier Library', 'Modifier Card UI', 'Mini Timeline'],
+        'project_data_normalizer_helper.js': ['Project Normalize', 'Action Schema', 'Effect Schema'],
+        'background_renderer.js': ['Background Render', 'Layer Render'],
+      };
+
       const LARGE_FILES = [
-        ['part_editor_controller.js', '548', 'Selection/Property', 'Modifier/Interaction 추가 흡수 주의'],
-        ['project_data_normalizer_helper.js', '525', 'Normalize', '저장 구조 변경 주의'],
-        ['background_renderer.js', '482', 'Background render', '더 흡수 금지'],
-        ['editor_panel_controller.js', '450', 'Editor shell', 'controller 연결만 유지'],
-        ['main.js', '433', 'Entry / loop', '책임 추가 금지'],
-        ['timeline_effect_controller.js', '430', 'Effect timeline', '추가 흡수보다 helper 분리 유지'],
-        ['actor_runtime_engine.js', '410', 'Runtime player', '더 흡수 금지'],
-        ['action_authoring_controller.js', '406', 'Action UI binding', 'Trigger/Action UI 분리 후보'],
-        ['actor_renderer.js', '394', 'Runtime render', 'Editor target 기록 경계 주의'],
-        ['timeline_action_controller.js', '347', 'Action timeline', '추가 흡수보다 helper 분리 유지'],
-        ['player_default_rig_data.js', '336', 'Default rig', '저장 구조 변경 시 별도 Sprint'],
-        ['action_trigger_engine.js', '256', 'Action runtime', 'Modifier runtime 분리 후보'],
+        [
+          'firebase_asset_storage_helper.js',
+          '682',
+          'Asset Storage / Metadata / Local bridge',
+          '저장과 에셋 책임이 넓다',
+        ],
+        ['editor_asset_controller.js', '663', 'Setup / Effect / Background asset actions', '에셋 UI 흐름 3개 포함'],
+        ['project_data_normalizer_helper.js', '540', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
+        ['action_trigger_engine.js', '532', 'Trigger / Action start / modifier runtime', 'Runtime 책임 3개 포함'],
+        ['actor_runtime_engine.js', '519', 'Actor state / physics / action update', 'Runtime 핵심 책임 포함'],
+        ['background_renderer.js', '482', 'Background render / layer render', '전용 renderer가 큼'],
+        ['editor_panel_controller.js', '476', 'Editor shell / external API', '연결 책임만 유지 필요'],
+        ['timeline_effect_controller.js', '456', 'Effect timeline controller', 'Timeline controller 중 큰 편'],
+        ['main.js', '436', 'Entry / loop', 'entry 책임 추가 금지'],
+        [
+          'action_trigger_controller.js',
+          '342',
+          'Trigger UI / recording / icon sync',
+          'Action authoring에서 분리된 Trigger UI 책임',
+        ],
+        ['part_editor_controller.js', '312', 'Selection / panel wiring', '선택과 panel controller 연결만 유지'],
+        [
+          'property_panel_controller.js',
+          '270',
+          'Setup / Action / Group property panel',
+          'Property panel 책임이 모인 파일',
+        ],
+        [
+          'actor_renderer.js',
+          '403',
+          'Runtime render / edit handle recording',
+          'Renderer와 Editor handle 기록 경계 주의',
+        ],
       ];
 
       const NAMING_EXCEPTIONS = [];
@@ -973,7 +1311,7 @@
       }
 
       function statusLabel(status) {
-        return status === 'common' ? '🟦 공통 시스템' : '🟨 전용 구현';
+        return status === 'common' ? '🟦 Common Engine' : '🟨 Dedicated';
       }
 
       function statusClass(status) {
@@ -996,6 +1334,78 @@
         return `<span class="js"><span>${escapeHtml(file)}</span>${renderSuffixBadge(file)}</span>`;
       }
 
+      function groupAudit(group) {
+        return (
+          GROUP_AUDIT[group.name] || {
+            dependsOn: [],
+            responsibility: ['✔ 역할 하나만 담당'],
+            risk: 'safe',
+            riskReason: '명시된 구조 위험 없음.',
+          }
+        );
+      }
+
+      function riskLabel(risk) {
+        if (risk === 'danger') return '🔴 리팩토링 후보';
+        if (risk === 'warn') return '🟡 주의';
+        return '🟢 안정';
+      }
+
+      function auditItemClass(text) {
+        if (String(text).includes('🔴') || String(text).includes('위험')) return 'danger';
+        if (String(text).includes('⚠') || String(text).includes('🟨')) return 'warn';
+        return '';
+      }
+
+      function renderDependencyFlow(items) {
+        if (!items?.length) return '<span class="pill safe">의존 없음</span>';
+        return `<div class="dependency-flow">${items
+          .map((item) => `<span class="pill">${escapeHtml(item)}</span>`)
+          .join('')}</div>`;
+      }
+
+      function renderResponsibilityAudit(items) {
+        return `<div class="audit-list">${items
+          .map(
+            (item) => `
+          <span class="audit-item ${auditItemClass(item)}">
+            <i>${escapeHtml(String(item).slice(0, 1))}</i>
+            <span>${escapeHtml(String(item).replace(/^[✔⚠🟨🔴🟢🟡]\\s*/, ''))}</span>
+          </span>
+        `
+          )
+          .join('')}</div>`;
+      }
+
+      function largeFilesForGroup(group) {
+        const groupFiles = new Set(group.js);
+        return LARGE_FILES.filter(([name]) => groupFiles.has(name));
+      }
+
+      function renderLargeFiles(group) {
+        const files = largeFilesForGroup(group);
+        if (!files.length) return '<span class="pill safe">큰 파일 없음</span>';
+        return `<div class="large-list">${files
+          .map(
+            ([name, lines, roles, reason]) => `
+          <div class="large-file">
+            <b>${escapeHtml(name)} · ${escapeHtml(lines)} lines</b>
+            <span>${escapeHtml(roles)}</span>
+            <span>${escapeHtml(reason)}</span>
+          </div>
+        `
+          )
+          .join('')}</div>`;
+      }
+
+      function renderFileResponsibilityWarnings(group) {
+        const warnings = group.js
+          .filter((file) => FILE_RESPONSIBILITY_AUDIT[file])
+          .map((file) => `${file}: ${FILE_RESPONSIBILITY_AUDIT[file].join(' / ')}`);
+        if (!warnings.length) return '<span class="pill safe">✔ 역할 하나만 담당</span>';
+        return renderResponsibilityAudit(warnings.map((warning) => `⚠ ${warning}`));
+      }
+
       function renderActionMap() {
         document.getElementById('actionMap').innerHTML = ACTION_PARTS.map(
           (part) => `
@@ -1004,6 +1414,18 @@
           <p>${escapeHtml(part.role)}</p>
           <div class="js-list">${part.js.map(renderJsFile).join('')}</div>
           <p><b>주의:</b> ${escapeHtml(part.caution)}</p>
+        </article>
+      `
+        ).join('');
+      }
+
+      function renderRuntimeFlow() {
+        document.getElementById('runtimeFlow').innerHTML = RUNTIME_FLOW.map(
+          (step) => `
+        <article class="action-map-card">
+          <h3>${escapeHtml(step.name)}</h3>
+          <p>${escapeHtml(step.role)}</p>
+          <div class="js-list">${step.js.map(renderJsFile).join('')}</div>
         </article>
       `
         ).join('');
@@ -1037,16 +1459,56 @@
         ).join('');
       }
 
+      function fileAuditRisk(file) {
+        if (file === 'firebase_asset_storage_helper.js' || file === 'editor_asset_controller.js') return 'danger';
+        if (file === 'action_authoring_controller.js' || file === 'part_editor_controller.js') return 'safe';
+        return 'warn';
+      }
+
+      function lineCountForFile(file) {
+        return LARGE_FILES.find(([name]) => name === file)?.[1] || '-';
+      }
+
+      function largeReasonForFile(file) {
+        return LARGE_FILES.find(([name]) => name === file)?.[3] || '책임 경계 감시 필요';
+      }
+
+      function renderFileAudit() {
+        document.getElementById('fileAudit').innerHTML = Object.entries(FILE_RESPONSIBILITY_AUDIT)
+          .map(([file, responsibilities]) => {
+            const risk = fileAuditRisk(file);
+            return `
+        <article class="file-audit-card">
+          <div class="group-head">
+            <h3>${escapeHtml(file)}</h3>
+            <span class="pill ${risk}">${riskLabel(risk)}</span>
+          </div>
+          <div class="info">
+            <div class="info-row"><b>책임 개수</b><span>${responsibilities.length}</span></div>
+            <div class="info-row"><b>섞인 책임</b><div class="dependency-flow">${responsibilities
+              .map((item) => `<span class="pill">${escapeHtml(item)}</span>`)
+              .join('')}</div></div>
+            <div class="info-row"><b>줄 수</b><span>${escapeHtml(lineCountForFile(file))}</span></div>
+            <div class="info-row"><b>후보 여부</b><span>${escapeHtml(largeReasonForFile(file))}</span></div>
+          </div>
+        </article>
+      `;
+          })
+          .join('');
+      }
+
       function renderSummary() {
         const common = GROUPS.filter((group) => group.status === 'common').length;
         const dedicated = GROUPS.length - common;
+        const danger = GROUPS.filter((group) => groupAudit(group).risk === 'danger').length;
+        const warn = GROUPS.filter((group) => groupAudit(group).risk === 'warn').length;
         const jsCount = new Set([...GROUPS.flatMap((group) => group.js), ...ACTION_PARTS.flatMap((part) => part.js)])
           .size;
         document.getElementById('summary').innerHTML = [
-          ['기능 그룹', GROUPS.length],
+          ['Audit 그룹', GROUPS.length],
           ['관련 JS', jsCount],
-          ['공통 시스템', common],
-          ['큰 파일', LARGE_FILES.length],
+          ['🟦 Common / 🟨 Dedicated', `${common} / ${dedicated}`],
+          ['🟡 주의 / 🔴 후보', `${warn} / ${danger}`],
         ]
           .map(
             ([label, value]) => `
@@ -1066,18 +1528,21 @@
       }
 
       function groupHasLargeFile(group) {
-        const largeNames = new Set(LARGE_FILES.map(([name]) => name));
-        return group.js.some((name) => largeNames.has(name));
+        return largeFilesForGroup(group).length > 0;
       }
 
       function matches(group, filters) {
+        const audit = groupAudit(group);
         const haystack =
-          `${group.name} ${group.role} ${group.js.join(' ')} ${group.caution} ${statusLabel(group.status)}`.toLowerCase();
+          `${group.name} ${group.role} ${group.js.join(' ')} ${group.caution} ${statusLabel(group.status)} ${audit.dependsOn.join(
+            ' '
+          )} ${audit.responsibility.join(' ')} ${riskLabel(audit.risk)} ${audit.riskReason}`.toLowerCase();
         return (
           (!filters.search || haystack.includes(filters.search)) &&
           (!filters.group || group.name === filters.group) &&
           (!filters.status || group.status === filters.status) &&
-          (!filters.large || groupHasLargeFile(group))
+          (!filters.large || groupHasLargeFile(group)) &&
+          (!filters.risk || audit.risk === filters.risk)
         );
       }
 
@@ -1087,39 +1552,43 @@
           group: document.getElementById('groupFilter').value,
           status: document.getElementById('statusFilter').value,
           large: document.getElementById('largeFilter').value === 'large',
+          risk: document.getElementById('riskFilter').value,
         };
         const visible = GROUPS.filter((group) => matches(group, filters));
         document.getElementById('groups').innerHTML = visible
-          .map(
-            (group) => `
+          .map((group) => {
+            const audit = groupAudit(group);
+            return `
         <article class="group-card">
           <div class="group-head">
             <h2>${escapeHtml(group.name)}</h2>
             <div class="pill-row">
               <span class="pill ${statusClass(group.status)}">${statusLabel(group.status)}</span>
-              ${groupHasLargeFile(group) ? '<span class="pill large">큰 파일 포함</span>' : ''}
             </div>
           </div>
           <div class="info">
             <div class="info-row"><b>역할</b><span>${escapeHtml(group.role)}</span></div>
             <div class="info-row"><b>관련 JS</b><div class="js-list">${group.js.map(renderJsFile).join('')}</div></div>
+            <div class="info-row"><b>의존</b>${renderDependencyFlow(audit.dependsOn)}</div>
             <div class="info-row"><b>주의</b><span>${escapeHtml(group.caution)}</span></div>
           </div>
         </article>
-      `
-          )
+      `;
+          })
           .join('');
         document.getElementById('emptyState').style.display = visible.length ? 'none' : 'block';
       }
 
       renderSummary();
       renderActionMap();
+      renderRuntimeFlow();
       renderSuffixRoles();
       renderNamingExceptions();
+      renderFileAudit();
       renderGroupOptions();
       renderGroups();
 
-      ['searchInput', 'groupFilter', 'statusFilter', 'largeFilter'].forEach((id) => {
+      ['searchInput', 'groupFilter', 'statusFilter', 'largeFilter', 'riskFilter'].forEach((id) => {
         document.getElementById(id).addEventListener('input', renderGroups);
         document.getElementById(id).addEventListener('change', renderGroups);
       });

@@ -28,9 +28,12 @@ import { DEATH_RESULT_DELAY } from './game_config_data.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
 import { createWorldFromSceneSession } from './scene_session_data.js';
 import { createProjectStateController } from './project_state_controller.js';
+import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
 import { isTrashCharacter } from './character_group_data.js';
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
+import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
+import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
 
 const {
   canvas,
@@ -53,14 +56,18 @@ const {
   resultKills,
   hudSurvivalTime,
   hudKills,
+  screenZoomRange,
+  screenZoomValue,
   retryRunButton,
 } = getMainDomElements();
 const keys = new Set();
 const pressed = new Set();
+const SCREEN_ZOOM_STORAGE_KEY = 'crowKnight.screenZoom';
 
 const savedState = await loadStoredSavedState();
 const sceneSessions = savedState.sessions;
 let sceneSession = savedState.sceneSession;
+await refreshInitialPsdBackground();
 preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
@@ -100,6 +107,17 @@ let last = performance.now();
 let runSurvivalTime = 0;
 let runKills = 0;
 let lastRecordedScore = 0;
+let screenZoom = readInitialScreenZoom();
+
+async function refreshInitialPsdBackground() {
+  const refreshed = await refreshPsdBackground({
+    getSceneSession: () => sceneSession,
+    onUpdate: null,
+    force: false,
+  });
+  if (!refreshed) return;
+  sceneSessions[sceneSession.id] = sceneSession;
+}
 
 window.addEventListener('resize', () =>
   syncCanvasToLayout({ canvas, world, actors: activeGameActors(), isFullStage, adjustActors: true })
@@ -143,6 +161,7 @@ rankingController.renderSettingsRankingList();
 if (!settingsRankingList) {
   rankingController.syncFromFirebase();
 }
+bindScreenZoomControl();
 const tuningPanel = createTuningPanel({
   canvas,
   ctx,
@@ -162,6 +181,7 @@ const tuningPanel = createTuningPanel({
   downloadSettings: downloadSettingsFromFirebase,
   refreshStagePsdAsset,
 });
+const runtimeDebugHud = createRuntimeDebugHud({ parent: canvas?.parentElement });
 bindKeyboardControls({
   keys,
   pressed,
@@ -179,6 +199,7 @@ function loop(now) {
 }
 
 function update(dt) {
+  beginRuntimeDebugFrame();
   const gameActors = activeGameActors();
   captureActorMotionStart(gameActors);
 
@@ -328,7 +349,7 @@ function draw() {
     playerDeathPending,
     resultOpen,
     isEditPanelOpen: isSettingsPanelOpen(),
-    hasActiveEditPart: Boolean(tuningPanel.activeEditPartKey()),
+    screenZoom,
   });
   drawWorld(ctx, world, view, sceneSession);
 
@@ -354,6 +375,8 @@ function draw() {
   tuningPanel.renderEditHandles();
 
   syncRunHud();
+  captureRuntimeDebugActorSnapshot(playerActor.player);
+  runtimeDebugHud.render();
   if (!settingsRankingList && !isFullStage) {
     drawRankingHud(ctx, { rankings: rankingController.getRankings(), battleActive, lastRecordedScore });
   }
@@ -373,6 +396,39 @@ function getRunResult() {
 
 function syncRunHud() {
   syncRunHudView({ survivalTime: runSurvivalTime, kills: runKills, hudSurvivalTime, hudKills });
+}
+
+function bindScreenZoomControl() {
+  if (!screenZoomRange) return;
+  screenZoomRange.value = String(screenZoom);
+  syncScreenZoomLabel();
+  screenZoomRange.addEventListener('input', () => {
+    screenZoom = normalizeScreenZoom(screenZoomRange.value);
+    syncScreenZoomLabel();
+    try {
+      localStorage.setItem(SCREEN_ZOOM_STORAGE_KEY, String(screenZoom));
+    } catch {
+      // Screen zoom is an editor viewing preference; storage failure should not affect play.
+    }
+  });
+}
+
+function syncScreenZoomLabel() {
+  if (screenZoomValue) screenZoomValue.textContent = `${screenZoom.toFixed(1)}x`;
+}
+
+function readInitialScreenZoom() {
+  try {
+    return normalizeScreenZoom(localStorage.getItem(SCREEN_ZOOM_STORAGE_KEY));
+  } catch {
+    return 1;
+  }
+}
+
+function normalizeScreenZoom(value) {
+  const zoom = Number(value);
+  if (!Number.isFinite(zoom)) return 1;
+  return Math.min(3, Math.max(1, zoom));
 }
 
 function startRun() {

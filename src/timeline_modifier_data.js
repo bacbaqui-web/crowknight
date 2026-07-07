@@ -1,21 +1,6 @@
 import { ACTION_MAX_FRAMES } from './game_config_data.js';
 
-export const MODIFIER_GRAPH_OPTIONS = Object.freeze([
-  { value: 'linear', label: 'Linear' },
-  { value: 'easeIn', label: 'Ease In' },
-  { value: 'easeOut', label: 'Ease Out' },
-]);
-
 export const MODIFIER_DEFS = Object.freeze([
-  {
-    type: 'move',
-    label: '이동',
-    settings: [
-      { prop: 'x', label: 'X 이동량', min: -2000, max: 2000, step: 1 },
-      { prop: 'y', label: 'Y 이동량', min: -2000, max: 2000, step: 1 },
-      { prop: 'frames', label: '도달 프레임', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
-    ],
-  },
   {
     type: 'velocity',
     label: '속도',
@@ -32,26 +17,6 @@ export const MODIFIER_DEFS = Object.freeze([
           { value: 'add', label: 'Add' },
         ],
       },
-      { prop: 'startFrame', label: 'Start Frame', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
-      { prop: 'endFrame', label: 'End Frame', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
-    ],
-  },
-  {
-    type: 'accelerate',
-    label: '가속',
-    timeline: true,
-    settings: [
-      { prop: 'graph', label: '그래프', kind: 'select', options: MODIFIER_GRAPH_OPTIONS },
-      { prop: 'startFrame', label: 'Start Frame', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
-      { prop: 'endFrame', label: 'End Frame', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
-    ],
-  },
-  {
-    type: 'decelerate',
-    label: '감속',
-    timeline: true,
-    settings: [
-      { prop: 'graph', label: '그래프', kind: 'select', options: MODIFIER_GRAPH_OPTIONS },
       { prop: 'startFrame', label: 'Start Frame', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
       { prop: 'endFrame', label: 'End Frame', min: 1, max: ACTION_MAX_FRAMES, step: 1 },
     ],
@@ -157,21 +122,13 @@ function normalizeSelectModifierSetting(field, value) {
 }
 
 function modifierSettingSourceValue(type, prop, settings = {}) {
-  if ((type === 'accelerate' || type === 'decelerate') && prop === 'startFrame') {
-    return settings.startFrame ?? 1;
-  }
-  if ((type === 'accelerate' || type === 'decelerate') && prop === 'endFrame') {
-    return settings.endFrame ?? settings.frames ?? settings.strength;
-  }
   return settings?.[prop];
 }
 
 function defaultModifierSettingValue(prop, type = '') {
-  if (prop === 'frames' && type === 'move') return ACTION_MAX_FRAMES;
   if (prop === 'frames') return 4;
   if (prop === 'startFrame') return 1;
   if (prop === 'endFrame') return type === 'velocity' ? ACTION_MAX_FRAMES : 4;
   if (prop === 'mode') return 'set';
-  if (prop === 'graph') return MODIFIER_GRAPH_OPTIONS[0].value;
   return 0;
 }

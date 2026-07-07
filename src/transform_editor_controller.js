@@ -45,6 +45,7 @@ export function createTuningPanelCanvasController({
   saveState,
   renderPartFields,
   renderActionPartFields,
+  selectCanvasPart,
   pushUndoSnapshot,
   beginUndoSnapshot,
   commitUndoSnapshot,
@@ -78,6 +79,7 @@ export function createTuningPanelCanvasController({
       beginUndoSnapshot,
       setEditContext,
       setEditFocusPartKey,
+      selectCanvasPart,
       setEditHandleActiveMode,
       setCanvasDrag: (value) => {
         canvasDrag = value;

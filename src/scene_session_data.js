@@ -231,7 +231,7 @@ export function usesPsdGround(background) {
   return Boolean(getActivePsdGroundLayer(background));
 }
 
-export function mergePsdBackgroundLayers(savedLayers, manifestLayers) {
+export function mergePsdBackgroundLayers(savedLayers, manifestLayers, { useManifestOrder = false } = {}) {
   const savedLayersNormalized = normalizePsdBackgroundLayers(savedLayers);
   const savedById = new Map(savedLayersNormalized.map((layer) => [layer.id, layer]));
   const savedByName = uniqueLayerNameMap(savedLayersNormalized);
@@ -255,6 +255,7 @@ export function mergePsdBackgroundLayers(savedLayers, manifestLayers) {
           opacity: saved?.opacity ?? manifestLayer?.opacity ?? 1,
           offsetX: hasLayerImage && !savedHadLayerImage ? 0 : (saved?.offsetX ?? manifestLayer?.offsetX ?? 0),
           offsetY: hasLayerImage && !savedHadLayerImage ? 0 : (saved?.offsetY ?? manifestLayer?.offsetY ?? 0),
+          order: useManifestOrder ? index : saved?.order,
         },
         index
       );

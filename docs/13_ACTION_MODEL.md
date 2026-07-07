@@ -35,7 +35,7 @@ New Feature
 
 - Timeline은 움직임이다. 위치, 크기, 회전, opacity, timing처럼 시간에 따라 변하는 제작 데이터다.
 - Interaction은 다른 객체와의 관계다. 충돌, 피격, 공격, 방어처럼 서로 만났을 때 의미가 생기는 데이터다.
-- Modifiers는 실행 중 적용되는 규칙이다. 현재 MVP에서는 이동, 가속, 감속처럼 Action/Effect/Projectile이 공유할 수 있는 수식부터 검증한다.
+- Formula는 실행 중 적용되는 Action 단위 수식이다. 현재 MVP에서는 속도, 고정, 보간, 캔슬, 연계를 같은 Formula Card 구조로 다룬다.
 - Runtime Rule은 게임 전체에 필요한 실행 규칙이다. 입력 수집, 중력, 월드 경계, HP, score, overlap 계산처럼 특정 Action 이름에 종속되지 않는 규칙이다.
 
 새 Action은 위 블록을 조합해서 만든다. Runtime은 `attack1`, `roll`, `fireSlash` 같은 이름을 보고 특별 처리하지 않는다.
@@ -84,9 +84,9 @@ input keys
 → PuppetPlayer state/time fields
 → actor_runtime_engine.actionKey / getActionFrameProgress()
 → actionOffsets timeline
-→ actor_renderer records hitRegions
-→ interaction_region_engine
 → combat_engine
+→ interaction_region_engine computes current InteractionRegions
+→ actor_renderer records hitRegions for canvas/edit overlay
 → actor_canvas_renderer
 ```
 
@@ -203,6 +203,7 @@ Action 실행 순서:
 Input
 → Trigger
 → Condition
+→ Link Rule
 → Action
 ```
 
@@ -218,6 +219,7 @@ MVP 지원 형태:
 
 - Trigger는 Runtime에서 Action 이름을 보고 분기하기 위한 장치가 아니다.
 - Runtime은 Trigger 데이터를 해석해 Custom Action Timeline 실행을 요청한다.
+- Trigger는 "무슨 키를 눌렀는가"만 담당한다. 지금 어떤 Action 중이라 실행 가능한지는 Condition / Link Rule 같은 실행 조건이 담당한다.
 - Trigger Mode는 Action을 언제 유지/종료할지 정한다. Timeline playback은 진행 중인 Timeline을 어떻게 재생할지 정한다.
 - `tap`: 키를 누르는 순간 Action을 끝까지 한 번 실행한다. release와 관계없다. 공격, 피격, 회피, 스킬에 적합하다.
 - `press`: 누르고 있는 동안만 Action이 진행된다. release하면 즉시 종료하고, duration 끝에 도달하면 반복하지 않고 종료한다. variable jump처럼 누른 길이만큼 진행되는 Action에 적합하다.
@@ -232,6 +234,59 @@ MVP 지원 형태:
 - 기존 물리 Runtime이 남아 있는 Basic Action은 migration이 끝날 때까지 `runtimeMode: "legacy"`로 둔다.
 - Runtime MVP는 발동된 Custom Action의 Action Timeline 재생과 공격 Interaction region 연결까지만 수행한다.
 - Modifier Engine 해석, 복잡한 입력 우선순위, overlapping sequence 지연 판정은 별도 단계로 분리한다.
+
+## Trigger Link Rule
+
+Link Rule은 Trigger 자체를 `QQ`, `QQQ` 같은 콤보 입력으로 늘리는 대신, Action이 다른 Action 중 특정 frame 구간에서만 실행될 수 있게 하는 Formula다.
+
+저장 위치는 `actionSettings[actionKey].formulas[]`의 `type: "link"` 항목이며, 자세한 shape는 `11_DATA_MODEL.md`를 본다.
+
+실행 흐름:
+
+```text
+Input
+→ Trigger match
+→ Condition check
+→ Link Rule check
+→ Cancel / interrupt check
+→ Action start
+```
+
+설계 원칙:
+
+- Trigger는 입력만 본다. 예를 들어 `attack1`, `attack2`, `attack3` 모두 Trigger를 `Q`로 둘 수 있다.
+- Link Rule은 현재 실행 중인 source Action과 source Action frame이 허용 구간 안인지 본다.
+- `link.enabled === false`이면 기존처럼 Trigger와 Condition만으로 실행 가능하다.
+- `link.enabled === true`이면 현재 Action이 `fromActions`에 없거나 현재 frame이 `startFrame~endFrame` 밖일 때 실행 실패한다.
+- 기존 sequence trigger는 compatibility로 유지하며 이번 단계에서 제거하지 않는다.
+- Link Rule은 Action 이름별 Runtime 분기를 만들기 위한 장치가 아니다. Runtime은 저장된 `fromActions`와 현재 Action state만 비교한다.
+- 같은 Trigger를 공유하는 Action이 여러 개 있으면 유효한 Link 후보를 일반 Trigger 후보보다 먼저 평가해야 한다. 그렇지 않으면 `attack2`가 실행될 frame에서 `attack1`이 다시 시작될 수 있다.
+- Link Rule은 Cancel window와 충돌하지 않게 설계해야 한다. MVP 구현에서는 Link 통과 후 기존 interrupt 판정을 이어서 적용하거나, Link 성공을 interrupt 허용으로 볼지 명확히 정해야 한다.
+- Editor에서는 수식 라이브러리의 `연계` 항목으로 표시한다. 대상 선택은 `폴더 드롭다운 → Action 드롭다운` 순서이며, Mini Timeline은 선택한 source Action의 Timeline frame 길이를 따른다.
+
+예:
+
+```text
+attack1
+→ Trigger Q
+→ link disabled
+
+attack2
+→ Trigger Q
+→ link from attack1 frame 6~12
+
+attack3
+→ Trigger Q
+→ link from attack2 frame 6~12
+```
+
+공중점프도 같은 구조를 쓴다.
+
+```text
+doubleJump
+→ Trigger Space
+→ link from jump / fall
+```
 
 ## Condition
 
@@ -276,7 +331,27 @@ Action Blend는 Action이 바뀔 때 이전 표시 포즈와 새 Action의 첫 �
 - Transition이 끝나면 새 Action Timeline 포즈가 첫 프레임부터 정상적으로 진행된다.
 - Editor에서는 Action Timeline 설정 줄의 Link 아이콘 버튼으로 `0 → 1 → 2 → 3 → 4 → 5 → 0` 순환 선택한다.
 
-저장 위치와 schema는 `11_DATA_MODEL.md`의 `actionSettings.blendFrames`를 본다.
+새 Formula 구조가 있으면 `actionSettings.formulas[]`의 `type: "blend"`가 우선이며, 기존 `runtimeRules.blend` / `blendFrames`는 migration source로만 사용한다. 저장 위치와 schema는 `11_DATA_MODEL.md`를 본다.
+
+## Action Formula Cards
+
+Action Formula Card는 키프레임 포즈 데이터가 아니다. 수식 라이브러리에서 클릭해 Action에 추가하는 독립 카드이며, 저장 위치는 `actionSettings[actionKey].formulas[]`다.
+
+MVP formula:
+
+- `velocity` / `속도`: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다.
+- `lock` / `고정`: `startFrame`~`endFrame` 동안 Action 시작 시점 facing/view direction을 유지한다.
+- `blend` / `보간`: Action 시작 구간에서 transition blend를 적용한다.
+- `cancel` / `캔슬`: `startFrame`~`endFrame` 동안만 다른 Action으로 interrupt 가능하다. 구간 밖에서는 Cancel OFF처럼 동작한다.
+- `link` / `연계`: 현재 실행 중인 Action과 frame 구간을 검사해 이 Action이 실행 가능한지 판단한다.
+
+공통 원칙:
+
+- 각 formula는 `type`, `enabled`, `startFrame`, `endFrame`을 가진다.
+- Editor UI는 Modifier Mini Timeline과 같은 `renderMiniTimelineRange()` 기반 block UI를 재사용한다.
+- 저장 위치는 `actionSettings[actionKey].formulas[]`이며 `actionOffsets`에는 저장하지 않는다.
+- 기존 `runtimeRules`는 UI에 표시하지 않고 normalize/migration 단계에서 `formulas[]`로 변환한다.
+- Formula별 구현은 `src/formulas/*_formula.js`에 둔다. `formula_registry.js`, `formula_editor_engine.js`, `formula_runtime_engine.js`는 registry를 통해 공통 처리한다.
 
 ## Action Mirror
 
@@ -319,9 +394,9 @@ Runtime에 반드시 남아야 함:
 - 충돌/피격/공격 overlap 계산.
 - Editor 원본을 수정하지 않는 Runtime 계산값 생성.
 
-Modifier Engine으로 이동 가능:
+Formula / Interaction 쪽으로 이동 가능:
 
-- 이동 / 가속 / 감속 같은 Action 실행 중 위치 보정.
+- 속도 같은 Action 실행 중 위치/velocity 보정.
 - 무적 시간 적용.
 - 색 변화 / tint / hit flash 성격의 Action별 표시 옵션.
 - 구르기 뒤 무적.
@@ -332,16 +407,17 @@ Modifier Engine으로 이동 가능:
 
 목표 Interaction:
 
-- collision: 충돌.
-- hurt: 피격.
-- attack: 공격.
-- guard: 방어.
+- collision: 충돌. Setup 기본값은 위치/크기/회전과 `noOverlap`, `pushPower`, `resistance`다.
+- hurt: 피격. Setup 기본값은 위치/크기/회전과 `hurtByAttack`, `hurtByCollision`, `invincibleTime`이다.
+- attack: 공격. Setup 기본값은 위치/크기/회전과 `damage`, `knockback`이다.
+- guard: 방어. Setup 기본값은 위치/크기/회전과 `block`, `deflect`, `parry` concept flag다.
 
 Editor 동작:
 
 ```text
-Interaction checkbox ON
-→ Action 데이터에 box 생성
+Interaction box click
+→ Interaction card 표시
+→ Action-level Interaction ON
 → Canvas에 box 표시
 → 기존 Transform handle로 위치/크기/회전 편집
 → Property scrub/stepper로 같은 값 편집
@@ -351,54 +427,62 @@ Interaction checkbox ON
 
 - 현재 `interaction_object_editor_controller.js`의 role/key 정의를 재사용한다.
 - 현재 Transform 모델 `x/y/ax/ay/w/h/rot/opacity`를 재사용한다.
+- `interaction_field_data.js`의 role별 option field 정의를 Setup 기본값과 Action override UI가 같이 사용한다.
 - Runtime `InteractionRegion`은 계속 계산값이다.
 - Runtime attack/hurt/collision/guard region을 Editor source로 쓰지 않는다.
+- Action에서 role을 켜면 `actionSettings[actionKey].interactions[interactionObjectKey]`가 해당 Action 전체에 적용된다.
+- 기존 Action frame 값은 compatibility source로 유지하며, 해당 frame에서 `active + role`이 켜진 경우 Action-level Interaction보다 우선한다.
+- Action-level Interaction 설정이 존재하는 Action에서는 `active + role`이 꺼진 box를 Runtime region으로 만들지 않는다.
+- Action-level Interaction 설정이 없는 Action만 Setup fallback box를 사용한다.
+- Interaction box를 클릭하면 box key에 대응하는 role 설정을 기본으로 펼친다. 예: `attackInteractionObject → attack`.
+- Attack knockback 방향은 별도 방향 필드를 저장하지 않고 MVP에서는 공격자 → 피격자 방향으로 해석한다.
 
 현재 구조와의 차이:
 
-- 현재는 fallback interaction object와 Action frame state가 분리되어 저장된다. 저장 위치는 `11_DATA_MODEL.md`를 본다.
+- 현재는 fallback interaction object, Action-level Interaction, Action frame state가 분리되어 저장된다. 저장 위치는 `11_DATA_MODEL.md`를 본다.
 - 목표는 Action 안에서 Interaction 생성 여부와 box 목록을 명시한다.
-- MVP에서는 기존 fallback object와 frame state를 compatibility source로 유지할 수 있다.
+- MVP에서는 기존 fallback object와 frame state를 compatibility source로 유지한다.
+- Collision `noOverlap`은 Runtime에서 겹친 Collision Box를 밀어내는 규칙으로 작동한다.
+- Hurt `hurtByAttack` / `hurtByCollision`은 Runtime 피격 조건으로 작동한다.
+- Guard `block`은 Attack damage를 막는 최소 규칙으로 작동한다.
+- Guard의 Deflect / Parry 세부 규칙, Finisher, 속성/상태이상 등은 Interaction MVP 이후 단계다.
 
-## Modifiers
+## Formula Runtime
 
 목표 구조:
 
 ```text
 Action
 ↓
-modifiers[]
+formulas[]
 ↓
-action_modifier_engine
+formula_runtime_engine
 ↓
 Runtime
 ```
 
 현재 MVP:
 
-- move: X/Y 목표 이동거리까지 `move.frames` 동안 이동한다. Action 전체 길이와 Move 길이는 독립이다.
-- velocity: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다. Runtime FPS 기준 속도로 변환하지 않는다.
-- accelerate: 공통 Mini Timeline 구간과 `linear` / `easeIn` / `easeOut` graph로 속도 분배를 바꾼다.
-- decelerate: 공통 Mini Timeline 구간과 `linear` / `easeIn` / `easeOut` graph로 속도 분배를 바꾼다.
-- 현재 저장 shape는 `11_DATA_MODEL.md`의 `modifiers`를 본다.
+- 속도: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다. Runtime FPS 기준 속도로 변환하지 않는다.
+- 고정: 구간 동안 Action 시작 facing을 유지한다.
+- 보간: Action 전환 포즈를 연결한다.
+- 캔슬: 구간 안에서만 다른 Action으로 전환 가능하게 한다.
+- 연계: 지정한 source Action의 구간 안에서만 target Action 실행을 허용한다.
+- 현재 저장 shape는 `11_DATA_MODEL.md`의 `actionSettings.formulas`를 본다.
 
 설계 원칙:
 
-- Modifier별 Runtime 적용 지점은 engine이 계산한 결과만 읽는다.
-- Velocity, Accelerate, Decelerate는 모두 같은 Modifier Mini Timeline UI를 사용해 `startFrame` / `endFrame` 작동 구간을 표현한다.
+- Formula별 Runtime 적용 지점은 `formula_runtime_engine`이 계산한 결과만 읽는다.
+- Formula Card는 모두 같은 Mini Timeline UI를 사용해 `startFrame` / `endFrame` 작동 구간을 표현한다.
 - Action Duration이 바뀌면 Mini Timeline block 수도 Action frame 수를 따라간다.
 - Velocity 카드 UI는 현재 `ACTION_FPS`를 읽어 `1s = {ACTION_FPS}f`를 표시하고, X/Y 입력에는 `px/f` 단위를 표시한다.
 - Velocity Runtime은 현재 Action Timeline progress로 적용 구간을 판단하고, `px/f` 값을 World Physics velocity state에 적용한다.
 - Runtime FPS가 60이든 120이든 `5 px/f`는 Action Timeline 1프레임 동안 5px 이동한다.
 - Gravity는 Action Modifier가 아니라 Stage World Physics acceleration이다. 단위는 `px/f²`이며, 매 Action Timeline frame마다 `vy += gravity` 관계로 해석한다.
 - Inertia는 velocity가 0이 되기까지 걸리는 `frame` 수다.
-- 장기 방향은 Move / Accelerate / Decelerate를 별도 전용 시스템으로 늘리지 않고 Velocity + Graph + Mini Timeline 조합으로 통합하는 것이다.
-- 이동 수식은 Timeline 원본 포즈 데이터를 수정하지 않고, 현재 실행 중인 Action의 프레임별 이동 가중치 차분만 actor 위치에 더한다.
-- 가속/감속을 켜도 Move 구간의 전체 가중치를 정규화해 `move`의 총 이동량은 유지한다.
 - 관성은 Action modifier가 아니라 Stage World Physics의 `Inertia` Runtime Rule에서 처리한다.
-- 현재 MVP의 Move modifier는 position delta 방식으로 유지하는 Legacy 후보이며, 다음 단계에서 Velocity 기반 구조로 전환할 수 있다.
-- `startFrame == 1`인 Accelerate / Decelerate는 Trigger 시작 시 1회 적용되는 성격으로 다루며, Press Loop의 loop마다 다시 발동하지 않는다.
-- Modifier 설정 UI는 Property 공통 입력을 우선 사용한다.
+- 이동 / 가속 / 감속 수식은 Formula Library에서 제거했다.
+- Formula 설정 UI는 공통 Formula Editor를 사용한다.
 
 ## Recommended Implementation Order
 
@@ -407,7 +491,7 @@ Runtime
 3. Skill 데이터 생성만 추가한다.
 4. Skill Timeline을 기존 Timeline adapter에 연결한다.
 5. Interaction checkbox와 box 생성을 붙인다.
-6. 이동 / 가속 / 감속 수식 MVP를 Runtime에 최소 연결한다.
+6. 속도 / 고정 / 보간 / 캔슬 / 연계 Formula MVP를 Runtime에 최소 연결한다.
 7. Runtime Skill trigger와 Timeline playback을 연결한다.
 
 ## Risks

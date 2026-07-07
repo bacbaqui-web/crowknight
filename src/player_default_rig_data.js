@@ -37,6 +37,9 @@ export const DEFAULT_PLAYER_RIG = {
     baseH: 96,
     rot: 0,
     opacity: 1,
+    noOverlap: 1,
+    pushPower: 0,
+    resistance: 1,
   },
   [HURT_INTERACTION_OBJECT_KEY]: {
     type: INTERACTION_OBJECT_PART_TYPE,
@@ -51,6 +54,9 @@ export const DEFAULT_PLAYER_RIG = {
     baseH: 96,
     rot: 0,
     opacity: 1,
+    hurtByAttack: 1,
+    hurtByCollision: 0,
+    invincibleTime: 0,
   },
   head: {
     x: -32,
@@ -116,6 +122,9 @@ export const DEFAULT_PLAYER_RIG = {
     baseH: 72,
     rot: 0,
     opacity: 1,
+    block: 1,
+    deflect: 0,
+    parry: 0,
   },
   upperArmL: {
     x: -14,
@@ -283,6 +292,8 @@ export const DEFAULT_PLAYER_RIG = {
     baseH: 24,
     rot: 0,
     opacity: 1,
+    damage: 1,
+    knockback: 0,
   },
   neck: { x: 0, y: -82, rot: 0 },
   shoulderL: {

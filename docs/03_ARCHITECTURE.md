@@ -55,6 +55,7 @@ Timeline Target
 
 - `Property`는 Transform 전용이다. `x/y`, `w/h`, `rot`, `opacity`, anchor 편집만 담당한다.
 - `Interaction`은 충돌, 피격, 공격, 방어 같은 상호작용 state와 세부 값을 담당한다.
+- Interaction Box는 Setup fallback object를 기본값으로 두고, Action frame에서 필요한 값만 override한다.
 - `Modifiers`는 Action 실행 중 적용되는 수식 목록과 설정값을 담당한다. 현재 MVP는 Move, Velocity, Accelerate, Decelerate를 노출한다.
 - Modifier Mini Timeline은 Action Timeline 길이를 기준으로 modifier 작동 구간을 표시하는 공통 UI다.
 - Modifier 방향은 Velocity를 중심으로 통합한다. Velocity 값은 Action Timeline frame 기준 `px/f`로 표현하고, Runtime FPS 변환 없이 World Physics velocity state에 적용한다.

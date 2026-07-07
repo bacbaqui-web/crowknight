@@ -22,6 +22,8 @@ export function getMainDomElements() {
     resultKills: document.querySelector('#resultKills'),
     hudSurvivalTime: document.querySelector('#hudSurvivalTime'),
     hudKills: document.querySelector('#hudKills'),
+    screenZoomRange: document.querySelector('#screenZoomRange'),
+    screenZoomValue: document.querySelector('#screenZoomValue'),
     retryRunButton: document.querySelector('#retryRun'),
   };
 }
