@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "enemy_01",
+  "type": "enemy",
+  "label": "에너미",
+  "name": "에너미",
+  "x": 260,
+  "folder": "mobs/enemy_01",
+  "storageFolder": "mobs/enemy_01",
+  "group": "mobs",
+  "deleted": false,
+  "psdFileName": "enemy.psd",
+  "tint": "#ef767a",
+  "updatedAt": 1782954240000
+}

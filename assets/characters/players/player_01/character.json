@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "player_01",
+  "type": "player",
+  "label": "까마귀",
+  "name": "까마귀",
+  "x": 480,
+  "folder": "players/player_01",
+  "storageFolder": "players/player_01",
+  "group": "players",
+  "deleted": false,
+  "psdFileName": "player.psd",
+  "tint": "#7cc3a2",
+  "updatedAt": 1782954240000
+}
