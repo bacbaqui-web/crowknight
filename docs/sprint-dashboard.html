@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>custom keyframe frameGroup/master preview 적용 수정</p>
+            <p>목표이동 1프레임 도달 수정</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>custom keyframe의 master transform도 start / end와 같은 preview pose에 적용한다.</p>
+            <p>목표이동 Formula가 발동 frame에 목표 좌표까지 즉시 또는 지정 frame 수 동안 도달하게 한다.</p>
           </div>
         </div>
       </section>
@@ -199,31 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>custom keyframe frameGroup/master preview 적용 수정</p>
+            <p>목표이동 도달 프레임 슬라이더 추가</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>custom keyframe의 part edit과 master edit 경로 차이를 확인한다.</li>
-              <li>custom master keyframe 값이 preview pose 전체에 적용되게 한다.</li>
-              <li>Runtime / Renderer / 저장 구조 변경 없이 preview source만 보정한다.</li>
+              <li>목표이동의 도달 속도를 0~10 frame으로 조절한다.</li>
+              <li>0은 즉시 도달, 1~10은 해당 frame 수 동안 목표까지 이동하게 한다.</li>
+              <li>기존 Formula 카드 구조를 유지한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>
-                `timeline_preview_helper.js`가 workflow active metadata를 기준으로 Action preview를 유지하게 했다.
-              </li>
-              <li>custom keyframe 선택 후 `actionPreview.t`가 custom frame 값을 가리키는 것을 확인했다.</li>
-              <li>`player.getPartOffset('master')`가 custom master keyframe 값을 반환하는 데이터 QA를 확인했다.</li>
+              <li>`moveFrames` 값을 목표이동 Formula에 추가했다.</li>
+              <li>목표이동 카드에 도달 프레임 슬라이더를 추가했다.</li>
+              <li>Runtime에서 시작 위치부터 목표 좌표까지 지정 frame 수 동안 보간한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>사용자 브라우저에서 custom frameGroup Properties 입력 / handle drag 체감 QA가 필요하다.</li>
-              <li>복사/붙여넣기 수동 QA는 직전 Task의 남은 범위로 유지한다.</li>
+              <li>브라우저에서 0 / 1 / 10 frame 체감 QA가 필요하다.</li>
+              <li>낙하찍기 / 돌진 / 백스텝별 적정 기본값은 제작 중 조정한다.</li>
             </ul>
           </div>
         </div>

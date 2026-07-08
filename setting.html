@@ -46,10 +46,10 @@
           <button type="button" data-tap-code="KeyQ"><kbd>Q</kbd><span>공격</span></button>
           <button type="button" data-tap-code="KeyW"><kbd>W</kbd><span>구르기</span></button>
           <button type="button" data-hold-code="KeyE"><kbd>E</kbd><span>방어</span></button>
-          <label class="screen-zoom-control" title="화면 확대">
-            <span>화면</span>
-            <input id="screenZoomRange" type="range" min="1" max="3" step="0.1" value="1" />
-            <output id="screenZoomValue" for="screenZoomRange">1.0x</output>
+          <label class="screen-zoom-control" title="게임 화면 배율">
+            <span>게임 화면 배율</span>
+            <input id="screenZoomRange" type="range" min="0.1" max="3" step="0.1" value="1.5" />
+            <output id="screenZoomValue" for="screenZoomRange">1.5x</output>
           </label>
         </div>
         <div class="battle-controls" aria-label="전투 제어">
@@ -316,6 +316,9 @@
                 </button>
                 <div id="actionMenu" class="control-more-menu-panel" role="menu" hidden>
                   <button id="actionAdd" class="control-menu-item" type="button" role="menuitem">새 액션</button>
+                  <button id="actionDuplicate" class="control-menu-item" type="button" role="menuitem">
+                    액션 복제
+                  </button>
                   <button id="actionMove" class="control-menu-item" type="button" role="menuitem">액션 이동</button>
                   <button id="actionDelete" class="control-menu-item danger" type="button" role="menuitem">
                     액션 삭제

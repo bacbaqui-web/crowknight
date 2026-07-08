@@ -55,6 +55,7 @@ export function initializeTuningPanelControls({
     actionSelect,
     actionGroupSelect,
     actionAdd,
+    actionDuplicate,
     actionMove,
     actionDelete,
     actionName,
@@ -141,6 +142,7 @@ export function initializeTuningPanelControls({
     {
       actionGroupSelect,
       actionAdd,
+      actionDuplicate,
       actionMove,
       actionDelete,
       actionName,

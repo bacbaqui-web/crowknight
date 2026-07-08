@@ -63,11 +63,14 @@ tuning.actionSettings[actionKey]
   editPivot: { x: 0, y: 0 },
   interactions: {},
   formulas: [
+    { type: "cast", enabled: true, mode: "repeat", repeatStartFrame: 2, repeatEndFrame: 6, releaseMode: "immediate" },
     { type: "velocity", enabled: true, startFrame: 1, endFrame: 10, x: 5, y: 0, mode: "set" },
-    { type: "lock", enabled: true, startFrame: 1, endFrame: 8 },
+    { type: "inertia", enabled: true, startFrame: 1, endFrame: 10, addInertia: 40, applyTarget: "air" },
+    { type: "lock", enabled: true, startFrame: 1, endFrame: 8, direction: "right" },
     { type: "blend", enabled: true, startFrame: 1, endFrame: 3, frames: 3 },
     { type: "cancel", enabled: true, startFrame: 5, endFrame: 12, priority: 0 },
-    { type: "link", enabled: true, fromActions: ["attack1"], startFrame: 6, endFrame: 12 }
+    { type: "link", enabled: true, fromActions: ["attack1"], startFrame: 6, endFrame: 12 },
+    { type: "cooldown", enabled: true, seconds: 0.5 }
   ]
 }
 ```
@@ -83,13 +86,17 @@ tuning.actionSettings[actionKey]
 - `group`: Editor 목록과 기본자세 fallback 선택에 쓰는 Action 그룹. `base`, `movement`, `attack`, `special` 중 하나이며 custom Action 기본값은 `movement`다. 기존 `idle`은 `base`로 normalize한다.
 - `editPivot`: Action Timeline에서 파츠 선택 없이 전체 키프레임을 그룹처럼 편집할 때 쓰는 Action 공통 Pivot이다. `{ x, y }` 형태이며 기본값은 `{ x: 0, y: 0 }`이다. Pivot은 Action별로 하나만 저장하고 키프레임별로 저장하지 않는다.
 - `interactions`: Action 단위 Interaction 설정이다. Interaction box를 Action 탭에서 클릭하면 Timeline keyframe 선택과 무관하게 이 위치에 저장한다.
-- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `속도`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
+- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `시전`, `쿨타임`, `속도`, `목표이동`, `관성`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
 - `runtimeRules`: legacy compatibility 저장 위치다. UI에는 직접 표시하지 않으며 normalize/migration 단계에서 `formulas[]`로 변환한다.
 
 Formula Card:
 
+- `cast` / UI `시전`: Trigger가 맞은 뒤 Action 입력 방식을 정한다. `mode`, `repeatStartFrame`, `repeatEndFrame`, `releaseMode`를 가진다. Formula가 없으면 기본 동작은 `tap` Event다. `press`와 `repeat`도 Action 시작은 pressed Event로만 일어나며, 시작된 뒤 held input State로 유지 / 반복 / release를 처리한다. 현재 Action이 비어 있거나 기본자세로 돌아온 상태에서는 held State로 복귀 Action을 다시 시작할 수 있다.
+- `cooldown` / UI `쿨타임`: 이 Action이 실행된 뒤 다시 실행 가능해지기까지 필요한 초 단위 시간을 가진다. `seconds`를 사용하며 기본값은 `0`이다.
 - `velocity` / UI `속도`: `startFrame~endFrame` 동안 `px/f` velocity를 적용한다. `x`, `y`, `mode`를 가진다.
-- `lock` / UI `고정`: 구간 동안 Action 시작 시점 facing/view direction을 유지한다.
+- `targetMove` / UI `목표이동`: `triggerFrame`에 발동해 그림자 / 발밑 기준 목표 좌표까지 이동한다. `triggerFrame`, `x`, `y`, `moveFrames`를 가진다. `moveFrames`는 `0`이면 즉시 도달, `1~10`이면 해당 Action Timeline frame 수 동안 목표까지 보간한다. Mini Timeline은 사용하지 않는다.
+- `inertia` / UI `관성`: `startFrame~endFrame` 동안 World Physics 기본 관성에 `addInertia`를 더한다. `applyTarget`은 `ground`, `air`, `all` 중 하나다.
+- `lock` / UI `고정`: 구간 동안 지정한 방향을 바라보게 한다. `direction`은 `left`, `right` 중 하나이며, 기존 direction 없는 데이터는 `right`로 normalize한다.
 - `blend` / UI `보간`: Action 전환 포즈 연결을 적용한다. `frames`를 가진다.
 - `cancel` / UI `캔슬`: 구간 동안만 다른 Action으로 interrupt 가능하다. `priority`를 가진다.
 - `link` / UI `연계`: Trigger가 맞은 뒤 현재 실행 중인 Action과 frame 구간을 검사한다. `fromActions`, `startFrame`, `endFrame`을 가진다.
@@ -138,7 +145,7 @@ tuning.customActions[]
 { type: "holdCombo", hold: "ArrowUp", press: "W" }
 ```
 
-Trigger 실행 모드:
+Trigger 실행 모드 legacy:
 
 ```js
 triggerMode: 'tap' | 'press' | 'pressLoop';
@@ -148,6 +155,7 @@ triggerMode: 'tap' | 'press' | 'pressLoop';
 - `press`: Trigger 입력이 유지되는 동안만 Action을 진행한다. release하면 즉시 종료하고, duration 끝에 도달해도 종료한다.
 - `pressLoop`: Trigger 입력이 유지되는 동안 Action을 유지한다. release하면 즉시 종료하고, duration 이후 progress는 Timeline playback 값을 따른다.
 - `repeatWhileHeld: true`는 legacy compatibility 입력으로 읽는다. 명시적 `triggerMode`가 없으면 현재 normalize 단계에서 `press`로 해석한다.
+- 새 입력 방식은 `actionSettings[actionKey].formulas[]`의 `type: "cast"`가 우선한다. `cast` Formula가 없으면 기존 Trigger mode compatibility 값을 fallback으로 사용한다.
 - `actionSettings[actionKey].mirror`가 `true`이면 Runtime Trigger matching에서 `ArrowLeft` / `ArrowRight`를 좌우 대칭 입력으로 해석할 수 있다. 반대 방향 Trigger를 `actionTriggers`에 추가 저장하지 않는다.
 
 지원 key:
@@ -396,17 +404,30 @@ sceneSession.stageRules
 ```js
 {
   gravity: 1,
-  inertia: 30
+  inertia: 30,
+  airControl: 0,
+  cameraShakePower: 4,
+  cameraShakeFrames: 6,
+  cameraShakeDecay: 1
 }
 ```
 
 - `gravity`: 공중 상태에서 매 Action Timeline frame `vy`에 더하는 값. 단위는 `px/f²`다.
 - `inertia`: 입력이나 impulse가 멈춘 뒤 현재 velocity가 0이 되기까지 걸리는 frame 수. `0`이면 즉시 멈추고, 값이 클수록 더 오래 미끄러진다.
+- `airControl`: 공중 상태에서 좌우 입력이 들어올 때 매 Action Timeline frame `vx`에 더하는 값. 단위는 `px/f`이며 기본값은 `0`이다.
+- `cameraShakePower`: `attackInteractionObject`와 `hurtInteractionObject`가 실제로 닿아 hit 처리에 도달했을 때 적용할 흔들림 강도다.
+- `cameraShakeFrames`: hit camera shake 지속 frame 수다.
+- `cameraShakeDecay`: 흔들림을 시간에 따라 점점 약하게 만들지 여부다.
 
-World Physics UI 표시 규칙:
+스테이지 물리 UI 표시 규칙:
 
-- Gravity 입력 오른쪽에는 `px/f²`를 표시한다.
-- Inertia 입력 오른쪽에는 `frame`을 표시한다.
+- `gravity`는 `중력`으로 표시하고 입력 오른쪽에는 `px/f²`를 표시한다.
+- `inertia`는 `관성`으로 표시하고 입력 오른쪽에는 `frame`을 표시한다.
+- `airControl`은 `공중 조작`으로 표시하고 입력 오른쪽에는 `px/f`를 표시한다.
+- `cameraShakePower`는 `흔들림 강도`로 표시한다.
+- `cameraShakeFrames`는 `흔들림 시간`으로 표시하고 입력 오른쪽에는 `frame`을 표시한다.
+- `cameraShakeDecay`는 `점점 약해짐`으로 표시한다.
+- Camera Shake는 항상 hit 접촉 규칙으로 켜져 있으며, 별도 ON/OFF 토글을 저장하지 않는다.
 
 ## Project State
 

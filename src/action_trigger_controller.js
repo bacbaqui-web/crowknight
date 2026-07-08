@@ -271,6 +271,7 @@ function syncTriggerRepeatToggle(elements, trigger, canEdit) {
   const triggerMode = actionTriggerModeFromTrigger(trigger);
   const active = triggerMode !== 'tap';
   const title = actionTriggerModeTitle(triggerMode);
+  elements.actionTriggerRepeat.hidden = true;
   elements.actionTriggerRepeat.disabled = !canEdit;
   elements.actionTriggerRepeat.classList.toggle('is-active', active);
   elements.actionTriggerRepeat.dataset.triggerMode = triggerMode;

@@ -82,6 +82,7 @@ export const INTERACTION_DETAIL_GROUPS = Object.freeze({
   attack: [
     {
       label: 'Attack',
+      toggles: [],
       props: [
         { prop: 'damage', label: 'Damage' },
         { prop: 'knockback', label: 'Knockback' },

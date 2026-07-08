@@ -35,7 +35,7 @@ New Feature
 
 - Timeline은 움직임이다. 위치, 크기, 회전, opacity, timing처럼 시간에 따라 변하는 제작 데이터다.
 - Interaction은 다른 객체와의 관계다. 충돌, 피격, 공격, 방어처럼 서로 만났을 때 의미가 생기는 데이터다.
-- Formula는 실행 중 적용되는 Action 단위 수식이다. 현재 MVP에서는 속도, 고정, 보간, 캔슬, 연계를 같은 Formula Card 구조로 다룬다.
+- Formula는 실행 중 적용되는 Action 단위 수식이다. 현재 MVP에서는 시전, 쿨타임, 속도, 목표이동, 고정, 보간, 캔슬, 연계를 같은 Formula Card 구조로 다룬다.
 - Runtime Rule은 게임 전체에 필요한 실행 규칙이다. 입력 수집, 중력, 월드 경계, HP, score, overlap 계산처럼 특정 Action 이름에 종속되지 않는 규칙이다.
 
 새 Action은 위 블록을 조합해서 만든다. Runtime은 `attack1`, `roll`, `fireSlash` 같은 이름을 보고 특별 처리하지 않는다.
@@ -219,16 +219,15 @@ MVP 지원 형태:
 
 - Trigger는 Runtime에서 Action 이름을 보고 분기하기 위한 장치가 아니다.
 - Runtime은 Trigger 데이터를 해석해 Custom Action Timeline 실행을 요청한다.
-- Trigger는 "무슨 키를 눌렀는가"만 담당한다. 지금 어떤 Action 중이라 실행 가능한지는 Condition / Link Rule 같은 실행 조건이 담당한다.
-- Trigger Mode는 Action을 언제 유지/종료할지 정한다. Timeline playback은 진행 중인 Timeline을 어떻게 재생할지 정한다.
-- `tap`: 키를 누르는 순간 Action을 끝까지 한 번 실행한다. release와 관계없다. 공격, 피격, 회피, 스킬에 적합하다.
-- `press`: 누르고 있는 동안만 Action이 진행된다. release하면 즉시 종료하고, duration 끝에 도달하면 반복하지 않고 종료한다. variable jump처럼 누른 길이만큼 진행되는 Action에 적합하다.
-- `pressLoop`: 누르고 있는 동안 Action을 유지한다. release하면 즉시 종료하고, duration 이후 progress는 Timeline playback이 결정한다. 이동, 차지, 활강처럼 입력 유지 중 계속 진행되는 Action에 적합하다.
-- `pressLoop`에서 `playback: loop`이면 progress를 0으로 순환하고 move modifier delta도 다음 loop로 계속 적용한다. `pingpong`이면 왕복 progress 기준으로 진행하고, `once`이면 끝 프레임에서 유지한다.
+- Trigger는 "무슨 키를 눌렀는가"만 담당한다. 입력 방식은 `시전` Formula가 담당한다.
+- 모든 Action 시작은 pressed Event로 시작한다. `press` / `repeat` 시전도 시작 Trigger는 Event이며, held State는 이미 시작된 Action을 유지하거나 기본 상태에서 복귀하는 데만 사용한다.
+- 지금 어떤 Action 중이라 실행 가능한지는 Condition / Link Rule 같은 실행 조건이 담당한다.
+- legacy Trigger Mode(`tap`, `press`, `pressLoop`)는 기존 저장 데이터 compatibility로만 유지한다.
+- `시전` Formula가 없으면 Runtime은 legacy Trigger Mode를 fallback으로 읽으며, 새 Action의 기본 동작은 `tap` Event다.
 - Accelerate / Decelerate는 Trigger가 새로 시작된 최초 1회에만 적용한다. `pressLoop`의 loop마다 다시 적용하지 않는다.
-- Editor에서는 Trigger Mode 버튼을 Action Timeline 설정 줄에 두며, `pressLoop`는 UI에서 Repeat로 표시한다.
 - 저장 위치와 schema는 `11_DATA_MODEL.md`를 본다. Legacy `repeatWhileHeld`는 compatibility 입력으로만 유지한다.
 - 실행 중 다른 Trigger Action이 입력되면 Action 설정의 interrupt option을 보고 현재 Action을 즉시 교체할 수 있다.
+- Cancel / interrupt 판정은 Event Action 전환에만 적용한다. held State 복귀는 진행 중인 Action을 cancel하지 않는다.
 - Editor에서는 이 interrupt option을 Action Timeline 설정 줄의 Cancel 버튼으로 제어한다. Cancel ON은 즉시 전환, Cancel OFF는 현재 Action 종료까지 유지한다.
 - Basic Action과 Custom Action 모두 Trigger Editor 데이터를 가질 수 있다.
 - 기존 물리 Runtime이 남아 있는 Basic Action은 migration이 끝날 때까지 `runtimeMode: "legacy"`로 둔다.
@@ -339,11 +338,48 @@ Action Formula Card는 키프레임 포즈 데이터가 아니다. 수식 라이
 
 MVP formula:
 
+- `cast` / `시전`: Trigger가 맞은 뒤 Action 입력 방식을 정한다. Formula가 없으면 기본 동작은 탭이다.
+- `cooldown` / `쿨타임`: Action이 실행된 뒤 다시 실행되기까지 필요한 초 단위 대기 시간을 정한다.
 - `velocity` / `속도`: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다.
-- `lock` / `고정`: `startFrame`~`endFrame` 동안 Action 시작 시점 facing/view direction을 유지한다.
+- `targetMove` / `목표이동`: `triggerFrame`에 발동해 그림자 / 발밑 기준 목표 좌표까지 이동한다. `moveFrames=0`이면 즉시 도달하고, `1~10`이면 해당 Action Timeline frame 수 동안 목표까지 보간한다. 목표에 도달하면 종료한다.
+- `inertia` / `관성`: `startFrame`~`endFrame` 구간에서 World Physics 기본 관성에 추가 관성을 더한다.
+- `lock` / `고정`: `startFrame`~`endFrame` 동안 선택한 방향을 바라보게 한다.
 - `blend` / `보간`: Action 시작 구간에서 transition blend를 적용한다.
 - `cancel` / `캔슬`: `startFrame`~`endFrame` 동안만 다른 Action으로 interrupt 가능하다. 구간 밖에서는 Cancel OFF처럼 동작한다.
 - `link` / `연계`: 현재 실행 중인 Action과 frame 구간을 검사해 이 Action이 실행 가능한지 판단한다.
+
+시전 Formula:
+
+- `tap` / `탭`: Event다. 버튼을 누른 순간만 Trigger를 평가하고 한 번 실행한다.
+- `press` / `프레스`: 시작은 Event다. 버튼을 누른 순간 한 번 Action을 시작하고, 시작된 뒤에는 held State로 유지한다.
+- `repeat` / `리핏`: 시작은 Event다. 버튼을 누른 순간 한 번 Action을 시작하고, 시작된 뒤에는 held State로 `repeatStartFrame`~`repeatEndFrame` 구간을 반복한다.
+- `releaseMode: "immediate"`: 버튼을 떼면 즉시 종료한다.
+- `releaseMode: "finish"`: 프레스는 버튼을 떼도 Action을 끝까지 재생하고, 리핏은 버튼을 떼면 현재 반복 구간의 끝 frame까지 재생한다.
+- Event Action은 State 복귀보다 우선한다. 예: 이동 State가 held 상태여도 공격 Event가 pressed되면 공격을 먼저 실행한다.
+- held State 복귀는 현재 Action이 끝났거나 `idle` / `fall` 같은 기본 상태일 때만 Action 시작 후보가 된다. 진행 중인 공격 / 피격 / 구르기 Action을 held State가 cancel하지 않는다.
+- State Action은 held input을 복귀에 사용하므로, 공중에서 조건이 막힌 상태로 방향키를 계속 누르고 있다가 착지하면 별도 keydown 없이 이동 Action을 시작할 수 있다.
+
+쿨타임 Formula:
+
+- `seconds`: 이 Action이 한 번 시작된 뒤 다시 시작 가능해지기까지 필요한 시간이다.
+- Trigger가 맞아도 현재 시간이 cooldown 종료 전이면 Action을 시작하지 않는다.
+- Timeline 구간을 가지지 않고 Action-level 실행 조건으로만 작동한다.
+
+관성 Formula:
+
+- 직접 x/y 속도나 위치 이동을 만들지 않는다.
+- 이미 생긴 속도가 얼마나 오래 유지되는지만 조절한다.
+- Runtime에서는 `effectiveInertia = worldPhysics.inertia + addInertia`로 계산한다.
+- `applyTarget: "air"`이면 공중 상태에서만 추가 관성이 적용된다.
+- `applyTarget: "ground"`이면 지상 상태에서만 추가 관성이 적용된다.
+- `applyTarget: "all"`이면 지상/공중 모두 적용된다.
+
+고정 Formula:
+
+- `direction: "left"`이면 활성 구간 동안 왼쪽을 바라본다.
+- `direction: "right"`이면 활성 구간 동안 오른쪽을 바라본다.
+- direction이 없는 legacy 데이터는 `right`로 normalize한다.
+- mirror Action에서 원본 기준 direction은 Runtime에서 자동 반전된다. 예: 원본 `right` + mirror 실행이면 실제 facing은 `left`다.
 
 공통 원칙:
 
@@ -390,6 +426,7 @@ Runtime에 반드시 남아야 함:
 
 - 입력 수집과 현재 눌림/방금 눌림 상태.
 - 위치, 속도, 중력, 월드 경계 계산.
+- 공중 조작은 Action이 아니라 World Physics 이동 보정이다. `onGround === false`일 때 좌우 입력을 현재 Action 위에 얹어 `vx += airControl` 방식으로 적용하며, 좌/우 이동 입력 자체로 Action 전환이나 Cancel을 발생시키지 않는다.
 - HP, 죽음, respawn, score 같은 게임 규칙.
 - 충돌/피격/공격 overlap 계산.
 - Editor 원본을 수정하지 않는 Runtime 계산값 생성.
@@ -409,7 +446,7 @@ Formula / Interaction 쪽으로 이동 가능:
 
 - collision: 충돌. Setup 기본값은 위치/크기/회전과 `noOverlap`, `pushPower`, `resistance`다.
 - hurt: 피격. Setup 기본값은 위치/크기/회전과 `hurtByAttack`, `hurtByCollision`, `invincibleTime`이다.
-- attack: 공격. Setup 기본값은 위치/크기/회전과 `damage`, `knockback`이다.
+- attack: 공격. Setup 기본값은 위치/크기/회전과 `damage`, `knockback` 설정이다.
 - guard: 방어. Setup 기본값은 위치/크기/회전과 `block`, `deflect`, `parry` concept flag다.
 
 Editor 동작:
@@ -436,6 +473,7 @@ Interaction box click
 - Action-level Interaction 설정이 없는 Action만 Setup fallback box를 사용한다.
 - Interaction box를 클릭하면 box key에 대응하는 role 설정을 기본으로 펼친다. 예: `attackInteractionObject → attack`.
 - Attack knockback 방향은 별도 방향 필드를 저장하지 않고 MVP에서는 공격자 → 피격자 방향으로 해석한다.
+- Camera Shake는 Attack Interaction에 저장하지 않는다. 공격박스가 피격박스에 실제로 닿아 damage / knockback 처리 위치에 도달했을 때 Stage의 스테이지 물리 hit camera shake 설정을 읽어 실행한다.
 
 현재 구조와의 차이:
 
@@ -464,7 +502,7 @@ Runtime
 현재 MVP:
 
 - 속도: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다. Runtime FPS 기준 속도로 변환하지 않는다.
-- 고정: 구간 동안 Action 시작 facing을 유지한다.
+- 고정: 구간 동안 선택한 direction으로 facing을 강제한다.
 - 보간: Action 전환 포즈를 연결한다.
 - 캔슬: 구간 안에서만 다른 Action으로 전환 가능하게 한다.
 - 연계: 지정한 source Action의 구간 안에서만 target Action 실행을 허용한다.
@@ -478,9 +516,10 @@ Runtime
 - Velocity 카드 UI는 현재 `ACTION_FPS`를 읽어 `1s = {ACTION_FPS}f`를 표시하고, X/Y 입력에는 `px/f` 단위를 표시한다.
 - Velocity Runtime은 현재 Action Timeline progress로 적용 구간을 판단하고, `px/f` 값을 World Physics velocity state에 적용한다.
 - Runtime FPS가 60이든 120이든 `5 px/f`는 Action Timeline 1프레임 동안 5px 이동한다.
-- Gravity는 Action Modifier가 아니라 Stage World Physics acceleration이다. 단위는 `px/f²`이며, 매 Action Timeline frame마다 `vy += gravity` 관계로 해석한다.
-- Inertia는 velocity가 0이 되기까지 걸리는 `frame` 수다.
-- 관성은 Action modifier가 아니라 Stage World Physics의 `Inertia` Runtime Rule에서 처리한다.
+- 중력은 Action Modifier가 아니라 Stage World Physics acceleration이다. 단위는 `px/f²`이며, 매 Action Timeline frame마다 `vy += gravity` 관계로 해석한다.
+- 관성은 velocity가 0이 되기까지 걸리는 `frame` 수다.
+- 공중 조작은 Stage World Physics 값이며 단위는 `px/f`다. 공중에서 좌우 입력이 있을 때만 현재 `vx`에 더하고, 지상에서는 적용하지 않는다.
+- 기본 관성은 Stage 스테이지 물리의 `관성` Runtime Rule에서 처리하고, Action별 `관성` Formula는 활성 구간 동안 이 값에 추가 관성을 더한다.
 - 이동 / 가속 / 감속 수식은 Formula Library에서 제거했다.
 - Formula 설정 UI는 공통 Formula Editor를 사용한다.
 

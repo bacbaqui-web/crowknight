@@ -93,8 +93,8 @@ export const DEFAULT_PLAYER_RIG = {
     anchorMode: 'local',
   },
   shield: {
-    x: 28,
-    y: -70,
+    x: -24,
+    y: -18,
     ax: 24,
     ay: 18,
     w: 48,

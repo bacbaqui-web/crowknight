@@ -98,7 +98,7 @@ export function drawPuppetLayer(player, ctx, layer, pose, rig) {
       );
     },
     cape: () => drawPuppetImagePart(player, ctx, player.assets.cape, rig.cape, 0, 0, pose.body * 0.4, 'cape'),
-    shield: () => drawPuppetImagePart(player, ctx, player.assets.shield, rig.shield, 0, 0, 0, 'shield'),
+    shield: () => drawPuppetShield(player, ctx, pose, rig),
     leftArm: () => {
       const shoulder = player.getPartOffset('shoulderL');
       const x = rig.shoulderL.x + shoulder.x;
@@ -248,6 +248,28 @@ export function drawPuppetWeapon(player, ctx, pose, rig) {
   ctx.translate(0, rig.lowerArmR.h - 4);
   ctx.rotate(pose.weapon);
   drawPuppetImagePart(player, ctx, player.assets.weapon, rig.weapon, 0, 0, 0, 'weapon');
+  ctx.restore();
+}
+
+export function drawPuppetShield(player, ctx, pose, rig) {
+  const shoulder = player.getPartOffset('shoulderL');
+  const x = rig.shoulderL.x + shoulder.x;
+  const y = rig.shoulderL.y + shoulder.y;
+  const group = puppetGroupControl(rig.shoulderL, shoulder);
+
+  ctx.save();
+  ctx.globalAlpha *= clamp(group.opacity ?? 1, 0, 1);
+  ctx.translate(
+    x + Number(group.anchorOffsetX || 0) + Number(group.ax || 0),
+    y + Number(group.anchorOffsetY || 0) + Number(group.ay || 0)
+  );
+  ctx.scale(Math.max(0.05, group.w ?? 1), Math.max(0.05, group.h ?? 1));
+  ctx.rotate(pose.upperArmL + deg((rig.shoulderL.rot || 0) + (shoulder.rot || 0)));
+  ctx.translate(-Number(group.ax || 0), -Number(group.ay || 0));
+  ctx.translate(0, rig.upperArmL.h - 8);
+  ctx.rotate(pose.lowerArmL);
+  ctx.translate(0, rig.lowerArmL.h - 4);
+  drawPuppetImagePart(player, ctx, player.assets.shield, rig.shield, 0, 0, 0, 'shield');
   ctx.restore();
 }
 

@@ -1016,6 +1016,14 @@
   gap: 5px;
 }
 
+.modifier-applied-card > summary {
+  cursor: default;
+}
+
+.modifier-applied-card > summary::after {
+  content: none;
+}
+
 .interaction-detail-title {
   display: flex;
   justify-content: space-between;
@@ -1036,6 +1044,38 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.formula-card-title-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  flex: 1;
+  gap: 8px;
+}
+
+.formula-reset-button {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: 1px solid #596176;
+  border-radius: 999px;
+  background: #151a24;
+  color: #d9deec;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.formula-reset-button:hover,
+.formula-reset-button:focus-visible {
+  border-color: #8edab8;
+  color: #f5f7fb;
 }
 
 .modifier-title-meta {
@@ -1126,13 +1166,45 @@
 
 .modifier-mini-timeline-row {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
   min-height: 32px;
   color: #cdd4e4;
   font-size: 13px;
+}
+
+.modifier-mini-timeline-frame-input {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  border: 1px solid #3a4050;
+  border-radius: 4px;
+  background: #10151f;
+  color: #e7ecf6;
+  padding: 0 14px 0 4px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.number-stepper-control.modifier-mini-timeline-frame-stepper {
+  min-width: 0;
+  width: 36px;
+}
+
+.modifier-mini-timeline-frame-stepper input[type='number'] {
+  height: 28px;
+  padding-right: 14px;
+}
+
+.modifier-mini-timeline-frame-stepper .number-stepper-buttons {
+  width: 12px;
+}
+
+.modifier-mini-timeline-frame-stepper .number-stepper-buttons button {
+  font-size: 7px;
 }
 
 .modifier-mini-timeline-track {
@@ -1172,6 +1244,235 @@
   color: #f5f7fb;
   padding: 3px 6px;
   font: inherit;
+}
+
+.velocity-formula-inline-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.velocity-formula-input {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.velocity-formula-input input {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  border: 1px solid #3a4050;
+  border-radius: 5px;
+  background: #0f1219;
+  color: #f5f7fb;
+  padding: 3px 48px 3px 7px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.velocity-formula-input input:focus {
+  border-color: #7cc3a2;
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(124, 195, 162, 0.22);
+}
+
+.velocity-formula-unit {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  color: #8f98aa;
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.velocity-formula-stepper-buttons {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  bottom: 3px;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  width: 14px;
+  overflow: hidden;
+  border-left: 1px solid rgba(58, 64, 80, 0.7);
+}
+
+.velocity-formula-stepper-buttons button {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: #aeb6c7;
+  font-size: 7px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.velocity-formula-stepper-buttons button:hover,
+.velocity-formula-stepper-buttons button:focus-visible {
+  color: #7cc3a2;
+  outline: none;
+}
+
+.velocity-formula-mode-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  min-width: 0;
+  height: 30px;
+  border: 1px solid #3a4050;
+  border-radius: 5px;
+  background: #0f1219;
+  color: #d9deec;
+  cursor: pointer;
+  padding: 0;
+}
+
+.velocity-formula-mode-toggle:hover,
+.velocity-formula-mode-toggle:focus-visible {
+  border-color: #7cc3a2;
+  color: #f5f7fb;
+  outline: none;
+}
+
+.velocity-formula-mode-toggle[data-mode='add'] {
+  background: #18281f;
+  color: #8edab8;
+}
+
+.velocity-formula-mode-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.formula-inline-stepper-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+
+.formula-inline-stepper-field {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  height: 30px;
+  border: 1px solid #3a4050;
+  border-radius: 5px;
+  background: #0f1219;
+  overflow: hidden;
+}
+
+.formula-inline-stepper-label {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 5px 0 7px;
+  color: #8f98aa;
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.formula-inline-stepper-field input {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #f5f7fb;
+  padding: 3px 18px 3px 2px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.formula-inline-stepper-field:focus-within {
+  border-color: #7cc3a2;
+  box-shadow: inset 0 0 0 1px rgba(124, 195, 162, 0.22);
+}
+
+.formula-inline-stepper-buttons {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  bottom: 3px;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  width: 14px;
+  overflow: hidden;
+  border-left: 1px solid rgba(58, 64, 80, 0.7);
+}
+
+.formula-inline-stepper-buttons button {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: #aeb6c7;
+  font-size: 7px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.formula-inline-stepper-buttons button:hover,
+.formula-inline-stepper-buttons button:focus-visible {
+  color: #7cc3a2;
+  outline: none;
+}
+
+.formula-range-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 30px;
+}
+
+.formula-range-label {
+  color: #cfd5e2;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.formula-range-row input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  accent-color: #7cc3a2;
+}
+
+.formula-range-value {
+  color: #d9deec;
+  font-size: 11px;
+  font-weight: 850;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .modifier-graph-picker {

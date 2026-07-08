@@ -4,6 +4,7 @@ import {
   canDeleteAction,
   createAction,
   deleteAction,
+  duplicateAction,
   actionName as actionDisplayName,
   moveActionToGroup,
   renameAction,
@@ -46,6 +47,7 @@ export function bindActionAuthoringControls(elements, callbacks) {
   const {
     actionAdd,
     actionDelete,
+    actionDuplicate,
     actionGroupSelect,
     actionMove,
     actionName: actionNameInput,
@@ -63,6 +65,18 @@ export function bindActionAuthoringControls(elements, callbacks) {
       activeActionGroup(elements, callbacks.getTuning(), actionSelect.value)
     );
     syncActionAuthoringControls(elements, callbacks.getTuning());
+    actionSelect.value = key;
+    syncSelectedAction(elements, callbacks, { apply: true });
+    callbacks.commitUndoSnapshot();
+  });
+
+  actionDuplicate?.addEventListener('click', () => {
+    const tuning = callbacks.getTuning();
+    const sourceKey = actionSelect.value;
+    callbacks.beginUndoSnapshot();
+    const key = duplicateAction(tuning, sourceKey);
+    syncActionGroupSelect(elements, actionGroup(tuning, key));
+    syncActionAuthoringControls(elements, tuning);
     actionSelect.value = key;
     syncSelectedAction(elements, callbacks, { apply: true });
     callbacks.commitUndoSnapshot();

@@ -141,11 +141,11 @@ canvas {
 
 .screen-zoom-control {
   display: inline-grid;
-  grid-template-columns: auto minmax(80px, 120px) 36px;
+  grid-template-columns: auto minmax(72px, 112px) 42px;
   align-items: center;
   gap: 6px;
   min-height: 28px;
-  max-width: 210px;
+  max-width: 280px;
   padding: 4px 8px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 5px;

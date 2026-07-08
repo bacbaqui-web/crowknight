@@ -1,11 +1,12 @@
 import { normalizeActionTrigger } from './action_trigger_data.js';
-import { timelineFrameCount, timelinePlaybackProgress } from './timeline_playback_helper.js';
+import { timelineFrameCount, timelineFrameDelta, timelinePlaybackProgress } from './timeline_playback_helper.js';
 import { actionMoveMirrorSign, isActionMirrorEnabled } from './action_mirror_helper.js';
 import { normalizeActionCondition } from './action_condition_helper.js';
 import { isRuntimeDebugEnabled, recordRuntimeDebugEvent } from './runtime_debug_state.js';
 import {
   actionFormula,
   actionFormulaActiveAtProgress,
+  activeActionFormulaAtProgress,
   actionFormulaFrameFromProgress,
   formulaFrameBoundary,
 } from './formula_runtime_engine.js';
@@ -59,12 +60,18 @@ export function updateActionTriggerRuntime(player, dt, keys, pressed) {
     recordActionStartFailure(player, match, linkResult.reason || '연계 조건이 맞지 않음');
     return new Set();
   }
+  const cooldownResult = actionCooldownResult(player, match.action.key, runtimeNowMs(player));
+  if (!cooldownResult.allowed) {
+    recordActionStartFailure(player, match, cooldownResult.reason || '쿨타임 대기 중');
+    return new Set();
+  }
   if (!canInterruptCurrentAction(player, match.action, match.facing)) {
     recordActionStartFailure(player, match, '현재 Action을 취소할 수 없음');
     return new Set();
   }
 
   startCustomAction(player, match.action.key, match.facing, match.triggerMode, match.pressCodes);
+  startActionCooldown(player, match.action.key, runtimeNowMs(player));
   return new Set(match.consumedCodes);
 }
 
@@ -99,8 +106,20 @@ export function advanceCustomActionRuntime(player, dt) {
   if (!player.customActionKey || player.customActionTime <= 0) return;
   applyCustomActionViewLock(player);
   applyCustomActionVelocityModifier(player, dt);
+  applyCustomActionTargetMove(player, dt);
   player.customActionElapsed = Math.max(0, Number(player.customActionElapsed || 0) + Math.max(0, Number(dt || 0)));
   applyCustomActionViewLock(player);
+
+  if (player.customActionRepeatRelease) {
+    player.customActionRepeatRelease.elapsed = Math.max(
+      0,
+      Number(player.customActionRepeatRelease.elapsed || 0) + Math.max(0, Number(dt || 0))
+    );
+    if (player.customActionRepeatRelease.elapsed >= Number(player.customActionRepeatRelease.duration || 0)) {
+      stopCustomAction(player);
+    }
+    return;
+  }
 
   if (isPressLoopAction(player)) {
     const duration = Math.max(0.01, Number(player.customActionDuration || 0.6));
@@ -119,16 +138,25 @@ function applyCustomActionViewLock(player) {
   if (!action) return;
   const settings = actionRuntimeSettings(player, action.key);
   const frameCount = actionFrameCount(player, action);
-  if (!actionFormulaActiveAtProgress(settings, 'lock', player.getActionFrameProgress?.() || 0, frameCount)) return;
-  const lockedFacing = normalizedFacing(player.customActionViewFacing);
+  const lock = activeActionFormulaAtProgress(settings, 'lock', player.getActionFrameProgress?.() || 0, frameCount);
+  if (!lock) return;
+  const lockedFacing = lockFormulaFacing(lock, settings, player.customActionFacing || player.facing);
   if (lockedFacing) player.facing = lockedFacing;
+}
+
+function lockFormulaFacing(lock, settings, actionFacing) {
+  const originalFacing = lock.direction === 'left' ? -1 : 1;
+  const mirrorSign = isActionMirrorEnabled(settings) && Number(actionFacing) < 0 ? -1 : 1;
+  return originalFacing * mirrorSign;
 }
 
 export function requestRuntimeAction(player, key, facing = null, triggerMode = 'tap') {
   if (!runtimeActions(player).some((action) => action?.key === key)) return false;
   if (!canRunActionCondition(player, key)) return false;
   if (!actionLinkResult(player, key).allowed) return false;
+  if (!actionCooldownResult(player, key, runtimeNowMs(player)).allowed) return false;
   startCustomAction(player, key, facing, triggerMode, []);
+  startActionCooldown(player, key, runtimeNowMs(player));
   return true;
 }
 
@@ -136,7 +164,9 @@ function ensureActionTriggerRuntime(player) {
   player.actionTriggerRuntime ||= {
     nowMs: 0,
     history: [],
+    cooldowns: {},
   };
+  player.actionTriggerRuntime.cooldowns ||= {};
   return player.actionTriggerRuntime;
 }
 
@@ -156,9 +186,24 @@ function trimInputHistory(runtime) {
 function findMatchingCustomAction(player, runtime, keys, pressed) {
   const actions = customActionsByTriggerPriority(player, runtimeActions(player));
   return (
+    findEventCustomActionMatch(player, actions, runtime, keys, pressed) ||
+    findStateReturnCustomActionMatch(player, actions, keys)
+  );
+}
+
+function findEventCustomActionMatch(player, actions, runtime, keys, pressed) {
+  return (
     findHoldComboMatch(player, actions, keys, pressed) ||
     findSequenceMatch(player, actions, runtime, pressed) ||
     findSingleMatch(player, actions, pressed)
+  );
+}
+
+function findStateReturnCustomActionMatch(player, actions, keys) {
+  if (player.isCustomActionActive) return null;
+  return (
+    findHoldComboMatch(player, actions, keys, keys, { state: true }) ||
+    findSingleMatch(player, actions, keys, { state: true })
   );
 }
 
@@ -186,18 +231,22 @@ function actionLinkPriority(player, actionKey) {
   return result.linked ? 1000 : 0;
 }
 
-function findHoldComboMatch(player, actions, keys, pressed) {
+function findHoldComboMatch(player, actions, keys, pressed, { state = null } = {}) {
   for (const mirrored of [false, true]) {
     for (const action of actions) {
       const trigger = action.trigger;
       if (trigger.type !== 'holdCombo') continue;
+      if (state !== null && isStateCastAction(player, action) !== state) continue;
       const variants = triggerInputVariants(player, action, [trigger.hold, trigger.press], { mirrored });
       for (const variant of variants) {
         const holdCode = inputCodeForTriggerKey(variant.keys[0]);
         const pressCode = inputCodeForTriggerKey(variant.keys[1]);
         if (!holdCode || !pressCode) continue;
-        if (keys.has(holdCode) && pressed.has(pressCode)) {
-          return triggerMatch(action, [pressCode], variant.facing, trigger, [holdCode, pressCode]);
+        const matched = state
+          ? keys.has(holdCode) && keys.has(pressCode)
+          : keys.has(holdCode) && pressed.has(pressCode);
+        if (matched) {
+          return triggerMatch(player, action, state ? [] : [pressCode], variant.facing, trigger, [holdCode, pressCode]);
         }
       }
     }
@@ -221,7 +270,7 @@ function findSequenceMatch(player, actions, runtime, pressed) {
         if (!pressedKeys.has(finalKey)) continue;
         if (historyEndsWithSequence(runtime.history, variant.keys, trigger.maxGapMs)) {
           const finalCode = inputCodeForTriggerKey(finalKey);
-          return triggerMatch(action, [finalCode], variant.facing, trigger, [finalCode]);
+          return triggerMatch(player, action, [finalCode], variant.facing, trigger, [finalCode]);
         }
       }
     }
@@ -239,15 +288,17 @@ function historyEndsWithSequence(history, expected, maxGapMs) {
   return true;
 }
 
-function findSingleMatch(player, actions, pressed) {
+function findSingleMatch(player, actions, pressed, { state = null } = {}) {
   for (const mirrored of [false, true]) {
     for (const action of actions) {
       const trigger = action.trigger;
       if (trigger.type !== 'single') continue;
+      if (state !== null && isStateCastAction(player, action) !== state) continue;
       const variants = triggerInputVariants(player, action, [trigger.keys[0]], { mirrored });
       for (const variant of variants) {
         const code = inputCodeForTriggerKey(variant.keys[0]);
-        if (code && pressed.has(code)) return triggerMatch(action, [code], variant.facing, trigger, [code]);
+        if (code && pressed.has(code))
+          return triggerMatch(player, action, state ? [] : [code], variant.facing, trigger, [code]);
       }
     }
   }
@@ -272,6 +323,8 @@ function startCustomAction(player, key, facing = null, triggerMode = 'tap', pres
   player.customActionTime = duration;
   player.customActionElapsed = 0;
   player.customActionMoveProgress = 0;
+  player.customActionRepeatRelease = null;
+  player.customActionTargetMove = null;
   player.attackSerial += 1;
   if (isRuntimeDebugEnabled()) {
     recordRuntimeDebugEvent('action-start', {
@@ -287,6 +340,17 @@ function updateActivePressAction(player, keys) {
   const pressCodes = normalizePressCodes(player.customActionPressCodes);
   if (!player.isCustomActionActive || !pressCodes.length) return;
   if (pressCodes.every((code) => keys.has(code))) return;
+  const cast = currentCastFormula(player);
+  if (cast?.releaseMode === 'finish') {
+    if (cast.mode === 'repeat') {
+      player.customActionRepeatRelease = createRepeatReleaseState(player, cast);
+      player.customActionPressCodes = null;
+      return;
+    }
+    player.customActionPressCodes = null;
+    if (player.customActionTriggerMode === 'pressLoop') player.customActionTriggerMode = 'tap';
+    return;
+  }
   stopCustomAction(player);
 }
 
@@ -303,6 +367,8 @@ function stopCustomAction(player) {
   player.customActionTime = 0;
   player.customActionElapsed = 0;
   player.customActionMoveProgress = 0;
+  player.customActionRepeatRelease = null;
+  player.customActionTargetMove = null;
   player.velocityControl = null;
   if (isRuntimeDebugEnabled()) {
     recordRuntimeDebugEvent('action-stop', {
@@ -402,6 +468,30 @@ function actionLinkResult(player, key) {
   return { allowed: true, linked: true };
 }
 
+function actionCooldownResult(player, key, nowMs) {
+  const cooldown = actionFormula(actionRuntimeSettings(player, key), 'cooldown');
+  const seconds = Number(cooldown?.seconds || 0);
+  if (!cooldown?.enabled || seconds <= 0) return { allowed: true };
+  const runtime = ensureActionTriggerRuntime(player);
+  const untilMs = Number(runtime.cooldowns?.[key] || 0);
+  if (nowMs >= untilMs) return { allowed: true };
+  const remaining = Math.max(0, (untilMs - nowMs) / 1000);
+  return { allowed: false, reason: `쿨타임 대기 중(${remaining.toFixed(1)}초)` };
+}
+
+function startActionCooldown(player, key, nowMs) {
+  const cooldown = actionFormula(actionRuntimeSettings(player, key), 'cooldown');
+  const seconds = Math.max(0, Number(cooldown?.seconds || 0));
+  if (!cooldown?.enabled || seconds <= 0) return;
+  const runtime = ensureActionTriggerRuntime(player);
+  runtime.cooldowns[key] = nowMs + seconds * 1000;
+}
+
+function runtimeNowMs(player) {
+  const runtime = ensureActionTriggerRuntime(player);
+  return Math.max(Number(runtime.nowMs || 0), Number(player.animTime || 0) * 1000);
+}
+
 function currentRuntimeActionKey(player) {
   return player.customActionKey || player.actionKey || 'idle';
 }
@@ -423,14 +513,33 @@ function horizontalFacingForKeys(keys) {
   return null;
 }
 
-function triggerMatch(action, consumedCodes, facing, trigger, pressCodes = []) {
-  const triggerMode = trigger.triggerMode || 'tap';
+function triggerMatch(player, action, consumedCodes, facing, trigger, pressCodes = []) {
+  const triggerMode = actionCastTriggerMode(player, action.key, trigger.triggerMode || 'tap');
   return {
     action,
     consumedCodes,
     facing,
     triggerMode,
     pressCodes: triggerMode === 'tap' ? [] : normalizePressCodes(pressCodes),
+  };
+}
+
+function createRepeatReleaseState(player, cast) {
+  const action = currentCustomAction(player);
+  const frameCount = actionFrameCount(player, action);
+  const progress = clamp01(Number(player.getActionFrameProgress?.() || 0));
+  const frame = actionFormulaFrameFromProgress(progress, frameCount);
+  const targetFrame = formulaFrameBoundary(cast.repeatEndFrame, frameCount, frameCount);
+  const distance = Math.max(1, Math.abs(targetFrame - frame) + 1);
+  const duration = Math.max(
+    ACTION_TIME_EPSILON,
+    (distance / Math.max(1, frameCount)) * Math.max(0.01, Number(player.customActionDuration || 0.6))
+  );
+  return {
+    elapsed: 0,
+    duration,
+    startProgress: progress,
+    endProgress: clamp01((targetFrame - 1) / Math.max(1, frameCount)),
   };
 }
 
@@ -444,6 +553,31 @@ function hasPressCondition(player) {
 
 function isPressLoopAction(player) {
   return player.customActionTriggerMode === 'pressLoop' && hasPressCondition(player);
+}
+
+function currentCastFormula(player) {
+  if (!player?.customActionKey) return null;
+  return actionFormula(actionRuntimeSettings(player, player.customActionKey), 'cast');
+}
+
+function actionCastTriggerMode(player, actionKey, legacyMode = 'tap') {
+  const mode = actionCastMode(player, actionKey, legacyMode);
+  if (mode === 'press') return 'press';
+  if (mode === 'repeat') return 'pressLoop';
+  return 'tap';
+}
+
+function actionCastMode(player, actionKey, legacyMode = 'tap') {
+  const cast = actionFormula(actionRuntimeSettings(player, actionKey), 'cast');
+  if (cast?.enabled) return cast.mode === 'press' || cast.mode === 'repeat' ? cast.mode : 'tap';
+  if (legacyMode === 'press') return 'press';
+  if (legacyMode === 'pressLoop') return 'repeat';
+  return 'tap';
+}
+
+function isStateCastAction(player, action) {
+  const mode = actionCastMode(player, action.key, action.trigger?.triggerMode || 'tap');
+  return mode === 'press' || mode === 'repeat';
 }
 
 function actionInterruptPriority(player, key) {
@@ -464,16 +598,20 @@ function applyCustomActionVelocityModifier(player, dt) {
   const nextRawProgress = previousRawProgress + Math.max(0, Number(dt || 0)) / duration;
   const playback = effectiveCustomActionPlayback(player, action);
   const frameCount = actionFrameCount(player, action);
+  const rawFrameDelta = velocityFrameDelta(previousRawProgress, nextRawProgress, playback, velocity, frameCount, {
+    curve: 'linear',
+  });
   const frameDelta = velocityFrameDelta(previousRawProgress, nextRawProgress, playback, velocity, frameCount);
   if (Math.abs(frameDelta) <= 0.000001) return;
 
   const mirrorSign = actionMoveMirrorSign(settings, player.facing);
-  const x = Number(velocity.x || 0) * mirrorSign;
-  const y = Number(velocity.y || 0);
+  const curveRate = Math.abs(rawFrameDelta) > 0.000001 ? frameDelta / rawFrameDelta : 0;
+  const x = Number(velocity.x || 0) * mirrorSign * curveRate;
+  const y = Number(velocity.y || 0) * curveRate;
   const mode = velocity.mode === 'add' ? 'add' : 'set';
   if (mode === 'add') {
-    player.vx = Number(player.vx || 0) + x * frameDelta;
-    player.vy = Number(player.vy || 0) + y * frameDelta;
+    player.vx = Number(player.vx || 0) + Number(velocity.x || 0) * mirrorSign * frameDelta;
+    player.vy = Number(player.vy || 0) + Number(velocity.y || 0) * frameDelta;
   } else {
     player.vx = x;
     player.vy = y;
@@ -485,19 +623,121 @@ function applyCustomActionVelocityModifier(player, dt) {
   if (y < 0) player.onGround = false;
 }
 
+function applyCustomActionTargetMove(player, dt) {
+  const action = currentCustomAction(player);
+  if (!action) return;
+  const settings = actionRuntimeSettings(player, action.key);
+  const targetMove = actionFormula(settings, 'targetMove');
+  if (!targetMove?.enabled) {
+    player.customActionTargetMove = null;
+    return;
+  }
+
+  const frameCount = actionFrameCount(player, action);
+  const state = ensureTargetMoveRuntimeState(player, action.key, targetMove, settings);
+  if (!state.started && targetMoveTriggerReached(player, targetMove, frameCount, dt)) {
+    startTargetMove(player, state, targetMove, settings);
+  }
+  if (!state.active) return;
+  advanceTargetMove(player, state, dt);
+}
+
+function ensureTargetMoveRuntimeState(player, actionKey, targetMove, settings) {
+  const signature = [
+    actionKey,
+    targetMove.triggerFrame,
+    targetMove.x,
+    targetMove.y,
+    targetMove.moveFrames,
+    actionMoveMirrorSign(settings, player.customActionFacing || player.facing),
+  ].join(':');
+  if (player.customActionTargetMove?.signature !== signature) {
+    player.customActionTargetMove = {
+      signature,
+      actionKey,
+      active: false,
+      started: false,
+      startX: 0,
+      startY: 0,
+      targetX: 0,
+      targetY: 0,
+      elapsedFrames: 0,
+      moveFrames: 1,
+    };
+  }
+  return player.customActionTargetMove;
+}
+
+function targetMoveTriggerReached(player, targetMove, frameCount, dt) {
+  const triggerFrame = formulaFrameBoundary(targetMove.triggerFrame, frameCount, 1);
+  const duration = Math.max(0.01, Number(player.customActionDuration || 0.6));
+  const previousProgress = Math.max(0, Number(player.customActionElapsed || 0)) / duration;
+  const nextProgress = previousProgress + Math.max(0, Number(dt || 0)) / duration;
+  const previousFrame = actionFormulaFrameFromProgress(previousProgress, frameCount);
+  const nextFrame = actionFormulaFrameFromProgress(nextProgress, frameCount);
+  return triggerFrame >= Math.min(previousFrame, nextFrame) && triggerFrame <= Math.max(previousFrame, nextFrame);
+}
+
+function startTargetMove(player, state, targetMove, settings) {
+  const mirrorSign = actionMoveMirrorSign(settings, player.customActionFacing || player.facing);
+  const shadowX = Number(player.x || 0);
+  const shadowY = Number.isFinite(player.floorY) ? Number(player.floorY) : Number(player.y || 0);
+  state.startX = Number(player.x || 0);
+  state.startY = Number(player.y || 0);
+  state.targetX = shadowX + Number(targetMove.x || 0) * mirrorSign;
+  state.targetY = shadowY + Number(targetMove.y || 0);
+  state.elapsedFrames = 0;
+  state.moveFrames = normalizeTargetMoveFrames(targetMove.moveFrames);
+  state.active = true;
+  state.started = true;
+}
+
+function advanceTargetMove(player, state, dt) {
+  const startX = Number(state.startX || 0);
+  const startY = Number(state.startY || 0);
+  const targetX = Number(state.targetX || 0);
+  const targetY = Number(state.targetY || 0);
+  const dy = targetY - startY;
+  player.vx = 0;
+  player.vy = 0;
+  player.velocityControl = { x: true, y: true };
+  const moveFrames = normalizeTargetMoveFrames(state.moveFrames);
+  if (moveFrames <= 0) {
+    player.x = targetX;
+    player.y = targetY;
+    state.active = false;
+    if (dy < 0) player.onGround = false;
+    return;
+  }
+
+  state.elapsedFrames = Math.max(0, Number(state.elapsedFrames || 0) + timelineFrameDelta(dt));
+  const t = clamp01(state.elapsedFrames / moveFrames);
+  player.x = startX + (targetX - startX) * t;
+  player.y = startY + (targetY - startY) * t;
+  if (t >= 1) state.active = false;
+  if (dy < 0) player.onGround = false;
+}
+
+function normalizeTargetMoveFrames(value) {
+  const number = Math.round(Number(value ?? 1));
+  if (!Number.isFinite(number)) return 1;
+  return Math.min(10, Math.max(0, number));
+}
+
 function effectiveCustomActionPlayback(player, action) {
   if (player.customActionTriggerMode !== 'pressLoop') return 'once';
   return actionRuntimeSettings(player, action.key).playback;
 }
 
-function velocityFrameDelta(previousRaw, nextRaw, playback, velocity, frameCount) {
-  if (playback === 'loop') return loopVelocityFrameDelta(previousRaw, nextRaw, velocity, frameCount);
-  const previous = velocityRangeProgress(timelinePlaybackProgress(previousRaw, playback), velocity, frameCount);
-  const next = velocityRangeProgress(timelinePlaybackProgress(nextRaw, playback), velocity, frameCount);
+function velocityFrameDelta(previousRaw, nextRaw, playback, velocity, frameCount, options = {}) {
+  const curve = options.curve || velocity.curve || 'linear';
+  if (playback === 'loop') return loopVelocityFrameDelta(previousRaw, nextRaw, velocity, frameCount, curve);
+  const previous = velocityRangeProgress(timelinePlaybackProgress(previousRaw, playback), velocity, frameCount, curve);
+  const next = velocityRangeProgress(timelinePlaybackProgress(nextRaw, playback), velocity, frameCount, curve);
   return next - previous;
 }
 
-function loopVelocityFrameDelta(previousRaw, nextRaw, velocity, frameCount) {
+function loopVelocityFrameDelta(previousRaw, nextRaw, velocity, frameCount, curve) {
   if (nextRaw <= previousRaw) return 0;
   const previousLoop = Math.floor(previousRaw);
   const nextLoop = Math.floor(nextRaw);
@@ -507,23 +747,25 @@ function loopVelocityFrameDelta(previousRaw, nextRaw, velocity, frameCount) {
 
   if (previousLoop === nextLoop) {
     return (
-      velocityRangeProgress(nextProgress, velocity, frameCount) -
-      velocityRangeProgress(previousProgress, velocity, frameCount)
+      velocityRangeProgress(nextProgress, velocity, frameCount, curve) -
+      velocityRangeProgress(previousProgress, velocity, frameCount, curve)
     );
   }
 
-  const previousLoopEnd = rangeFrames - velocityRangeProgress(previousProgress, velocity, frameCount);
+  const previousLoopEnd = rangeFrames - velocityRangeProgress(previousProgress, velocity, frameCount, curve);
   const middleLoops = Math.max(0, nextLoop - previousLoop - 1) * rangeFrames;
-  return previousLoopEnd + middleLoops + velocityRangeProgress(nextProgress, velocity, frameCount);
+  return previousLoopEnd + middleLoops + velocityRangeProgress(nextProgress, velocity, frameCount, curve);
 }
 
-function velocityRangeProgress(progress, velocity, frameCount) {
+function velocityRangeProgress(progress, velocity, frameCount, curve = 'linear') {
   const start = formulaFrameBoundary(velocity.startFrame, frameCount, 1);
   const end = formulaFrameBoundary(velocity.endFrame, frameCount, frameCount);
   const minFrame = Math.min(start, end);
   const maxFrame = Math.max(start, end);
   const frameProgress = clamp01(progress) * frameCount;
-  return Math.min(Math.max(0, frameProgress - (minFrame - 1)), maxFrame - minFrame + 1);
+  const rangeFrames = maxFrame - minFrame + 1;
+  const rangeProgress = Math.min(Math.max(0, frameProgress - (minFrame - 1)), rangeFrames);
+  return velocityCurveProgress(rangeProgress / rangeFrames, curve) * rangeFrames;
 }
 
 function velocityRangeFrameCount(velocity, frameCount) {
@@ -554,6 +796,13 @@ function liveActionModifiers(player, action) {
 function clamp01(value) {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
+}
+
+function velocityCurveProgress(progress, curve) {
+  const t = clamp01(progress);
+  if (curve === 'easeIn') return t * t;
+  if (curve === 'easeOut') return 1 - (1 - t) * (1 - t);
+  return t;
 }
 
 function inputCodeForTriggerKey(key) {

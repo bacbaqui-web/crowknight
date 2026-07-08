@@ -1,6 +1,9 @@
 import { createDefaultStageRules, normalizeStageRules, normalizeWorldPhysicsRules } from './stage_rules_state.js';
 
 export const DEFAULT_SCENE_SESSION_ID = 'default';
+export const DEFAULT_SCREEN_ZOOM = 1.5;
+export const MIN_SCREEN_ZOOM = 0.1;
+export const MAX_SCREEN_ZOOM = 3;
 
 export const BACKGROUND_TYPES = [
   { key: 'layers', label: '레이어' },
@@ -43,6 +46,7 @@ export function createDefaultSceneSession() {
     name: '기본 세션',
     background: createDefaultBackground(),
     world: createDefaultWorldSettings(),
+    view: createDefaultViewSettings(),
     stageRules: createDefaultStageRules(),
   };
 }
@@ -98,6 +102,12 @@ export function createDefaultWorldSettings() {
   };
 }
 
+export function createDefaultViewSettings() {
+  return {
+    screenZoom: DEFAULT_SCREEN_ZOOM,
+  };
+}
+
 export function createWorldFromSceneSession(session) {
   const settings = normalizeWorldSettings(session?.world);
   const stageRules = normalizeStageRules(session?.stageRules);
@@ -137,7 +147,15 @@ export function normalizeSceneSession(saved) {
     name: nonEmptyString(saved?.name) || defaults.name,
     background: normalizeSceneBackground(saved?.background),
     world: normalizeWorldSettings(saved?.world),
+    view: normalizeSceneView(saved?.view),
     stageRules: normalizeStageRules(saved?.stageRules),
+  };
+}
+
+export function normalizeSceneView(saved) {
+  const defaults = createDefaultViewSettings();
+  return {
+    screenZoom: clampNumber(saved?.screenZoom, MIN_SCREEN_ZOOM, MAX_SCREEN_ZOOM, defaults.screenZoom),
   };
 }
 

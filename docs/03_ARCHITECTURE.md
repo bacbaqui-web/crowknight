@@ -31,9 +31,10 @@
 ## Stage
 
 - Stage는 배경 설정과 Stage Rules를 가진다.
-- Stage Rules 안의 World Physics는 제작자가 이해하기 쉬운 `Gravity`와 `Inertia` 설정을 저장한다.
+- Stage Rules 안의 스테이지 물리는 제작자가 이해하기 쉬운 `중력`, `관성`, hit camera shake 설정을 저장한다.
 - World Physics는 Action Modifier가 아니라 모든 Runtime actor가 공유할 수 있는 Stage / World Runtime Rule이다.
-- World Physics 단위는 Action Timeline frame 기준이다. Position은 `px`, Velocity는 `px/f`, Gravity는 `px/f²`, Inertia는 `frame`이다.
+- World Physics 단위는 Action Timeline frame 기준이다. Position은 `px`, Velocity와 Air Control은 `px/f`, Gravity는 `px/f²`, Inertia는 `frame`이다.
+- Camera Shake는 Action Formula나 Attack Interaction 설정이 아니라, 공격박스와 피격박스가 실제로 닿았을 때 스테이지 물리가 실행하는 공통 hit rule이다.
 
 ## Timeline
 

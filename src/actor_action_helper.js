@@ -1,11 +1,12 @@
 import { advanceCustomActionRuntime, updateActionTriggerRuntime } from './action_trigger_engine.js';
-import { timelineFrameDelta } from './timeline_playback_helper.js';
+import { activeActionFormulaAtProgress } from './formula_runtime_engine.js';
+import { timelineFrameCount, timelineFrameDelta } from './timeline_playback_helper.js';
 
 export function updatePuppetPlayer(player, dt, keys, pressed, world) {
   advanceActorClock(player, dt);
-  updateActionTriggerRuntime(player, dt, keys, pressed);
+  updateActionTriggerRuntime(player, dt, keys, airControlPressedInputs(player, world, keys, pressed));
   advanceCustomActionRuntime(player, dt);
-  applyWorldPhysics(player, dt, world);
+  applyWorldPhysics(player, dt, world, keys);
   updatePuppetPlayerState(player);
 }
 
@@ -74,7 +75,7 @@ function advanceActorClock(player, dt) {
   player.glideActive = false;
 }
 
-function applyWorldPhysics(player, dt, world) {
+function applyWorldPhysics(player, dt, world, keys = null) {
   if (!world) return;
   const physics = normalizeRuntimeWorldPhysics(world.worldPhysics);
   const frameDelta = timelineFrameDelta(dt);
@@ -83,15 +84,17 @@ function applyWorldPhysics(player, dt, world) {
   player.floorY = Number.isFinite(floorY) ? floorY : player.y;
 
   if (Number.isFinite(player.floorY) && player.y < player.floorY) player.onGround = false;
-  player.vx = velocityControl.x ? Number(player.vx || 0) : applyInertia(player, 'vx', physics.inertia, frameDelta);
+  const inertia = effectiveRuntimeInertia(player, physics);
+  player.vx = velocityControl.x ? Number(player.vx || 0) : applyInertia(player, 'vx', inertia, frameDelta);
   player.vy =
     player.onGround && !velocityControl.y
       ? 0
       : velocityControl.y
         ? Number(player.vy || 0)
-        : applyInertia(player, 'vy', physics.inertia, frameDelta);
+        : applyInertia(player, 'vy', inertia, frameDelta);
   if (player.vy < -0.0001) player.onGround = false;
   if (!player.onGround) player.vy += physics.gravity * frameDelta;
+  applyAirControl(player, physics, keys, frameDelta);
 
   player.x += player.vx * frameDelta;
   player.y += player.vy * frameDelta;
@@ -112,7 +115,49 @@ function normalizeRuntimeWorldPhysics(value = {}) {
   return {
     gravity: Math.max(0, Number(value.gravity ?? 1)),
     inertia: Math.max(0, Number(value.inertia ?? 30)),
+    airControl: Math.max(0, Number(value.airControl ?? 0)),
   };
+}
+
+function airControlPressedInputs(player, world, keys, pressed) {
+  if (!isAirControlInputActive(player, world, keys)) return pressed;
+  const nextPressed = new Set(pressed || []);
+  nextPressed.delete('ArrowLeft');
+  nextPressed.delete('ArrowRight');
+  return nextPressed;
+}
+
+function isAirControlInputActive(player, world, keys) {
+  const airControl = Math.max(0, Number(world?.worldPhysics?.airControl ?? 0));
+  if (!airControl || player.onGround || !keys) return false;
+  return keys.has('ArrowLeft') || keys.has('ArrowRight');
+}
+
+function applyAirControl(player, physics, keys, frameDelta) {
+  if (player.onGround || !keys || !physics.airControl) return;
+  const direction = Number(keys.has('ArrowRight')) - Number(keys.has('ArrowLeft'));
+  if (!direction) return;
+  player.vx = Number(player.vx || 0) + direction * physics.airControl * frameDelta;
+}
+
+function effectiveRuntimeInertia(player, physics) {
+  const baseInertia = Math.max(0, Number(physics?.inertia || 0));
+  const actionKey = player.actionKey;
+  const settings = player.actionSettings?.[actionKey] || {};
+  const formula = activeActionFormulaAtProgress(
+    settings,
+    'inertia',
+    player.getActionFrameProgress?.() || 0,
+    timelineFrameCount(settings)
+  );
+  if (!formula || !inertiaAppliesToGroundState(formula.applyTarget, player.onGround === true)) return baseInertia;
+  return baseInertia + Math.max(0, Number(formula.addInertia || 0));
+}
+
+function inertiaAppliesToGroundState(applyTarget, onGround) {
+  if (applyTarget === 'ground') return onGround;
+  if (applyTarget === 'air') return !onGround;
+  return true;
 }
 
 function applyInertia(player, prop, inertiaFrames, frameDelta) {

@@ -4,9 +4,23 @@ import { velocityFormula } from './formulas/velocity_formula.js';
 import { lockFormula } from './formulas/lock_formula.js';
 import { blendFormula } from './formulas/blend_formula.js';
 import { cancelFormula } from './formulas/cancel_formula.js';
+import { castFormula } from './formulas/cast_formula.js';
+import { inertiaFormula } from './formulas/inertia_formula.js';
 import { linkFormula } from './formulas/link_formula.js';
+import { cooldownFormula } from './formulas/cooldown_formula.js';
+import { targetMoveFormula } from './formulas/target_move_formula.js';
 
-export const FORMULA_DEFS = Object.freeze([velocityFormula, lockFormula, blendFormula, cancelFormula, linkFormula]);
+export const FORMULA_DEFS = Object.freeze([
+  velocityFormula,
+  inertiaFormula,
+  lockFormula,
+  blendFormula,
+  cancelFormula,
+  linkFormula,
+  castFormula,
+  cooldownFormula,
+  targetMoveFormula,
+]);
 
 export function formulaDef(type) {
   return FORMULA_DEFS.find((formula) => formula.type === type) || null;
@@ -54,6 +68,16 @@ export function writeActionFormulaSetting(settings, type, prop, value) {
   if (!formula) return null;
   formula[prop] = value;
   settings.formulas = normalizeActionFormulas(settings.formulas, settings);
+  return settings.formulas.find((item) => item.type === type) || formula;
+}
+
+export function resetActionFormula(settings, type) {
+  const def = formulaDef(type);
+  if (!def) return null;
+  const formula = normalizeFormula(normalizeResetSource(type, def.defaultValue()));
+  if (!formula) return null;
+  const formulas = normalizeActionFormulas(settings.formulas, settings).filter((item) => item.type !== type);
+  settings.formulas = normalizeActionFormulas([...formulas, formula], settings);
   return settings.formulas.find((item) => item.type === type) || formula;
 }
 
@@ -121,4 +145,13 @@ function legacyFormulas(legacy = {}) {
 
 function normalizeFormulaFrame(value, fallback = 1) {
   return clamp(Math.round(Number(value ?? fallback)), 1, ACTION_MAX_FRAMES);
+}
+
+function normalizeResetSource(type, source) {
+  const next = { ...source, enabled: true };
+  if (type === 'blend' && Number(next.frames || 0) <= 0) {
+    next.frames = 1;
+    next.endFrame = Math.max(Number(next.startFrame || 1), Number(next.startFrame || 1));
+  }
+  return next;
 }

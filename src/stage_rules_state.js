@@ -53,6 +53,10 @@ export function createDefaultWorldPhysicsRules() {
   return {
     gravity: 1,
     inertia: 30,
+    airControl: 0,
+    cameraShakePower: 4,
+    cameraShakeFrames: 6,
+    cameraShakeDecay: 1,
   };
 }
 
@@ -61,7 +65,19 @@ export function normalizeWorldPhysicsRules(saved) {
   return {
     gravity: clampNumber(saved?.gravity, 0, 100, defaults.gravity),
     inertia: clampNumber(saved?.inertia, 0, 300, defaults.inertia),
+    airControl: clampNumber(saved?.airControl, 0, 100, defaults.airControl),
+    cameraShakePower: clampNumber(saved?.cameraShakePower, 0, 100, defaults.cameraShakePower),
+    cameraShakeFrames: clampNumber(saved?.cameraShakeFrames, 0, 120, defaults.cameraShakeFrames),
+    cameraShakeDecay: normalizeBooleanNumber(saved?.cameraShakeDecay, defaults.cameraShakeDecay),
   };
+}
+
+function normalizeBooleanNumber(value, fallback) {
+  if (value === true) return 1;
+  if (value === false) return 0;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return number >= 0.5 ? 1 : 0;
 }
 
 function createDefaultProgressionRules() {

@@ -331,6 +331,23 @@ function parentImageTransform(player, parentKey) {
       y: -anchorLocalY * (height / referenceH),
     };
   }
+  if (parentKey === 'shield') {
+    const shield = player.rig?.shield;
+    const offset = player.getPartOffset('shield');
+    const matrix = player.shieldAnchorTransform?.();
+    if (!shield || !matrix) return null;
+    const referenceW = Math.max(1, Number(shield.baseW || shield.w || 1));
+    const referenceH = Math.max(1, Number(shield.baseH || shield.h || 1));
+    const width = Math.max(1, Number(shield.w || referenceW) + Number(offset.w || 0));
+    const height = Math.max(1, Number(shield.h || referenceH) + Number(offset.h || 0));
+    const anchorLocalX = Number(shield.ax ?? shield.ox ?? 0) + Number(offset.ax || 0);
+    const anchorLocalY = Number(shield.ay ?? shield.oy ?? 0) + Number(offset.ay || 0);
+    return {
+      matrix,
+      x: -anchorLocalX * (width / referenceW),
+      y: -anchorLocalY * (height / referenceH),
+    };
+  }
 
   const part = player.rig?.[parentKey];
   if (!part) return null;

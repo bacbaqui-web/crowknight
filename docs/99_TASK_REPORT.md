@@ -1,45 +1,42 @@
-# CURRENT TASK REPORT
+# 99 Task Report
 
-## Latest Task: frameGroup master write 버그 수정
+## 1. 변경 내용
 
-## 1. 이번에 한 일
+- `목표이동` Formula에 `moveFrames` 값을 추가했다.
+- `moveFrames=0`은 목표 좌표로 즉시 이동한다.
+- `moveFrames=1~10`은 해당 Action Timeline frame 수 동안 시작 위치에서 목표 좌표까지 보간한다.
 
-`src/timeline_action_adapter.js`의 `ensureOffset(part)`가 기존 offset 객체를 다시 normalize해서 교체하지 않도록 확인했다.
+## 2. UI
 
-현재 구현:
+- 목표이동 카드의 기존 `발동 프레임 / X / Y` 입력 아래에 `도달 프레임` 슬라이더를 추가했다.
+- 슬라이더 범위는 `0~10`이며, `0`은 `즉시`, 나머지는 `Nf`로 표시한다.
+- 기존 Formula 카드 / 공통 field 구조를 재사용했다.
 
-```js
-function ensureOffset(part) {
-  if (tuning().actionOffsets?.[key()]?.[part]) return;
-  ensureActionOffset(tuning(), key(), part);
-}
-```
+## 3. 저장 구조
 
-## 2. 확정된 원인
+- 저장 위치는 기존과 같은 `actionSettings[actionKey].formulas[]`다.
+- `targetMove` Formula에 `moveFrames` 필드를 추가했다.
+- 기본값은 `1`이다.
 
-`ensureActionOffset()`은 단순 존재 보장 함수가 아니라, 기존 offset도 normalize하면서 새 객체로 교체한다.
+## 4. Runtime 적용 방식
 
-기존 offset이 있는 상태에서도 이 함수가 다시 호출되면 `writeActionTimelineFrameValue()`가 교체 전 낡은 `frames` 객체에 값을 쓰게 된다.
+- 목표이동 발동 시점의 actor 위치를 `startX/startY`로 저장한다.
+- 목표 좌표는 기존처럼 그림자 / 발밑 기준과 mirror X 반전을 유지한다.
+- 매 frame `timelineFrameDelta(dt)`만큼 진행해 `moveFrames` 동안 목표 좌표까지 보간한다.
+- `moveFrames=0`이면 기존 즉시 이동처럼 바로 목표 좌표로 이동한다.
 
-그 결과 frameGroup/master Properties write가 실제 `actor.tuning.actionOffsets[actionKey].master`에 남지 않았다.
+## 5. QA 결과
 
-## 3. 수정 내용
+- 데이터 QA: `moveFrames=0` 즉시 도달 확인.
+- 데이터 QA: `moveFrames=1` 1 Action frame에 목표 도달 확인.
+- 데이터 QA: `moveFrames=2` 첫 frame 50%, 두 번째 frame 목표 도달 확인.
+- 데이터 QA: mirror 상태에서 X 반전 이동 확인.
+- 데이터 QA: 공중에서 `Y=0` 목표 이동 시 그림자 위치로 보간 확인.
+- `npm run check` 통과.
+- `git diff --check` 통과.
+- 브라우저 수동 체감 QA는 아직 별도로 진행하지 않았다.
 
-기존 offset이 있으면 즉시 return한다.
+## 6. 코덱스 의견
 
-offset이 없을 때만 `ensureActionOffset()`을 호출한다.
-
-저장 구조, Runtime, Renderer, `group_transform_adapter`는 변경하지 않았다.
-
-## 4. QA
-
-- `npm run check` 통과
-- `git diff --check` 통과
-
-브라우저 직접 QA는 이번 실행 환경에서 수행하지 않았다.
-
-## 5. 코덱스 의견
-
-이번 버그는 Transform/Renderer 문제가 아니라 Action adapter의 offset 보장 경계 문제였다.
-
-앞으로 `ensure*` 함수가 실제로 객체를 교체하는지, 단순 보장만 하는지 이름과 역할을 분리하면 같은 유형의 버그를 줄일 수 있다.
+- `목표이동`은 순간이동과 속도 Formula 사이의 중간 역할이므로 `moveFrames`를 0~10으로 제한한 현재 구조가 안전하다.
+- 이후 필요하면 `curve` 옵션을 추가해 목표까지 선형 / 감속 / 가속 이동을 고를 수 있지만, 지금은 단순 frame 수 조절만 두는 것이 좋다.

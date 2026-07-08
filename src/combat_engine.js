@@ -1,6 +1,7 @@
 import { requestRuntimeAction } from './action_trigger_engine.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
+import { ACTION_FPS } from './game_config_data.js';
 
 export function updateBattleActorMotion({ actors, playerActor, keys, pressed, world, dt }) {
   updateActorCombatTimers(actors, dt);
@@ -13,8 +14,6 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
 }
 
 export function resolveCombat({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill }) {
-  void world;
-
   const regionCache = createInteractionRegionFrameCache();
   resolveCollisionInteractions(actors, regionCache);
   resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, regionCache });
@@ -59,6 +58,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
 
       const comboStep = attacker.player.comboStep || 1;
       target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
+      triggerWorldAttackCameraShake(world, particleEffects);
       if (isRuntimeDebugEnabled()) {
         debugInteractionRuntimeLog('attack-hurt-overlap', {
           attacker: attacker.id,
@@ -352,6 +352,20 @@ function applyInteractionDamage({
 function applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects) {
   applyKnockback(attacker, target, attackRegion);
   particleEffects.triggerHitImpact(attacker, target, comboStep);
+}
+
+function triggerWorldAttackCameraShake(world, particleEffects) {
+  const physics = world?.worldPhysics || {};
+  const power = Math.max(0, Number(physics.cameraShakePower || 0));
+  const frames = Math.max(0, Number(physics.cameraShakeFrames || 0));
+  if (power <= 0 || frames <= 0) return;
+
+  particleEffects?.shakeScreen?.({
+    magnitude: power,
+    duration: frames / ACTION_FPS,
+    direction: 'random',
+    decay: Number(physics.cameraShakeDecay ?? 1) >= 0.5,
+  });
 }
 
 function targetHurtInvincibleTime(hurtRegions) {

@@ -4,10 +4,21 @@ export function createStageRulesPanelController({
   beginChange = () => {},
   commitChange = () => {},
 } = {}) {
-  const { worldPhysicsGravity, worldPhysicsInertia } = elements;
+  const {
+    worldPhysicsGravity,
+    worldPhysicsInertia,
+    worldPhysicsAirControl,
+    worldPhysicsCameraShakePower,
+    worldPhysicsCameraShakeFrames,
+    worldPhysicsCameraShakeDecay,
+  } = elements;
 
   bindWorldPhysicsNumberInput(worldPhysicsGravity, 'gravity');
   bindWorldPhysicsNumberInput(worldPhysicsInertia, 'inertia');
+  bindWorldPhysicsNumberInput(worldPhysicsAirControl, 'airControl');
+  bindWorldPhysicsNumberInput(worldPhysicsCameraShakePower, 'cameraShakePower');
+  bindWorldPhysicsNumberInput(worldPhysicsCameraShakeFrames, 'cameraShakeFrames');
+  bindWorldPhysicsCheckboxInput(worldPhysicsCameraShakeDecay, 'cameraShakeDecay');
 
   function sync() {
     renderWorldPhysicsPanel();
@@ -19,10 +30,21 @@ export function createStageRulesPanelController({
     input?.addEventListener('blur', commitChange);
   }
 
+  function bindWorldPhysicsCheckboxInput(input, prop) {
+    input?.addEventListener('change', () => {
+      updateWorldPhysicsValue(prop, input.checked ? 1 : 0);
+      commitChange();
+    });
+  }
+
   function renderWorldPhysicsPanel() {
     const rules = stageRulesController.getWorldPhysicsRules();
     syncNumberInput(worldPhysicsGravity, rules.gravity);
     syncNumberInput(worldPhysicsInertia, rules.inertia);
+    syncNumberInput(worldPhysicsAirControl, rules.airControl);
+    syncNumberInput(worldPhysicsCameraShakePower, rules.cameraShakePower);
+    syncNumberInput(worldPhysicsCameraShakeFrames, rules.cameraShakeFrames);
+    syncCheckboxInput(worldPhysicsCameraShakeDecay, rules.cameraShakeDecay);
   }
 
   function updateWorldPhysicsValue(prop, value) {
@@ -38,4 +60,8 @@ export function createStageRulesPanelController({
 
 function syncNumberInput(input, value) {
   if (input) input.value = String(value ?? 0);
+}
+
+function syncCheckboxInput(input, value) {
+  if (input) input.checked = Number(value || 0) >= 0.5;
 }

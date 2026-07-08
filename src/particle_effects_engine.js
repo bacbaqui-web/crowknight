@@ -109,21 +109,16 @@ export function createParticleEffects({ actors, world, ctx }) {
     const hitX = box ? box.x + box.w * (attacker.player.facing === 1 ? 0.68 : 0.32) : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 70;
     const effects = attacker.tuning.effects || {};
-    const shake = Number(effects.hitShake ?? 1.6);
     const spark = Number(effects.hitSpark ?? 1);
     const power = defeated ? 1.45 : comboStep === 3 ? 1.25 : 1;
     spawnHitSparks(hitX, hitY, attacker.player.facing, power * spark);
-    shakeScreen((defeated ? 8 : comboStep === 3 ? 6 : 4) * shake, defeated ? 0.18 : 0.12);
   }
 
   function triggerGuardImpact(attacker, target, broken = false) {
     const box = attacker.player.attackInteractionRegion;
     const hitX = box ? box.x + box.w * 0.5 : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 72;
-    const effects = target.tuning.effects || {};
-    const shake = Number(effects.hitShake ?? 1.6);
     spawnHitSparks(hitX, hitY, -attacker.player.facing, broken ? 1.45 : 1.05);
-    shakeScreen((broken ? 7.5 : 4.5) * shake, broken ? 0.18 : 0.11);
     attacker.player.vx = -attacker.player.facing * (broken ? 105 : 68);
   }
 
@@ -181,11 +176,23 @@ export function createParticleEffects({ actors, world, ctx }) {
     });
   }
 
-  function shakeScreen(magnitude, duration) {
+  function shakeScreen(options, duration = null) {
+    const settings =
+      typeof options === 'object'
+        ? options
+        : {
+            magnitude: options,
+            duration,
+          };
+    const magnitude = Math.max(0, Number(settings.magnitude ?? settings.strength ?? 0));
+    const nextDuration = Math.max(0, Number(settings.duration || 0));
+    if (magnitude <= 0 || nextDuration <= 0) return;
     screenShake = {
-      time: Math.max(screenShake.time, duration),
-      duration: Math.max(screenShake.duration, duration),
+      time: Math.max(screenShake.time, nextDuration),
+      duration: Math.max(screenShake.duration, nextDuration),
       magnitude: Math.max(screenShake.magnitude, magnitude),
+      direction: normalizeShakeDirection(settings.direction),
+      decay: settings.decay !== false,
     };
   }
 
@@ -200,11 +207,12 @@ export function createParticleEffects({ actors, world, ctx }) {
   function getScreenShakeOffset() {
     if (screenShake.time <= 0 || screenShake.duration <= 0) return { x: 0, y: 0 };
 
-    const progress = screenShake.time / screenShake.duration;
+    const progress = screenShake.decay === false ? 1 : screenShake.time / screenShake.duration;
     const amount = screenShake.magnitude * progress * progress;
+    const direction = normalizeShakeDirection(screenShake.direction);
     return {
-      x: (Math.random() - 0.5) * amount,
-      y: (Math.random() - 0.5) * amount * 0.7,
+      x: direction === 'vertical' ? 0 : (Math.random() - 0.5) * amount,
+      y: direction === 'horizontal' ? 0 : (Math.random() - 0.5) * amount * 0.7,
     };
   }
 
@@ -258,6 +266,11 @@ export function createParticleEffects({ actors, world, ctx }) {
     emitLandingDust(player, 820);
   }
 
+  function normalizeShakeDirection(value) {
+    if (value === 'horizontal' || value === 'vertical') return value;
+    return 'random';
+  }
+
   function updateDeathParticles(dt) {
     deathParticles = deathParticles.filter((particle) => {
       particle.life -= dt;
@@ -304,6 +317,7 @@ export function createParticleEffects({ actors, world, ctx }) {
     emitDust,
     getScreenShakeOffset,
     reset,
+    shakeScreen,
     spawnEnemyDeathBurst,
     triggerGuardImpact,
     triggerHitImpact,

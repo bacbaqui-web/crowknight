@@ -21,7 +21,7 @@ export const cancelFormula = {
   },
   renderOptions(container, formula, context) {
     container.append(
-      renderFormulaNumberField('Priority', formula.priority, (value) => context.onChange('priority', value))
+      renderFormulaNumberField('우선순위', formula.priority, (value) => context.onChange('priority', value))
     );
   },
   runtime: {

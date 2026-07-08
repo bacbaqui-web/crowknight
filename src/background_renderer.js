@@ -1,4 +1,4 @@
-import { normalizeSceneBackground } from './scene_session_data.js';
+import { MAX_SCREEN_ZOOM, MIN_SCREEN_ZOOM, normalizeSceneBackground } from './scene_session_data.js';
 import { clamp } from './common_helper.js';
 
 const imageCache = new Map();
@@ -127,8 +127,8 @@ function psdLayerZoomDepth(layer) {
 }
 
 function drawWithScreenZoom(ctx, world, zoom, draw) {
-  const safeZoom = clamp(Number(zoom || 1), 1, 3);
-  if (safeZoom <= 1.001) {
+  const safeZoom = clamp(Number(zoom || 1), MIN_SCREEN_ZOOM, MAX_SCREEN_ZOOM);
+  if (Math.abs(safeZoom - 1) <= 0.001) {
     draw();
     return;
   }
@@ -142,7 +142,7 @@ function drawWithScreenZoom(ctx, world, zoom, draw) {
 }
 
 function getScreenZoom(view) {
-  return clamp(Number(view?.zoom || 1), 1, 3);
+  return clamp(Number(view?.zoom || 1), MIN_SCREEN_ZOOM, MAX_SCREEN_ZOOM);
 }
 
 function getGroundScrollX(world, view) {

@@ -8,6 +8,15 @@ export function actionFormula(settings = {}, type) {
 
 export function actionFormulaActiveAtProgress(settings = {}, type, progress = 0, frameCount = ACTION_MAX_FRAMES) {
   const formula = actionFormula(settings, type);
+  return formulaActiveAtProgress(formula, progress, frameCount);
+}
+
+export function activeActionFormulaAtProgress(settings = {}, type, progress = 0, frameCount = ACTION_MAX_FRAMES) {
+  const formula = actionFormula(settings, type);
+  return formulaActiveAtProgress(formula, progress, frameCount) ? formula : null;
+}
+
+export function formulaActiveAtProgress(formula, progress = 0, frameCount = ACTION_MAX_FRAMES) {
   if (!formula?.enabled) return false;
   const frame = actionFormulaFrameFromProgress(progress, frameCount);
   const start = normalizeFormulaFrame(formula.startFrame, 1, frameCount);

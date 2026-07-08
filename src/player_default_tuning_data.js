@@ -16,7 +16,7 @@ export const DEFAULT_PLAYER_TUNING = {
   invulnerability: { hurt: 0, rollEnd: 0 },
   transform: { scale: 1, anchorX: 0, anchorY: 0 },
   hud: { offsetY: 0 },
-  effects: { hitShake: 1.6, hitSpark: 1 },
+  effects: { hitSpark: 1 },
   customActions: [],
   deletedActionKeys: [],
   actionNames: {},

@@ -4,6 +4,8 @@ import { isActionMirrorEnabled } from './action_mirror_helper.js';
 import { actionBlendTitle, normalizeActionBlendFrames } from './action_blend_helper.js';
 import { actionConditionTitle, normalizeActionCondition } from './action_condition_helper.js';
 
+const miniTimelineRangeChangeHandlers = new WeakMap();
+
 export function renderTimelineSlots(track, frameCount, selectedSlot, onSelectSlot) {
   track.innerHTML = '';
   track.style.gridTemplateColumns = `repeat(${frameCount}, 1fr)`;
@@ -24,24 +26,27 @@ export function renderTimelineSlots(track, frameCount, selectedSlot, onSelectSlo
 
 export function renderMiniTimelineRange(track, { totalFrames, startFrame, endFrame, onRangeChange = null }) {
   const frameCount = Math.max(1, Math.round(Number(totalFrames || 1)));
+  const rangeChange = onRangeChange || miniTimelineRangeChangeHandlers.get(track) || null;
   const start = clampModifierFrame(startFrame, frameCount);
   const end = clampModifierFrame(endFrame, frameCount);
   const minFrame = Math.min(start, end);
   const maxFrame = Math.max(start, end);
+  if (rangeChange) miniTimelineRangeChangeHandlers.set(track, rangeChange);
+  else miniTimelineRangeChangeHandlers.delete(track);
   track.dataset.miniTimeline = 'true';
   track.dataset.startFrame = String(startFrame ?? start);
   track.dataset.endFrame = String(endFrame ?? end);
-  track.classList.toggle('is-click-editable', Boolean(onRangeChange));
+  track.classList.toggle('is-click-editable', Boolean(rangeChange));
   renderTimelineSlots(track, frameCount, null, (slot) => {
-    if (!onRangeChange) return;
+    if (!rangeChange) return;
     const nextRange = clickedMiniTimelineRange(slot + 1, minFrame, maxFrame);
     if (nextRange.startFrame === minFrame && nextRange.endFrame === maxFrame) return;
-    const confirmedRange = onRangeChange(nextRange) || nextRange;
+    const confirmedRange = rangeChange(nextRange) || nextRange;
     renderMiniTimelineRange(track, {
       totalFrames: frameCount,
       startFrame: confirmedRange.startFrame,
       endFrame: confirmedRange.endFrame,
-      onRangeChange,
+      onRangeChange: rangeChange,
     });
   });
   track.querySelectorAll('.timeline-slot').forEach((cell, index) => {
@@ -56,6 +61,7 @@ export function syncMiniTimelineTracks(root, totalFrames) {
       totalFrames,
       startFrame: track.dataset.startFrame,
       endFrame: track.dataset.endFrame,
+      onRangeChange: miniTimelineRangeChangeHandlers.get(track) || null,
     });
   });
 }

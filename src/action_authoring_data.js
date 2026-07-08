@@ -131,6 +131,25 @@ export function createAction(tuning, group = 'movement') {
   return key;
 }
 
+export function duplicateAction(tuning, sourceKey) {
+  ensureActionAuthoringData(tuning);
+  const sourceName = actionName(tuning, sourceKey);
+  const name = duplicateActionName(tuning, sourceName);
+  const key = uniqueActionKey(tuning, `${sourceKey}_copy`);
+  const trigger = clone(actionTrigger(tuning, sourceKey));
+  tuning.customActions.push({ key, name, trigger });
+  tuning.actionNames[key] = name;
+  tuning.actionTriggers[key] = clone(trigger);
+  tuning.actionSettings[key] = {
+    ...defaultActionSettings(defaultActionGroup(sourceKey), defaultActionCondition(sourceKey)),
+    ...clone(tuning.actionSettings?.[sourceKey] || {}),
+    group: actionGroup(tuning, sourceKey),
+  };
+  tuning.actionOffsets[key] = clone(tuning.actionOffsets?.[sourceKey] || {});
+  tuning.modifiers.action[key] = clone(tuning.modifiers?.action?.[sourceKey] || []);
+  return key;
+}
+
 export function moveActionToGroup(tuning, key, group) {
   ensureActionAuthoringData(tuning);
   const nextGroup = normalizeActionGroupInput(group, actionGroup(tuning, key));
@@ -354,6 +373,17 @@ function safeActionKey(value) {
     .replace(/[^a-zA-Z0-9_-]+/g, '_')
     .replace(/^_+|_+$/g, '');
   return key || 'customAction';
+}
+
+function duplicateActionName(tuning, sourceName) {
+  const base = `${String(sourceName || '액션').trim() || '액션'} 2`;
+  const used = new Set(actionKeys(tuning).map((key) => actionName(tuning, key)));
+  if (!used.has(base)) return base;
+
+  let index = 3;
+  const stem = base.replace(/\s+2$/, '');
+  while (used.has(`${stem} ${index}`)) index += 1;
+  return `${stem} ${index}`;
 }
 
 function safeActionFileName(value) {

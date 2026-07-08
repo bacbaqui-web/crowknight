@@ -1,6 +1,7 @@
 import { renderEditorDataCard } from './editor_card_panel_view.js';
 import { renderScrubGroups } from './editor_scrub_helper.js';
 import { ACTION_FPS, ACTION_MAX_FRAMES } from './game_config_data.js';
+import { renderGraphPickerField } from './graph_picker_view.js';
 import { MODIFIER_DEFS } from './timeline_modifier_data.js';
 import { renderMiniTimelineRange } from './timeline_dom_helper.js';
 
@@ -259,62 +260,13 @@ function renderModifierSelectSetting(def, modifier, setting, onSettingChange, ta
 }
 
 function renderModifierGraphSetting(def, modifier, setting, onSettingChange, targetKey) {
-  const row = document.createElement('div');
-  row.className = 'modifier-select-row';
-  const label = document.createElement('span');
-  label.textContent = setting.label;
-  const picker = document.createElement('div');
-  picker.className = 'modifier-graph-picker';
-  picker.setAttribute('role', 'radiogroup');
-  picker.setAttribute('aria-label', setting.label);
   const currentValue = modifier?.settings?.[setting.prop] ?? defaultSettingValue(def, setting);
-  graphOptionsForDisplay(setting.options).forEach((option) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'modifier-graph-button';
-    button.dataset.value = option.value;
-    button.title = option.label;
-    button.setAttribute('aria-label', option.label);
-    button.innerHTML = graphIconSvg(option.value);
-    button.addEventListener('click', () => {
-      const nextValue = onSettingChange(def.type, setting.prop, option.value, targetKey) ?? option.value;
-      modifier.settings ||= {};
-      modifier.settings[setting.prop] = nextValue;
-      syncGraphPickerButtons(picker, nextValue);
-    });
-    picker.append(button);
+  return renderGraphPickerField(setting.label, currentValue, setting.options, (value) => {
+    const nextValue = onSettingChange(def.type, setting.prop, value, targetKey) ?? value;
+    modifier.settings ||= {};
+    modifier.settings[setting.prop] = nextValue;
+    return nextValue;
   });
-  syncGraphPickerButtons(picker, currentValue);
-  row.append(label, picker);
-  return row;
-}
-
-function graphOptionsForDisplay(options = []) {
-  const order = ['easeOut', 'linear', 'easeIn'];
-  return [...options].sort((a, b) => order.indexOf(a.value) - order.indexOf(b.value));
-}
-
-function syncGraphPickerButtons(picker, value) {
-  picker.querySelectorAll('.modifier-graph-button').forEach((button) => {
-    const active = button.dataset.value === value;
-    button.classList.toggle('is-active', active);
-    button.setAttribute('aria-pressed', String(active));
-  });
-}
-
-function graphIconSvg(value) {
-  const paths = {
-    easeOut: 'M16 50 C19 28 34 15 56 10',
-    easeIn: 'M16 50 C31 49 49 33 56 10',
-    linear: 'M16 50 L56 10',
-  };
-  const curvePath = paths[value] || paths.linear;
-  return `
-    <svg viewBox="0 0 68 58" aria-hidden="true" focusable="false">
-      <path class="modifier-graph-axis" d="M14 8 V50 H60"></path>
-      <path class="modifier-graph-curve" d="${curvePath || curvePath.linear}"></path>
-    </svg>
-  `;
 }
 
 function defaultSettingValue(def, setting) {

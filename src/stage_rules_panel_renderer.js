@@ -8,12 +8,12 @@ export function renderStageRulesPanels(panel, { definitions = STAGE_RULES_PANEL_
 const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
   {
     key: 'worldPhysics',
-    title: 'World Physics',
+    title: '스테이지 물리',
     fields: [
       {
         type: 'number',
         id: 'worldPhysicsGravity',
-        label: 'Gravity',
+        label: '중력',
         min: 0,
         max: 100,
         step: 0.05,
@@ -23,12 +23,48 @@ const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
       {
         type: 'number',
         id: 'worldPhysicsInertia',
-        label: 'Inertia',
+        label: '관성',
         min: 0,
         max: 300,
         step: 1,
         unit: 'frame',
         title: '입력이나 힘이 멈춘 뒤 velocity가 0이 되기까지 걸리는 frame 수입니다.',
+      },
+      {
+        type: 'number',
+        id: 'worldPhysicsAirControl',
+        label: '공중 조작',
+        min: 0,
+        max: 100,
+        step: 0.05,
+        unit: 'px/f',
+        title: '공중에서 좌우 입력이 있을 때 X velocity에 더하는 값입니다.',
+      },
+      {
+        type: 'number',
+        id: 'worldPhysicsCameraShakePower',
+        label: '흔들림 강도',
+        min: 0,
+        max: 100,
+        step: 0.5,
+        unit: '',
+        title: '공격박스와 피격박스가 닿았을 때 적용할 흔들림 강도입니다.',
+      },
+      {
+        type: 'number',
+        id: 'worldPhysicsCameraShakeFrames',
+        label: '흔들림 시간',
+        min: 0,
+        max: 120,
+        step: 1,
+        unit: 'frame',
+        title: '공격박스와 피격박스가 닿았을 때 흔들림이 유지되는 frame 수입니다.',
+      },
+      {
+        type: 'checkbox',
+        id: 'worldPhysicsCameraShakeDecay',
+        label: '점점 약해짐',
+        title: '흔들림이 시간이 지나며 약해지게 합니다.',
       },
     ],
   },
@@ -56,6 +92,7 @@ function createStageRulesPanel(definition) {
 function createFieldElement(field) {
   if (field.type === 'select') return createSelectField(field);
   if (field.type === 'rangeNumber') return createRangeNumberField(field);
+  if (field.type === 'checkbox') return createCheckboxField(field);
   if (field.type === 'number') return createNumberField(field);
   if (field.type === 'summary') return createSummaryField(field);
   return document.createTextNode('');
@@ -99,6 +136,22 @@ function createRangeNumberField(field) {
   });
 
   row.append(label, range, number);
+  return row;
+}
+
+function createCheckboxField(field) {
+  const row = document.createElement('label');
+  row.className = 'select-row';
+  row.title = field.title || field.label;
+
+  const label = document.createElement('span');
+  label.textContent = field.label;
+
+  const input = document.createElement('input');
+  input.id = field.id;
+  input.type = 'checkbox';
+
+  row.append(label, input);
   return row;
 }
 

@@ -42,25 +42,38 @@ import {
 } from './puppet_player_geometry_helper.js';
 import { createPuppetPose } from './actor_pose_helper.js';
 import { actionDescriptors } from './action_authoring_data.js';
-import { timelinePlaybackProgress } from './timeline_playback_helper.js';
+import { timelineFrameCount, timelinePlaybackProgress } from './timeline_playback_helper.js';
 import { actionTimelineMirrorSign, mirrorActionFrameValue } from './action_mirror_helper.js';
 import { ACTION_FPS, ACTION_PART_KEYS } from './game_config_data.js';
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
-import { actionFormula } from './formula_runtime_engine.js';
+import { actionFormula, formulaFrameBoundary } from './formula_runtime_engine.js';
 import { normalizeActionCondition } from './action_condition_helper.js';
 import { normalizeActionGroup } from './action_group_helper.js';
 import { interactionObjectRole, isInteractionObjectPartKey } from './interaction_object_editor_controller.js';
 
 const ACTION_BLEND_VISUAL_KEYS = ['x', 'y', 'ax', 'ay', 'w', 'h', 'rot', 'opacity', 'anchorX', 'anchorY'];
+const ROTATION_CYCLE_DEGREES = 360;
 
 function blendActionOffset(from = {}, to = {}, current = {}, t = 1) {
   const next = { ...current };
   ACTION_BLEND_VISUAL_KEYS.forEach((key) => {
     const start = Number(from?.[key] ?? next[key] ?? 0);
     const end = Number(to?.[key] ?? next[key] ?? 0);
-    next[key] = lerp(start, end, t);
+    next[key] = key === 'rot' ? blendRotationShortest(start, end, t) : lerp(start, end, t);
   });
   return next;
+}
+
+function blendRotationShortest(from, to, t) {
+  return from + shortestRotationDelta(from, to) * t;
+}
+
+function shortestRotationDelta(from, to) {
+  return positiveModulo(to - from + ROTATION_CYCLE_DEGREES / 2, ROTATION_CYCLE_DEGREES) - ROTATION_CYCLE_DEGREES / 2;
+}
+
+function positiveModulo(value, divisor) {
+  return ((value % divisor) + divisor) % divisor;
 }
 
 function canRunFallbackCondition(player, key) {
@@ -117,6 +130,7 @@ export class PuppetPlayer {
     this.customActionElapsed = 0;
     this.customActionMoveProgress = 0;
     this.customActionBlend = null;
+    this.customActionTargetMove = null;
     this.fallbackActionKey = 'idle';
     this.hurtTime = 0;
     this.guardActive = false;
@@ -154,6 +168,7 @@ export class PuppetPlayer {
       this.customActionElapsed = 0;
       this.customActionMoveProgress = 0;
       this.customActionBlend = null;
+      this.customActionTargetMove = null;
       this.velocityControl = null;
     }
   }
@@ -255,6 +270,61 @@ export class PuppetPlayer {
     matrix = multiplyMatrix(matrix, rotationMatrix(pose.weapon));
     matrix = multiplyMatrix(matrix, translationMatrix(weaponX + anchorLocalX, weaponY + anchorLocalY));
     matrix = multiplyMatrix(matrix, rotationMatrix(deg((weapon.rot || 0) + (weaponOffset.rot || 0))));
+    return matrix;
+  }
+
+  shieldAnchorTransform() {
+    const pose = this.getPose();
+    const rig = this.rig;
+    const master = this.getPartOffset('master');
+    const shoulder = this.getPartOffset('shoulderL');
+    const upperPart = rig.upperArmL;
+    const lowerPart = rig.lowerArmL;
+    const shield = rig.shield;
+    const shieldOffset = this.getPartOffset('shield');
+    const shieldX = (shield.x || 0) + (shield.anchorOffsetX || 0) + shieldOffset.x;
+    const shieldY = (shield.y || 0) + (shield.anchorOffsetY || 0) + shieldOffset.y;
+    const anchorLocalX = shield.ax ?? shield.ox ?? 0;
+    const anchorLocalY = shield.ay ?? shield.oy ?? 0;
+    const shoulderGroup = this.groupControl(rig.shoulderL, shoulder);
+    let matrix = identityMatrix();
+
+    matrix = multiplyMatrix(matrix, translationMatrix(this.x, this.y + pose.bobY));
+    matrix = multiplyMatrix(
+      matrix,
+      scaleMatrix(this.facing * this.transform.scale, this.transform.scale * pose.scaleY)
+    );
+    matrix = multiplyMatrix(matrix, translationMatrix(this.transform.anchorX, this.transform.anchorY));
+    matrix = multiplyMatrix(matrix, rotationMatrix(pose.root));
+    matrix = multiplyMatrix(matrix, translationMatrix(master.anchorX || 0, master.anchorY || 0));
+    matrix = multiplyMatrix(matrix, translationMatrix(master.x || 0, master.y || 0));
+    matrix = multiplyMatrix(matrix, rotationMatrix(deg(master.rot || 0)));
+    matrix = multiplyMatrix(
+      matrix,
+      scaleMatrix(Math.max(0.05, 1 + Number(master.w || 0)), Math.max(0.05, 1 + Number(master.h || 0)))
+    );
+    matrix = multiplyMatrix(matrix, translationMatrix(-(master.anchorX || 0), -(master.anchorY || 0)));
+    matrix = multiplyMatrix(
+      matrix,
+      translationMatrix(
+        rig.shoulderL.x + shoulder.x + Number(shoulderGroup.anchorOffsetX || 0) + Number(shoulderGroup.ax || 0),
+        rig.shoulderL.y + shoulder.y + Number(shoulderGroup.anchorOffsetY || 0) + Number(shoulderGroup.ay || 0)
+      )
+    );
+    matrix = multiplyMatrix(
+      matrix,
+      scaleMatrix(Math.max(0.05, shoulderGroup.w ?? 1), Math.max(0.05, shoulderGroup.h ?? 1))
+    );
+    matrix = multiplyMatrix(
+      matrix,
+      rotationMatrix(pose.upperArmL + deg((rig.shoulderL.rot || 0) + (shoulder.rot || 0)))
+    );
+    matrix = multiplyMatrix(matrix, translationMatrix(-Number(shoulderGroup.ax || 0), -Number(shoulderGroup.ay || 0)));
+    matrix = multiplyMatrix(matrix, translationMatrix(0, upperPart.h - 8));
+    matrix = multiplyMatrix(matrix, rotationMatrix(pose.lowerArmL));
+    matrix = multiplyMatrix(matrix, translationMatrix(0, lowerPart.h - 4));
+    matrix = multiplyMatrix(matrix, translationMatrix(shieldX + anchorLocalX, shieldY + anchorLocalY));
+    matrix = multiplyMatrix(matrix, rotationMatrix(deg((shield.rot || 0) + (shieldOffset.rot || 0))));
     return matrix;
   }
 
@@ -477,6 +547,11 @@ export class PuppetPlayer {
         Number(this.customActionDuration || this.getActionDuration(this.customActionKey, 0.6))
       );
       const raw = Math.max(0, Number(this.customActionElapsed || 0)) / duration;
+      const cast = actionFormula(settings, 'cast');
+      if (this.customActionRepeatRelease) return repeatCastReleaseProgress(this.customActionRepeatRelease);
+      if (this.customActionTriggerMode === 'pressLoop' && cast?.mode === 'repeat') {
+        return repeatCastTimelineProgress(raw, cast, timelineFrameCount(settings));
+      }
       const playback = this.customActionTriggerMode === 'pressLoop' ? settings.playback : 'once';
       return timelinePlaybackProgress(raw, playback);
     }
@@ -537,6 +612,23 @@ export class PuppetPlayer {
   drawImageGlow(ctx, image, x, y, w, h) {
     drawPuppetImageGlow(ctx, image, x, y, w, h);
   }
+}
+
+function repeatCastTimelineProgress(rawProgress, cast, frameCount) {
+  const count = Math.max(1, Number(frameCount || 1));
+  const start = formulaFrameBoundary(cast.repeatStartFrame, count, 1);
+  const end = formulaFrameBoundary(cast.repeatEndFrame, count, count);
+  const minFrame = Math.min(start, end);
+  const maxFrame = Math.max(start, end);
+  const rangeFrames = Math.max(1, maxFrame - minFrame + 1);
+  const rangeProgress = ((Math.max(0, Number(rawProgress || 0)) * count) % rangeFrames) / count;
+  return clamp((minFrame - 1) / count + rangeProgress, 0, 1);
+}
+
+function repeatCastReleaseProgress(releaseState) {
+  const duration = Math.max(0.000001, Number(releaseState?.duration || 0));
+  const t = clamp(Number(releaseState?.elapsed || 0) / duration, 0, 1);
+  return lerp(Number(releaseState?.startProgress || 0), Number(releaseState?.endProgress || 0), t);
 }
 
 function emptyInteractionValues() {
