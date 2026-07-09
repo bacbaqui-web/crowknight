@@ -268,7 +268,7 @@ export function mergePsdBackgroundLayers(savedLayers, manifestLayers, { useManif
           id,
           name: manifestName || saved?.name || `레이어 ${index + 1}`,
           sourceId: manifestLayer?.sourceId ?? saved?.sourceId ?? null,
-          imageSrc: hasLayerImage ? `./runtime/${manifestLayer.image}` : saved?.imageSrc,
+          imageSrc: hasLayerImage ? psdManifestLayerImageSrc(manifestLayer.image) : saved?.imageSrc,
           enabled: saved?.enabled ?? manifestLayer?.visible ?? true,
           opacity: saved?.opacity ?? manifestLayer?.opacity ?? 1,
           offsetX: hasLayerImage && !savedHadLayerImage ? 0 : (saved?.offsetX ?? manifestLayer?.offsetX ?? 0),
@@ -281,6 +281,13 @@ export function mergePsdBackgroundLayers(savedLayers, manifestLayers, { useManif
     .filter(Boolean);
 
   return merged.sort((a, b) => a.order - b.order);
+}
+
+function psdManifestLayerImageSrc(image) {
+  const value = String(image || '').trim();
+  if (!value) return '';
+  if (/^(?:https?:|data:|\.\/|\/)/.test(value)) return value;
+  return `./assets/backgrounds/current/${value}`;
 }
 
 function uniqueLayerNameMap(layers) {

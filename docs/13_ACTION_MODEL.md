@@ -35,7 +35,7 @@ New Feature
 
 - Timeline은 움직임이다. 위치, 크기, 회전, opacity, timing처럼 시간에 따라 변하는 제작 데이터다.
 - Interaction은 다른 객체와의 관계다. 충돌, 피격, 공격, 방어처럼 서로 만났을 때 의미가 생기는 데이터다.
-- Formula는 실행 중 적용되는 Action 단위 수식이다. 현재 MVP에서는 시전, 쿨타임, 속도, 목표이동, 고정, 보간, 캔슬, 연계를 같은 Formula Card 구조로 다룬다.
+- Formula는 실행 중 적용되는 Action 단위 수식이다. 현재 MVP에서는 시전, 쿨타임, 속도, 목표이동, 관성, 잔상, 고정, 보간, 캔슬, 연계를 같은 Formula Card 구조로 다룬다.
 - Runtime Rule은 게임 전체에 필요한 실행 규칙이다. 입력 수집, 중력, 월드 경계, HP, score, overlap 계산처럼 특정 Action 이름에 종속되지 않는 규칙이다.
 
 새 Action은 위 블록을 조합해서 만든다. Runtime은 `attack1`, `roll`, `fireSlash` 같은 이름을 보고 특별 처리하지 않는다.
@@ -343,6 +343,7 @@ MVP formula:
 - `velocity` / `속도`: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다.
 - `targetMove` / `목표이동`: `triggerFrame`에 발동해 그림자 / 발밑 기준 목표 좌표까지 이동한다. `moveFrames=0`이면 즉시 도달하고, `1~10`이면 해당 Action Timeline frame 수 동안 목표까지 보간한다. 목표에 도달하면 종료한다.
 - `inertia` / `관성`: `startFrame`~`endFrame` 구간에서 World Physics 기본 관성에 추가 관성을 더한다.
+- `afterimage` / `잔상`: `startFrame`~`endFrame` 구간에서 현재 actor pose snapshot을 Action Timeline 1프레임당 생성 수 기준으로 남겨 시각적인 잔상을 만든다. 원본 캐릭터 투명 잔상 위에 색상 실루엣을 별도 투명도로 얹으며, Runtime 판정과 위치 계산은 바꾸지 않는다.
 - `lock` / `고정`: `startFrame`~`endFrame` 동안 선택한 방향을 바라보게 한다.
 - `blend` / `보간`: Action 시작 구간에서 transition blend를 적용한다.
 - `cancel` / `캔슬`: `startFrame`~`endFrame` 동안만 다른 Action으로 interrupt 가능하다. 구간 밖에서는 Cancel OFF처럼 동작한다.
@@ -446,7 +447,7 @@ Formula / Interaction 쪽으로 이동 가능:
 
 - collision: 충돌. Setup 기본값은 위치/크기/회전과 `noOverlap`, `pushPower`, `resistance`다.
 - hurt: 피격. Setup 기본값은 위치/크기/회전과 `hurtByAttack`, `hurtByCollision`, `invincibleTime`이다.
-- attack: 공격. Setup 기본값은 위치/크기/회전과 `damage`, `knockback` 설정이다.
+- attack: 공격. Setup 기본값은 위치/크기/회전과 `damage`, `knockback`, `hitMode` 설정이다.
 - guard: 방어. Setup 기본값은 위치/크기/회전과 `block`, `deflect`, `parry` concept flag다.
 
 Editor 동작:
@@ -473,6 +474,8 @@ Interaction box click
 - Action-level Interaction 설정이 없는 Action만 Setup fallback box를 사용한다.
 - Interaction box를 클릭하면 box key에 대응하는 role 설정을 기본으로 펼친다. 예: `attackInteractionObject → attack`.
 - Attack knockback 방향은 별도 방향 필드를 저장하지 않고 MVP에서는 공격자 → 피격자 방향으로 해석한다.
+- Attack `hitMode`는 `box` / `trace`를 사용한다. `box`는 현재 frame 공격박스만 검사하고, `trace`는 이전 frame 공격박스와 현재 frame 공격박스를 이어 빠르게 지나간 중간 경로도 검사한다.
+- Attack Trace Effect 시각 기능은 제거했다. `hitMode=trace`는 판정 방식으로만 유지하며 별도 궤적을 화면에 그리지 않는다.
 - Camera Shake는 Attack Interaction에 저장하지 않는다. 공격박스가 피격박스에 실제로 닿아 damage / knockback 처리 위치에 도달했을 때 Stage의 스테이지 물리 hit camera shake 설정을 읽어 실행한다.
 
 현재 구조와의 차이:

@@ -31,6 +31,7 @@ export function syncActionAuthoringControls(elements, tuning) {
   syncActionGroupOptions(elements.actionGroupSelect, activeGroup);
   syncActionGroupSelect(elements, activeGroup);
   replaceSelectOptions(actionSelect, actionOptionsForGroup(tuning, activeGroup));
+  syncEffectAuthoringControls(elements, tuning);
   if (
     previousValue &&
     actionGroup(tuning, previousValue) === activeGroup &&
@@ -43,6 +44,25 @@ export function syncActionAuthoringControls(elements, tuning) {
   syncTriggerControls(elements, tuning, actionSelect.value);
 }
 
+export function syncEffectAuthoringControls(elements, tuning, preferredValue = elements.effectSelect?.value) {
+  const { effectGroupSelect, effectSelect } = elements;
+  if (!effectSelect) return;
+  const activeGroup = activeEffectGroup(elements, tuning, preferredValue || effectSelect.value);
+  syncActionGroupOptions(effectGroupSelect, activeGroup);
+  syncEffectGroupSelect(elements, activeGroup);
+  syncEffectOptions(effectSelect, tuning, activeGroup, preferredValue);
+}
+
+function syncEffectOptions(effectSelect, tuning, activeGroup, preferredValue) {
+  if (!effectSelect) return;
+  replaceSelectOptions(effectSelect, actionOptionsForGroup(tuning, activeGroup));
+  if (preferredValue && hasSelectOption(effectSelect, preferredValue)) {
+    effectSelect.value = preferredValue;
+  } else if (effectSelect.options[0]) {
+    effectSelect.value = effectSelect.options[0].value;
+  }
+}
+
 export function bindActionAuthoringControls(elements, callbacks) {
   const {
     actionAdd,
@@ -52,9 +72,11 @@ export function bindActionAuthoringControls(elements, callbacks) {
     actionMove,
     actionName: actionNameInput,
     actionSelect,
+    effectGroupSelect,
   } = elements;
   if (!actionSelect || !actionNameInput) return;
   syncActionGroupOptions(actionGroupSelect, activeActionGroup(elements, callbacks.getTuning(), actionSelect.value));
+  syncEffectAuthoringControls(elements, callbacks.getTuning());
   populateTriggerControls(elements, replaceSelectOptions);
   syncTriggerControls(elements, callbacks.getTuning(), actionSelect.value);
 
@@ -85,6 +107,11 @@ export function bindActionAuthoringControls(elements, callbacks) {
   actionGroupSelect?.addEventListener('change', () => {
     syncActionAuthoringControls(elements, callbacks.getTuning());
     syncSelectedAction(elements, callbacks, { apply: true });
+  });
+  effectGroupSelect?.addEventListener('change', () => {
+    syncEffectAuthoringControls(elements, callbacks.getTuning());
+    callbacks.handleEffectChange?.();
+    callbacks.applySelected();
   });
 
   actionMove?.addEventListener('click', () => {
@@ -127,6 +154,7 @@ export function bindActionAuthoringControls(elements, callbacks) {
   actionNameInput.addEventListener('input', () => {
     renameAction(callbacks.getTuning(), actionSelect.value, actionNameInput.value);
     syncSelectedActionOption(actionSelect, callbacks.getTuning());
+    syncEffectAuthoringControls(elements, callbacks.getTuning());
     callbacks.applySelected();
   });
   actionNameInput.addEventListener('change', callbacks.commitUndoSnapshot);
@@ -151,9 +179,19 @@ function activeActionGroup(elements, tuning, key = '') {
   return normalizeActionGroup(actionGroup(tuning, key), 'base');
 }
 
+function activeEffectGroup(elements, tuning, key = '') {
+  if (elements.effectGroupSelect?.value) return normalizeActionGroup(elements.effectGroupSelect.value);
+  return normalizeActionGroup(actionGroup(tuning, key), 'base');
+}
+
 function syncActionGroupSelect(elements, activeGroup) {
   const group = normalizeActionGroup(activeGroup, 'base');
   if (elements.actionGroupSelect) elements.actionGroupSelect.value = group;
+}
+
+function syncEffectGroupSelect(elements, activeGroup) {
+  const group = normalizeActionGroup(activeGroup, 'base');
+  if (elements.effectGroupSelect) elements.effectGroupSelect.value = group;
 }
 
 function syncActionGroupOptions(select, activeGroup) {

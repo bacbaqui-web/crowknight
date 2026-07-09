@@ -16,6 +16,7 @@ import {
   translationMatrix,
 } from './puppet_player_geometry_helper.js';
 import { isRuntimeDebugEnabled, recordRuntimeDebugEvent } from './runtime_debug_state.js';
+import { normalizeInteractionSelectValue } from './interaction_field_data.js';
 
 export function debugInteractionRuntimeLog(type, payload = {}) {
   if (!isRuntimeDebugEnabled()) return;
@@ -67,6 +68,7 @@ export function createInteractionRegion({
 export function interactionReactionFromValue(value = {}) {
   return {
     damage: Math.max(0, Number(value?.damage ?? 1)),
+    hitMode: normalizeInteractionSelectValue('hitMode', value?.hitMode),
     stun: Math.max(0, Number(value?.stun || 0)),
     knockbackX: Number(value?.knockbackX || 0),
     knockbackY: Number(value?.knockbackY || 0),

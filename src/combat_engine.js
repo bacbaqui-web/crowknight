@@ -2,6 +2,11 @@ import { requestRuntimeAction } from './action_trigger_engine.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
 import { ACTION_FPS } from './game_config_data.js';
+import {
+  cloneInteractionRegionSnapshot,
+  regionPoints,
+  sweptInteractionRegion,
+} from './interaction_swept_region_helper.js';
 
 export function updateBattleActorMotion({ actors, playerActor, keys, pressed, world, dt }) {
   updateActorCombatTimers(actors, dt);
@@ -27,7 +32,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       if (shouldSkipTarget(attacker, target)) return;
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
       const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
-      const attackRegion = overlappingAttackRegion(attackRegions, targetHurtRegions);
+      const attackRegion = overlappingAttackRegion(attacker, attackRegions, targetHurtRegions);
       if (!attackRegion) {
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('attack-hurt-no-overlap', {
@@ -43,7 +48,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
         }
         return;
       }
-      if (isAttackBlocked(attackRegions, cachedInteractionRegions(regionCache, target, 'guard'))) {
+      if (isAttackBlocked(attacker, attackRegions, cachedInteractionRegions(regionCache, target, 'guard'))) {
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('guard-block', {
             attacker: attacker.id,
@@ -85,6 +90,8 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects);
     });
   });
+
+  actors.forEach((actor) => syncPreviousAttackRegions(actor, cachedInteractionRegions(regionCache, actor, 'attack')));
 }
 
 function resolveCollisionInteractions(actors, regionCache) {
@@ -224,20 +231,35 @@ function overlappingCollisionHurtRegion(collisionRegion, hurtRegions) {
   );
 }
 
-function overlappingAttackRegion(attackRegions, hurtRegions) {
+function overlappingAttackRegion(attacker, attackRegions, hurtRegions) {
   return attackRegions.find((attackRegion) =>
     (hurtRegions || []).some(
       (hurtRegion) =>
-        hurtRegion?.reaction?.hurtByAttack !== false && interactionRegionsOverlap(attackRegion, hurtRegion)
+        hurtRegion?.reaction?.hurtByAttack !== false && attackRegionOverlaps(attacker, attackRegion, hurtRegion)
     )
   );
 }
 
-function isAttackBlocked(attackRegions, guardRegions) {
+function isAttackBlocked(attacker, attackRegions, guardRegions) {
   return (guardRegions || []).some(
     (guardRegion) =>
       guardRegion?.reaction?.block === true &&
-      attackRegions.some((attackRegion) => interactionRegionsOverlap(attackRegion, guardRegion))
+      attackRegions.some((attackRegion) => attackRegionOverlaps(attacker, attackRegion, guardRegion))
+  );
+}
+
+function attackRegionOverlaps(attacker, attackRegion, targetRegion) {
+  if (interactionRegionsOverlap(attackRegion, targetRegion)) return true;
+  if (attackRegion?.reaction?.hitMode !== 'trace') return false;
+  const previous = previousAttackRegion(attacker, attackRegion);
+  if (!previous) return false;
+  return interactionRegionsOverlap(sweptInteractionRegion(previous, attackRegion), targetRegion);
+}
+
+function previousAttackRegion(attacker, attackRegion) {
+  const currentActionKey = attacker?.player?.actionKey;
+  return (attacker?.previousAttackRegions || []).find(
+    (region) => region?.key === attackRegion?.key && region?.actionKey === currentActionKey
   );
 }
 
@@ -265,14 +287,9 @@ function convexPolygonsOverlap(a, b) {
   });
 }
 
-function regionPoints(region) {
-  if (region?.points?.length) return region.points;
-  return [
-    { x: region.x, y: region.y },
-    { x: region.x + region.w, y: region.y },
-    { x: region.x + region.w, y: region.y + region.h },
-    { x: region.x, y: region.y + region.h },
-  ];
+function syncPreviousAttackRegions(actor, attackRegions = []) {
+  const actionKey = actor.player.actionKey;
+  actor.previousAttackRegions = attackRegions.map((region) => cloneInteractionRegionSnapshot(region, actionKey));
 }
 
 function projectPolygon(points, axis) {

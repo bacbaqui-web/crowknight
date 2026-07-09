@@ -71,6 +71,7 @@ export function initializeTuningPanelControls({
     actionTriggerRecordStatus,
     actionTriggerRecordComplete,
     actionTriggerRecordCancel,
+    effectGroupSelect,
     effectSelect,
     actionPartSelect,
     actionDuration,
@@ -91,6 +92,7 @@ export function initializeTuningPanelControls({
     actionDeleteKeyframe,
     actionResetAnimation,
     effectDuration,
+    effectFileName,
     effectPlaybackRateRange,
     effectPlaybackRate,
     effectFrameUp,
@@ -107,7 +109,7 @@ export function initializeTuningPanelControls({
   } = elements;
 
   populateTuningPanelSelects(
-    { actorGroupSelect, actorSelect, partSelect, actionSelect, actionPartSelect, effectSelect },
+    { actorGroupSelect, actorSelect, partSelect, actionSelect, actionPartSelect, effectGroupSelect, effectSelect },
     actors,
     rig,
     callbacks.getTuning()
@@ -159,12 +161,15 @@ export function initializeTuningPanelControls({
       actionTriggerRecordStatus,
       actionTriggerRecordComplete,
       actionTriggerRecordCancel,
+      effectGroupSelect,
+      effectSelect,
     },
     {
       beginUndoSnapshot: callbacks.beginUndoSnapshot,
       commitUndoSnapshot: callbacks.commitUndoSnapshot,
       getTuning: callbacks.getTuning,
       handleActionChange: callbacks.handleActionChange,
+      handleEffectChange: callbacks.handleEffectChange,
       applySelected: callbacks.applySelected,
     }
   );
@@ -220,6 +225,7 @@ export function initializeTuningPanelControls({
   bindEffectTimelineControls(
     {
       effectDuration,
+      effectFileName,
       effectPlaybackRateRange,
       effectPlaybackRate,
       effectFrameUp,

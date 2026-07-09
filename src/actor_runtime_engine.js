@@ -1,8 +1,12 @@
 import { clamp, clone, deg, lerp } from './common_helper.js';
 import {
+  INTERACTION_COLOR_PROPS,
   INTERACTION_NUMERIC_PROPS,
+  INTERACTION_SELECT_PROPS,
   INTERACTION_TOGGLE_PROPS,
   interactionDefaultValue,
+  normalizeInteractionColorValue,
+  normalizeInteractionSelectValue,
 } from './interaction_field_data.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import {
@@ -53,6 +57,12 @@ import { interactionObjectRole, isInteractionObjectPartKey } from './interaction
 
 const ACTION_BLEND_VISUAL_KEYS = ['x', 'y', 'ax', 'ay', 'w', 'h', 'rot', 'opacity', 'anchorX', 'anchorY'];
 const ROTATION_CYCLE_DEGREES = 360;
+const INTERACTION_MERGE_PROPS = [
+  ...INTERACTION_TOGGLE_PROPS,
+  ...INTERACTION_NUMERIC_PROPS,
+  ...INTERACTION_SELECT_PROPS,
+  ...INTERACTION_COLOR_PROPS,
+];
 
 function blendActionOffset(from = {}, to = {}, current = {}, t = 1) {
   const next = { ...current };
@@ -85,6 +95,23 @@ function canRunFallbackCondition(player, key) {
 
 function interactionValueEnabled(value = {}, role) {
   return Number(value?.active || 0) >= 0.5 && Number(value?.[role] || 0) >= 0.5;
+}
+
+function interactionFrameValueOverridesAction(prop, value) {
+  if (value === undefined) return false;
+  const fallback = interactionDefaultValue(prop);
+  if (typeof fallback === 'string') return String(value || '') !== fallback;
+  return Number(value ?? fallback) !== Number(fallback);
+}
+
+function timelineSourceControlsInteractionRole(source, role) {
+  if (!source) return false;
+  const frames = [];
+  if (source.start) frames.push(source.start);
+  if (Array.isArray(source.keyframes)) frames.push(...source.keyframes);
+  if (source.end) frames.push(source.end);
+  if (!source.start && !source.end && !Array.isArray(source.keyframes)) frames.push(source);
+  return frames.some((frame) => interactionValueEnabled(frame, role));
 }
 
 export class PuppetPlayer {
@@ -400,7 +427,7 @@ export class PuppetPlayer {
 
   getPartOffset(key) {
     const value = this.actionOffsets?.[this.actionKey]?.[key];
-    const resolved = this.resolveInteractionActionLevelOffset(key, this.resolveActionOffset(value));
+    const resolved = this.resolveInteractionActionLevelOffset(key, this.resolveActionOffset(value), value);
     return this.resolveActionBlendOffset(key, resolved);
   }
 
@@ -412,14 +439,31 @@ export class PuppetPlayer {
     return this.resolveActionOffsetAt(value, this.getActionFrameProgress(), this.actionMirrorSettings, this.facing);
   }
 
-  resolveInteractionActionLevelOffset(key, timelineOffset) {
+  resolveInteractionActionLevelOffset(key, timelineOffset, timelineSource = null) {
     if (!isInteractionObjectPartKey(key)) return timelineOffset;
     const role = interactionObjectRole(key);
     const actionValue = this.actionSettings?.[this.actionKey]?.interactions?.[key];
     if (!role || !actionValue) return timelineOffset;
-    if (interactionValueEnabled(timelineOffset, role)) return timelineOffset;
-    if (!interactionValueEnabled(actionValue, role)) return timelineOffset;
-    return { ...timelineOffset, ...actionValue };
+    const timelineEnabled = interactionValueEnabled(timelineOffset, role);
+    const timelineControlsActivation = timelineSourceControlsInteractionRole(timelineSource, role);
+    const actionEnabled = interactionValueEnabled(actionValue, role);
+    if (!timelineEnabled && !actionEnabled) return timelineOffset;
+
+    const merged = { ...timelineOffset };
+    INTERACTION_MERGE_PROPS.forEach((prop) => {
+      if (prop === 'active' || prop === role) return;
+      if (actionValue[prop] !== undefined) merged[prop] = actionValue[prop];
+      if (interactionFrameValueOverridesAction(prop, timelineOffset[prop])) merged[prop] = timelineOffset[prop];
+    });
+
+    if (timelineControlsActivation || timelineEnabled || !actionEnabled) {
+      merged.active = timelineOffset.active;
+      merged[role] = timelineOffset[role];
+    } else {
+      merged.active = actionValue.active;
+      merged[role] = actionValue[role];
+    }
+    return merged;
   }
 
   resolveActionOffsetForAction(actionKey, partKey, progress = 0, facing = this.facing) {
@@ -639,6 +683,12 @@ function emptyInteractionValues() {
   INTERACTION_NUMERIC_PROPS.forEach((prop) => {
     values[prop] = Number(interactionDefaultValue(prop));
   });
+  INTERACTION_SELECT_PROPS.forEach((prop) => {
+    values[prop] = normalizeInteractionSelectValue(prop, interactionDefaultValue(prop));
+  });
+  INTERACTION_COLOR_PROPS.forEach((prop) => {
+    values[prop] = normalizeInteractionColorValue(prop, interactionDefaultValue(prop));
+  });
   return values;
 }
 
@@ -653,6 +703,12 @@ function interpolateInteractionValues(start = {}, end = {}, t = 0) {
       Number(end[prop] ?? interactionDefaultValue(prop)),
       t
     );
+  });
+  INTERACTION_SELECT_PROPS.forEach((prop) => {
+    values[prop] = normalizeInteractionSelectValue(prop, start[prop] ?? interactionDefaultValue(prop));
+  });
+  INTERACTION_COLOR_PROPS.forEach((prop) => {
+    values[prop] = normalizeInteractionColorValue(prop, start[prop] ?? interactionDefaultValue(prop));
   });
   return values;
 }

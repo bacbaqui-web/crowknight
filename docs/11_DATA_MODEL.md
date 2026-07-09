@@ -35,7 +35,7 @@ Action 제작 모델의 목표와 migration 원칙은 `13_ACTION_MODEL.md`를 �
 
 현재 Effect 관련 저장 source:
 
-- `tuning.effectSettings`: Effect duration/playback option.
+- `tuning.effectSettings`: Effect duration/playback option과 Effect 이미지 파일명용 `fileName`.
 - `tuning.effectOffsets`: Effect Timeline frame data.
 - `tuning.modifiers.effect`: Effect modifier 목록.
 
@@ -70,7 +70,8 @@ tuning.actionSettings[actionKey]
     { type: "blend", enabled: true, startFrame: 1, endFrame: 3, frames: 3 },
     { type: "cancel", enabled: true, startFrame: 5, endFrame: 12, priority: 0 },
     { type: "link", enabled: true, fromActions: ["attack1"], startFrame: 6, endFrame: 12 },
-    { type: "cooldown", enabled: true, seconds: 0.5 }
+    { type: "cooldown", enabled: true, seconds: 0.5 },
+    { type: "afterimage", enabled: true, startFrame: 1, endFrame: 8, amount: 1, opacity: 0.35, color: "#8edab8", colorOpacity: 0.35, fadeFrames: 10 }
   ]
 }
 ```
@@ -86,7 +87,7 @@ tuning.actionSettings[actionKey]
 - `group`: Editor 목록과 기본자세 fallback 선택에 쓰는 Action 그룹. `base`, `movement`, `attack`, `special` 중 하나이며 custom Action 기본값은 `movement`다. 기존 `idle`은 `base`로 normalize한다.
 - `editPivot`: Action Timeline에서 파츠 선택 없이 전체 키프레임을 그룹처럼 편집할 때 쓰는 Action 공통 Pivot이다. `{ x, y }` 형태이며 기본값은 `{ x: 0, y: 0 }`이다. Pivot은 Action별로 하나만 저장하고 키프레임별로 저장하지 않는다.
 - `interactions`: Action 단위 Interaction 설정이다. Interaction box를 Action 탭에서 클릭하면 Timeline keyframe 선택과 무관하게 이 위치에 저장한다.
-- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `시전`, `쿨타임`, `속도`, `목표이동`, `관성`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
+- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `시전`, `쿨타임`, `속도`, `목표이동`, `관성`, `잔상`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
 - `runtimeRules`: legacy compatibility 저장 위치다. UI에는 직접 표시하지 않으며 normalize/migration 단계에서 `formulas[]`로 변환한다.
 
 Formula Card:
@@ -96,6 +97,7 @@ Formula Card:
 - `velocity` / UI `속도`: `startFrame~endFrame` 동안 `px/f` velocity를 적용한다. `x`, `y`, `mode`를 가진다.
 - `targetMove` / UI `목표이동`: `triggerFrame`에 발동해 그림자 / 발밑 기준 목표 좌표까지 이동한다. `triggerFrame`, `x`, `y`, `moveFrames`를 가진다. `moveFrames`는 `0`이면 즉시 도달, `1~10`이면 해당 Action Timeline frame 수 동안 목표까지 보간한다. Mini Timeline은 사용하지 않는다.
 - `inertia` / UI `관성`: `startFrame~endFrame` 동안 World Physics 기본 관성에 `addInertia`를 더한다. `applyTarget`은 `ground`, `air`, `all` 중 하나다.
+- `afterimage` / UI `잔상`: `startFrame~endFrame` 동안 actor pose snapshot을 남기는 시각 효과다. `amount`, `opacity`, `color`, `colorOpacity`, `fadeFrames`를 가진다. `amount`는 Action Timeline 1프레임당 생성 수다. 원본 캐릭터 잔상은 `opacity`로 그리고, 색상 실루엣은 그 위에 `colorOpacity`로 얹는다. Runtime 판정에는 영향을 주지 않는다.
 - `lock` / UI `고정`: 구간 동안 지정한 방향을 바라보게 한다. `direction`은 `left`, `right` 중 하나이며, 기존 direction 없는 데이터는 `right`로 normalize한다.
 - `blend` / UI `보간`: Action 전환 포즈 연결을 적용한다. `frames`를 가진다.
 - `cancel` / UI `캔슬`: 구간 동안만 다른 Action으로 interrupt 가능하다. `priority`를 가진다.
@@ -232,7 +234,7 @@ Editor 기준 fallback interaction object 저장 위치다.
 | ---------------------------- | ----------- | -------- | ---------------------------------------------------------------------- |
 | `collisionInteractionObject` | `collision` | `body`   | Transform fields + `noOverlap`, `pushPower`, `resistance`              |
 | `hurtInteractionObject`      | `hurt`      | `body`   | Transform fields + `hurtByAttack`, `hurtByCollision`, `invincibleTime` |
-| `attackInteractionObject`    | `attack`    | `weapon` | Transform fields + `damage`, `knockback`                               |
+| `attackInteractionObject`    | `attack`    | `weapon` | Transform fields + `damage`, `knockback`, `hitMode`, trail effect      |
 | `guardInteractionObject`     | `guard`     | `shield` | Transform fields + `block`, `deflect`, `parry`                         |
 
 저장 key는 InteractionObject 용어를 사용한다.
@@ -281,7 +283,7 @@ Combat은 draw 순서에 의존하지 않도록 `player.hitRegions`를 Runtime s
 Runtime 공격 효과:
 
 ```text
-tuning.actionOffsets[actionKey][partKey].damage/knockback
+tuning.actionOffsets[actionKey][partKey].damage/knockback/hitMode
 legacy: stun/knockbackX/knockbackY/deathBurst
 → actor.player.attackInteractionRegion.reaction
 → combat_engine.applyHitReaction()
@@ -329,7 +331,7 @@ Frame value:
 - `opacity`
 - `active` (common interaction state)
 - `attack`, `hurt`, `collision`, `guard` (interaction role switches)
-- `damage`, `knockback` (attack MVP settings)
+- `damage`, `knockback`, `hitMode` (attack MVP settings)
 - `stun`, `knockbackX`, `knockbackY`, `deathBurst` (legacy attack reaction compatibility)
 - `noOverlap`, `pushPower`, `resistance` (collision settings)
 - `hurtByAttack`, `hurtByCollision`, `invincibleTime` (hurt settings)
@@ -366,6 +368,10 @@ Frame value:
 - `opacity`
 - `image`
 - `active`
+
+Effect 전체 설정:
+
+- `tuning.effectSettings[effectKey].fileName`: Effect 이미지 업로드 파일명 slug다. 내부 `effectKey`를 바꾸지 않고, 새 업로드의 image key를 `effect_<fileName>`으로 만들 때만 사용한다.
 - `attack`, `hurt`, `collision`, `guard`
 - `stun`, `knockbackX`, `knockbackY`, `deathBurst`
 - `pushPower`
@@ -444,9 +450,9 @@ Asset reference 규칙:
 - `actors[id].assets`: 캐릭터 파츠 PNG source와 선택 캐릭터 PSD source를 저장한다.
 - `characters`: Setup 캐릭터 목록 metadata를 저장한다. 저장된 `characters`가 없을 때만 기존 고정 `ACTOR_DEFS`를 fallback으로 사용한다.
 - 새 캐릭터는 `id`, `type`, `name`, `folder`, `storageFolder`, `psdFileName`, `deletable`을 가진다. `folder`는 로컬 `assets/characters/{folder}`와 Firebase Storage `crow-knight/assets/characters/{folder}`를 연결하는 기준이다.
-- `effectAssets`: 이펙트 PNG source와 선택 가능한 effect PSD source를 저장한다.
-- `sessions[id].background.psdPreview`: 배경 preview URL, 원본 PSD source URL, 크기 metadata를 저장한다.
-- `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다.
+- `effectAssets`: 이펙트 PNG source와 선택 가능한 effect PSD source를 저장한다. Effect 파일명 slug가 있으면 로컬 업로드 source는 `assets/effects/custom/effect_<fileName>.png`를 사용한다.
+- `sessions[id].background.psdPreview`: 배경 preview URL, 원본 PSD source URL, 크기 metadata를 저장한다. 로컬 PSD export는 `assets/backgrounds/current/background-preview.webp`만 사용한다.
+- `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다. 로컬 PSD layer export는 `assets/backgrounds/current/layers/*.webp`만 사용한다.
 - 상단 Firebase 업로드 버튼은 Project State metadata만 Firestore에 저장한다. PSD/PNG/WebP Storage 업로드는 실행하지 않는다.
 - 상단 Firebase 다운로드 버튼은 Firestore metadata만 받아 설정 수치에 적용한다.
 - Project State metadata는 `projectSettings/crowKnight` 단일 문서에 저장한다. 문서 크기를 줄이기 위해 가능하면 gzip-base64 압축 필드로 저장한다.

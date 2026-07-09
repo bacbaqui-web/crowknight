@@ -12,7 +12,7 @@ EFFECT_ASSET_PATHS = {
 
 
 def effect_asset_path(root, asset):
-    relative = EFFECT_ASSET_PATHS.get(asset)
+    relative = EFFECT_ASSET_PATHS.get(asset) or dynamic_effect_asset_path(asset)
     if not relative:
         raise RuntimeError("Invalid effect asset")
     return (root / relative).resolve()
@@ -20,6 +20,14 @@ def effect_asset_path(root, asset):
 
 def effect_source_psd_path(root, asset):
     return effect_asset_path(root, asset).with_suffix(".psd")
+
+
+def dynamic_effect_asset_path(asset):
+    if not asset.startswith("effect_"):
+        return None
+    if not all(char.isalnum() or char in "_-" for char in asset):
+        return None
+    return Path("assets/effects/custom") / f"{asset}.png"
 
 
 def export_effect_asset(source_path, output_path):

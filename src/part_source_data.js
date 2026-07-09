@@ -95,7 +95,7 @@ function characterBasisSource(tuning) {
 
 export function partFieldLimits(prop, partKey = '') {
   if (partKey === 'effect') return effectFieldLimits(prop);
-  if (isInteractionObjectPartKey(partKey)) return setupInteractionObjectFieldLimits(prop);
+  if (isInteractionObjectPartKey(partKey)) return setupInteractionObjectFieldLimits(prop, partKey);
   if (isAnchorProp(prop)) return axisFieldLimits();
   return commonTransformFieldLimits(prop, axisFieldLimits());
 }
@@ -128,9 +128,10 @@ export function isParentSizedPart(partKey) {
   return isInteractionObjectPartKey(partKey);
 }
 
-export function actionFieldLimits(prop) {
+export function actionFieldLimits(prop, partKey = '') {
   const interactionLimits = interactionFieldLimits(prop);
   if (interactionLimits) return interactionLimits;
+  if (partKey === ATTACK_INTERACTION_OBJECT_KEY && isSizeProp(prop)) return attackInteractionActionSizeLimits();
   return commonTransformFieldLimits(prop, axisFieldLimits());
 }
 
@@ -157,12 +158,21 @@ function interactionDecimalFieldLimits(prop) {
   return { min: 0, max: 4, step: 0.01 };
 }
 
-function setupInteractionObjectFieldLimits(prop) {
+function setupInteractionObjectFieldLimits(prop, partKey = '') {
   const interactionLimits = interactionFieldLimits(prop);
   if (interactionLimits) return interactionLimits;
+  if (partKey === ATTACK_INTERACTION_OBJECT_KEY && isSizeProp(prop)) return attackInteractionSetupSizeLimits();
   if (isSizeProp(prop)) return { min: 1, max: 320 };
   if (isRotationProp(prop)) return { min: -360, max: 360 };
   return wideAxisFieldLimits();
+}
+
+function attackInteractionSetupSizeLimits() {
+  return { min: 1, max: 960 };
+}
+
+function attackInteractionActionSizeLimits() {
+  return { min: SIZE_PERCENT_MIN, max: 800 };
 }
 
 function commonTransformFieldLimits(prop, fallback) {

@@ -1,5 +1,6 @@
 import { syncEffectTimelinePlaybackSettings, syncEffectTimelineToolbar } from './timeline_panel_sync_helper.js';
 import { ACTION_MAX_FRAMES, ACTION_MIN_FRAMES } from './game_config_data.js';
+import { normalizeEffectFileName } from './animation_frame_data.js';
 
 export function renderEffectTimelineSettingsView(elements, state) {
   syncEffectTimelinePlaybackSettings(
@@ -16,7 +17,16 @@ export function renderEffectTimelineSettingsView(elements, state) {
       playing: state.playing,
     }
   );
+  syncEffectFileNameInput(elements.effectFileName, state.settings, state.effectKey);
   syncEffectTimelineToolbarView(elements, state);
+}
+
+function syncEffectFileNameInput(input, settings = {}, effectKey = '') {
+  if (!input) return;
+  const nextValue = normalizeEffectFileName(settings.fileName || '');
+  if (input.value !== nextValue) input.value = nextValue;
+  input.placeholder = effectKey || '';
+  input.title = effectKey ? `기본값: ${effectKey}` : '';
 }
 
 export function syncEffectTimelineToolbarView(elements, state) {

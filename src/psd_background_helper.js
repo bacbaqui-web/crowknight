@@ -1,6 +1,6 @@
 import { mergePsdBackgroundLayers } from './scene_session_data.js';
 
-const PSD_PREVIEW_MANIFEST_URL = './runtime/background-preview.json';
+const PSD_PREVIEW_MANIFEST_URL = './assets/backgrounds/current/background-preview.json';
 const PSD_REFRESH_API_URL = './api/psd/refresh';
 
 let lastLoadedUpdatedAt = null;
@@ -13,9 +13,10 @@ export async function refreshPsdBackground({ getSceneSession, onUpdate, force = 
 
     lastLoadedUpdatedAt = manifest.updatedAt;
     const session = getSceneSession();
+    const assetBase = backgroundAssetBase(manifest);
     session.background.psdPreview = {
       enabled: true,
-      url: `./runtime/${manifest.preview}?v=${manifest.updatedAt}`,
+      url: versionBackgroundAssetPath(manifest.preview, manifest.updatedAt, assetBase),
       sourceUrl: manifest.sourceUrl || session.background.psdPreview?.sourceUrl || '',
       updatedAt: manifest.updatedAt,
       width: manifest.width,
@@ -25,7 +26,7 @@ export async function refreshPsdBackground({ getSceneSession, onUpdate, force = 
     const useManifestOrder = Boolean(psdFile) || savedLayers.length === 0;
     session.background.psdLayers = mergePsdBackgroundLayers(
       savedLayers,
-      versionPsdLayerImages(manifest.layers, manifest.updatedAt),
+      versionPsdLayerImages(manifest.layers, manifest.updatedAt, assetBase),
       { useManifestOrder }
     );
     onUpdate?.(session.background);
@@ -62,16 +63,35 @@ async function uploadPsdFileForRefresh(file) {
   return response.json();
 }
 
-function versionPsdLayerImages(layers, updatedAt) {
+function versionPsdLayerImages(layers, updatedAt, assetBase) {
   if (!Array.isArray(layers)) return layers;
   return layers.map((layer) => {
     if (typeof layer?.image !== 'string' || !layer.image.trim()) return layer;
-    const separator = layer.image.includes('?') ? '&' : '?';
+    const image = backgroundAssetPath(layer.image, assetBase);
+    const separator = image.includes('?') ? '&' : '?';
     return {
       ...layer,
-      image: `${layer.image}${separator}v=${updatedAt}`,
+      image: `${image}${separator}v=${updatedAt}`,
     };
   });
+}
+
+function versionBackgroundAssetPath(path, updatedAt, assetBase) {
+  const image = backgroundAssetPath(path, assetBase);
+  const separator = image.includes('?') ? '&' : '?';
+  return `${image}${separator}v=${updatedAt}`;
+}
+
+function backgroundAssetBase(manifest = {}) {
+  return typeof manifest.assetBase === 'string' && manifest.assetBase.trim() ? manifest.assetBase.trim() : './runtime';
+}
+
+function backgroundAssetPath(path, assetBase) {
+  const value = String(path || '').trim();
+  if (!value) return '';
+  if (/^(?:https?:|data:|\.\/|\/)/.test(value)) return value;
+  const base = String(assetBase || './runtime').replace(/\/+$/, '');
+  return `${base}/${value}`;
 }
 
 export function startPsdBackgroundRuntime(options) {

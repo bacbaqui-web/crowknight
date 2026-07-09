@@ -12,12 +12,13 @@ import {
   ensureEffectOffset,
   ensureActionOffset,
   makeActionKeyframeId,
-  normalizeEffectOffsets,
+  normalizeEffectOffsetForKey,
   normalizeActionFrameValue,
   actionKeyframesFor,
   sortActionKeyframes,
 } from './project_data_normalizer_helper.js';
 import { actionKeyframeTargetId, hasActionKeyframeTarget } from './action_keyframe_target_helper.js';
+import { hasTimelineKeyframeTarget, timelineKeyframeTargetId } from './timeline_keyframe_target_helper.js';
 
 export function addActionTimelineKeyframe(tuning, actionKey, t) {
   const id = makeActionKeyframeId();
@@ -174,9 +175,7 @@ export function resetActionTimelineAnimation(tuning, actionKey) {
 }
 
 export function resetEffectTimelineAnimation(tuning, effectKey) {
-  tuning.effectOffsets[effectKey] = normalizeEffectOffsets({
-    [effectKey]: { image: defaultEffectImageKey(effectKey) },
-  })[effectKey];
+  tuning.effectOffsets[effectKey] = normalizeEffectOffsetForKey(effectKey, { image: defaultEffectImageKey(effectKey) });
 }
 
 export function pasteActionTimelineFramePart({ frames, id, sourceFrame, ensureKeyframe }) {
@@ -224,10 +223,21 @@ export function writeEffectTimelineFrameValue({
   effectKey,
   prop,
   value,
+  timelineKeyframeTarget,
   activeKeyframeId,
   fixedFrame,
   ensureKeyframe,
 }) {
+  if (timelineKeyframeTarget) {
+    return writeEffectTimelineTargetFrameValue({
+      effect,
+      prop,
+      value,
+      timelineKeyframeTarget,
+      ensureKeyframe,
+    });
+  }
+
   if (!activeKeyframeId && !fixedFrame) return false;
 
   if (activeKeyframeId) {
@@ -239,6 +249,15 @@ export function writeEffectTimelineFrameValue({
 
   effect[fixedFrame][prop] = value;
   effectKeyframesFor(effect, effectKey).find((keyframe) => keyframe.id === fixedFrame)[prop] = value;
+  syncFrameAliases(effect);
+  return true;
+}
+
+function writeEffectTimelineTargetFrameValue({ effect, prop, value, timelineKeyframeTarget, ensureKeyframe }) {
+  if (!hasTimelineKeyframeTarget(timelineKeyframeTarget)) return false;
+
+  const keyframe = ensureKeyframe(effect, timelineKeyframeTargetId(timelineKeyframeTarget));
+  keyframe[prop] = value;
   syncFrameAliases(effect);
   return true;
 }

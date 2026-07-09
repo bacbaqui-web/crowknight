@@ -35,18 +35,37 @@ export function loadCharacterAssets(folder, version = '', sources = {}) {
 }
 
 export function loadEffectAssets(version = '', sources = {}) {
+  const entries = {
+    ...EFFECT_ASSET_PATHS,
+    ...Object.fromEntries(
+      Object.keys(sources || {})
+        .filter((key) => !key.endsWith('Psd'))
+        .map((key) => [key, effectAssetPath(key)])
+        .filter(([, path]) => Boolean(path))
+    ),
+  };
   return loadImages(
     Object.fromEntries(
-      Object.entries(EFFECT_ASSET_PATHS).map(([key, path]) => [key, versionedPath(sources?.[key] || path, version)])
+      Object.entries(entries).map(([key, path]) => [key, versionedPath(sources?.[key] || path, version)])
     )
   );
 }
 
 export async function loadEffectAsset(key, version = '', sources = {}) {
-  const path = sources?.[key] || EFFECT_ASSET_PATHS[key];
+  const path = sources?.[key] || effectAssetPath(key);
   if (!path) return null;
   const assets = await loadImages({ [key]: versionedPath(path, version) });
   return assets[key] || null;
+}
+
+export function effectAssetPath(key) {
+  if (EFFECT_ASSET_PATHS[key]) return EFFECT_ASSET_PATHS[key];
+  if (!isDynamicEffectAssetKey(key)) return null;
+  return `./assets/effects/custom/${key}.png`;
+}
+
+export function isDynamicEffectAssetKey(key) {
+  return /^effect_[a-zA-Z0-9_-]+$/.test(String(key || ''));
 }
 
 function versionedPath(path, version) {

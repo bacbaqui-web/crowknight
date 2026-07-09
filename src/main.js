@@ -23,6 +23,7 @@ import { getViewTransform } from './camera_view.js';
 import { isSettingsPanelOpen } from './settings_panel_state.js';
 import { createTuningPanel } from './editor_panel_controller.js';
 import { actorDefsFromSavedState, createActors } from './actor_factory.js';
+import { drawFormulaAfterimages, updateFormulaAfterimages } from './afterimage_runtime_helper.js';
 import { syncCanvasToLayout } from './canvas_layout_helper.js';
 import { DEATH_RESULT_DELAY } from './game_config_data.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
@@ -71,7 +72,7 @@ const pressed = new Set();
 const savedState = await loadStoredSavedState();
 const sceneSessions = savedState.sessions;
 let sceneSession = savedState.sceneSession;
-await refreshInitialPsdBackground();
+const initialPsdBackgroundChanged = await refreshInitialPsdBackground();
 preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
@@ -102,6 +103,7 @@ const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refre
     getSceneSession: () => sceneSession,
     onSceneBackgroundUpdate: preloadSceneBackground,
   });
+if (initialPsdBackgroundChanged) saveState();
 let selectedActor = playerActor;
 let battleActive = false;
 let playerDeathPending = false;
@@ -114,13 +116,23 @@ let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
 
 async function refreshInitialPsdBackground() {
+  const previousSignature = backgroundAssetSignature(sceneSession.background);
   const refreshed = await refreshPsdBackground({
     getSceneSession: () => sceneSession,
     onUpdate: null,
     force: false,
   });
-  if (!refreshed) return;
+  if (!refreshed) return false;
   sceneSessions[sceneSession.id] = sceneSession;
+  return previousSignature !== backgroundAssetSignature(sceneSession.background);
+}
+
+function backgroundAssetSignature(background = {}) {
+  const preview = background.psdPreview?.url || '';
+  const layers = Array.isArray(background.psdLayers)
+    ? background.psdLayers.map((layer) => `${layer?.id || ''}:${layer?.imageSrc || ''}`).join('|')
+    : '';
+  return `${preview}::${layers}`;
 }
 
 window.addEventListener('resize', () =>
@@ -226,6 +238,7 @@ function update(dt) {
       { clearAttackTime: true }
     );
     updateRollGhosts(gameActors, dt);
+    updateFormulaAfterimages(gameActors, dt);
     particleEffects.emitDust(dt);
     particleEffects.update(dt);
     return;
@@ -255,6 +268,7 @@ function update(dt) {
 
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects });
   updateRollGhosts(gameActors, dt);
+  updateFormulaAfterimages(gameActors, dt);
   particleEffects.emitDust(dt);
   particleEffects.update(dt);
 }
@@ -361,6 +375,7 @@ function draw() {
   ctx.save();
   applyWorldView(ctx, world, view);
   particleEffects.drawDust();
+  renderActors.forEach((actor) => drawFormulaAfterimages(ctx, actor));
   renderActors.forEach((actor) => drawRollGhosts(ctx, actor));
   renderActors.forEach((actor) =>
     drawActor(ctx, world, actor, {

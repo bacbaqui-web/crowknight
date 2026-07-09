@@ -4,10 +4,11 @@ import {
   frameValue,
   interpolateEffectFrameValues,
   actionAnchorValue,
+  normalizeEffectFileName,
   syncFrameAliases,
   validEffectImageKey,
 } from './animation_frame_data.js';
-import { EFFECT_KEYS, ACTION_FRAME_KEYS, ACTION_KEYS, ACTION_PART_KEYS } from './game_config_data.js';
+import { ACTION_FRAME_KEYS, ACTION_KEYS, ACTION_PART_KEYS } from './game_config_data.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import { normalizeCharacterHud } from './character_hud_layout_helper.js';
 import { controlGroupPartKeys, imagePartKeys } from './part_source_data.js';
@@ -37,9 +38,13 @@ import {
   interactionObjectParentPartKey,
 } from './interaction_object_editor_controller.js';
 import {
+  INTERACTION_COLOR_PROPS,
   INTERACTION_NUMERIC_PROPS,
+  INTERACTION_SELECT_PROPS,
   INTERACTION_TOGGLE_PROPS,
   interactionDefaultValue,
+  normalizeInteractionColorValue,
+  normalizeInteractionSelectValue,
 } from './interaction_field_data.js';
 import { clamp, clone, lerp } from './common_helper.js';
 
@@ -57,8 +62,13 @@ export function mergeTuning(base, saved) {
       fresh.customActions,
       fresh.deletedActionKeys
     );
-    fresh.effectOffsets = normalizeEffectOffsets(fresh.effectOffsets);
-    fresh.effectSettings = normalizeEffectSettings(fresh.effectSettings, base.effectSettings || base.actionSettings);
+    fresh.effectOffsets = normalizeEffectOffsets(fresh.effectOffsets, fresh.customActions, fresh.deletedActionKeys);
+    fresh.effectSettings = normalizeEffectSettings(
+      fresh.effectSettings,
+      base.effectSettings || base.actionSettings,
+      fresh.customActions,
+      fresh.deletedActionKeys
+    );
     fresh.modifiers = normalizeTimelineModifiers(fresh.modifiers);
     migrateNormalizedActionFormulas(fresh);
     normalizeControlGroups(fresh.rig);
@@ -88,10 +98,16 @@ export function mergeTuning(base, saved) {
     merged.customActions,
     merged.deletedActionKeys
   );
-  merged.effectOffsets = normalizeEffectOffsets(saved.effectOffsets || merged.effectOffsets);
+  merged.effectOffsets = normalizeEffectOffsets(
+    saved.effectOffsets || merged.effectOffsets,
+    merged.customActions,
+    merged.deletedActionKeys
+  );
   merged.effectSettings = normalizeEffectSettings(
     saved.effectSettings || merged.effectSettings,
-    base.effectSettings || base.actionSettings
+    base.effectSettings || base.actionSettings,
+    merged.customActions,
+    merged.deletedActionKeys
   );
   merged.modifiers = normalizeTimelineModifiers(saved.modifiers || merged.modifiers);
   migrateNormalizedActionFormulas(merged);
@@ -244,13 +260,14 @@ function normalizeActionInteractions(current = {}) {
   return normalized;
 }
 
-function normalizeEffectSettings(current = {}, fallback = {}) {
+function normalizeEffectSettings(current = {}, fallback = {}, customActions = [], deletedActionKeys = []) {
   const normalized = {};
-  EFFECT_KEYS.forEach((key) => {
+  actionKeysForNormalize(customActions, deletedActionKeys).forEach((key) => {
     const source = current?.[key] || {};
     const base = fallback?.[key] || {};
     normalized[key] = {
       duration: clamp(Number(source.duration ?? base.duration ?? 0.4), 0.05, 5),
+      fileName: normalizeEffectFileName(source.fileName ?? base.fileName ?? ''),
       playback: normalizeTimelinePlayback(source.playback ?? base.playback, 'once'),
       playbackRate: clamp(Number(source.playbackRate ?? base.playbackRate ?? 1), 0.1, 4),
     };
@@ -258,20 +275,24 @@ function normalizeEffectSettings(current = {}, fallback = {}) {
   return normalized;
 }
 
-export function normalizeEffectOffsets(current = {}) {
+export function normalizeEffectOffsets(current = {}, customActions = [], deletedActionKeys = []) {
   const normalized = {};
-  EFFECT_KEYS.forEach((key) => {
-    const source = current?.[key] || {};
-    const fallback = effectFrameValue({}, key);
-    const image = validEffectImageKey(source.image) ? source.image : defaultEffectImageKey(key);
-    normalized[key] = {
-      image,
-      start: effectFrameValue(source.start || fallback, key),
-      end: effectFrameValue(source.end || fallback, key),
-      keyframes: normalizeEffectKeyframes(source.keyframes, source.start || fallback, source.end || fallback, key),
-    };
-    syncFrameAliases(normalized[key]);
+  actionKeysForNormalize(customActions, deletedActionKeys).forEach((key) => {
+    normalized[key] = normalizeEffectOffsetForKey(key, current?.[key]);
   });
+  return normalized;
+}
+
+export function normalizeEffectOffsetForKey(key, source = {}) {
+  const fallback = effectFrameValue({}, key);
+  const image = validEffectImageKey(source.image) ? source.image : defaultEffectImageKey(key);
+  const normalized = {
+    image,
+    start: effectFrameValue(source.start || fallback, key),
+    end: effectFrameValue(source.end || fallback, key),
+    keyframes: normalizeEffectKeyframes(source.keyframes, source.start || fallback, source.end || fallback, key),
+  };
+  syncFrameAliases(normalized);
   return normalized;
 }
 
@@ -296,14 +317,16 @@ export function normalizeEffectKeyframes(keyframes, start, end, key) {
 }
 
 export function ensureEffectOffset(tuning, key) {
-  tuning.effectOffsets ||= normalizeEffectOffsets();
-  tuning.effectOffsets[key] = normalizeEffectOffsets({ [key]: tuning.effectOffsets[key] })[key];
+  tuning.effectOffsets ||= normalizeEffectOffsets({}, tuning.customActions || [], tuning.deletedActionKeys || []);
+  tuning.effectOffsets[key] = normalizeEffectOffsetForKey(key, tuning.effectOffsets[key]);
 }
 
 export function ensureEffectSettings(tuning) {
   tuning.effectSettings = normalizeEffectSettings(
     tuning.effectSettings,
-    DEFAULT_PLAYER_TUNING.effectSettings || DEFAULT_PLAYER_TUNING.actionSettings
+    DEFAULT_PLAYER_TUNING.effectSettings || DEFAULT_PLAYER_TUNING.actionSettings,
+    tuning.customActions || [],
+    tuning.deletedActionKeys || []
   );
 }
 
@@ -313,7 +336,7 @@ export function effectFrameAt(tuning, key, t = 0) {
   const frame = interpolateEffectFrameValues(effectKeyframesFor(effect, key), clamp(Number(t), 0, 1), key);
   return {
     ...frame,
-    image: defaultEffectImageKey(key),
+    image: validEffectImageKey(effect.image) ? effect.image : defaultEffectImageKey(key),
   };
 }
 
@@ -478,6 +501,18 @@ function normalizeInteractionFields(source = {}, fallback = {}) {
   });
   INTERACTION_NUMERIC_PROPS.forEach((prop) => {
     normalized[prop] = Number(source[prop] ?? fallback[prop] ?? interactionDefaultValue(prop));
+  });
+  INTERACTION_SELECT_PROPS.forEach((prop) => {
+    normalized[prop] = normalizeInteractionSelectValue(
+      prop,
+      source[prop] ?? fallback[prop] ?? interactionDefaultValue(prop)
+    );
+  });
+  INTERACTION_COLOR_PROPS.forEach((prop) => {
+    normalized[prop] = normalizeInteractionColorValue(
+      prop,
+      source[prop] ?? fallback[prop] ?? interactionDefaultValue(prop)
+    );
   });
   return normalized;
 }

@@ -1,42 +1,43 @@
 # 99 Task Report
 
-## 1. 변경 내용
+## 1. 증상
 
-- `목표이동` Formula에 `moveFrames` 값을 추가했다.
-- `moveFrames=0`은 목표 좌표로 즉시 이동한다.
-- `moveFrames=1~10`은 해당 Action Timeline frame 수 동안 시작 위치에서 목표 좌표까지 보간한다.
+- Effect 탭의 애니메이션 속도 / 재생 속도 설정은 UI와 저장 경로가 존재한다.
+- Effect Preview는 `effectSettings.playbackRate`를 사용한다.
+- 실제 Play 렌더에서는 Effect 진행률이 Action 진행률에 묶여 있어 Effect 속도 설정이 반영되지 않았다.
 
-## 2. UI
+## 2. 원인
 
-- 목표이동 카드의 기존 `발동 프레임 / X / Y` 입력 아래에 `도달 프레임` 슬라이더를 추가했다.
-- 슬라이더 범위는 `0~10`이며, `0`은 `즉시`, 나머지는 `Nf`로 표시한다.
-- 기존 Formula 카드 / 공통 field 구조를 재사용했다.
+- `editor_debug_view.js`의 Effect Preview는 `effectSettings.duration`, `effectSettings.playbackRate`, `effectSettings.playback`으로 진행률을 계산한다.
+- `actor_canvas_renderer.js`의 Runtime Effect draw는 `player.getActionFrameProgress()` 값을 그대로 `effectFrameAt()`에 전달했다.
+- 그래서 Effect 설정의 재생 속도는 저장되어도 실제 Play의 Effect 프레임 선택에는 쓰이지 않았다.
 
-## 3. 저장 구조
+## 3. 수정 내용
 
-- 저장 위치는 기존과 같은 `actionSettings[actionKey].formulas[]`다.
-- `targetMove` Formula에 `moveFrames` 필드를 추가했다.
-- 기본값은 `1`이다.
+- `src/actor_canvas_renderer.js`에서 Runtime Effect 진행률 계산을 분리했다.
+- 실제 Play에서는 `effectSettings.duration / playbackRate / playback` 기준으로 Effect 진행률을 계산한다.
+- Action Preview 중에는 기존처럼 `getActionFrameProgress()`를 유지해 에디터 Action Preview 동작을 바꾸지 않았다.
 
-## 4. Runtime 적용 방식
+## 4. Runtime 적용 경로
 
-- 목표이동 발동 시점의 actor 위치를 `startX/startY`로 저장한다.
-- 목표 좌표는 기존처럼 그림자 / 발밑 기준과 mirror X 반전을 유지한다.
-- 매 frame `timelineFrameDelta(dt)`만큼 진행해 `moveFrames` 동안 목표 좌표까지 보간한다.
-- `moveFrames=0`이면 기존 즉시 이동처럼 바로 목표 좌표로 이동한다.
+```text
+player.actionKey
+→ effectSettings[actionKey]
+→ customActionElapsed 또는 stateTime
+→ timelinePlaybackProgress()
+→ effectFrameAt(actor.tuning, actionKey, effectProgress)
+→ drawAttackTrail()
+```
 
 ## 5. QA 결과
 
-- 데이터 QA: `moveFrames=0` 즉시 도달 확인.
-- 데이터 QA: `moveFrames=1` 1 Action frame에 목표 도달 확인.
-- 데이터 QA: `moveFrames=2` 첫 frame 50%, 두 번째 frame 목표 도달 확인.
-- 데이터 QA: mirror 상태에서 X 반전 이동 확인.
-- 데이터 QA: 공중에서 `Y=0` 목표 이동 시 그림자 위치로 보간 확인.
+- 데이터 QA: `duration=1`, `playbackRate=2`, `customActionElapsed=0.25`일 때 Effect 진행률이 `0.5`로 계산되어 중간 프레임 위치가 사용되는 것을 확인했다.
 - `npm run check` 통과.
 - `git diff --check` 통과.
-- 브라우저 수동 체감 QA는 아직 별도로 진행하지 않았다.
+- 브라우저 수동 체감 QA는 사용자가 이어서 확인해야 한다.
 
 ## 6. 코덱스 의견
 
-- `목표이동`은 순간이동과 속도 Formula 사이의 중간 역할이므로 `moveFrames`를 0~10으로 제한한 현재 구조가 안전하다.
-- 이후 필요하면 `curve` 옵션을 추가해 목표까지 선형 / 감속 / 가속 이동을 고를 수 있지만, 지금은 단순 frame 수 조절만 두는 것이 좋다.
+- 이번 문제는 Effect 설정 저장 문제가 아니라 Preview와 Runtime이 서로 다른 시간 source를 사용한 문제다.
+- Effect Timeline의 속도는 Action 속도와 별개 설정이므로 Runtime Effect draw도 `effectSettings`를 읽는 현재 구조가 맞다.
+- `action_trigger_engine.js`는 810줄로 리팩토링 권장 기준을 넘었다. 당장 이번 수정 범위는 아니지만, 시전 / 캔슬 / 수식 Runtime이 더 커지기 전에 기능별 분리를 검토하는 것이 좋다.

@@ -2,6 +2,7 @@ import { clearActorEffectPreviews, clearActorActionPreviews, shouldPreviewEffect
 import { renderInactivePreviewTimeline } from './editor_panel_dom_helper.js';
 import { previewTimeoutMs } from './timeline_playback_helper.js';
 import { actionKeyframeTargetT, hasActionKeyframeTarget } from './action_keyframe_target_helper.js';
+import { hasTimelineKeyframeTarget, timelineKeyframeTargetT } from './timeline_keyframe_target_helper.js';
 
 export function syncActionTimelinePreview({
   actors,
@@ -40,26 +41,29 @@ export function syncEffectTimelinePreview({
   playbackButton,
   renderTimeline,
   playing,
+  timelineKeyframeTarget,
   activeKeyframeId,
   fixedFrame,
   selectedSlot,
   createPreview,
   getActiveT,
 }) {
+  const previewTarget = effectPreviewTarget({
+    timelineKeyframeTarget,
+    activeKeyframeId,
+    fixedFrame,
+    selectedSlot,
+    playing,
+  });
   syncTimelinePreview({
     actors,
     section,
     playbackButton,
     renderTimeline,
     clearPreviews: clearActorEffectPreviews,
-    hasPreview: shouldPreviewEffect({
-      playing,
-      activeKeyframeId,
-      fixedFrame,
-      selectedSlot,
-    }),
+    hasPreview: previewTarget.hasTarget,
     assignPreview: () => {
-      actor.player.effectPreview = createPreview({ playing, t: playing ? null : getActiveT() });
+      actor.player.effectPreview = createPreview({ playing, t: playing ? null : (previewTarget.t ?? getActiveT()) });
     },
   });
 }
@@ -96,6 +100,27 @@ function actionPreviewTarget(target) {
     fixedFrame,
     hasTarget: hasTarget || hasSlot,
     t: hasTarget || hasSlot ? actionKeyframeTargetT(target) : null,
+  };
+}
+
+function effectPreviewTarget({ timelineKeyframeTarget, activeKeyframeId, fixedFrame, selectedSlot, playing }) {
+  if (timelineKeyframeTarget) {
+    const hasTarget = hasTimelineKeyframeTarget(timelineKeyframeTarget);
+    const hasSlot = timelineKeyframeTarget.selectedSlot !== null && timelineKeyframeTarget.selectedSlot !== undefined;
+    return {
+      hasTarget: playing || hasTarget || hasSlot,
+      t: hasTarget || hasSlot ? timelineKeyframeTargetT(timelineKeyframeTarget) : null,
+    };
+  }
+
+  return {
+    hasTarget: shouldPreviewEffect({
+      playing,
+      activeKeyframeId,
+      fixedFrame,
+      selectedSlot,
+    }),
+    t: null,
   };
 }
 

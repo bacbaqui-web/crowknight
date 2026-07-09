@@ -7,6 +7,7 @@ import { isMasterPart } from './editor_label_helper.js';
 import { effectFrameAt } from './project_data_normalizer_helper.js';
 import { controlGroupPartKeys, imagePartKeys } from './part_source_data.js';
 import { clamp } from './common_helper.js';
+import { timelinePlaybackProgress } from './timeline_playback_helper.js';
 
 export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey, activeEditPartKeys }) {
   drawActorShadow(ctx, world, actor);
@@ -51,7 +52,10 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
   const active = activePlayerEffectAction(player);
   if (!active) return;
 
-  const { key: effectKey, progress } = active;
+  const { key: effectKey } = active;
+  const progress = active.usesEffectPlayback
+    ? runtimeEffectPlaybackProgress(player, effectKey, actor.tuning.effectSettings?.[effectKey])
+    : active.progress;
   const config = effectFrameAt(actor.tuning, effectKey, progress);
   if (!config || config.image === 'none' || Number(config.opacity ?? 1) <= 0) return;
   const asset = effectAssets[config.image];
@@ -99,7 +103,29 @@ function activePlayerEffectAction(player) {
     };
   }
 
+  const actionKey = player?.actionKey;
+  if (actionKey) {
+    return {
+      key: actionKey,
+      progress: clamp(Number(player.getActionFrameProgress?.() || 0), 0, 1),
+      usesEffectPlayback: !player?.actionPreview?.action,
+    };
+  }
+
   return null;
+}
+
+function runtimeEffectPlaybackProgress(player, effectKey, settings = {}) {
+  const duration = Math.max(0.05, Number(settings.duration || 0.3));
+  const playbackRate = Math.max(0.1, Number(settings.playbackRate || 1));
+  const elapsed = runtimeEffectElapsedSeconds(player, effectKey);
+  return timelinePlaybackProgress((elapsed / duration) * playbackRate, settings.playback);
+}
+
+function runtimeEffectElapsedSeconds(player, effectKey) {
+  if (player?.isCustomActionActive && player?.customActionKey === effectKey)
+    return Math.max(0, Number(player.customActionElapsed || 0));
+  return Math.max(0, Number(player?.stateTime || 0));
 }
 
 function recordEffectRegion(player, ctx, effectKey, config, drawRect) {

@@ -1,10 +1,5 @@
 import { defaultEffectImageKey } from './animation_frame_data.js';
-import {
-  CHARACTER_ASSET_PATHS,
-  EFFECT_ASSET_PATHS,
-  loadCharacterAssets,
-  loadEffectAsset,
-} from './asset_loader_helper.js';
+import { CHARACTER_ASSET_PATHS, effectAssetPath, loadCharacterAssets, loadEffectAsset } from './asset_loader_helper.js';
 import { characterPsdStorageFileName } from './firebase_asset_storage_helper.js';
 import { imagePartKeys } from './part_source_data.js';
 
@@ -14,6 +9,7 @@ const CHARACTER_MOVE_API_URL = './api/character/move';
 const CHARACTER_COPY_API_URL = './api/character/copy';
 const CHARACTER_DELETE_API_URL = './api/character/delete';
 const EFFECT_REFRESH_API_URL = './api/effect/refresh';
+const EFFECT_UPLOAD_API_URL = './api/effect/upload';
 
 export async function refreshCharacterPsdAssets({ actor, psdFile = null, createFolder = false }) {
   const result = await refreshCharacterPsdAssetResult({ actor, psdFile, createFolder });
@@ -139,34 +135,81 @@ function localCharacterPsdSource(actor, result) {
   return `./assets/characters/${actor.folder}/${filename}`;
 }
 
-export async function refreshEffectAsset({ effectAssets, effectAssetSources = {}, effectKey, file = null }) {
-  const assetKey = defaultEffectImageKey(effectKey);
-  if (!effectAssets || assetKey === 'none') return false;
+export async function refreshEffectAsset({
+  effectAssets,
+  effectAssetSources = {},
+  effectKey,
+  imageKey = null,
+  file = null,
+}) {
+  const result = await refreshEffectAssetResult({ effectAssets, effectAssetSources, effectKey, imageKey, file });
+  return result.ok;
+}
 
-  const url = effectRefreshUrl(assetKey);
+export async function refreshEffectAssetResult({
+  effectAssets,
+  effectAssetSources = {},
+  effectKey,
+  imageKey = null,
+  file = null,
+}) {
+  const assetKey = imageKey || defaultEffectImageKey(effectKey);
+  const url = file ? effectUploadUrl(assetKey) : effectRefreshUrl(assetKey);
+  const debug = {
+    effectKey,
+    imageKey: assetKey,
+    uploadUrl: url,
+    fileName: file?.name || '',
+    fileSize: Number(file?.size || 0),
+  };
+
+  if (!effectAssets) {
+    return { ok: false, error: '효과 에셋 저장소가 준비되지 않았습니다.', debug };
+  }
+  if (assetKey === 'none') {
+    return { ok: false, error: '업로드할 효과 이미지 슬롯이 없습니다.', debug };
+  }
+
   const result = file
-    ? await uploadBinaryAsset({
+    ? await uploadBinaryAssetResult({
         url,
         file,
         headerName: 'X-Effect-Filename',
         fallbackFileName: `${assetKey}.psd`,
       })
-    : await fetchJson(url);
-  if (!result?.ok) return false;
+    : await fetchJsonResult(url);
+  debug.responseStatus = result.status || 0;
+  debug.responseBody = result.data ?? result.error ?? '';
+  if (!result.ok) return { ok: false, error: result.error || `효과 업로드 실패 (${result.status || 0})`, debug };
 
-  const asset = await loadEffectAsset(assetKey, result.updatedAt || Date.now());
-  if (!asset) return false;
+  const data = result.data;
+  const asset = await loadEffectAsset(assetKey, data.updatedAt || Date.now());
+  if (!asset) {
+    return { ok: false, error: '업로드된 효과 이미지를 다시 불러오지 못했습니다.', debug };
+  }
 
   effectAssets[assetKey] = asset;
-  const sourcePath = EFFECT_ASSET_PATHS[assetKey];
+  const sourcePath = effectAssetPath(assetKey);
   if (sourcePath) {
-    const version = result.updatedAt || Date.now();
+    const version = data.updatedAt || Date.now();
     effectAssetSources[assetKey] = `${sourcePath}?v=${version}`;
     if (!file || file.name?.toLowerCase().endsWith('.psd')) {
       effectAssetSources[`${assetKey}Psd`] = `${sourcePath.replace(/\.[^.]+$/, '.psd')}?v=${version}`;
     }
   }
-  return true;
+  debug.effectAsset = effectAssetDebugInfo(effectAssets[assetKey]);
+  debug.effectAssetSource = effectAssetSources[assetKey] || '';
+  return { ok: true, assetKey, debug };
+}
+
+function effectAssetDebugInfo(asset) {
+  if (!asset) return null;
+  return {
+    width: Number(asset.naturalWidth || asset.width || 0),
+    height: Number(asset.naturalHeight || asset.height || 0),
+    complete: Boolean(asset.complete),
+    src: asset.currentSrc || asset.src || '',
+  };
 }
 
 function characterRefreshUrl(folder) {
@@ -203,9 +246,8 @@ function effectRefreshUrl(assetKey) {
   return `${EFFECT_REFRESH_API_URL}?asset=${encodeURIComponent(assetKey)}&t=${Date.now()}`;
 }
 
-async function uploadBinaryAsset({ url, file, headerName, fallbackFileName }) {
-  const result = await uploadBinaryAssetResult({ url, file, headerName, fallbackFileName });
-  return result.ok ? result.data : null;
+function effectUploadUrl(assetKey) {
+  return `${EFFECT_UPLOAD_API_URL}?asset=${encodeURIComponent(assetKey)}&t=${Date.now()}`;
 }
 
 async function uploadBinaryAssetResult({ url, file, headerName, fallbackFileName }) {
@@ -241,11 +283,6 @@ async function responseJson(response) {
   } catch {
     return null;
   }
-}
-
-async function fetchJson(url) {
-  const result = await fetchJsonResult(url);
-  return result.ok ? result.data : null;
 }
 
 async function fetchJsonResult(url) {

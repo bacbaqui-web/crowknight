@@ -1,5 +1,5 @@
 import { FIREBASE_PROJECT_STATE_CONFIG } from './firebase_config_data.js';
-import { CHARACTER_ASSET_PATHS, EFFECT_ASSET_PATHS } from './asset_loader_helper.js';
+import { CHARACTER_ASSET_PATHS, EFFECT_ASSET_PATHS, effectAssetPath } from './asset_loader_helper.js';
 import {
   CHARACTER_GROUPS,
   characterGroupLabel,
@@ -210,14 +210,14 @@ export function characterPsdStorageFileName(actor) {
 
 async function uploadEffectAssetsToFirebase(effectAssetSources) {
   await Promise.all(
-    Object.keys(EFFECT_ASSET_PATHS).map((assetKey) => uploadEffectAssetToFirebase(effectAssetSources, assetKey))
+    effectAssetKeys(effectAssetSources).map((assetKey) => uploadEffectAssetToFirebase(effectAssetSources, assetKey))
   );
 }
 
 export async function uploadEffectAssetToFirebase(effectAssetSources, assetKey, version = Date.now()) {
   if (!isFirebaseStorageEnabled()) return false;
 
-  const path = EFFECT_ASSET_PATHS[assetKey];
+  const path = effectAssetPath(assetKey);
   if (!path) return false;
 
   try {
@@ -244,6 +244,15 @@ export async function uploadEffectAssetToFirebase(effectAssetSources, assetKey, 
     window.console?.warn(`Firebase effect asset upload failed: ${assetKey}`, error);
     return false;
   }
+}
+
+function effectAssetKeys(effectAssetSources = {}) {
+  return Array.from(
+    new Set([
+      ...Object.keys(EFFECT_ASSET_PATHS),
+      ...Object.keys(effectAssetSources).filter((key) => !key.endsWith('Psd')),
+    ])
+  );
 }
 
 export async function uploadScenePsdAssetsToFirebase(background) {

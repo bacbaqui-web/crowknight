@@ -34,7 +34,7 @@ export function createTuningPanelLifecycleController({
   pushUndoSnapshot,
   saveState,
 }) {
-  const { panel, backdrop, actorGroupSelect, actorSelect, actorName, effectName, effectSelect } = elements;
+  const { panel, backdrop, actorGroupSelect, actorSelect, actorName } = elements;
 
   function openPanel() {
     syncPanel();
@@ -103,7 +103,6 @@ export function createTuningPanelLifecycleController({
 
   function handleEffectChange() {
     setEditContext('effect');
-    syncEffectName();
     effectTimeline.stopPreview();
     effectTimeline.resetSelectionState();
     effectTimeline.ensureActiveFrame();
@@ -121,11 +120,6 @@ export function createTuningPanelLifecycleController({
   function visibleActorsForActiveGroup() {
     const group = normalizeCharacterGroup(actorGroupSelect?.value || getSelectedActor()?.group || 'players');
     return actors.filter((actor) => normalizeCharacterGroup(actor.group) === group);
-  }
-
-  function syncEffectName() {
-    if (!effectName || !effectSelect) return;
-    effectName.value = effectSelect.selectedOptions[0]?.textContent || '';
   }
 
   return {

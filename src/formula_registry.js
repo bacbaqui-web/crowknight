@@ -9,6 +9,7 @@ import { inertiaFormula } from './formulas/inertia_formula.js';
 import { linkFormula } from './formulas/link_formula.js';
 import { cooldownFormula } from './formulas/cooldown_formula.js';
 import { targetMoveFormula } from './formulas/target_move_formula.js';
+import { afterimageFormula } from './formulas/afterimage_formula.js';
 
 export const FORMULA_DEFS = Object.freeze([
   velocityFormula,
@@ -20,6 +21,7 @@ export const FORMULA_DEFS = Object.freeze([
   castFormula,
   cooldownFormula,
   targetMoveFormula,
+  afterimageFormula,
 ]);
 
 export function formulaDef(type) {

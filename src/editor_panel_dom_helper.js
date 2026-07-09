@@ -1,10 +1,11 @@
 import { defaultEffectImageKey } from './animation_frame_data.js';
-import { EFFECT_IMAGE_OPTIONS, EFFECT_KEYS, ACTION_KEYS, ACTION_PART_KEYS } from './game_config_data.js';
+import { EFFECT_IMAGE_OPTIONS, ACTION_KEYS, ACTION_PART_KEYS } from './game_config_data.js';
 import { getPath } from './common_helper.js';
 import { layerLabel, partLabel, actionLabel } from './editor_label_helper.js';
 import { displayTuningControlValue } from './control_value_transform_helper.js';
 import { partEditKeys } from './part_source_data.js';
 import { actionOptions } from './action_authoring_data.js';
+import { ACTION_GROUPS } from './action_group_helper.js';
 import { SELECTION_PALETTE_TARGETS } from './selection_palette_data.js';
 import {
   ATTACK_INTERACTION_OBJECT_KEY,
@@ -121,8 +122,9 @@ export function getTuningPanelElements(panel) {
     actionAddKeyframe: document.querySelector('#actionAddKeyframe'),
     actionDeleteKeyframe: document.querySelector('#actionDeleteKeyframe'),
     actionResetAnimation: document.querySelector('#actionResetAnimation'),
+    effectGroupSelect: document.querySelector('#effectGroupSelect'),
     effectSelect: document.querySelector('#effectSelect'),
-    effectName: document.querySelector('#effectName'),
+    effectFileName: document.querySelector('#effectFileName'),
     effectImagePreview: document.querySelector('#effectImagePreview'),
     effectAssetMenu: document.querySelector('#effectAssetMenu'),
     effectAssetMenuToggle: document.querySelector('#effectAssetMenuToggle'),
@@ -231,13 +233,13 @@ export function emptyPartMessage(text) {
   return `<div class="part-empty">${text}</div>`;
 }
 
-export function renderEffectImagePreview(preview, effectKey, effectAssets) {
+export function renderEffectImagePreview(preview, effectKey, effectAssets, imageKey = null) {
   if (!preview) return;
 
   preview.innerHTML = '';
-  const imageKey = defaultEffectImageKey(effectKey);
-  const option = EFFECT_IMAGE_OPTIONS.find((item) => item.key === imageKey);
-  const asset = option?.asset ? effectAssets[option.asset] : null;
+  const resolvedImageKey = imageKey || defaultEffectImageKey(effectKey);
+  const option = EFFECT_IMAGE_OPTIONS.find((item) => item.key === resolvedImageKey);
+  const asset = option?.asset ? effectAssets[option.asset] : effectAssets[resolvedImageKey];
   if (!asset) return;
 
   const image = document.createElement('img');
@@ -325,7 +327,7 @@ export function syncActorGroupOptions(actorGroupSelect, activeGroup) {
 }
 
 export function populateTuningPanelSelects(
-  { actorGroupSelect, actorSelect, partSelect, actionSelect, actionPartSelect, effectSelect },
+  { actorGroupSelect, actorSelect, partSelect, actionSelect, actionPartSelect, effectGroupSelect, effectSelect },
   actors,
   rig,
   tuning = null
@@ -353,7 +355,11 @@ export function populateTuningPanelSelects(
   );
   replaceSelectOptions(
     effectSelect,
-    EFFECT_KEYS.map((key) => ({ value: key, label: actionLabel(key) }))
+    tuning ? actionOptions(tuning) : ACTION_KEYS.map((key) => ({ value: key, label: actionLabel(key) }))
+  );
+  replaceSelectOptions(
+    effectGroupSelect,
+    ACTION_GROUPS.map((group) => ({ value: group.key, label: group.label }))
   );
 }
 

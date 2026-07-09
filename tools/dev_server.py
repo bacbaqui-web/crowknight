@@ -58,6 +58,9 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/effect/refresh":
             self.handle_effect_upload_refresh(parsed)
             return
+        if parsed.path == "/api/effect/upload":
+            self.handle_effect_local_upload(parsed)
+            return
         if parsed.path == "/api/state/default":
             self.handle_default_state_save()
             return
@@ -273,12 +276,48 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
             if not sanitize_effect_filename(filename).lower().endswith(".psd"):
                 source_path = output_path.with_suffix(".upload")
 
+            source_path.parent.mkdir(parents=True, exist_ok=True)
             source_path.write_bytes(self.rfile.read(content_length))
             result = export_effect_asset(source_path, output_path)
             result["asset"] = asset
             self.send_json(200, result)
         except Exception as exc:
             self.send_json(500, {"error": str(exc)})
+
+    def handle_effect_local_upload(self, parsed):
+        temp_path = None
+        try:
+            asset = effect_asset_from_request(parsed)
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length <= 0:
+                self.send_json(400, {"error": "Empty effect file"})
+                return
+
+            filename = self.headers.get("X-Effect-Filename", f"{asset}.png")
+            upload_name = sanitize_effect_filename(filename)
+            suffix = Path(upload_name).suffix.lower()
+            if suffix not in {".png", ".webp", ".jpg", ".jpeg", ".psd"}:
+                self.send_json(400, {"error": "Unsupported effect file"})
+                return
+
+            output_path = effect_asset_path(self.root_dir, asset)
+            source_path = effect_source_psd_path(self.root_dir, asset) if suffix == ".psd" else output_path.with_name(f".{output_path.stem}.upload{suffix}")
+            source_path.parent.mkdir(parents=True, exist_ok=True)
+            source_path.write_bytes(self.rfile.read(content_length))
+            temp_path = None if suffix == ".psd" else source_path
+
+            result = export_effect_asset(source_path, output_path)
+            result["asset"] = asset
+            try:
+                result["sourceUrl"] = f"./{output_path.resolve().relative_to(self.root_dir).as_posix()}"
+            except ValueError:
+                result["sourceUrl"] = ""
+            self.send_json(200, result)
+        except Exception as exc:
+            self.send_json(500, {"error": str(exc)})
+        finally:
+            if temp_path:
+                temp_path.unlink(missing_ok=True)
 
     def character_folder_from_request(self, parsed, allow_create=False, allow_missing=False):
         return self.character_folder_from_named_request(parsed, "folder", allow_create, allow_missing)
@@ -383,9 +422,13 @@ def effect_asset_from_request(parsed):
         if key == "asset":
             asset = unquote(value)
             break
-    if asset not in {"slash1", "slash2", "slash3"}:
+    if asset not in {"slash1", "slash2", "slash3"} and not is_dynamic_effect_asset(asset):
         raise RuntimeError("Invalid effect asset")
     return asset
+
+
+def is_dynamic_effect_asset(asset):
+    return asset.startswith("effect_") and all(char.isalnum() or char in "_-" for char in asset)
 
 
 def export_background_preview(source_path, output_path, manifest_path, layer_output_dir):
@@ -393,6 +436,10 @@ def export_background_preview(source_path, output_path, manifest_path, layer_out
     if suffix != ".psd":
         raise RuntimeError("Background source must be a PSD file")
     manifest = export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
+    try:
+        manifest["assetBase"] = f"./{manifest_path.parent.resolve().relative_to(CrowKnightHandler.root_dir).as_posix()}"
+    except ValueError:
+        manifest["assetBase"] = ""
     try:
         manifest["sourceUrl"] = f"./{source_path.resolve().relative_to(CrowKnightHandler.root_dir).as_posix()}"
     except ValueError:
@@ -408,11 +455,11 @@ def main():
     parser.add_argument("--port-retries", type=int, default=20)
     parser.add_argument("--root", default=".")
     parser.add_argument("--psd", default="assets/backgrounds/background_01.psd")
-    parser.add_argument("--output", default="runtime/background-preview.webp")
-    parser.add_argument("--manifest", default="runtime/background-preview.json")
-    parser.add_argument("--layer-output-dir", default="runtime/background-layers")
+    parser.add_argument("--output", default="assets/backgrounds/current/background-preview.webp")
+    parser.add_argument("--manifest", default="assets/backgrounds/current/background-preview.json")
+    parser.add_argument("--layer-output-dir", default="assets/backgrounds/current/layers")
     parser.add_argument("--default-state", default="runtime/project-default-state.json")
-    parser.add_argument("--uploaded-psd-dir", default="runtime/uploaded-psds")
+    parser.add_argument("--uploaded-psd-dir", default="assets/backgrounds/uploaded-psds")
     parser.add_argument("--characters-dir", default="assets/characters")
     args = parser.parse_args()
 
@@ -421,6 +468,7 @@ def main():
     print("PSD refresh API: /api/psd/refresh", flush=True)
     print("Character PSD refresh API: /api/character/refresh", flush=True)
     print("Effect asset refresh API: /api/effect/refresh", flush=True)
+    print("Effect asset upload API: /api/effect/upload", flush=True)
     print("Project default state API: /api/state/default", flush=True)
     server.serve_forever()
 

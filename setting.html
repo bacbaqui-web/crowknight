@@ -466,14 +466,13 @@
           </div>
         </section>
 
-        <section class="setting-section" data-collapsible data-section="effect">
-          <button class="section-toggle" type="button">효과</button>
+        <section class="setting-section" data-section="effect">
+          <div class="section-heading">효과</div>
           <div class="section-content">
-            <div class="action-select-row">
-              <label class="select-row action-select-control">
-                <span>선택</span>
-                <select id="effectSelect"></select>
-              </label>
+            <div class="select-row character-select-row action-select-row">
+              <span>선택</span>
+              <select id="effectGroupSelect" aria-label="Effect 그룹"></select>
+              <select id="effectSelect"></select>
               <div class="control-more-menu">
                 <button
                   id="effectAssetMenuToggle"
@@ -504,10 +503,18 @@
                 </div>
               </div>
             </div>
-            <label class="action-name-trigger-row effect-name-row">
-              <span>이름</span>
-              <input id="effectName" type="text" readonly />
-            </label>
+            <div class="action-name-trigger-row effect-name-row">
+              <label for="effectFileName">영문 파일명</label>
+              <input
+                id="effectFileName"
+                type="text"
+                inputmode="text"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder=""
+                aria-label="Effect 영문 파일명"
+              />
+            </div>
             <div class="timeline-settings">
               <div class="timeline-frame-input">
                 <input id="effectDuration" type="number" min="2" max="50" step="1" />

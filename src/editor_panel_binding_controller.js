@@ -1,5 +1,6 @@
 import { GAME_KEYS } from './game_config_data.js';
 import { handlePanelKeyboardShortcut } from './editor_shortcut_helper.js';
+import { normalizeEffectFileName } from './animation_frame_data.js';
 
 export function bindActionTimelineControls(elements, actions) {
   bindTimelineControls({
@@ -48,6 +49,7 @@ export function bindEffectTimelineControls(elements, actions) {
   bindTimelineControls({
     controls: {
       duration: elements.effectDuration,
+      fileName: elements.effectFileName,
       playbackRateRange: elements.effectPlaybackRateRange,
       playbackRate: elements.effectPlaybackRate,
       frameUp: elements.effectFrameUp,
@@ -77,6 +79,7 @@ export function bindEffectTimelineControls(elements, actions) {
     bindNumberDrag: actions.bindNumberDrag,
     commitUndoSnapshot: actions.commitUndoSnapshot,
   });
+  bindEffectFileNameControl(elements.effectFileName, actions.updateEffectSetting, actions.commitUndoSnapshot);
 }
 
 function bindTimelineControls({ controls, actions, bindNumberDrag, commitUndoSnapshot }) {
@@ -119,6 +122,17 @@ function bindTimelineControls({ controls, actions, bindNumberDrag, commitUndoSna
   controls.addKeyframe.addEventListener('click', actions.addKeyframe);
   controls.deleteKeyframe.addEventListener('click', actions.deleteKeyframe);
   controls.resetAnimation?.addEventListener('click', actions.resetAnimation);
+}
+
+function bindEffectFileNameControl(input, updateSetting, commitUndoSnapshot) {
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const next = normalizeEffectFileName(input.value);
+    if (input.value !== next) input.value = next;
+    updateSetting('fileName', next);
+  });
+  input.addEventListener('change', commitUndoSnapshot);
+  input.addEventListener('blur', commitUndoSnapshot);
 }
 
 export function bindPanelKeyboardShortcuts(panel, actions) {

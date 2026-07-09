@@ -50,6 +50,20 @@ export function renderFormulaSelectField(labelText, value, options, onChange) {
   return label;
 }
 
+export function renderFormulaColorField(labelText, value, onChange) {
+  const label = document.createElement('label');
+  label.className = 'modifier-setting-row';
+  const text = document.createElement('span');
+  text.textContent = labelText;
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.value = normalizeColorValue(value);
+  input.addEventListener('input', () => onChange(input.value));
+  input.addEventListener('change', () => onChange(input.value));
+  label.append(text, input);
+  return label;
+}
+
 export function renderFormulaButtonGroup(labelText, value, options, onChange) {
   const row = document.createElement('div');
   row.className = 'modifier-select-row';
@@ -180,6 +194,11 @@ function clampInlineStepperValue(value, input) {
   const number = Number(value);
   if (!Number.isFinite(number)) return Number(input.value || 0);
   return Math.min(max, Math.max(min, Math.round(number * 10) / 10));
+}
+
+function normalizeColorValue(value) {
+  const text = String(value || '').trim();
+  return /^#[0-9a-f]{6}$/i.test(text) ? text : '#8edab8';
 }
 
 export function renderFormulaActionTargetFields(formula, context) {

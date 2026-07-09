@@ -12,6 +12,7 @@ const GLOW_GROUP_PARTS = {
   hipR: ['upperLegR', 'lowerLegR'],
 };
 const glowImageCache = new WeakMap();
+const tintImageCache = new WeakMap();
 
 export function partWidth(image) {
   return image.naturalWidth || image.width;
@@ -36,6 +37,34 @@ export function glowSilhouetteFor(image) {
   buffer.fillRect(0, 0, width, height);
   glowImageCache.set(image, canvas);
   return canvas;
+}
+
+export function tintedSilhouetteFor(image, color = '#8edab8') {
+  const tint = normalizeTintColor(color);
+  let imageCache = tintImageCache.get(image);
+  if (!imageCache) {
+    imageCache = new Map();
+    tintImageCache.set(image, imageCache);
+  }
+  if (imageCache.has(tint)) return imageCache.get(tint);
+
+  const width = partWidth(image);
+  const height = partHeight(image);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const buffer = canvas.getContext('2d');
+  buffer.drawImage(image, 0, 0, width, height);
+  buffer.globalCompositeOperation = 'source-in';
+  buffer.fillStyle = tint;
+  buffer.fillRect(0, 0, width, height);
+  imageCache.set(tint, canvas);
+  return canvas;
+}
+
+function normalizeTintColor(value) {
+  const text = String(value || '').trim();
+  return /^#[0-9a-f]{6}$/i.test(text) ? text : '#8edab8';
 }
 
 export function shouldGlowPartKey(key, glowPart, glowParts) {

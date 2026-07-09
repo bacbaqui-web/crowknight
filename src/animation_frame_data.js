@@ -70,11 +70,39 @@ export function defaultEffectImageKey(key = '') {
   if (key === 'attack1') return 'slash1';
   if (key === 'attack2' || key === 'jumpAttack') return 'slash2';
   if (key === 'attack3') return 'slash3';
-  return 'none';
+  return dynamicEffectImageKey(key);
+}
+
+export function defaultEffectUploadImageKey(key = '') {
+  return dynamicEffectImageKey(key);
+}
+
+export function effectImageKeyFromFileName(fileName = '', fallbackKey = '') {
+  const slug = normalizeEffectFileName(fileName);
+  return slug ? `effect_${slug}` : defaultEffectUploadImageKey(fallbackKey);
+}
+
+export function normalizeEffectFileName(value = '') {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_-]+/g, '')
+    .replace(/_+/g, '_')
+    .replace(/-+/g, '-')
+    .replace(/^[-_]+|[-_]+$/g, '');
 }
 
 export function validEffectImageKey(key) {
-  return EFFECT_IMAGE_OPTIONS.some((option) => option.key === key);
+  return EFFECT_IMAGE_OPTIONS.some((option) => option.key === key) || /^effect_[a-zA-Z0-9_-]+$/.test(String(key || ''));
+}
+
+export function dynamicEffectImageKey(key = '') {
+  const safeKey = String(key || 'effect')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return `effect_${safeKey || 'effect'}`;
 }
 
 export function actionAnchorValue(value = {}, fallback = frameValue()) {

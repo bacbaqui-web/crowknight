@@ -10,13 +10,15 @@ import {
 import { preserveTimelineKeyframeSlots, writeEffectTimelineSetting } from './timeline_settings_helper.js';
 import { createEffectPreview } from './preview_state.js';
 import { defineTimelineAdapter } from './timeline_adapter_contract_helper.js';
-import { activeTimelineT } from './timeline_state.js';
+import { timelineFrameCountFor } from './timeline_state.js';
 import { currentEffectTimelineFrame } from './timeline_frame_reader.js';
 import {
   copyActiveEffectTimelineFrame,
+  effectTimelinePasteTargetFrameId,
   pasteEffectTimelineFrameCopy,
-  timelinePasteTargetFrameId,
+  selectTimelinePasteTargetFrame,
 } from './timeline_clipboard_helper.js';
+import { resolveTimelineKeyframeTarget, timelineKeyframeTargetT } from './timeline_keyframe_target_helper.js';
 
 export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   const key = () => effectSelect.value;
@@ -53,23 +55,16 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   }
 
   function activeT({ selection, frameCount }) {
-    return activeTimelineT({
-      activeKeyframeId: selection.activeKeyframeId,
-      selectedSlot: selection.selectedSlot,
-      fixedFrame: selection.fixedFrame,
-      keyframes: keyframes(),
-      selectedKeyframe: selectedKeyframe(selection.activeKeyframeId),
-      frameCount,
-    });
+    const target = timelineKeyframeTarget(selection, frameCount);
+    return timelineKeyframeTargetT(target) ?? 0;
   }
 
   function currentFrameValue({ selection, activeT, setFixedFrame }) {
+    const target = timelineKeyframeTarget(selection);
     return currentEffectTimelineFrame({
       tuning: tuning(),
       effectKey: key(),
-      activeKeyframeId: selection.activeKeyframeId,
-      fixedFrame: selection.fixedFrame,
-      selectedSlot: selection.selectedSlot,
+      timelineKeyframeTarget: target,
       activeT,
       ensureKeyframe,
       setFixedFrame,
@@ -95,17 +90,18 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   function ensureKeyframe(effectOrId, maybeId) {
     const id = maybeId ?? effectOrId;
     const effect = maybeId === undefined ? offset() : effectOrId;
-    return ensureEffectTimelineKeyframe(effect, key(), id, keyframes());
+    const timelineKeyframes = maybeId === undefined ? keyframes() : effectKeyframesFor(effect, key());
+    return ensureEffectTimelineKeyframe(effect, key(), id, timelineKeyframes);
   }
 
   function writeFrameValue({ prop, value, selection }) {
+    const target = timelineKeyframeTarget(selection);
     return writeEffectTimelineFrameValue({
       effect: offset(),
       effectKey: key(),
       prop,
       value,
-      activeKeyframeId: selection.activeKeyframeId,
-      fixedFrame: selection.fixedFrame,
+      timelineKeyframeTarget: target,
       ensureKeyframe,
     });
   }
@@ -133,10 +129,11 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
   }
 
   function copyFrame({ isOpen, selection, fallbackFrame }) {
+    const target = timelineKeyframeTarget(selection);
     return copyActiveEffectTimelineFrame({
       isOpen,
       effectKey: key(),
-      id: selection.activeKeyframeId || selection.fixedFrame,
+      timelineKeyframeTarget: target,
       keyframes: keyframes(),
       fallbackFrame,
     });
@@ -152,14 +149,26 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
     });
   }
 
-  function pasteTargetFrameId({ selection, slotToValue }) {
-    return timelinePasteTargetFrameId({
-      selection,
-      keyframes: keyframes(),
-      slotToValue,
+  function pasteTargetFrameId({ selection }) {
+    const id = effectTimelinePasteTargetFrameId({
+      timelineKeyframeTarget: timelineKeyframeTarget(selection),
       addKeyframe,
       defaultFrameId: 'start',
     });
+    if (id) selectTimelinePasteTargetFrame(selection, id, keyframes());
+    return id;
+  }
+
+  function timelineKeyframeTarget(selection, frameCount = activeTimelineFrameCount()) {
+    return resolveTimelineKeyframeTarget({
+      selection,
+      keyframes: keyframes(),
+      frameCount,
+    });
+  }
+
+  function activeTimelineFrameCount() {
+    return timelineFrameCountFor(settingsByKey(), key());
   }
 
   return defineTimelineAdapter(
@@ -190,6 +199,7 @@ export function createEffectTimelineAdapter({ getActor, effectSelect }) {
       ensureOffset,
       offset,
       selectedKeyframe,
+      timelineKeyframeTarget,
     }
   );
 }

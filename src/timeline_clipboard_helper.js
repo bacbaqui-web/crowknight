@@ -9,6 +9,11 @@ import {
   actionKeyframeTargetT,
   hasActionKeyframeTarget,
 } from './action_keyframe_target_helper.js';
+import {
+  hasTimelineKeyframeTarget,
+  timelineKeyframeTargetId,
+  timelineKeyframeTargetT,
+} from './timeline_keyframe_target_helper.js';
 
 export function createTimelineClipboardState() {
   let copiedFrame = null;
@@ -44,6 +49,13 @@ export function timelinePasteTargetFrameId({ selection, keyframes, slotToValue, 
   selection.activeKeyframeId = createdId;
   selection.fixedFrame = null;
   return createdId;
+}
+
+export function selectTimelinePasteTargetFrame(selection, id, keyframes) {
+  if (!id || !isTimelineFrameId(id, keyframes)) return null;
+  selection.activeKeyframeId = id === 'start' || id === 'end' ? null : id;
+  selection.fixedFrame = id === 'start' || id === 'end' ? id : null;
+  return id;
 }
 
 export function copyActiveActionTimelineFrame({
@@ -109,7 +121,14 @@ export function pasteActionTimelineFrameCopy({
   return true;
 }
 
-export function copyActiveEffectTimelineFrame({ isOpen, effectKey, id, keyframes, fallbackFrame }) {
+export function copyActiveEffectTimelineFrame({
+  isOpen,
+  effectKey,
+  timelineKeyframeTarget = null,
+  id = timelineKeyframeTargetId(timelineKeyframeTarget),
+  keyframes,
+  fallbackFrame,
+}) {
   return copyTimelineFrame({
     isOpen,
     id,
@@ -117,6 +136,14 @@ export function copyActiveEffectTimelineFrame({ isOpen, effectKey, id, keyframes
     fallbackFrame,
     createCopy: (source) => createEffectFrameCopy(effectKey, source),
   });
+}
+
+export function effectTimelinePasteTargetFrameId({ timelineKeyframeTarget, addKeyframe, defaultFrameId = 'start' }) {
+  if (hasTimelineKeyframeTarget(timelineKeyframeTarget)) return timelineKeyframeTargetId(timelineKeyframeTarget);
+
+  const t = timelineKeyframeTargetT(timelineKeyframeTarget);
+  if (t === null) return defaultFrameId;
+  return addKeyframe(t);
 }
 
 export function pasteEffectTimelineFrameCopy({ copiedEffectFrame, effect, effectKey, id, ensureKeyframe }) {
@@ -194,6 +221,8 @@ function explicitSelectedActionParts(selectedActionParts) {
 export function createEffectFrameCopy(effectKey, source) {
   return {
     effect: effectKey,
+    mode: 'frame',
+    sourceId: source?.id || null,
     frame: effectFrameValue(source, effectKey),
   };
 }

@@ -86,6 +86,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `timeline_pose_panel_view.js`: legacy pose timeline DOM view.
 - `timeline_view.js`: shared timeline view.
 - `timeline_renderer.js`: timeline bar renderer.
+- `timeline_keyframe_target_helper.js`: start / end / normal keyframe target compatibility helper.
 - `timeline_frame_reader.js`: current frame reader.
 - `timeline_keyframe_helper.js`: keyframe write / lookup helper.
 - `timeline_action_helper.js`: action timeline small helper.
@@ -123,6 +124,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `property_value_helper.js`: Property 표시값 / 저장값 변환.
 - `property_field_data.js`: Property field group definitions.
 - `property_panel_controller.js`: Setup / Action Property panel 렌더/write controller.
+- `effect_property_controller.js`: Effect Property card 렌더/write controller.
 - `property_group_edit_helper.js`: group edit Property 값 적용 helper.
 - `property_numeric_input_helper.js`: numeric input helper.
 - `property_scrub_helper.js`: property scrub helper.
@@ -140,15 +142,18 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `interaction_field_data.js`: collision / hurt / attack / guard option field definitions and defaults.
 - `interaction_object_editor_controller.js`: interaction object edit source controller.
 - `interaction_region_engine.js`: runtime interaction region 계산.
+- `interaction_swept_region_helper.js`: 이전 / 현재 Interaction Region swept polygon helper.
 - `action_modifier_panel_controller.js`: Action Formula panel 연결 controller.
 - `formula_registry.js`: Formula module registry / normalize / migration.
 - `formula_editor_engine.js`: Formula library / applied Formula card 공통 renderer.
 - `formula_runtime_engine.js`: Runtime이 현재 frame의 Formula를 읽는 helper.
+- `afterimage_runtime_helper.js`: 잔상 Formula runtime snapshot update / draw helper.
 - `graph_picker_view.js`: Formula / modifier graph 선택 UI view.
 - `formulas/cast_formula.js`: 시전 Formula definition.
 - `formulas/cooldown_formula.js`: 쿨타임 Formula definition.
 - `formulas/velocity_formula.js`: 속도 Formula definition / editor / runtime metadata.
 - `formulas/inertia_formula.js`: 관성 Formula definition.
+- `formulas/afterimage_formula.js`: 잔상 Formula definition.
 - `formulas/lock_formula.js`: 고정 Formula definition.
 - `formulas/blend_formula.js`: 보간 Formula definition.
 - `formulas/cancel_formula.js`: 캔슬 Formula definition.
@@ -234,7 +239,7 @@ Input
 - `firebase_asset_storage_helper.js`: Firebase asset storage helper.
 - `local_api_helper.js`: local API request helper.
 - `local_character_asset_storage_helper.js`: local character asset storage helper.
-- `psd_background_helper.js`: PSD background helper.
+- `psd_background_helper.js`: PSD background helper; 로컬 background export는 `assets/backgrounds/current`만 사용.
 
 ## Save / Project / Data
 

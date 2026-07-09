@@ -3,6 +3,7 @@ import {
   normalizeTimelinePlayback,
   timelineDurationFromFrames,
 } from './timeline_playback_helper.js';
+import { normalizeEffectFileName } from './animation_frame_data.js';
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
 import { normalizeActionCondition } from './action_condition_helper.js';
 import { normalizeActionEditPivot } from './action_timeline_edit_helper.js';
@@ -50,6 +51,7 @@ export function preserveTimelineKeyframeSlots(keyframes, oldFrameCount, nextFram
 
 function writeTimelineSetting(settings, prop, value, normalizePlayback) {
   if (prop === 'duration') settings.duration = timelineDurationFromFrames(value);
+  if (prop === 'fileName') settings.fileName = normalizeEffectFileName(value);
   if (prop === 'playback') settings.playback = normalizePlayback(value);
   if (prop === 'playbackRate') settings.playbackRate = clampTimelinePlaybackRate(value);
   if (prop === 'mirror') settings.mirror = value !== false;

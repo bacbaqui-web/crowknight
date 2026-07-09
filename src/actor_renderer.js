@@ -19,6 +19,7 @@ import {
   partHeight,
   partWidth,
   shouldGlowPartKey,
+  tintedSilhouetteFor,
 } from './puppet_player_geometry_helper.js';
 import {
   INTERACTION_OBJECT_TARGET_TYPE,
@@ -328,6 +329,22 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
   drawPuppetImageLessChildParts(player, ctx, key, drawRect.x, drawRect.y);
   ctx.globalAlpha *= clamp((part.opacity ?? 1) * (offset.opacity ?? 1), 0, 1);
+  if (player.afterimageTintColor) {
+    ctx.drawImage(image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
+    ctx.save();
+    ctx.globalAlpha *= clamp(player.afterimageTintOpacity ?? 0.35, 0, 1);
+    ctx.drawImage(
+      tintedSilhouetteFor(image, player.afterimageTintColor),
+      drawRect.x,
+      drawRect.y,
+      drawRect.w,
+      drawRect.h
+    );
+    ctx.restore();
+    ctx.restore();
+    if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, transform.x, transform.y);
+    return;
+  }
   if (shouldGlowPartKey(key, player.glowPart, player.glowParts)) {
     drawPuppetImageGlow(ctx, image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   }

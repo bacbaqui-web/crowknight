@@ -1,12 +1,13 @@
 import { defaultTuningFor } from './actor_tuning_helper.js';
 import { createActorFromDef } from './actor_factory.js';
+import { effectImageKeyFromFileName, validEffectImageKey } from './animation_frame_data.js';
 import {
   createCharacterPsdAssets,
   copyCharacterAssetFolder,
   deleteCharacterAssetFolder,
   moveCharacterAssetFolder,
   refreshCharacterPsdAssetResult,
-  refreshEffectAsset,
+  refreshEffectAssetResult,
 } from './asset_refresh_helper.js';
 import {
   CHARACTER_TRASH_GROUP,
@@ -19,6 +20,7 @@ import {
 } from './character_group_data.js';
 import { showPanelActionFeedback } from './panel_feedback_view.js';
 import { clone } from './common_helper.js';
+import { ensureEffectOffset, ensureEffectSettings } from './project_data_normalizer_helper.js';
 
 export function bindTuningPanelAssetActions({
   elements,
@@ -51,7 +53,14 @@ export function bindTuningPanelAssetActions({
     syncPanel,
     syncRemoteState: null,
   });
-  bindEffectAssetButtons({ elements, effectAssets, effectAssetSources, getEffectTimeline, saveState });
+  bindEffectAssetButtons({
+    elements,
+    effectAssets,
+    effectAssetSources,
+    getSelectedActor,
+    getEffectTimeline,
+    saveState,
+  });
 }
 
 function bindFirebaseButtons({ elements, uploadSettings, downloadSettings }) {
@@ -575,7 +584,14 @@ function nextCharacterX(actors) {
   return lastX + 140;
 }
 
-function bindEffectAssetButtons({ elements, effectAssets, effectAssetSources, getEffectTimeline, saveState }) {
+function bindEffectAssetButtons({
+  elements,
+  effectAssets,
+  effectAssetSources,
+  getSelectedActor,
+  getEffectTimeline,
+  saveState,
+}) {
   const { effectAssetUpload, effectAssetFile, effectAssetRefresh, effectAssetReset, effectSelect } = elements;
 
   effectAssetUpload?.addEventListener('click', () => {
@@ -592,6 +608,7 @@ function bindEffectAssetButtons({ elements, effectAssets, effectAssetSources, ge
         effectAssetSources,
         effectKey: effectSelect.value,
         effectFile,
+        getSelectedActor,
         getEffectTimeline,
         saveState,
       })
@@ -603,6 +620,7 @@ function bindEffectAssetButtons({ elements, effectAssets, effectAssetSources, ge
         effectAssets,
         effectAssetSources,
         effectKey: effectSelect.value,
+        getSelectedActor,
         getEffectTimeline,
         saveState,
       })
@@ -619,17 +637,104 @@ async function refreshCurrentEffectAsset({
   effectAssetSources,
   effectKey,
   effectFile = null,
+  getSelectedActor,
   getEffectTimeline,
   saveState,
 }) {
-  const ok = await refreshEffectAsset({ effectAssets, effectAssetSources, effectKey, file: effectFile });
-  if (!ok) return false;
-
+  const actor = getSelectedActor?.();
+  if (!actor?.tuning) return { ok: false, error: '선택된 캐릭터가 없습니다.' };
+  ensureEffectOffset(actor.tuning, effectKey);
+  ensureEffectSettings(actor.tuning);
+  const effect = actor.tuning.effectOffsets?.[effectKey];
+  const settings = actor.tuning.effectSettings?.[effectKey] || {};
   const effectTimeline = getEffectTimeline();
+  const imageKey = effectUploadImageKey(effectKey, settings, effect, Boolean(effectFile));
+  const diagnostic = {
+    effectKey,
+    currentImage: effect?.image || 'none',
+    effectFileName: settings.fileName || '',
+    imageKey,
+    fileName: effectFile?.name || '',
+    fileSize: Number(effectFile?.size || 0),
+  };
+
+  const result = await refreshEffectAssetResult({
+    effectAssets,
+    effectAssetSources,
+    effectKey,
+    imageKey,
+    file: effectFile,
+  });
+  Object.assign(diagnostic, result.debug || {});
+  if (!result.ok) return effectUploadDiagnosticResult(result, diagnostic);
+  ensureEffectOffset(actor.tuning, effectKey);
+  actor.tuning.effectOffsets[effectKey].image = imageKey;
+  diagnostic.savedImage = actor.tuning.effectOffsets[effectKey].image || 'none';
+  diagnostic.effectAsset = effectAssetDiagnosticInfo(effectAssets?.[imageKey]);
+  diagnostic.effectAssetSource = effectAssetSources?.[imageKey] || diagnostic.effectAssetSource || '';
+
   effectTimeline?.renderFields();
   effectTimeline?.syncPreview();
   saveState?.();
-  return true;
+  return effectUploadDiagnosticResult(result, diagnostic);
+}
+
+function effectUploadImageKey(effectKey, settings = {}, effect = {}, hasUploadFile = false) {
+  if (!hasUploadFile && validEffectImageKey(effect?.image)) return effect.image;
+  return effectImageKeyFromFileName(settings.fileName, effectKey);
+}
+
+function effectUploadDiagnosticResult(result, diagnostic) {
+  const nextResult = {
+    ...result,
+    debug: diagnostic,
+    feedbackDetail: formatEffectUploadDiagnostic(diagnostic),
+  };
+  window.console?.info?.('[EffectUpload]', diagnostic);
+  return nextResult;
+}
+
+function formatEffectUploadDiagnostic(diagnostic = {}) {
+  return [
+    'Effect Upload Debug',
+    `effectKey: ${diagnostic.effectKey || ''}`,
+    `currentImage: ${diagnostic.currentImage || 'none'}`,
+    `effectFileName: ${diagnostic.effectFileName || ''}`,
+    `imageKey: ${diagnostic.imageKey || ''}`,
+    `url: ${diagnostic.uploadUrl || ''}`,
+    `file: ${formatEffectUploadFile(diagnostic)}`,
+    `status: ${diagnostic.responseStatus ?? ''}`,
+    `body: ${formatDiagnosticValue(diagnostic.responseBody)}`,
+    `savedImage: ${diagnostic.savedImage || ''}`,
+    `effectAssets[imageKey]: ${formatDiagnosticValue(diagnostic.effectAsset)}`,
+    `effectAssetSource: ${diagnostic.effectAssetSource || ''}`,
+  ].join('\n');
+}
+
+function formatEffectUploadFile(diagnostic = {}) {
+  const name = diagnostic.fileName || 'none';
+  const size = Number(diagnostic.fileSize || 0);
+  return `${name} / ${size} bytes`;
+}
+
+function formatDiagnosticValue(value) {
+  if (value === undefined || value === null || value === '') return '';
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function effectAssetDiagnosticInfo(asset) {
+  if (!asset) return null;
+  return {
+    width: Number(asset.naturalWidth || asset.width || 0),
+    height: Number(asset.naturalHeight || asset.height || 0),
+    complete: Boolean(asset.complete),
+    src: asset.currentSrc || asset.src || '',
+  };
 }
 
 async function runPanelButtonAction(button, label, action) {
@@ -642,18 +747,22 @@ async function runPanelButtonAction(button, label, action) {
   showPanelActionFeedback(label, 'working');
 
   let ok;
+  let errorMessage;
   try {
-    ok = await action();
+    const result = await action();
+    ok = typeof result === 'object' && result !== null ? Boolean(result.ok) : Boolean(result);
+    errorMessage = typeof result === 'object' && result !== null ? result.feedbackDetail || result.error || '' : '';
   } catch (error) {
     window.console?.warn(`${label} failed.`, error);
     ok = false;
+    errorMessage = error?.message || String(error || '');
   }
 
   button.classList.remove('is-working');
   button.classList.toggle('is-success', Boolean(ok));
   button.classList.toggle('is-error', !ok);
   button.setAttribute('aria-label', `${label} ${ok ? '완료' : '실패'}`);
-  showPanelActionFeedback(label, ok ? 'success' : 'error');
+  showPanelActionFeedback(label, ok ? 'success' : 'error', errorMessage);
 
   window.setTimeout(() => {
     button.classList.remove('is-success', 'is-error');

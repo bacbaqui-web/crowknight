@@ -2,7 +2,7 @@ import { TUNING_FIELDS } from './game_config_data.js';
 import { syncNumericFields } from './editor_panel_dom_helper.js';
 import { renderTuningLayerOrder } from './editor_layer_order_helper.js';
 import { normalizeTuningPanelWorkflowSession } from './editor_workflow_data.js';
-import { syncActionAuthoringControls } from './action_authoring_controller.js';
+import { syncActionAuthoringControls, syncEffectAuthoringControls } from './action_authoring_controller.js';
 import { isPlayerCharacter } from './character_group_data.js';
 
 export function createTuningPanelSync({
@@ -16,7 +16,7 @@ export function createTuningPanelSync({
   actionTimeline,
   syncAnchorDebugPart,
 }) {
-  const { actorSelect, actorName, characterDelete, effectName, effectSelect, layerOrder } = elements;
+  const { actorSelect, actorName, characterDelete, layerOrder } = elements;
 
   function syncActorControls() {
     const selectedActor = getSelectedActor();
@@ -47,9 +47,7 @@ export function createTuningPanelSync({
   }
 
   function syncEffect() {
-    if (effectName && effectSelect) {
-      effectName.value = effectSelect.selectedOptions[0]?.textContent || '';
-    }
+    syncEffectAuthoringControls(elements, getSelectedActor().tuning);
     effectTimeline.renderFields();
     effectTimeline.syncPreview();
   }

@@ -20,8 +20,16 @@ export const INTERACTION_TOGGLE_PROPS = new Set([
 ]);
 
 export const INTERACTION_DECIMAL_PROPS = new Set(['stun', 'deathBurst', 'invincibleTime']);
+export const INTERACTION_COLOR_PROPS = new Set([]);
 export const INTERACTION_KNOCKBACK_PROPS = new Set(['knockbackX', 'knockbackY', 'knockback']);
 export const INTERACTION_PUSH_POWER_PROPS = new Set(['pushPower', 'resistance']);
+export const INTERACTION_SELECT_PROPS = new Set(['hitMode']);
+export const INTERACTION_SELECT_OPTIONS = Object.freeze({
+  hitMode: [
+    { value: 'box', label: '박스' },
+    { value: 'trace', label: '궤적' },
+  ],
+});
 
 export const INTERACTION_NUMERIC_PROPS = [
   'stun',
@@ -53,6 +61,7 @@ export const INTERACTION_FIELD_DEFAULTS = Object.freeze({
   invincibleTime: 0,
   damage: 1,
   knockback: 0,
+  hitMode: 'box',
   block: 1,
   deflect: 0,
   parry: 0,
@@ -82,7 +91,7 @@ export const INTERACTION_DETAIL_GROUPS = Object.freeze({
   attack: [
     {
       label: 'Attack',
-      toggles: [],
+      selects: [{ prop: 'hitMode', label: '히트 판정 방식' }],
       props: [
         { prop: 'damage', label: 'Damage' },
         { prop: 'knockback', label: 'Knockback' },
@@ -106,6 +115,17 @@ export function interactionDefaultValue(prop) {
   return INTERACTION_FIELD_DEFAULTS[prop] ?? 0;
 }
 
+export function normalizeInteractionSelectValue(prop, value) {
+  const options = INTERACTION_SELECT_OPTIONS[prop] || [];
+  const text = String(value || '');
+  return options.some((option) => option.value === text) ? text : interactionDefaultValue(prop);
+}
+
+export function normalizeInteractionColorValue(prop, value) {
+  const text = String(value || '').trim();
+  return /^#[0-9a-f]{6}$/i.test(text) ? text : interactionDefaultValue(prop);
+}
+
 export function interactionRoleLabel(prop) {
   return INTERACTION_ROLE_DEFS.find((item) => item.prop === prop)?.label || prop;
 }
@@ -117,6 +137,8 @@ export function interactionDetailGroups(prop) {
 export function interactionDetailFieldProps(role) {
   return interactionDetailGroups(role).flatMap((group) => [
     ...(group.toggles || []).map((item) => item.prop),
+    ...(group.selects || []).map((item) => item.prop),
+    ...(group.colors || []).map((item) => item.prop),
     ...(group.props || []).map((item) => item.prop),
   ]);
 }
