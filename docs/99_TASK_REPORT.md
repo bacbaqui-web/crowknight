@@ -1,43 +1,36 @@
 # 99 Task Report
 
-## 1. 증상
+## 1. 이번에 한 일
 
-- Effect 탭의 애니메이션 속도 / 재생 속도 설정은 UI와 저장 경로가 존재한다.
-- Effect Preview는 `effectSettings.playbackRate`를 사용한다.
-- 실제 Play 렌더에서는 Effect 진행률이 Action 진행률에 묶여 있어 Effect 속도 설정이 반영되지 않았다.
+- `rescue/pre-reset-working-tree` 브랜치의 작업을 모두 커밋했다.
+- `main` 브랜치로 이동한 뒤 rescue 브랜치를 fast-forward merge했다.
+- merge 후 `main`에서 `npm run check`를 실행해 통과를 확인했다.
+- 4176 dev server를 `.venv/bin/python tools/dev_server.py --port 4176`로 다시 열었다.
 
-## 2. 원인
+## 2. 커밋
 
-- `editor_debug_view.js`의 Effect Preview는 `effectSettings.duration`, `effectSettings.playbackRate`, `effectSettings.playback`으로 진행률을 계산한다.
-- `actor_canvas_renderer.js`의 Runtime Effect draw는 `player.getActionFrameProgress()` 값을 그대로 `effectFrameAt()`에 전달했다.
-- 그래서 Effect 설정의 재생 속도는 저장되어도 실제 Play의 Effect 프레임 선택에는 쓰이지 않았다.
+- `df2c32d Update character asset index timestamp`
+- `2d8ac06 Update character index after asset refresh`
 
-## 3. 수정 내용
+## 3. Merge 결과
 
-- `src/actor_canvas_renderer.js`에서 Runtime Effect 진행률 계산을 분리했다.
-- 실제 Play에서는 `effectSettings.duration / playbackRate / playback` 기준으로 Effect 진행률을 계산한다.
-- Action Preview 중에는 기존처럼 `getActionFrameProgress()`를 유지해 에디터 Action Preview 동작을 바꾸지 않았다.
+- 현재 브랜치: `main`
+- 현재 HEAD: `2d8ac06`
+- `rescue/pre-reset-working-tree`와 `main`은 같은 커밋을 가리킨다.
+- merge 방식: fast-forward
 
-## 4. Runtime 적용 경로
+## 4. QA 결과
 
-```text
-player.actionKey
-→ effectSettings[actionKey]
-→ customActionElapsed 또는 stateTime
-→ timelinePlaybackProgress()
-→ effectFrameAt(actor.tuning, actionKey, effectProgress)
-→ drawAttackTrail()
-```
-
-## 5. QA 결과
-
-- 데이터 QA: `duration=1`, `playbackRate=2`, `customActionElapsed=0.25`일 때 Effect 진행률이 `0.5`로 계산되어 중간 프레임 위치가 사용되는 것을 확인했다.
 - `npm run check` 통과.
-- `git diff --check` 통과.
-- 브라우저 수동 체감 QA는 사용자가 이어서 확인해야 한다.
+- dev server 재시작 확인: `http://127.0.0.1:4176/setting.html`
+
+## 5. 주의사항
+
+- dev server 시작 시 `assets/characters/index.json`의 `updatedAt`이 자동 갱신된다.
+- 이 자동 갱신분도 별도 커밋으로 고정해야 작업 트리가 깨끗하게 유지된다.
 
 ## 6. 코덱스 의견
 
-- 이번 문제는 Effect 설정 저장 문제가 아니라 Preview와 Runtime이 서로 다른 시간 source를 사용한 문제다.
-- Effect Timeline의 속도는 Action 속도와 별개 설정이므로 Runtime Effect draw도 `effectSettings`를 읽는 현재 구조가 맞다.
-- `action_trigger_engine.js`는 810줄로 리팩토링 권장 기준을 넘었다. 당장 이번 수정 범위는 아니지만, 시전 / 캔슬 / 수식 Runtime이 더 커지기 전에 기능별 분리를 검토하는 것이 좋다.
+- rescue 브랜치 작업을 `main`에 fast-forward로 합친 것은 현재 작업을 보존하는 가장 안전한 방식이었다.
+- 다만 asset index timestamp가 서버 실행 시 자동으로 바뀌는 구조는 Git 작업 중 불필요한 dirty state를 만들 수 있다.
+- 장기적으로는 timestamp 자동 갱신을 실제 asset 변경이 있을 때만 하도록 제한하는 것이 좋다.

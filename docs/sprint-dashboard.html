@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Effect Runtime 재생 속도 수정</p>
+            <p>Rescue 작업 Main Merge</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>Effect 탭의 애니메이션 속도 설정이 실제 Play 렌더에도 반영되게 한다.</p>
+            <p>rescue 브랜치에 쌓인 작업을 잃지 않고 main 브랜치에 적용한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Effect playbackRate Runtime draw 연결</p>
+            <p>rescue/pre-reset-working-tree main merge</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>Effect 애니메이션 속도 설정이 저장되는지 확인한다.</li>
-              <li>Preview와 Runtime이 같은 Effect playback source를 쓰는지 확인한다.</li>
-              <li>실제 Play에서 Effect 진행률이 `effectSettings.playbackRate`를 반영하게 한다.</li>
+              <li>rescue 브랜치의 남은 변경을 커밋한다.</li>
+              <li>main 브랜치에 rescue 작업을 merge한다.</li>
+              <li>merge 후 체크와 서버 재시작을 확인한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`drawAttackTrail()`의 Effect 진행률 계산 경로를 확인했다.</li>
-              <li>Runtime Effect draw가 `effectSettings.duration / playbackRate / playback`을 읽도록 수정했다.</li>
-              <li>Action Preview 중에는 기존 `getActionFrameProgress()` 동작을 유지했다.</li>
+              <li>`df2c32d`, `2d8ac06` 커밋을 추가했다.</li>
+              <li>`main`을 rescue 최신 커밋까지 fast-forward merge했다.</li>
+              <li>4176 dev server를 `.venv` Python으로 다시 열었다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>Effect 속도 체감은 브라우저에서 실제 재생으로 추가 확인이 필요하다.</li>
-              <li>실제 수동 플레이 체감 QA는 사용자가 이어서 확인한다.</li>
+              <li>서버 실행 시 `assets/characters/index.json` timestamp가 자동 갱신된다.</li>
+              <li>timestamp 자동 갱신 구조는 나중에 별도 정리하는 것이 좋다.</li>
             </ul>
           </div>
         </div>
@@ -234,21 +234,21 @@
             <h3>View QA</h3>
             <ul>
               <li>
-                <label class="qa-item" data-qa-id="effect-playback-source">
+                <label class="qa-item" data-qa-id="merge-main-branch">
                   <input type="checkbox" />
-                  <span>Runtime Effect draw가 `effectSettings.playbackRate`를 읽는지 확인한다.</span>
+                  <span>현재 브랜치가 `main`인지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="effect-playback-data">
+                <label class="qa-item" data-qa-id="merge-head">
                   <input type="checkbox" />
-                  <span>playbackRate=2일 때 같은 elapsed에서 Effect 프레임이 더 진행되는지 확인한다.</span>
+                  <span>`main`과 `rescue/pre-reset-working-tree`가 같은 HEAD를 가리키는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="effect-action-preview">
+                <label class="qa-item" data-qa-id="merge-server">
                   <input type="checkbox" />
-                  <span>Action Preview 중에는 기존 Action 진행률 기반 표시가 유지되는지 확인한다.</span>
+                  <span>4176 dev server가 열렸는지 확인한다.</span>
                 </label>
               </li>
               <li>
