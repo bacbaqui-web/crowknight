@@ -396,6 +396,10 @@ function applyKnockback(attacker, target, attackRegion) {
   const deltaX = Number(target.player.x || 0) - Number(attacker.player.x || 0);
   const direction = deltaX === 0 ? Number(attacker.player.facing || 1) : Math.sign(deltaX);
   target.player.vx = Number(target.player.vx || 0) + direction * knockback;
+  target.player.velocityControl = {
+    ...(target.player.velocityControl || {}),
+    x: true,
+  };
 }
 
 function requestHurtAction(target, attacker) {

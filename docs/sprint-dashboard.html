@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Rescue 작업 Main Merge</p>
+            <p>Attack Knockback Runtime 수정</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>rescue 브랜치에 쌓인 작업을 잃지 않고 main 브랜치에 적용한다.</p>
+            <p>Attack Interaction의 knockback 값이 실제 피격 이동으로 보이게 한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>rescue/pre-reset-working-tree main merge</p>
+            <p>knockback velocity impulse 보존</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>rescue 브랜치의 남은 변경을 커밋한다.</li>
-              <li>main 브랜치에 rescue 작업을 merge한다.</li>
-              <li>merge 후 체크와 서버 재시작을 확인한다.</li>
+              <li>Attack Region의 knockback 값이 Combat에 전달되는지 확인한다.</li>
+              <li>Combat에서 대상 velocity가 실제로 변하는지 확인한다.</li>
+              <li>World Physics 관성 때문에 첫 이동 전에 velocity가 죽는지 확인한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`df2c32d`, `2d8ac06` 커밋을 추가했다.</li>
-              <li>`main`을 rescue 최신 커밋까지 fast-forward merge했다.</li>
-              <li>4176 dev server를 `.venv` Python으로 다시 열었다.</li>
+              <li>`applyKnockback()`이 `target.player.vx`를 갱신하는 것을 확인했다.</li>
+              <li>넉백 후 `velocityControl.x = true`를 설정해 다음 physics frame에서 감쇠 전 이동되게 했다.</li>
+              <li>Interaction 저장 구조와 damage 판정은 변경하지 않았다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>서버 실행 시 `assets/characters/index.json` timestamp가 자동 갱신된다.</li>
-              <li>timestamp 자동 갱신 구조는 나중에 별도 정리하는 것이 좋다.</li>
+              <li>브라우저 체감 QA는 사용자가 이어서 확인한다.</li>
+              <li>장기적으로 knockback 전용 velocity 채널 분리를 검토할 수 있다.</li>
             </ul>
           </div>
         </div>
@@ -234,21 +234,21 @@
             <h3>View QA</h3>
             <ul>
               <li>
-                <label class="qa-item" data-qa-id="merge-main-branch">
+                <label class="qa-item" data-qa-id="knockback-vx">
                   <input type="checkbox" />
-                  <span>현재 브랜치가 `main`인지 확인한다.</span>
+                  <span>hit 성공 후 대상 `vx`가 knockback 값만큼 증가하는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="merge-head">
+                <label class="qa-item" data-qa-id="knockback-velocity-control">
                   <input type="checkbox" />
-                  <span>`main`과 `rescue/pre-reset-working-tree`가 같은 HEAD를 가리키는지 확인한다.</span>
+                  <span>hit 성공 후 `velocityControl.x`가 켜지는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="merge-server">
+                <label class="qa-item" data-qa-id="knockback-low-inertia">
                   <input type="checkbox" />
-                  <span>4176 dev server가 열렸는지 확인한다.</span>
+                  <span>관성이 낮아도 첫 frame 넉백 이동이 보이는지 확인한다.</span>
                 </label>
               </li>
               <li>
