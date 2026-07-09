@@ -9,6 +9,7 @@ import {
   isSettingsPanelOpen,
 } from './settings_panel_state.js';
 import { effectFrameAt } from './project_data_normalizer_helper.js';
+import { actionFormula } from './formula_runtime_engine.js';
 import { timelinePlaybackProgress } from './timeline_playback_helper.js';
 import {
   COLLISION_INTERACTION_OBJECT_KEY,
@@ -18,14 +19,17 @@ import {
   interactionObjectPartKeysForEditFocus,
 } from './interaction_object_editor_controller.js';
 import { clamp } from './common_helper.js';
+import { resolveEffectAsset } from './asset_loader_helper.js';
 
 export function drawTuningPanelDebugBoxes(
   ctx,
   selectedActor,
   effectAssets,
-  { activeSetupPartKey = null, activeActionPartKey = null } = {}
+  { activeSetupPartKey = null, activeActionPartKey = null, activeActionKey = null } = {}
 ) {
   if (!isSettingsPanelOpen()) return;
+
+  drawActionRangeFormulaGuide(ctx, selectedActor, activeActionKey);
 
   if (isCollisionSectionOpen()) {
     drawSetupFallbackInteractionPreview(ctx, selectedActor, activeSetupPartKey);
@@ -45,6 +49,37 @@ export function drawTuningPanelDebugBoxes(
   if (!effectKey) return;
 
   drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
+}
+
+function drawActionRangeFormulaGuide(ctx, actor, actionKey) {
+  if (!actor?.player || !actionKey) return;
+  const formula = actionFormula(actor.tuning?.actionSettings?.[actionKey] || {}, 'range');
+  if (!formula?.enabled) return;
+
+  const minRange = Math.max(0, Number(formula.minRange || 0));
+  const maxRange = Math.max(minRange, Number(formula.maxRange || 0));
+  const x = Number(actor.player.x || 0);
+  const y = Number(actor.player.y || 0);
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(124, 195, 162, 0.08)';
+  ctx.strokeStyle = 'rgba(124, 195, 162, 0.9)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, maxRange, 0, Math.PI * 2);
+  ctx.arc(x, y, minRange, 0, Math.PI * 2, true);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, maxRange, 0, Math.PI * 2);
+  ctx.stroke();
+  if (minRange > 0) {
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = 'rgba(245, 247, 251, 0.72)';
+    ctx.beginPath();
+    ctx.arc(x, y, minRange, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function editHandleFallbackInteractionKeysForActionPart(partKey) {
@@ -138,7 +173,7 @@ function drawEffectSettingsPreview(ctx, actor, key, effectAssets) {
   if (!frame || frame.image === 'none' || Number(frame.opacity ?? 1) <= 0) return null;
 
   const metrics = effectPreviewMetrics(actor, key, frame);
-  const asset = effectAssets[frame.image];
+  const asset = resolveEffectAsset(effectAssets, frame.image, actor?.id);
   const transform = effectMetricsTransform(metrics, frame);
   const drawRect = editableTransformDrawRect(transform);
 

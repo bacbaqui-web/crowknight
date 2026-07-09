@@ -60,12 +60,43 @@ export async function loadEffectAsset(key, version = '', sources = {}) {
 
 export function effectAssetPath(key) {
   if (EFFECT_ASSET_PATHS[key]) return EFFECT_ASSET_PATHS[key];
-  if (!isDynamicEffectAssetKey(key)) return null;
-  return `./assets/effects/custom/${key}.png`;
+  const dynamic = dynamicEffectAssetPathParts(key);
+  if (!dynamic) return null;
+  return dynamic.actorId
+    ? `./assets/effects/${dynamic.actorId}/${dynamic.imageKey}.png`
+    : `./assets/effects/custom/${dynamic.imageKey}.png`;
 }
 
 export function isDynamicEffectAssetKey(key) {
-  return /^effect_[a-zA-Z0-9_-]+$/.test(String(key || ''));
+  return Boolean(dynamicEffectAssetPathParts(key));
+}
+
+export function effectActorAssetKey(actorId, imageKey) {
+  const safeActorId = sanitizeEffectActorId(actorId);
+  const safeImageKey = String(imageKey || '').trim();
+  if (!safeActorId || !/^effect_[a-zA-Z0-9_-]+$/.test(safeImageKey)) return safeImageKey;
+  return `${safeActorId}/${safeImageKey}`;
+}
+
+export function resolveEffectAsset(effectAssets, imageKey, actorId = null) {
+  if (!effectAssets || !imageKey) return null;
+  const actorAssetKey = effectActorAssetKey(actorId, imageKey);
+  return effectAssets[actorAssetKey] || effectAssets[imageKey] || null;
+}
+
+function dynamicEffectAssetPathParts(key) {
+  const raw = String(key || '').trim();
+  if (/^effect_[a-zA-Z0-9_-]+$/.test(raw)) return { actorId: '', imageKey: raw };
+  const match = raw.match(/^([a-zA-Z0-9_-]+)\/(effect_[a-zA-Z0-9_-]+)$/);
+  if (!match) return null;
+  return { actorId: match[1], imageKey: match[2] };
+}
+
+function sanitizeEffectActorId(actorId) {
+  return String(actorId || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
 function versionedPath(path, version) {

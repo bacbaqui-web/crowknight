@@ -11,23 +11,32 @@ export const INTERACTION_TOGGLE_PROPS = new Set([
   'hurt',
   'collision',
   'guard',
+  'followWeapon',
   'noOverlap',
   'hurtByAttack',
   'hurtByCollision',
-  'block',
-  'deflect',
   'parry',
 ]);
 
 export const INTERACTION_DECIMAL_PROPS = new Set(['stun', 'deathBurst', 'invincibleTime']);
 export const INTERACTION_COLOR_PROPS = new Set([]);
-export const INTERACTION_KNOCKBACK_PROPS = new Set(['knockbackX', 'knockbackY', 'knockback']);
+export const INTERACTION_KNOCKBACK_PROPS = new Set([
+  'knockbackX',
+  'knockbackY',
+  'knockback',
+  'knockbackExtraVx',
+  'knockbackExtraVy',
+]);
 export const INTERACTION_PUSH_POWER_PROPS = new Set(['pushPower', 'resistance']);
-export const INTERACTION_SELECT_PROPS = new Set(['hitMode']);
+export const INTERACTION_SELECT_PROPS = new Set(['hitMode', 'knockbackMode']);
 export const INTERACTION_SELECT_OPTIONS = Object.freeze({
   hitMode: [
     { value: 'box', label: '박스' },
     { value: 'trace', label: '궤적' },
+  ],
+  knockbackMode: [
+    { value: 'add', label: 'Add' },
+    { value: 'set', label: 'Set' },
   ],
 });
 
@@ -41,6 +50,8 @@ export const INTERACTION_NUMERIC_PROPS = [
   'invincibleTime',
   'damage',
   'knockback',
+  'knockbackExtraVx',
+  'knockbackExtraVy',
 ];
 
 export const INTERACTION_FIELD_DEFAULTS = Object.freeze({
@@ -61,9 +72,11 @@ export const INTERACTION_FIELD_DEFAULTS = Object.freeze({
   invincibleTime: 0,
   damage: 1,
   knockback: 0,
+  knockbackMode: 'add',
+  knockbackExtraVx: 0,
+  knockbackExtraVy: 0,
   hitMode: 'box',
-  block: 1,
-  deflect: 0,
+  followWeapon: 1,
   parry: 0,
 });
 
@@ -91,10 +104,13 @@ export const INTERACTION_DETAIL_GROUPS = Object.freeze({
   attack: [
     {
       label: 'Attack',
+      toggles: [{ prop: 'followWeapon', label: '무기에 붙이기' }],
       selects: [{ prop: 'hitMode', label: '히트 판정 방식' }],
+      modes: [{ prop: 'knockbackMode', label: 'Knockback Mode' }],
       props: [
-        { prop: 'damage', label: 'Damage' },
         { prop: 'knockback', label: 'Knockback' },
+        { prop: 'knockbackExtraVx', label: '추가 vx' },
+        { prop: 'knockbackExtraVy', label: '추가 vy' },
       ],
     },
   ],
@@ -102,9 +118,9 @@ export const INTERACTION_DETAIL_GROUPS = Object.freeze({
     {
       label: 'Guard',
       toggles: [
-        { prop: 'block', label: 'Block' },
-        { prop: 'deflect', label: 'Deflect' },
-        { prop: 'parry', label: 'Parry' },
+        { prop: 'guard', label: '방어' },
+        { prop: 'parry', label: '패링' },
+        { prop: 'attack', label: '공격' },
       ],
       props: [],
     },
@@ -138,6 +154,7 @@ export function interactionDetailFieldProps(role) {
   return interactionDetailGroups(role).flatMap((group) => [
     ...(group.toggles || []).map((item) => item.prop),
     ...(group.selects || []).map((item) => item.prop),
+    ...(group.modes || []).map((item) => item.prop),
     ...(group.colors || []).map((item) => item.prop),
     ...(group.props || []).map((item) => item.prop),
   ]);

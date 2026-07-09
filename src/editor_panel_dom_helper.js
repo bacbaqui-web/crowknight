@@ -1,6 +1,7 @@
 import { defaultEffectImageKey } from './animation_frame_data.js';
 import { EFFECT_IMAGE_OPTIONS, ACTION_KEYS, ACTION_PART_KEYS } from './game_config_data.js';
 import { getPath } from './common_helper.js';
+import { resolveEffectAsset } from './asset_loader_helper.js';
 import { layerLabel, partLabel, actionLabel } from './editor_label_helper.js';
 import { displayTuningControlValue } from './control_value_transform_helper.js';
 import { partEditKeys } from './part_source_data.js';
@@ -233,13 +234,15 @@ export function emptyPartMessage(text) {
   return `<div class="part-empty">${text}</div>`;
 }
 
-export function renderEffectImagePreview(preview, effectKey, effectAssets, imageKey = null) {
+export function renderEffectImagePreview(preview, effectKey, effectAssets, imageKey = null, actor = null) {
   if (!preview) return;
 
   preview.innerHTML = '';
   const resolvedImageKey = imageKey || defaultEffectImageKey(effectKey);
   const option = EFFECT_IMAGE_OPTIONS.find((item) => item.key === resolvedImageKey);
-  const asset = option?.asset ? effectAssets[option.asset] : effectAssets[resolvedImageKey];
+  const asset = option?.asset
+    ? resolveEffectAsset(effectAssets, option.asset, actor?.id)
+    : resolveEffectAsset(effectAssets, resolvedImageKey, actor?.id);
   if (!asset) return;
 
   const image = document.createElement('img');

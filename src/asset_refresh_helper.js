@@ -1,5 +1,11 @@
 import { defaultEffectImageKey } from './animation_frame_data.js';
-import { CHARACTER_ASSET_PATHS, effectAssetPath, loadCharacterAssets, loadEffectAsset } from './asset_loader_helper.js';
+import {
+  CHARACTER_ASSET_PATHS,
+  effectActorAssetKey,
+  effectAssetPath,
+  loadCharacterAssets,
+  loadEffectAsset,
+} from './asset_loader_helper.js';
 import { characterPsdStorageFileName } from './firebase_asset_storage_helper.js';
 import { imagePartKeys } from './part_source_data.js';
 
@@ -140,9 +146,17 @@ export async function refreshEffectAsset({
   effectAssetSources = {},
   effectKey,
   imageKey = null,
+  actorId = null,
   file = null,
 }) {
-  const result = await refreshEffectAssetResult({ effectAssets, effectAssetSources, effectKey, imageKey, file });
+  const result = await refreshEffectAssetResult({
+    effectAssets,
+    effectAssetSources,
+    effectKey,
+    imageKey,
+    actorId,
+    file,
+  });
   return result.ok;
 }
 
@@ -151,13 +165,17 @@ export async function refreshEffectAssetResult({
   effectAssetSources = {},
   effectKey,
   imageKey = null,
+  actorId = null,
   file = null,
 }) {
-  const assetKey = imageKey || defaultEffectImageKey(effectKey);
+  const imageAssetKey = imageKey || defaultEffectImageKey(effectKey);
+  const assetKey = effectActorAssetKey(actorId, imageAssetKey);
   const url = file ? effectUploadUrl(assetKey) : effectRefreshUrl(assetKey);
   const debug = {
+    actorId: actorId || '',
     effectKey,
-    imageKey: assetKey,
+    imageKey: imageAssetKey,
+    assetKey,
     uploadUrl: url,
     fileName: file?.name || '',
     fileSize: Number(file?.size || 0),
@@ -166,7 +184,7 @@ export async function refreshEffectAssetResult({
   if (!effectAssets) {
     return { ok: false, error: '효과 에셋 저장소가 준비되지 않았습니다.', debug };
   }
-  if (assetKey === 'none') {
+  if (imageAssetKey === 'none') {
     return { ok: false, error: '업로드할 효과 이미지 슬롯이 없습니다.', debug };
   }
 
@@ -183,7 +201,7 @@ export async function refreshEffectAssetResult({
   if (!result.ok) return { ok: false, error: result.error || `효과 업로드 실패 (${result.status || 0})`, debug };
 
   const data = result.data;
-  const asset = await loadEffectAsset(assetKey, data.updatedAt || Date.now());
+  const asset = await loadEffectAsset(assetKey, data.updatedAt || Date.now(), effectAssetSources);
   if (!asset) {
     return { ok: false, error: '업로드된 효과 이미지를 다시 불러오지 못했습니다.', debug };
   }
@@ -199,7 +217,7 @@ export async function refreshEffectAssetResult({
   }
   debug.effectAsset = effectAssetDebugInfo(effectAssets[assetKey]);
   debug.effectAssetSource = effectAssetSources[assetKey] || '';
-  return { ok: true, assetKey, debug };
+  return { ok: true, assetKey, imageKey: imageAssetKey, debug };
 }
 
 function effectAssetDebugInfo(asset) {

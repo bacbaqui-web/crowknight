@@ -90,6 +90,7 @@ export function createTuningPanel({
     drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets, {
       activeSetupPartKey: selectionState.getActivePartKeyGlobal(),
       activeActionPartKey: currentActionActiveActionPartKey(),
+      activeActionKey: currentOpenEditContext() === EDIT_CONTEXT_ACTION ? getCurrentActionKey() : null,
     });
   }
 

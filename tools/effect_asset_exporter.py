@@ -23,11 +23,27 @@ def effect_source_psd_path(root, asset):
 
 
 def dynamic_effect_asset_path(asset):
-    if not asset.startswith("effect_"):
-        return None
-    if not all(char.isalnum() or char in "_-" for char in asset):
-        return None
-    return Path("assets/effects/custom") / f"{asset}.png"
+    parts = str(asset or "").split("/")
+    if len(parts) == 1:
+        image_key = parts[0]
+        if not valid_dynamic_effect_image_key(image_key):
+            return None
+        return Path("assets/effects/custom") / f"{image_key}.png"
+    if len(parts) == 2:
+        actor_id, image_key = parts
+        if not valid_effect_actor_id(actor_id) or not valid_dynamic_effect_image_key(image_key):
+            return None
+        return Path("assets/effects") / actor_id / f"{image_key}.png"
+    return None
+
+
+def valid_dynamic_effect_image_key(value):
+    return str(value or "").startswith("effect_") and all(char.isalnum() or char in "_-" for char in value)
+
+
+def valid_effect_actor_id(value):
+    text = str(value or "")
+    return bool(text) and all(char.isalnum() or char in "_-" for char in text)
 
 
 def export_effect_asset(source_path, output_path):

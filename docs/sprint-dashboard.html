@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Shake Formula</p>
+            <p>Attack Interaction Knockback Mode</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>Action Formula로 지정 프레임 흔들림을 발동한다.</p>
+            <p>Attack Interaction에 Velocity와 같은 SET / ADD Knockback Mode를 추가한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>shake formula trigger frame</p>
+            <p>attack knockback mode</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>수식 라이브러리에 `흔들림`을 추가한다.</li>
-              <li>흔들림 강도와 흔들림 시간 옵션을 제공한다.</li>
-              <li>발동 프레임에 도달했을 때 한 번 화면 흔들림을 실행한다.</li>
+              <li>Attack Interaction에 SET / ADD mode 토글을 추가한다.</li>
+              <li>Velocity Formula와 같은 mode UI를 재사용한다.</li>
+              <li>ADD는 기존 넉백을 유지하고 SET은 facing 기준 넉백만 사용한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`shake_formula.js`를 Formula Registry에 등록했다.</li>
-              <li>`shake_formula_runtime_helper.js`에서 triggerFrame 도달을 감지한다.</li>
-              <li>기존 `particleEffects.shakeScreen()` API를 재사용했다.</li>
+              <li>`knockbackMode` 저장 필드와 기본값 `add`를 추가했다.</li>
+              <li>Attack 숫자 입력 줄 앞에 Velocity mode 토글을 붙였다.</li>
+              <li>Combat 넉백 계산에 ADD / SET 분기를 추가했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>World Physics hit camera shake는 그대로 유지한다.</li>
-              <li>브라우저 수동 QA는 별도 확인이 필요하다.</li>
+              <li>브라우저에서 SET / ADD 체감 QA가 필요하다.</li>
+              <li>SET의 `knockback`은 공격자 facing 기준 전방값으로 해석한다.</li>
             </ul>
           </div>
         </div>
@@ -236,19 +236,19 @@
               <li>
                 <label class="qa-item" data-qa-id="return-blend-idle">
                   <input type="checkbox" />
-                  <span>수식 라이브러리에 흔들림 버튼이 보이는지 확인한다.</span>
+                  <span>Attack Interaction에 Velocity와 같은 SET / ADD 아이콘이 표시되는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="return-blend-fall">
                   <input type="checkbox" />
-                  <span>흔들림 카드에 발동 프레임 / 강도 / 시간이 표시되는지 확인한다.</span>
+                  <span>ADD가 기존 무기 이동 벡터 기반 넉백과 동일하게 동작하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="return-blend-zero">
                   <input type="checkbox" />
-                  <span>지정 프레임에 도달했을 때 한 번만 흔들리는지 확인한다.</span>
+                  <span>SET이 무기 이동 벡터를 쓰지 않고 facing 기준 넉백을 적용하는지 확인한다.</span>
                 </label>
               </li>
               <li>

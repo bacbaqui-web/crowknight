@@ -53,6 +53,7 @@ export function createTuningPanelPartController({
     beginUndoSnapshot,
     getDefaultValue: (partKey) => getSelectedActor().tuning.rig?.[partKey],
     getActionKey: () => actionSelect.value,
+    getTotalFrames: () => actionTimeline.frameCount?.(),
     getTuning: () => getSelectedActor().tuning,
     getWriteTargetKey: () => primaryInteractionObjectPartKeyForEditFocus(actionTimelineEditTarget().writeTargetKey),
     rerender: () => renderActionPartFields(),

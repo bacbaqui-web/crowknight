@@ -223,7 +223,7 @@ MVP 지원 형태:
 - 모든 Action 시작은 pressed Event로 시작한다. `press` / `repeat` 시전도 시작 Trigger는 Event이며, held State는 이미 시작된 Action을 유지하거나 기본 상태에서 복귀하는 데만 사용한다.
 - 지금 어떤 Action 중이라 실행 가능한지는 Condition / Link Rule 같은 실행 조건이 담당한다.
 - legacy Trigger Mode(`tap`, `press`, `pressLoop`)는 기존 저장 데이터 compatibility로만 유지한다.
-- `시전` Formula가 없으면 Runtime은 legacy Trigger Mode를 fallback으로 읽으며, 새 Action의 기본 동작은 `tap` Event다.
+- `formulas[]`가 있는 새 Action에서 `시전` Formula가 없으면 Runtime은 legacy Trigger Mode를 읽지 않고 `tap` Event로 처리한다. `formulas[]`가 없는 구 데이터만 legacy Trigger Mode를 fallback으로 읽는다.
 - Accelerate / Decelerate는 Trigger가 새로 시작된 최초 1회에만 적용한다. `pressLoop`의 loop마다 다시 적용하지 않는다.
 - 저장 위치와 schema는 `11_DATA_MODEL.md`를 본다. Legacy `repeatWhileHeld`는 compatibility 입력으로만 유지한다.
 - 실행 중 다른 Trigger Action이 입력되면 Action 설정의 interrupt option을 보고 현재 Action을 즉시 교체할 수 있다.
@@ -447,8 +447,8 @@ Formula / Interaction 쪽으로 이동 가능:
 
 - collision: 충돌. Setup 기본값은 위치/크기/회전과 `noOverlap`, `pushPower`, `resistance`다.
 - hurt: 피격. Setup 기본값은 위치/크기/회전과 `hurtByAttack`, `hurtByCollision`, `invincibleTime`이다.
-- attack: 공격. Setup 기본값은 위치/크기/회전과 `damage`, `knockback`, `hitMode` 설정이다.
-- guard: 방어. Setup 기본값은 위치/크기/회전과 `block`, `deflect`, `parry` concept flag다.
+- attack: 공격. Setup 기본값은 위치/크기/회전과 `knockback`, `knockbackExtraVx`, `knockbackExtraVy`, `hitMode`, `followWeapon` 설정이다.
+- guard: 방어. Setup 기본값은 위치/크기/회전과 `guard`, `parry`, `attack` concept flag다.
 
 Editor 동작:
 
@@ -469,11 +469,15 @@ Interaction box click
 - Runtime `InteractionRegion`은 계속 계산값이다.
 - Runtime attack/hurt/collision/guard region을 Editor source로 쓰지 않는다.
 - Action에서 role을 켜면 `actionSettings[actionKey].interactions[interactionObjectKey]`가 해당 Action 전체에 적용된다.
+- `attackInteractionObject`는 Action-level `startFrame~endFrame` 구간을 가질 수 있으며, Runtime은 해당 구간 안에서만 Attack region을 생성한다.
 - 기존 Action frame 값은 compatibility source로 유지하며, 해당 frame에서 `active + role`이 켜진 경우 Action-level Interaction보다 우선한다.
 - Action-level Interaction 설정이 존재하는 Action에서는 `active + role`이 꺼진 box를 Runtime region으로 만들지 않는다.
 - Action-level Interaction 설정이 없는 Action만 Setup fallback box를 사용한다.
 - Interaction box를 클릭하면 box key에 대응하는 role 설정을 기본으로 펼친다. 예: `attackInteractionObject → attack`.
-- Attack knockback 방향은 별도 방향 필드를 저장하지 않고 MVP에서는 공격자 → 피격자 방향으로 해석한다.
+- Attack `followWeapon`은 기본 ON이다. ON이면 기존처럼 무기 anchor를 따라가고, OFF이면 actor/action root 기준으로 공격박스를 독립 배치한다.
+- Attack knockback 방향은 별도 방향 필드를 저장하지 않고 이전 frame Attack Region 중심점 → 현재 frame Attack Region 중심점 이동 벡터로 해석한다. 이동 벡터가 거의 없으면 기존처럼 공격자 → 피격자 방향을 fallback으로 사용한다.
+- Attack 최종 넉백은 `direction * knockback + extra`다. `knockbackExtraVx`는 공격자 facing 기준으로 반전하고, `knockbackExtraVy`는 월드 기준으로 그대로 더한다.
+- Attack damage는 Runtime에서 항상 `1`이다. 기존 저장 데이터의 `damage` 값은 UI에 표시하지 않고 Runtime damage 계산에도 쓰지 않는다.
 - Attack `hitMode`는 `box` / `trace`를 사용한다. `box`는 현재 frame 공격박스만 검사하고, `trace`는 이전 frame 공격박스와 현재 frame 공격박스를 이어 빠르게 지나간 중간 경로도 검사한다.
 - Attack Trace Effect 시각 기능은 제거했다. `hitMode=trace`는 판정 방식으로만 유지하며 별도 궤적을 화면에 그리지 않는다.
 - Camera Shake는 Attack Interaction에 저장하지 않는다. 공격박스가 피격박스에 실제로 닿아 damage / knockback 처리 위치에 도달했을 때 Stage의 스테이지 물리 hit camera shake 설정을 읽어 실행한다.
@@ -485,8 +489,11 @@ Interaction box click
 - MVP에서는 기존 fallback object와 frame state를 compatibility source로 유지한다.
 - Collision `noOverlap`은 Runtime에서 겹친 Collision Box를 밀어내는 규칙으로 작동한다.
 - Hurt `hurtByAttack` / `hurtByCollision`은 Runtime 피격 조건으로 작동한다.
-- Guard `block`은 Attack damage를 막는 최소 규칙으로 작동한다.
-- Guard의 Deflect / Parry 세부 규칙, Finisher, 속성/상태이상 등은 Interaction MVP 이후 단계다.
+- Guard `guard`는 Attack damage만 막고 hit effect, camera shake, knockback은 유지한다.
+- Guard `parry`는 현재 UI와 저장값만 유지하며 Runtime 동작은 없다.
+- Guard `attack`은 Guard Box를 Attack Region으로도 생성한다. 이때 공격 설정은 `attackInteractionObject` 값을 참조하고 Guard 전용 Attack 설정은 만들지 않는다.
+- Deflect는 제거된 legacy concept이다. 기존 `deflect` 값은 Runtime에서 새 공격 동작으로 자동 승격하지 않는다.
+- Finisher, 속성/상태이상 등은 Interaction MVP 이후 단계다.
 
 ## Formula Runtime
 

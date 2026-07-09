@@ -264,6 +264,14 @@ export function createActionTimelineController({
     if (!hasActionKeyframeTarget(target) && target.selectedSlot !== null) {
       createKeyframeAtSelectedSlot(target);
     }
+    if (!hasActionKeyframeTarget(target) && target.selectedSlot === null && !isMasterPart(part)) {
+      const currentValue = Number(currentFrameValue(part)?.[prop] ?? 0);
+      const nextValue = Number(value);
+      if (Number.isFinite(currentValue) && Number.isFinite(nextValue)) {
+        actionTimeline.applyFrameValueDelta(part, prop, nextValue - currentValue);
+      }
+      return;
+    }
     timelineWriteFrameValue({
       part,
       prop,

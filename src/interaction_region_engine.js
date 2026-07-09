@@ -67,12 +67,15 @@ export function createInteractionRegion({
 
 export function interactionReactionFromValue(value = {}) {
   return {
-    damage: Math.max(0, Number(value?.damage ?? 1)),
+    damage: 1,
     hitMode: normalizeInteractionSelectValue('hitMode', value?.hitMode),
+    knockbackMode: normalizeInteractionSelectValue('knockbackMode', value?.knockbackMode),
     stun: Math.max(0, Number(value?.stun || 0)),
     knockbackX: Number(value?.knockbackX || 0),
     knockbackY: Number(value?.knockbackY || 0),
     knockback: Math.max(0, Number(value?.knockback || 0)),
+    knockbackExtraVx: Number(value?.knockbackExtraVx || 0),
+    knockbackExtraVy: Number(value?.knockbackExtraVy || 0),
     deathBurst: Math.max(0, Number(value?.deathBurst ?? 1)),
     pushPower: Math.max(0, Number(value?.pushPower || 0)),
     resistance: Math.max(0, Number(value?.resistance ?? 1)),
@@ -80,8 +83,8 @@ export function interactionReactionFromValue(value = {}) {
     hurtByAttack: Number(value?.hurtByAttack ?? 1) >= 0.5,
     hurtByCollision: Number(value?.hurtByCollision || 0) >= 0.5,
     invincibleTime: Math.max(0, Number(value?.invincibleTime || 0)),
-    block: Number(value?.block ?? 1) >= 0.5,
-    deflect: Number(value?.deflect || 0) >= 0.5,
+    guard: Number(value?.guard ?? value?.block ?? 1) >= 0.5,
+    block: Number(value?.guard ?? value?.block ?? 1) >= 0.5,
     parry: Number(value?.parry || 0) >= 0.5,
   };
 }
@@ -98,22 +101,13 @@ function boundsFromPoints(points) {
 }
 
 export function createAttackInteractionRegion(player, offset = player.getPartOffset(ATTACK_INTERACTION_OBJECT_KEY)) {
-  const transform = player.weaponAnchorTransform();
   const attackPart = player.rig?.[ATTACK_INTERACTION_OBJECT_KEY];
-  const weapon = player.rig?.weapon;
-  if (!transform || !attackPart || !weapon) return null;
+  if (!attackPart) return null;
 
-  const weaponOffset = player.getPartOffset('weapon');
-  const referenceW = Math.max(1, Number(weapon.baseW || weapon.w || 1));
-  const referenceH = Math.max(1, Number(weapon.baseH || weapon.h || 1));
-  const weaponW = Math.max(1, Number(weapon.w || referenceW) + Number(weaponOffset.w || 0));
-  const weaponH = Math.max(1, Number(weapon.h || referenceH) + Number(weaponOffset.h || 0));
-  const anchorLocalX = Number(weapon.ax ?? weapon.ox ?? 0) + Number(weaponOffset.ax || 0);
-  const anchorLocalY = Number(weapon.ay ?? weapon.oy ?? 0) + Number(weaponOffset.ay || 0);
-  const scaledAnchorX = anchorLocalX * (weaponW / referenceW);
-  const scaledAnchorY = anchorLocalY * (weaponH / referenceH);
-  const x = -scaledAnchorX + Number(attackPart.x || 0) + Number(offset.x || 0);
-  const y = -scaledAnchorY + Number(attackPart.y || 0) + Number(offset.y || 0);
+  const interaction = activeInteractionValue(attackPart, offset, INTERACTION_OBJECT_ROLES.ATTACK);
+  const placement = attackInteractionPlacement(player, attackPart, offset, interaction);
+  if (!placement) return null;
+
   const w = Math.max(1, Number(attackPart.w || attackPart.baseW || 1) + Number(offset.w || 0));
   const h = Math.max(1, Number(attackPart.h || attackPart.baseH || 1) + Number(offset.h || 0));
   const attackAnchor = scaledEditableAnchor({
@@ -129,22 +123,65 @@ export function createAttackInteractionRegion(player, offset = player.getPartOff
     key: ATTACK_INTERACTION_OBJECT_KEY,
     role: INTERACTION_OBJECT_ROLES.ATTACK,
     active: true,
-    matrix: transform,
-    x,
-    y,
+    matrix: placement.matrix,
+    x: placement.x,
+    y: placement.y,
     w,
     h,
     ax: attackAnchor.ax,
     ay: attackAnchor.ay,
     rot,
-    interaction: activeInteractionValue(attackPart, offset, INTERACTION_OBJECT_ROLES.ATTACK),
+    interaction,
   });
 }
 
+function attackInteractionPlacement(player, attackPart, offset, interaction) {
+  if (!attackInteractionFollowsWeapon(interaction)) {
+    return {
+      matrix: rootLayerMatrix(player),
+      x: Number(attackPart.x || 0) + Number(offset.x || 0),
+      y: Number(attackPart.y || 0) + Number(offset.y || 0),
+    };
+  }
+
+  const transform = player.weaponAnchorTransform();
+  const weapon = player.rig?.weapon;
+  if (!transform || !weapon) return null;
+
+  const weaponOffset = player.getPartOffset('weapon');
+  const referenceW = Math.max(1, Number(weapon.baseW || weapon.w || 1));
+  const referenceH = Math.max(1, Number(weapon.baseH || weapon.h || 1));
+  const weaponW = Math.max(1, Number(weapon.w || referenceW) + Number(weaponOffset.w || 0));
+  const weaponH = Math.max(1, Number(weapon.h || referenceH) + Number(weaponOffset.h || 0));
+  const anchorLocalX = Number(weapon.ax ?? weapon.ox ?? 0) + Number(weaponOffset.ax || 0);
+  const anchorLocalY = Number(weapon.ay ?? weapon.oy ?? 0) + Number(weaponOffset.ay || 0);
+  return {
+    matrix: transform,
+    x: -anchorLocalX * (weaponW / referenceW) + Number(attackPart.x || 0) + Number(offset.x || 0),
+    y: -anchorLocalY * (weaponH / referenceH) + Number(attackPart.y || 0) + Number(offset.y || 0),
+  };
+}
+
+function attackInteractionFollowsWeapon(value = {}) {
+  return Number(value?.followWeapon ?? 1) >= 0.5;
+}
+
 export function createAttackInteractionRegions(player) {
+  const regions = [];
   const offset = player.getPartOffset(ATTACK_INTERACTION_OBJECT_KEY);
   const flags = interactionFlagSnapshot(offset);
-  if (!flags.active || !flags.attack) {
+  if (flags.active && flags.attack) {
+    const fallback = createAttackInteractionRegion(player, offset);
+    if (fallback) regions.push(fallback);
+    logAttackRegionDecision({
+      player,
+      source: 'runtime',
+      key: ATTACK_INTERACTION_OBJECT_KEY,
+      flags,
+      created: Boolean(fallback),
+      reason: fallback ? null : 'active=true attack=true but attack geometry is missing',
+    });
+  } else {
     logAttackRegionDecision({
       player,
       source: 'runtime',
@@ -152,18 +189,48 @@ export function createAttackInteractionRegions(player) {
       flags,
       created: false,
     });
-    return [];
   }
-  const fallback = createAttackInteractionRegion(player, offset);
+
+  const guardAttack = createGuardAttackInteractionRegion(player);
+  if (guardAttack) regions.push(guardAttack);
+  return regions;
+}
+
+function createGuardAttackInteractionRegion(player) {
+  const guardOffset = player.getPartOffset(GUARD_INTERACTION_OBJECT_KEY);
+  const guardFlags = interactionFlagSnapshot(guardOffset);
+  if (!guardFlags.active || !guardFlags.attack) return null;
+
+  const attackPart = player.rig?.[ATTACK_INTERACTION_OBJECT_KEY] || {};
+  const attackOffset = player.getPartOffset(ATTACK_INTERACTION_OBJECT_KEY);
+  const attackFlags = interactionFlagSnapshot(attackOffset);
+  const actionAttackSettings =
+    player.actionSettings?.[player.actionKey]?.interactions?.[ATTACK_INTERACTION_OBJECT_KEY] || {};
+  const attackSettings =
+    attackFlags.active && attackFlags.attack ? attackOffset : { ...attackOffset, ...actionAttackSettings };
+  const attackInteraction = {
+    ...attackPart,
+    ...attackSettings,
+    active: 1,
+    attack: 1,
+  };
+
+  const fallback = createParentedInteractionRegion(
+    player,
+    GUARD_INTERACTION_OBJECT_KEY,
+    INTERACTION_OBJECT_ROLES.ATTACK,
+    guardOffset,
+    attackInteraction
+  );
   logAttackRegionDecision({
     player,
     source: 'runtime',
-    key: ATTACK_INTERACTION_OBJECT_KEY,
-    flags,
+    key: GUARD_INTERACTION_OBJECT_KEY,
+    flags: guardFlags,
     created: Boolean(fallback),
-    reason: fallback ? null : 'active=true attack=true but attack geometry is missing',
+    reason: fallback ? null : 'active=true attack=true but guard geometry is missing',
   });
-  return fallback ? [fallback] : [];
+  return fallback;
 }
 
 export function createHurtInteractionRegion(player) {
@@ -219,14 +286,14 @@ export function createGuardInteractionRegions(player) {
   return fallback ? [fallback] : [];
 }
 
-function createParentedInteractionRegion(player, boxKey, role) {
+function createParentedInteractionRegion(player, boxKey, role, offsetOverride = null, interactionOverride = null) {
   const boxPart = player.rig?.[boxKey];
   if (!boxPart?.parent) return null;
 
   const parent = parentImageTransform(player, boxPart.parent);
   if (!parent) return null;
 
-  const offset = player.getPartOffset(boxKey);
+  const offset = offsetOverride || player.getPartOffset(boxKey);
   const w = Math.max(1, Number(boxPart.w || boxPart.baseW || 1) + Number(offset.w || 0));
   const h = Math.max(1, Number(boxPart.h || boxPart.baseH || 1) + Number(offset.h || 0));
   const boxAnchor = scaledEditableAnchor({
@@ -249,7 +316,7 @@ function createParentedInteractionRegion(player, boxKey, role) {
     ax: boxAnchor.ax,
     ay: boxAnchor.ay,
     rot: Number(boxPart.rot || 0) + Number(offset.rot || 0),
-    interaction: activeInteractionValue(boxPart, offset, role),
+    interaction: interactionOverride || activeInteractionValue(boxPart, offset, role),
   });
 }
 
@@ -280,7 +347,7 @@ function interactionFlagSnapshot(value = {}) {
 function logAttackRegionDecision({ player, source, key, flags, created, reason = null }) {
   if (!isRuntimeDebugEnabled()) return;
   const frame = currentActionDebugFrame(player);
-  const offset = player.getPartOffset?.(ATTACK_INTERACTION_OBJECT_KEY) || {};
+  const offset = player.getPartOffset?.(key) || {};
   debugInteractionRuntimeLog(created ? 'attack-region-created' : 'attack-region-skipped', {
     actionKey: player.actionKey,
     frame: frame.frame,

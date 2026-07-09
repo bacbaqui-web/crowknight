@@ -8,6 +8,7 @@ import { effectFrameAt } from './project_data_normalizer_helper.js';
 import { controlGroupPartKeys, imagePartKeys } from './part_source_data.js';
 import { clamp } from './common_helper.js';
 import { timelinePlaybackProgress } from './timeline_playback_helper.js';
+import { resolveEffectAsset } from './asset_loader_helper.js';
 
 export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey, activeEditPartKeys }) {
   drawActorShadow(ctx, world, actor);
@@ -58,7 +59,7 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
     : active.progress;
   const config = effectFrameAt(actor.tuning, effectKey, progress);
   if (!config || config.image === 'none' || Number(config.opacity ?? 1) <= 0) return;
-  const asset = effectAssets[config.image];
+  const asset = resolveEffectAsset(effectAssets, config.image, actor.id);
   if (!asset) return;
 
   const cx = player.x;

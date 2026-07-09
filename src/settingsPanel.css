@@ -1195,6 +1195,37 @@
   font-size: 13px;
 }
 
+.interaction-knockback-inline-row {
+  display: grid;
+  grid-template-columns: 34px repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.interaction-number-stepper {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+}
+
+.interaction-number-stepper input[type='number'] {
+  height: 100%;
+  border-radius: 5px;
+  padding: 3px 20px 3px 8px;
+  font-size: 13px;
+  font-weight: 850;
+  text-align: left;
+}
+
+.interaction-number-stepper .number-stepper-buttons {
+  width: 16px;
+}
+
+.interaction-number-stepper .number-stepper-buttons button {
+  font-size: 7px;
+}
+
 .modifier-mini-timeline-frame-input {
   width: 100%;
   min-width: 0;

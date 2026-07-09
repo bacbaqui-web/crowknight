@@ -1,5 +1,6 @@
 import { advanceCustomActionRuntime, updateActionTriggerRuntime } from './action_trigger_engine.js';
 import { activeActionFormulaAtProgress } from './formula_runtime_engine.js';
+import { isRuntimeDebugEnabled, recordRuntimeDebugEvent } from './runtime_debug_state.js';
 import { timelineFrameCount, timelineFrameDelta } from './timeline_playback_helper.js';
 
 export function updatePuppetPlayer(player, dt, keys, pressed, world) {
@@ -81,8 +82,10 @@ function applyWorldPhysics(player, dt, world, keys = null) {
   const frameDelta = timelineFrameDelta(dt);
   const floorY = Number.isFinite(world.floorY) ? world.floorY : player.floorY;
   const velocityControl = player.velocityControl || {};
+  const knockbackDebug = player.knockbackDebug || null;
   player.floorY = Number.isFinite(floorY) ? floorY : player.y;
 
+  recordKnockbackBeforePhysics(player, knockbackDebug);
   if (Number.isFinite(player.floorY) && player.y < player.floorY) player.onGround = false;
   const inertia = effectiveRuntimeInertia(player, physics);
   player.vx = velocityControl.x ? Number(player.vx || 0) : applyInertia(player, 'vx', inertia, frameDelta);
@@ -108,6 +111,7 @@ function applyWorldPhysics(player, dt, world, keys = null) {
   }
 
   player.x = Math.max(world.minX ?? player.x, Math.min(world.maxX ?? player.x, player.x));
+  recordKnockbackAfterPhysics(player, knockbackDebug, physics);
   player.velocityControl = null;
 }
 
@@ -180,4 +184,31 @@ function applyInertia(player, prop, inertiaFrames, frameDelta) {
   const nextAbs = Math.max(0, absValue - decrement);
   player[stateKey] = nextAbs > 0 ? { sign, startAbs } : null;
   return nextAbs * sign;
+}
+
+function recordKnockbackBeforePhysics(player, debug) {
+  if (!debug || !isRuntimeDebugEnabled()) return;
+  recordRuntimeDebugEvent('knockback-before-physics', {
+    target: debug.target,
+    beforeX: debug.beforeX,
+    currentX: Number(player.x || 0),
+    currentVx: Number(player.vx || 0),
+    velocityControlX: player.velocityControl?.x === true,
+    inertia: debug.inertia,
+  });
+}
+
+function recordKnockbackAfterPhysics(player, debug, physics) {
+  if (!debug) return;
+  delete player.knockbackDebug;
+  if (!isRuntimeDebugEnabled()) return;
+  const afterPhysicsX = Number(player.x || 0);
+  recordRuntimeDebugEvent('knockback-after-physics', {
+    target: debug.target,
+    beforeX: debug.beforeX,
+    afterPhysicsX,
+    deltaX: afterPhysicsX - Number(debug.beforeX || 0),
+    vxAfterPhysics: Number(player.vx || 0),
+    inertia: Number(physics?.inertia ?? debug.inertia ?? 30),
+  });
 }

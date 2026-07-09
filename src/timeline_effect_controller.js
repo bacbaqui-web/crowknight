@@ -116,7 +116,13 @@ export function createEffectTimelineController({
     ensureActiveFrame();
     renderTimeline();
     effectTimeline.ensureOffset();
-    renderEffectImagePreview(effectImagePreview, effectTimeline.key(), effectAssets, effectTimeline.offset()?.image);
+    renderEffectImagePreview(
+      effectImagePreview,
+      effectTimeline.key(),
+      effectAssets,
+      effectTimeline.offset()?.image,
+      actor()
+    );
     effectPropertyController.render();
   }
 

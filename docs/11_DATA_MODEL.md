@@ -92,7 +92,7 @@ tuning.actionSettings[actionKey]
 
 Formula Card:
 
-- `cast` / UI `시전`: Trigger가 맞은 뒤 Action 입력 방식을 정한다. `mode`, `repeatStartFrame`, `repeatEndFrame`, `releaseMode`를 가진다. Formula가 없으면 기본 동작은 `tap` Event다. `press`와 `repeat`도 Action 시작은 pressed Event로만 일어나며, 시작된 뒤 held input State로 유지 / 반복 / release를 처리한다. 현재 Action이 비어 있거나 기본자세로 돌아온 상태에서는 held State로 복귀 Action을 다시 시작할 수 있다.
+- `cast` / UI `시전`: Trigger가 맞은 뒤 Action 입력 방식을 정한다. `mode`, `repeatStartFrame`, `repeatEndFrame`, `releaseMode`를 가진다. `formulas[]`가 있는 Action에서 Formula가 없으면 기본 동작은 `tap` Event다. `press`와 `repeat`도 Action 시작은 pressed Event로만 일어나며, 시작된 뒤 held input State로 유지 / 반복 / release를 처리한다. 현재 Action이 비어 있거나 기본자세로 돌아온 상태에서는 held State로 복귀 Action을 다시 시작할 수 있다.
 - `cooldown` / UI `쿨타임`: 이 Action이 실행된 뒤 다시 실행 가능해지기까지 필요한 초 단위 시간을 가진다. `seconds`를 사용하며 기본값은 `0`이다.
 - `velocity` / UI `속도`: `startFrame~endFrame` 동안 `px/f` velocity를 적용한다. `x`, `y`, `mode`를 가진다.
 - `targetMove` / UI `목표이동`: `triggerFrame`에 발동해 그림자 / 발밑 기준 목표 좌표까지 이동한다. `triggerFrame`, `x`, `y`, `moveFrames`를 가진다. `moveFrames`는 `0`이면 즉시 도달, `1~10`이면 해당 Action Timeline frame 수 동안 목표까지 보간한다. Mini Timeline은 사용하지 않는다.
@@ -230,12 +230,12 @@ Setup에서 직접 편집하는 base rig다.
 
 Editor 기준 fallback interaction object 저장 위치다.
 
-| Key                          | Role        | Parent   | 저장 필드                                                              |
-| ---------------------------- | ----------- | -------- | ---------------------------------------------------------------------- |
-| `collisionInteractionObject` | `collision` | `body`   | Transform fields + `noOverlap`, `pushPower`, `resistance`              |
-| `hurtInteractionObject`      | `hurt`      | `body`   | Transform fields + `hurtByAttack`, `hurtByCollision`, `invincibleTime` |
-| `attackInteractionObject`    | `attack`    | `weapon` | Transform fields + `damage`, `knockback`, `hitMode`, trail effect      |
-| `guardInteractionObject`     | `guard`     | `shield` | Transform fields + `block`, `deflect`, `parry`                         |
+| Key                          | Role        | Parent   | 저장 필드                                                                                         |
+| ---------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `collisionInteractionObject` | `collision` | `body`   | Transform fields + `noOverlap`, `pushPower`, `resistance`                                         |
+| `hurtInteractionObject`      | `hurt`      | `body`   | Transform fields + `hurtByAttack`, `hurtByCollision`, `invincibleTime`                            |
+| `attackInteractionObject`    | `attack`    | `weapon` | Transform fields + `knockback`, `knockbackExtraVx`, `knockbackExtraVy`, `hitMode`, `followWeapon` |
+| `guardInteractionObject`     | `guard`     | `shield` | Transform fields + `guard`, `parry`, `attack`                                                     |
 
 저장 key는 InteractionObject 용어를 사용한다.
 
@@ -256,6 +256,8 @@ Action frame override
 Action frame override는 해당 frame에서 `active + role`이 켜진 경우에만 Action-level 설정보다 우선한다.
 Action-level interaction 설정이 존재하면 그 Action은 해당 설정을 따른다. 이 설정에서 `active + role`이 꺼져 있으면 Hurt/Collision/Attack/Guard region은 생성되지 않는다.
 Action-level 설정이 아예 없을 때만 `tuning.rig[interactionObjectKey]`를 fallback으로 사용한다.
+`attackInteractionObject` action-level setting은 `startFrame`, `endFrame`을 가질 수 있다. 값이 있으면 현재 Action frame이 해당 구간 안에 있을 때만 Attack region을 생성한다.
+`followWeapon`은 기본값 `1`이다. `1`이면 기존처럼 weapon anchor transform을 부모로 사용하고, `0`이면 actor/action root 기준으로 Attack region을 계산한다.
 
 Runtime 피격 판정 geometry:
 
@@ -283,11 +285,14 @@ Combat은 draw 순서에 의존하지 않도록 `player.hitRegions`를 Runtime s
 Runtime 공격 효과:
 
 ```text
-tuning.actionOffsets[actionKey][partKey].damage/knockback/hitMode
+tuning.actionOffsets[actionKey][partKey].knockback/knockbackExtraVx/knockbackExtraVy/hitMode
 legacy: stun/knockbackX/knockbackY/deathBurst
 → actor.player.attackInteractionRegion.reaction
 → combat_engine.applyHitReaction()
 ```
+
+Attack damage는 Runtime에서 항상 `1`로 처리한다. 기존 저장 데이터에 `damage` 값이 남아 있어도 Runtime damage 계산에는 사용하지 않는다.
+Attack knockback은 이전 frame Attack Region 중심점 → 현재 frame Attack Region 중심점 이동 벡터에 `knockback`을 곱한 값에 `knockbackExtraVx`, `knockbackExtraVy`를 더한다. `knockbackExtraVx`는 공격자 facing 기준으로 좌우 반전하고, `knockbackExtraVy`는 월드 기준 값으로 그대로 사용한다.
 
 Runtime collision / hurt / guard 효과:
 
@@ -298,8 +303,13 @@ collision.noOverlap / pushPower / resistance
 hurt.hurtByAttack / hurtByCollision / invincibleTime
 → combat_engine.applyInteractionDamage()
 
-guard.block
-→ combat_engine.isAttackBlocked()
+guard.guard
+→ combat_engine.overlappingGuardBlockAttackRegion()
+→ damage만 무효, hit effect / camera shake / knockback은 유지
+
+guard.attack
+→ interaction_region_engine.createAttackInteractionRegions()
+→ Guard Box geometry + attackInteractionObject attack settings
 ```
 
 Runtime mirror field는 저장하지 않는다.
@@ -331,11 +341,12 @@ Frame value:
 - `opacity`
 - `active` (common interaction state)
 - `attack`, `hurt`, `collision`, `guard` (interaction role switches)
-- `damage`, `knockback`, `hitMode` (attack MVP settings)
+- `knockback`, `knockbackExtraVx`, `knockbackExtraVy`, `hitMode`, `followWeapon` (attack MVP settings)
+- `damage` (legacy 저장 호환. Runtime damage는 항상 `1`)
 - `stun`, `knockbackX`, `knockbackY`, `deathBurst` (legacy attack reaction compatibility)
 - `noOverlap`, `pushPower`, `resistance` (collision settings)
 - `hurtByAttack`, `hurtByCollision`, `invincibleTime` (hurt settings)
-- `block`, `deflect`, `parry` (guard concept flags)
+- `guard`, `parry`, `attack` (guard concept flags)
 
 Setup fallback interaction object는 박스 모양과 기본 옵션이다. Action 단위 `actionSettings[actionKey].interactions`가 있으면 해당 Action 전체의 사용 여부를 결정한다. Action frame에서 `active + role`을 켠 경우 해당 frame 값이 가장 우선하는 override로 쓰인다. MVP에서는 frame에서 OFF를 찍어 Action-level ON을 끄는 per-frame disable은 아직 사용하지 않는다.
 
@@ -372,6 +383,7 @@ Frame value:
 Effect 전체 설정:
 
 - `tuning.effectSettings[effectKey].fileName`: Effect 이미지 업로드 파일명 slug다. 내부 `effectKey`를 바꾸지 않고, 새 업로드의 image key를 `effect_<fileName>`으로 만들 때만 사용한다.
+- `tuning.effectOffsets[effectKey].image`: actor와 무관한 image key만 저장한다. 예: `effect_customAction4`.
 - `attack`, `hurt`, `collision`, `guard`
 - `stun`, `knockbackX`, `knockbackY`, `deathBurst`
 - `pushPower`
@@ -450,7 +462,7 @@ Asset reference 규칙:
 - `actors[id].assets`: 캐릭터 파츠 PNG source와 선택 캐릭터 PSD source를 저장한다.
 - `characters`: Setup 캐릭터 목록 metadata를 저장한다. 저장된 `characters`가 없을 때만 기존 고정 `ACTOR_DEFS`를 fallback으로 사용한다.
 - 새 캐릭터는 `id`, `type`, `name`, `folder`, `storageFolder`, `psdFileName`, `deletable`을 가진다. `folder`는 로컬 `assets/characters/{folder}`와 Firebase Storage `crow-knight/assets/characters/{folder}`를 연결하는 기준이다.
-- `effectAssets`: 이펙트 PNG source와 선택 가능한 effect PSD source를 저장한다. Effect 파일명 slug가 있으면 로컬 업로드 source는 `assets/effects/custom/effect_<fileName>.png`를 사용한다.
+- `effectAssets`: 이펙트 PNG source와 선택 가능한 effect PSD source를 저장한다. actor별 업로드 source key는 `{actorId}/{imageKey}`이며 로컬 업로드 source는 `assets/effects/{actorId}/{imageKey}.png`를 사용한다. 기존 `assets/effects/custom/{imageKey}.png`는 fallback source로만 남긴다.
 - `sessions[id].background.psdPreview`: 배경 preview URL, 원본 PSD source URL, 크기 metadata를 저장한다. 로컬 PSD export는 `assets/backgrounds/current/background-preview.webp`만 사용한다.
 - `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다. 로컬 PSD layer export는 `assets/backgrounds/current/layers/*.webp`만 사용한다.
 - 상단 Firebase 업로드 버튼은 Project State metadata만 Firestore에 저장한다. PSD/PNG/WebP Storage 업로드는 실행하지 않는다.

@@ -649,7 +649,9 @@ async function refreshCurrentEffectAsset({
   const settings = actor.tuning.effectSettings?.[effectKey] || {};
   const effectTimeline = getEffectTimeline();
   const imageKey = effectUploadImageKey(effectKey, settings, effect, Boolean(effectFile));
+  const actorId = actor.id || '';
   const diagnostic = {
+    actorId,
     effectKey,
     currentImage: effect?.image || 'none',
     effectFileName: settings.fileName || '',
@@ -663,6 +665,7 @@ async function refreshCurrentEffectAsset({
     effectAssetSources,
     effectKey,
     imageKey,
+    actorId,
     file: effectFile,
   });
   Object.assign(diagnostic, result.debug || {});
@@ -670,8 +673,8 @@ async function refreshCurrentEffectAsset({
   ensureEffectOffset(actor.tuning, effectKey);
   actor.tuning.effectOffsets[effectKey].image = imageKey;
   diagnostic.savedImage = actor.tuning.effectOffsets[effectKey].image || 'none';
-  diagnostic.effectAsset = effectAssetDiagnosticInfo(effectAssets?.[imageKey]);
-  diagnostic.effectAssetSource = effectAssetSources?.[imageKey] || diagnostic.effectAssetSource || '';
+  diagnostic.effectAsset = effectAssetDiagnosticInfo(effectAssets?.[result.assetKey]);
+  diagnostic.effectAssetSource = effectAssetSources?.[result.assetKey] || diagnostic.effectAssetSource || '';
 
   effectTimeline?.renderFields();
   effectTimeline?.syncPreview();
@@ -697,16 +700,18 @@ function effectUploadDiagnosticResult(result, diagnostic) {
 function formatEffectUploadDiagnostic(diagnostic = {}) {
   return [
     'Effect Upload Debug',
+    `actorId: ${diagnostic.actorId || ''}`,
     `effectKey: ${diagnostic.effectKey || ''}`,
     `currentImage: ${diagnostic.currentImage || 'none'}`,
     `effectFileName: ${diagnostic.effectFileName || ''}`,
     `imageKey: ${diagnostic.imageKey || ''}`,
+    `assetKey: ${diagnostic.assetKey || ''}`,
     `url: ${diagnostic.uploadUrl || ''}`,
     `file: ${formatEffectUploadFile(diagnostic)}`,
     `status: ${diagnostic.responseStatus ?? ''}`,
     `body: ${formatDiagnosticValue(diagnostic.responseBody)}`,
     `savedImage: ${diagnostic.savedImage || ''}`,
-    `effectAssets[imageKey]: ${formatDiagnosticValue(diagnostic.effectAsset)}`,
+    `effectAssets[assetKey]: ${formatDiagnosticValue(diagnostic.effectAsset)}`,
     `effectAssetSource: ${diagnostic.effectAssetSource || ''}`,
   ].join('\n');
 }

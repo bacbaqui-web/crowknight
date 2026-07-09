@@ -1,7 +1,9 @@
 import { requestRuntimeAction } from './action_trigger_engine.js';
+import { actionFormula } from './formula_runtime_engine.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
 import { ACTION_FPS } from './game_config_data.js';
+import { normalizeCharacterGroup } from './character_group_data.js';
 import {
   cloneInteractionRegionSnapshot,
   regionPoints,
@@ -13,8 +15,44 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
 
   playerActor.player.update(dt, keys, pressed, world);
 
-  actors.slice(1).forEach((actor) => {
-    actor.player.updateNpc(dt, playerActor.player, world);
+  actors
+    .filter((actor) => actor !== playerActor)
+    .forEach((actor) => {
+      faceNpcActorTowardPlayer(actor, playerActor);
+      runEnemyRangeAi(actor, playerActor);
+      actor.player.updateNpc(dt, playerActor.player, world);
+    });
+}
+
+function faceNpcActorTowardPlayer(actor, playerActor) {
+  if (!shouldNpcFacePlayer(actor, playerActor)) return;
+  const deltaX = Number(playerActor.player.x || 0) - Number(actor.player.x || 0);
+  if (Math.abs(deltaX) <= 0.0001) return;
+  actor.player.facing = deltaX < 0 ? -1 : 1;
+}
+
+function shouldNpcFacePlayer(actor, playerActor) {
+  if (!actor?.player || !playerActor?.player || actor === playerActor) return false;
+  const group = normalizeCharacterGroup(actor.group, '');
+  return group === 'mobs' || group === 'bosses';
+}
+
+function runEnemyRangeAi(actor, playerActor) {
+  if (!shouldNpcFacePlayer(actor, playerActor)) return;
+  if (actor.player.isCustomActionActive) return;
+
+  const distance = Math.abs(Number(playerActor.player.x || 0) - Number(actor.player.x || 0));
+  const candidate = enemyRangeActionCandidate(actor.player, distance);
+  if (!candidate) return;
+
+  requestRuntimeAction(actor.player, candidate.key, actor.player.facing, 'tap');
+}
+
+function enemyRangeActionCandidate(player, distance) {
+  return (player.actions || []).find((action) => {
+    const formula = actionFormula(player.actionSettings?.[action.key] || {}, 'range');
+    if (!formula?.enabled) return false;
+    return distance >= Number(formula.minRange || 0) && distance <= Number(formula.maxRange || 0);
   });
 }
 
@@ -32,8 +70,13 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       if (shouldSkipTarget(attacker, target)) return;
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
       const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
+      const guardBlockAttackRegion = overlappingGuardBlockAttackRegion(
+        attacker,
+        attackRegions,
+        cachedInteractionRegions(regionCache, target, 'guard')
+      );
       const attackRegion = overlappingAttackRegion(attacker, attackRegions, targetHurtRegions);
-      if (!attackRegion) {
+      if (!attackRegion && !guardBlockAttackRegion) {
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('attack-hurt-no-overlap', {
             attacker: attacker.id,
@@ -48,21 +91,26 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
         }
         return;
       }
-      if (isAttackBlocked(attacker, attackRegions, cachedInteractionRegions(regionCache, target, 'guard'))) {
+
+      const comboStep = attacker.player.comboStep || 1;
+      target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
+
+      if (guardBlockAttackRegion) {
+        triggerWorldAttackCameraShake(world, particleEffects);
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('guard-block', {
             attacker: attacker.id,
             target: target.id,
             attackerAction: attacker.player.actionKey,
             targetAction: target.player.actionKey,
+            damage: 0,
+            knockback: guardBlockAttackRegion.reaction.knockback,
           });
         }
-        target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
+        applyHitReaction(attacker, target, guardBlockAttackRegion, comboStep, particleEffects, world);
         return;
       }
 
-      const comboStep = attacker.player.comboStep || 1;
-      target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
       triggerWorldAttackCameraShake(world, particleEffects);
       if (isRuntimeDebugEnabled()) {
         debugInteractionRuntimeLog('attack-hurt-overlap', {
@@ -70,14 +118,14 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
           target: target.id,
           attackerAction: attacker.player.actionKey,
           targetAction: target.player.actionKey,
-          damage: attackRegion.reaction.damage,
+          damage: 1,
           knockback: attackRegion.reaction.knockback,
         });
       }
       const removed = applyInteractionDamage({
         attacker,
         target,
-        damage: attackRegion.reaction.damage,
+        damage: 1,
         invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
         comboStep,
         playerActor,
@@ -87,7 +135,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       });
       if (removed) return;
 
-      applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects);
+      applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects, world);
     });
   });
 
@@ -240,11 +288,13 @@ function overlappingAttackRegion(attacker, attackRegions, hurtRegions) {
   );
 }
 
-function isAttackBlocked(attacker, attackRegions, guardRegions) {
-  return (guardRegions || []).some(
-    (guardRegion) =>
-      guardRegion?.reaction?.block === true &&
-      attackRegions.some((attackRegion) => attackRegionOverlaps(attacker, attackRegion, guardRegion))
+function overlappingGuardBlockAttackRegion(attacker, attackRegions, guardRegions) {
+  return attackRegions.find((attackRegion) =>
+    (guardRegions || []).some(
+      (guardRegion) =>
+        (guardRegion?.reaction?.guard === true || guardRegion?.reaction?.block === true) &&
+        attackRegionOverlaps(attacker, attackRegion, guardRegion)
+    )
   );
 }
 
@@ -366,8 +416,8 @@ function applyInteractionDamage({
   return true;
 }
 
-function applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects) {
-  applyKnockback(attacker, target, attackRegion);
+function applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects, world) {
+  applyKnockback(attacker, target, attackRegion, world);
   particleEffects.triggerHitImpact(attacker, target, comboStep);
 }
 
@@ -390,15 +440,94 @@ function targetHurtInvincibleTime(hurtRegions) {
   return Math.max(0, ...times);
 }
 
-function applyKnockback(attacker, target, attackRegion) {
+function applyKnockback(attacker, target, attackRegion, world) {
   const knockback = Math.max(0, Number(attackRegion?.reaction?.knockback || 0));
-  if (knockback <= 0) return;
-  const deltaX = Number(target.player.x || 0) - Number(attacker.player.x || 0);
-  const direction = deltaX === 0 ? Number(attacker.player.facing || 1) : Math.sign(deltaX);
-  target.player.vx = Number(target.player.vx || 0) + direction * knockback;
+  const knockbackMode = attackRegion?.reaction?.knockbackMode === 'set' ? 'set' : 'add';
+  const extraVx = Number(attackRegion?.reaction?.knockbackExtraVx || 0);
+  const extraVy = Number(attackRegion?.reaction?.knockbackExtraVy || 0);
+  const facingSign = Number(attacker?.player?.facing || 1) < 0 ? -1 : 1;
+  const facingAdjustedExtraVx = extraVx * facingSign;
+  const beforeX = Number(target.player.x || 0);
+  const beforeVx = Number(target.player.vx || 0);
+  const beforeVy = Number(target.player.vy || 0);
+  const direction =
+    knockbackMode === 'add'
+      ? knockbackDirection(attacker, target, attackRegion)
+      : { x: facingSign, y: 0, source: 'set-mode-facing' };
+  const vectorKnockbackX = knockbackMode === 'add' ? direction.x * knockback : facingSign * knockback;
+  const vectorKnockbackY = knockbackMode === 'add' ? direction.y * knockback : 0;
+  const finalVx = vectorKnockbackX + facingAdjustedExtraVx;
+  const finalVy = vectorKnockbackY + extraVy;
+  if (Math.abs(finalVx) <= 0.0001 && Math.abs(finalVy) <= 0.0001) return;
+  target.player.vx = Number(target.player.vx || 0) + finalVx;
+  target.player.vy = Number(target.player.vy || 0) + finalVy;
   target.player.velocityControl = {
     ...(target.player.velocityControl || {}),
-    x: true,
+    x: Math.abs(finalVx) > 0.0001 || target.player.velocityControl?.x === true,
+    y: Math.abs(finalVy) > 0.0001 || target.player.velocityControl?.y === true,
+  };
+  if (isRuntimeDebugEnabled()) {
+    const debug = {
+      target: target.id,
+      beforeX,
+      beforeVx,
+      beforeVy,
+      afterApplyVx: Number(target.player.vx || 0),
+      afterApplyVy: Number(target.player.vy || 0),
+      velocityControlX: target.player.velocityControl.x === true,
+      velocityControlY: target.player.velocityControl.y === true,
+      knockback,
+      knockbackMode,
+      vectorKnockbackX,
+      vectorKnockbackY,
+      knockbackExtraVx: extraVx,
+      knockbackExtraVy: extraVy,
+      facingAdjustedExtraVx,
+      finalVx,
+      finalVy,
+      directionX: direction.x,
+      directionY: direction.y,
+      directionSource: direction.source,
+      inertia: Number(world?.worldPhysics?.inertia ?? 30),
+    };
+    target.player.knockbackDebug = debug;
+    debugInteractionRuntimeLog('knockback-applied', debug);
+  }
+}
+
+function knockbackDirection(attacker, target, attackRegion) {
+  const previous = previousAttackRegion(attacker, attackRegion);
+  if (previous) {
+    const previousCenter = interactionRegionCenter(previous);
+    const currentCenter = interactionRegionCenter(attackRegion);
+    const dx = currentCenter.x - previousCenter.x;
+    const dy = currentCenter.y - previousCenter.y;
+    const length = Math.hypot(dx, dy);
+    if (length > 0.0001) return { x: dx / length, y: dy / length, source: 'attack-region-motion' };
+  }
+  const deltaX = Number(target.player.x || 0) - Number(attacker.player.x || 0);
+  const x = deltaX === 0 ? Number(attacker.player.facing || 1) : Math.sign(deltaX);
+  return { x, y: 0, source: 'attacker-to-target' };
+}
+
+function interactionRegionCenter(region) {
+  const points = regionPoints(region);
+  if (points.length) {
+    const total = points.reduce(
+      (sum, point) => ({
+        x: sum.x + Number(point.x || 0),
+        y: sum.y + Number(point.y || 0),
+      }),
+      { x: 0, y: 0 }
+    );
+    return {
+      x: total.x / points.length,
+      y: total.y / points.length,
+    };
+  }
+  return {
+    x: Number(region?.x || 0) + Number(region?.w || 0) / 2,
+    y: Number(region?.y || 0) + Number(region?.h || 0) / 2,
   };
 }
 

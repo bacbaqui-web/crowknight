@@ -122,9 +122,8 @@ export const DEFAULT_PLAYER_RIG = {
     baseH: 72,
     rot: 0,
     opacity: 1,
-    block: 1,
-    deflect: 0,
     parry: 0,
+    attack: 0,
   },
   upperArmL: {
     x: -14,

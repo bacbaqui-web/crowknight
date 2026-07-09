@@ -100,7 +100,8 @@ export function createTuningPanelCanvasController({
 
   function currentCanvasActivePart() {
     const context = currentCanvasEditContext();
-    return getEditTarget?.(context)?.writeTargetKey || null;
+    const editTarget = getEditTarget?.(context);
+    return editTarget?.writeTargetKey || (editTarget?.isActionPivot ? editTarget.targetType : null);
   }
 
   function onPointerMove(event) {

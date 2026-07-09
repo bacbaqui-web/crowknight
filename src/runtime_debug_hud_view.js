@@ -136,6 +136,23 @@ function eventLabel(event) {
   if (event.type === 'damage-applied') {
     return `${displayEventType(event.type)} 데미지=${fallbackText(payload.damage)} HP=${fallbackText(payload.targetHp)}`;
   }
+  if (event.type === 'knockback-applied') {
+    return `${displayEventType(event.type)} target=${fallbackText(payload.target)} x=${fallbackText(
+      payload.beforeX
+    )} vx=${fallbackText(payload.afterApplyVx)} vy=${fallbackText(payload.afterApplyVy)} ${fallbackText(
+      payload.directionSource
+    )}`;
+  }
+  if (event.type === 'knockback-before-physics') {
+    return `${displayEventType(event.type)} target=${fallbackText(payload.target)} x=${fallbackText(
+      payload.currentX
+    )} vx=${fallbackText(payload.currentVx)}`;
+  }
+  if (event.type === 'knockback-after-physics') {
+    return `${displayEventType(event.type)} target=${fallbackText(payload.target)} deltaX=${fallbackText(
+      payload.deltaX
+    )} vx=${fallbackText(payload.vxAfterPhysics)}`;
+  }
   return displayEventType(event.type);
 }
 

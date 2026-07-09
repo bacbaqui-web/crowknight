@@ -2,6 +2,8 @@ import { isInteractionObjectPartKey, interactionObjectParentPartKey } from './in
 import { partLabel } from './editor_label_helper.js';
 import { renderEditorDataCard } from './editor_card_panel_view.js';
 import { renderScrubGroups } from './editor_scrub_helper.js';
+import { renderMiniTimelineRange } from './timeline_dom_helper.js';
+import { renderVelocityModeToggle } from './formulas/velocity_formula.js';
 import { interactionFieldLimits } from './part_source_data.js';
 import { clamp } from './common_helper.js';
 import {
@@ -17,6 +19,8 @@ import {
   normalizeInteractionColorValue,
   normalizeInteractionSelectValue,
 } from './interaction_field_data.js';
+
+const ATTACK_KNOCKBACK_INLINE_PROPS = ['knockback', 'knockbackExtraVx', 'knockbackExtraVy'];
 
 export function renderInteractionEditor(container, options) {
   renderEditorDataCard(
@@ -97,9 +101,10 @@ function renderFixedRoleToggle(body, options, role) {
 
 function renderInteractionDetails(body, options) {
   const { targetKey = null, fixedRole = null } = options;
-  const activeRoles = fixedRole
+  const baseRoles = fixedRole
     ? [{ prop: fixedRole, label: interactionRoleLabel(fixedRole) }]
     : INTERACTION_ROLE_DEFS.filter(({ prop }) => isInteractionValueOn(options, prop, prop));
+  const activeRoles = mergeInteractionDetailRoles(baseRoles, readAdditionalDetailRoles(options, baseRoles));
   if (!activeRoles.length) {
     const empty = document.createElement('div');
     empty.className = 'editor-data-empty';
@@ -117,9 +122,144 @@ function renderInteractionDetails(body, options) {
     section.append(heading);
 
     const groups = interactionDetailGroups(prop);
+    if (prop === 'attack') renderAttackFrameWindow(section, options, prop);
     renderInteractionDetailControls(section, groups, options, prop);
     body.append(section);
   });
+}
+
+function readAdditionalDetailRoles(options, activeRoles) {
+  if (typeof options?.additionalDetailRoles !== 'function') return [];
+  return options.additionalDetailRoles(activeRoles) || [];
+}
+
+function mergeInteractionDetailRoles(baseRoles, additionalRoles) {
+  const roles = [...baseRoles];
+  additionalRoles.forEach((role) => {
+    if (!role?.prop) return;
+    if (roles.some((item) => item.prop === role.prop)) return;
+    roles.push({
+      prop: role.prop,
+      label: role.label || interactionRoleLabel(role.prop),
+    });
+  });
+  return roles;
+}
+
+function renderAttackFrameWindow(section, options, role) {
+  const rawTotalFrames = Number(options.totalFrames);
+  if (!Number.isFinite(rawTotalFrames) || rawTotalFrames <= 0) return;
+  const totalFrames = Math.max(1, Math.round(rawTotalFrames));
+
+  const row = document.createElement('div');
+  row.className = 'modifier-mini-timeline-row interaction-mini-timeline-row';
+
+  const startInput = renderInteractionFrameStepper(
+    readInteractionFrameWindowValue(options, 'startFrame', role, 1, totalFrames),
+    totalFrames,
+    (value) => commitInteractionFrameWindowValue(options, role, 'startFrame', value, totalFrames)
+  );
+  const track = document.createElement('div');
+  track.className = 'timeline-track modifier-mini-timeline-track interaction-mini-timeline-track';
+  track.setAttribute('aria-label', '공격 작동 구간');
+  const endInput = renderInteractionFrameStepper(
+    readInteractionFrameWindowValue(options, 'endFrame', role, totalFrames, totalFrames),
+    totalFrames,
+    (value) => commitInteractionFrameWindowValue(options, role, 'endFrame', value, totalFrames)
+  );
+
+  const renderRange = (startFrame, endFrame) => {
+    renderMiniTimelineRange(track, {
+      totalFrames,
+      startFrame,
+      endFrame,
+      onRangeChange: ({ startFrame: nextStart, endFrame: nextEnd }) => {
+        const start = commitInteractionFrameWindowValue(options, role, 'startFrame', nextStart, totalFrames);
+        const end = commitInteractionFrameWindowValue(options, role, 'endFrame', nextEnd, totalFrames);
+        startInput.input.value = String(start);
+        endInput.input.value = String(end);
+        return { startFrame: start, endFrame: end };
+      },
+    });
+  };
+
+  const syncRange = () => {
+    renderRange(Number(startInput.input.value), Number(endInput.input.value));
+  };
+  startInput.onAfterCommit = syncRange;
+  endInput.onAfterCommit = syncRange;
+  renderRange(Number(startInput.input.value), Number(endInput.input.value));
+
+  row.append(startInput.root, track, endInput.root);
+  section.append(row);
+}
+
+function renderInteractionFrameStepper(value, maxFrame, onChange) {
+  const root = document.createElement('span');
+  root.className = 'number-stepper-control modifier-mini-timeline-frame-stepper';
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.step = '1';
+  input.min = '1';
+  input.max = String(maxFrame);
+  input.className = 'modifier-mini-timeline-frame-input';
+  input.value = String(value);
+  input.setAttribute('aria-label', '프레임');
+  let lastValue = Number(input.value);
+  const result = { root, input, onAfterCommit: null };
+  const commit = () => {
+    const nextValue = Number(input.value);
+    if (Object.is(nextValue, lastValue)) return;
+    lastValue = nextValue;
+    const committedValue = onChange(nextValue);
+    if (committedValue !== undefined) {
+      input.value = String(committedValue);
+      lastValue = Number(committedValue);
+    }
+    result.onAfterCommit?.();
+  };
+  input.addEventListener('input', commit);
+  input.addEventListener('change', commit);
+
+  const buttons = document.createElement('span');
+  buttons.className = 'number-stepper-buttons';
+  const up = document.createElement('button');
+  const down = document.createElement('button');
+  up.type = 'button';
+  down.type = 'button';
+  up.setAttribute('aria-label', '프레임 올리기');
+  down.setAttribute('aria-label', '프레임 내리기');
+  up.textContent = '▲';
+  down.textContent = '▼';
+  up.addEventListener('click', (event) => stepInteractionFrameInput(event, input, 1));
+  down.addEventListener('click', (event) => stepInteractionFrameInput(event, input, -1));
+  buttons.append(up, down);
+  root.append(input, buttons);
+  return result;
+}
+
+function stepInteractionFrameInput(event, input, direction) {
+  event.preventDefault();
+  const min = Number(input.min || 1);
+  const max = Number(input.max || 1);
+  const next = clamp(Math.round(Number(input.value || min)) + direction, min, max);
+  input.value = String(next);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function readInteractionFrameWindowValue(options, prop, role, fallback, totalFrames) {
+  return clampInteractionFrame(readInteractionOptionValue(options, prop, role) ?? fallback, totalFrames, fallback);
+}
+
+function commitInteractionFrameWindowValue(options, role, prop, value, totalFrames) {
+  const nextValue = clampInteractionFrame(value, totalFrames, prop === 'startFrame' ? 1 : totalFrames);
+  return options.onWrite(prop, nextValue, { role, rerender: false }) ?? nextValue;
+}
+
+function clampInteractionFrame(value, totalFrames, fallback) {
+  const number = Math.round(Number(value ?? fallback));
+  if (!Number.isFinite(number)) return fallback;
+  return clamp(number, 1, totalFrames);
 }
 
 function renderInteractionDetailControls(section, groups, options, role) {
@@ -128,6 +268,10 @@ function renderInteractionDetailControls(section, groups, options, role) {
     renderInteractionSelectRows(section, group.selects || [], options, role);
     renderInteractionColorRows(section, group.colors || [], options, role);
     if (!group.props?.length) return;
+    if (role === 'attack' && isAttackKnockbackInlineGroup(group.props)) {
+      renderAttackKnockbackInlineControls(section, group.props, options, role);
+      return;
+    }
     renderScrubGroups(
       section,
       [group],
@@ -136,6 +280,89 @@ function renderInteractionDetailControls(section, groups, options, role) {
       options.scrubCallbacks
     );
   });
+}
+
+function isAttackKnockbackInlineGroup(props = []) {
+  return ATTACK_KNOCKBACK_INLINE_PROPS.every((prop) => props.some((field) => field.prop === prop));
+}
+
+function renderAttackKnockbackInlineControls(section, props, options, role) {
+  const row = document.createElement('div');
+  row.className = 'interaction-knockback-inline-row';
+  row.append(
+    renderVelocityModeToggle(readInteractionOptionValue(options, 'knockbackMode', role), (value) =>
+      options.onWrite('knockbackMode', interactionFrameValueFromInput('knockbackMode', value), {
+        role,
+        rerender: false,
+      })
+    )
+  );
+  ATTACK_KNOCKBACK_INLINE_PROPS.forEach((prop) => {
+    const field = props.find((item) => item.prop === prop) || { prop };
+    row.append(renderInteractionNumberStepper(field, options, role));
+  });
+  section.append(row);
+}
+
+function renderInteractionNumberStepper(field, options, role) {
+  const prop = field.prop;
+  const limits = interactionFieldLimits(prop) || {};
+  const root = document.createElement('span');
+  root.className = 'number-stepper-control interaction-number-stepper';
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.step = String(limits.step ?? 1);
+  if (limits.min !== undefined) input.min = String(limits.min);
+  if (limits.max !== undefined) input.max = String(limits.max);
+  input.value = String(readInteractionOptionValue(options, prop, role));
+  input.setAttribute('aria-label', field.label || prop);
+
+  let lastValue = Number(input.value || 0);
+  const commit = (rawValue = input.value) => {
+    const nextValue = clampInteractionNumber(prop, rawValue);
+    if (Object.is(nextValue, lastValue)) return;
+    lastValue = nextValue;
+    const committedValue = options.onWrite(prop, nextValue, { role, rerender: false });
+    const displayValue = committedValue ?? readInteractionOptionValue(options, prop, role);
+    input.value = String(displayValue);
+    lastValue = Number(displayValue);
+  };
+  input.addEventListener('input', () => commit());
+  input.addEventListener('change', () => commit());
+
+  const buttons = document.createElement('span');
+  buttons.className = 'number-stepper-buttons';
+  const up = document.createElement('button');
+  const down = document.createElement('button');
+  up.type = 'button';
+  down.type = 'button';
+  up.setAttribute('aria-label', `${field.label || prop} 올리기`);
+  down.setAttribute('aria-label', `${field.label || prop} 내리기`);
+  up.textContent = '▲';
+  down.textContent = '▼';
+  up.addEventListener('click', (event) => stepInteractionNumber(event, input, prop, 1, commit));
+  down.addEventListener('click', (event) => stepInteractionNumber(event, input, prop, -1, commit));
+  buttons.append(up, down);
+  root.append(input, buttons);
+  return root;
+}
+
+function stepInteractionNumber(event, input, prop, direction, commit) {
+  event.preventDefault();
+  const limits = interactionFieldLimits(prop) || {};
+  const step = Number(limits.step ?? 1);
+  const current = Number(input.value || 0);
+  const next = clampInteractionNumber(prop, current + direction * step);
+  input.value = String(next);
+  commit(next);
+}
+
+function clampInteractionNumber(prop, value) {
+  const limits = interactionFieldLimits(prop);
+  const number = Number(value);
+  if (!Number.isFinite(number)) return Number(interactionDefaultValue(prop) || 0);
+  if (!limits) return number;
+  return clamp(number, limits.min ?? number, limits.max ?? number);
 }
 
 function renderInteractionColorRows(section, colors, options, role) {
@@ -192,7 +419,10 @@ function renderInteractionCheckRows(section, toggles, options, role) {
     checkbox.type = 'checkbox';
     checkbox.checked = readInteractionOptionValue(options, prop, role) >= 0.5;
     checkbox.addEventListener('change', () => {
-      onWrite(prop, interactionFrameValueFromInput(prop, checkbox.checked ? 1 : 0), { role, rerender: false });
+      onWrite(prop, interactionFrameValueFromInput(prop, checkbox.checked ? 1 : 0), {
+        role,
+        rerender: prop === 'followWeapon' || options.shouldRerenderOnWrite?.(prop, role) === true,
+      });
     });
     item.append(checkbox, document.createTextNode(label));
     section.append(item);

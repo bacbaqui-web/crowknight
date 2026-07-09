@@ -251,13 +251,31 @@ function normalizeActionInteractions(current = {}) {
     const source = current?.[partKey];
     if (!source) return;
     const role = interactionObjectRole(partKey);
+    const interactionFields = normalizeInteractionFields(source);
+    if (partKey === ATTACK_INTERACTION_OBJECT_KEY && source.followWeapon === undefined) {
+      delete interactionFields.followWeapon;
+    }
     normalized[partKey] = {
       active: Number(source.active || 0) >= 0.5 ? 1 : 0,
       [role]: Number(source[role] || 0) >= 0.5 ? 1 : 0,
-      ...normalizeInteractionFields(source),
+      ...interactionFields,
+      ...normalizeActionInteractionWindow(source, role),
     };
   });
   return normalized;
+}
+
+function normalizeActionInteractionWindow(source = {}, role = '') {
+  if (role !== 'attack') return {};
+  const window = {};
+  if (source.startFrame !== undefined) window.startFrame = normalizeActionInteractionFrame(source.startFrame, 1);
+  if (source.endFrame !== undefined) window.endFrame = normalizeActionInteractionFrame(source.endFrame, 1);
+  return window;
+}
+
+function normalizeActionInteractionFrame(value, fallback) {
+  const frame = Math.round(Number(value ?? fallback));
+  return Number.isFinite(frame) ? Math.max(1, frame) : fallback;
 }
 
 function normalizeEffectSettings(current = {}, fallback = {}, customActions = [], deletedActionKeys = []) {

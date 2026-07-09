@@ -120,7 +120,7 @@ function stepVelocityInput(event, input, direction) {
   input.commitVelocityValue?.(nextValue);
 }
 
-function renderVelocityModeToggle(mode, onChange) {
+export function renderVelocityModeToggle(mode, onChange) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'velocity-formula-mode-toggle';

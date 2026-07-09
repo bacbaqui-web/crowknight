@@ -114,6 +114,34 @@ function timelineSourceControlsInteractionRole(source, role) {
   return frames.some((frame) => interactionValueEnabled(frame, role));
 }
 
+function timelineSourceHasExplicitInteractionProp(source, prop) {
+  if (!source) return false;
+  const frames = [];
+  if (source.start) frames.push(source.start);
+  if (Array.isArray(source.keyframes)) frames.push(...source.keyframes);
+  if (source.end) frames.push(source.end);
+  if (!source.start && !source.end && !Array.isArray(source.keyframes)) frames.push(source);
+  return frames.some((frame) => Object.prototype.hasOwnProperty.call(frame || {}, prop));
+}
+
+function interactionHasFrameWindow(value = {}, role = '') {
+  return role === 'attack' && (value.startFrame !== undefined || value.endFrame !== undefined);
+}
+
+function interactionActionFrameWindowActive(player, value = {}, role = '') {
+  if (!interactionHasFrameWindow(value, role)) return true;
+  const frameCount = Math.max(1, timelineFrameCount(player.actionSettings?.[player.actionKey] || {}));
+  const frame = interactionFrameFromProgress(player.getActionFrameProgress(), frameCount);
+  const start = formulaFrameBoundary(value.startFrame, frameCount, 1);
+  const end = formulaFrameBoundary(value.endFrame, frameCount, frameCount);
+  return frame >= Math.min(start, end) && frame <= Math.max(start, end);
+}
+
+function interactionFrameFromProgress(progress = 0, frameCount = 1) {
+  const count = Math.max(1, Math.round(Number(frameCount || 1)));
+  return clamp(Math.floor(clamp(Number(progress || 0), 0, 1) * count) + 1, 1, count);
+}
+
 export class PuppetPlayer {
   constructor(x, y, assets) {
     this.x = x;
@@ -446,12 +474,19 @@ export class PuppetPlayer {
     if (!role || !actionValue) return timelineOffset;
     const timelineEnabled = interactionValueEnabled(timelineOffset, role);
     const timelineControlsActivation = timelineSourceControlsInteractionRole(timelineSource, role);
-    const actionEnabled = interactionValueEnabled(actionValue, role);
+    const actionWindowActive = interactionActionFrameWindowActive(this, actionValue, role);
+    const actionEnabled = interactionValueEnabled(actionValue, role) && actionWindowActive;
     if (!timelineEnabled && !actionEnabled) return timelineOffset;
 
     const merged = { ...timelineOffset };
     INTERACTION_MERGE_PROPS.forEach((prop) => {
       if (prop === 'active' || prop === role) return;
+      if (prop === 'followWeapon') {
+        merged[prop] = this.rig?.[key]?.[prop] ?? interactionDefaultValue(prop);
+        if (actionValue[prop] !== undefined) merged[prop] = actionValue[prop];
+        if (timelineSourceHasExplicitInteractionProp(timelineSource, prop)) merged[prop] = timelineOffset[prop];
+        return;
+      }
       if (actionValue[prop] !== undefined) merged[prop] = actionValue[prop];
       if (interactionFrameValueOverridesAction(prop, timelineOffset[prop])) merged[prop] = timelineOffset[prop];
     });
@@ -462,6 +497,10 @@ export class PuppetPlayer {
     } else {
       merged.active = actionValue.active;
       merged[role] = actionValue[role];
+    }
+    if (!actionWindowActive && interactionHasFrameWindow(actionValue, role)) {
+      merged.active = 0;
+      merged[role] = 0;
     }
     return merged;
   }
@@ -524,7 +563,7 @@ export class PuppetPlayer {
     });
   }
 
-  beginCustomActionBlend(nextActionKey, nextFacing = this.facing) {
+  beginCustomActionBlend(nextActionKey, nextFacing = this.facing, source = null) {
     const settings = this.actionSettings?.[nextActionKey] || {};
     const blendRule = actionFormula(settings, 'blend');
     const hasBlendRule = Boolean(blendRule);
@@ -541,8 +580,14 @@ export class PuppetPlayer {
     const facing = nextFacing === -1 || nextFacing === 1 ? nextFacing : this.facing;
     const from = {};
     const to = {};
+    const sourceActionKey = source?.actionKey;
+    const sourceProgress = Number(source?.progress);
+    const sourceFacing = source?.facing === -1 || source?.facing === 1 ? source.facing : this.facing;
     ACTION_PART_KEYS.forEach((partKey) => {
-      from[partKey] = this.getPartOffset(partKey);
+      from[partKey] =
+        sourceActionKey && Number.isFinite(sourceProgress)
+          ? this.resolveActionOffsetForAction(sourceActionKey, partKey, clamp(sourceProgress, 0, 1), sourceFacing)
+          : this.getPartOffset(partKey);
       to[partKey] = this.resolveActionOffsetForAction(nextActionKey, partKey, 0, facing);
     });
     this.customActionBlend = {

@@ -5,7 +5,7 @@ import shutil
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from effect_asset_exporter import effect_asset_path, effect_source_psd_path, export_effect_asset
 from export_character_psd_parts import export_character_parts, find_character_psd
@@ -416,19 +416,33 @@ def sanitize_effect_filename(filename):
 
 
 def effect_asset_from_request(parsed):
-    asset = ""
-    for item in parsed.query.split("&"):
-        key, _, value = item.partition("=")
-        if key == "asset":
-            asset = unquote(value)
-            break
+    asset = parse_qs(parsed.query, keep_blank_values=True).get("asset", [""])[0].strip()
     if asset not in {"slash1", "slash2", "slash3"} and not is_dynamic_effect_asset(asset):
         raise RuntimeError("Invalid effect asset")
-    return asset
+    return normalize_effect_asset_key(asset)
 
 
 def is_dynamic_effect_asset(asset):
-    return asset.startswith("effect_") and all(char.isalnum() or char in "_-" for char in asset)
+    parts = normalize_effect_asset_key(asset).split("/")
+    if len(parts) == 1:
+        return is_dynamic_effect_image_key(parts[0])
+    if len(parts) == 2:
+        actor_id, image_key = parts
+        return is_effect_actor_id(actor_id) and is_dynamic_effect_image_key(image_key)
+    return False
+
+
+def normalize_effect_asset_key(asset):
+    return "/".join(part.strip() for part in str(asset or "").split("/"))
+
+
+def is_dynamic_effect_image_key(value):
+    return str(value or "").startswith("effect_") and all(char.isalnum() or char in "_-" for char in value)
+
+
+def is_effect_actor_id(value):
+    text = str(value or "")
+    return bool(text) and all(char.isalnum() or char in "_-" for char in text)
 
 
 def export_background_preview(source_path, output_path, manifest_path, layer_output_dir):

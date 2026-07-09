@@ -129,7 +129,11 @@ export function advanceCustomActionRuntime(player, dt) {
 
   player.customActionTime = Math.max(0, player.customActionTime - dt);
   if (player.customActionTime <= ACTION_TIME_EPSILON) {
-    stopCustomAction(player);
+    stopCustomAction(player, {
+      actionKey: player.customActionKey,
+      progress: 1,
+      facing: player.customActionFacing || player.facing,
+    });
   }
 }
 
@@ -354,10 +358,10 @@ function updateActivePressAction(player, keys) {
   stopCustomAction(player);
 }
 
-function stopCustomAction(player) {
+function stopCustomAction(player, source = null) {
   const fallbackActionKey = player.resolveFallbackActionKey?.() || 'idle';
   player.fallbackActionKey = fallbackActionKey;
-  player.beginCustomActionBlend?.(fallbackActionKey, player.customActionFacing || player.facing);
+  player.beginCustomActionBlend?.(fallbackActionKey, player.customActionFacing || player.facing, source);
   player.customActionKey = null;
   player.customActionFacing = null;
   player.customActionViewFacing = null;
@@ -397,13 +401,13 @@ function recordActionStartFailure(player, match, reason) {
   });
 }
 
-function canInterruptCurrentAction(player, nextAction, requestedFacing = null) {
+function canInterruptCurrentAction(player, nextAction) {
   if (!player.isCustomActionActive) return true;
   if (!nextAction?.key) return false;
 
   const currentSettings = actionRuntimeSettings(player, player.customActionKey);
   if (!canCancelCurrentActionAtFrame(player, currentSettings)) return false;
-  if (nextAction.key === player.customActionKey) return isRequestedFacingChange(player, requestedFacing);
+  if (nextAction.key === player.customActionKey) return true;
 
   return actionInterruptPriority(player, nextAction.key) >= actionInterruptPriority(player, player.customActionKey);
 }
@@ -414,13 +418,6 @@ function canCancelCurrentActionAtFrame(player, settings) {
   if (!actionFormulaActiveAtProgress(settings, 'cancel', player.getActionFrameProgress?.() || 0, frameCount))
     return false;
   return true;
-}
-
-function isRequestedFacingChange(player, requestedFacing) {
-  const nextFacing = normalizedFacing(requestedFacing);
-  if (!nextFacing) return false;
-  const currentFacing = normalizedFacing(player.customActionFacing) || normalizedFacing(player.facing);
-  return Boolean(currentFacing && currentFacing !== nextFacing);
 }
 
 function normalizedFacing(facing) {
@@ -568,8 +565,10 @@ function actionCastTriggerMode(player, actionKey, legacyMode = 'tap') {
 }
 
 function actionCastMode(player, actionKey, legacyMode = 'tap') {
-  const cast = actionFormula(actionRuntimeSettings(player, actionKey), 'cast');
+  const settings = actionRuntimeSettings(player, actionKey);
+  const cast = actionFormula(settings, 'cast');
   if (cast?.enabled) return cast.mode === 'press' || cast.mode === 'repeat' ? cast.mode : 'tap';
+  if (Array.isArray(settings.formulas)) return 'tap';
   if (legacyMode === 'press') return 'press';
   if (legacyMode === 'pressLoop') return 'repeat';
   return 'tap';
@@ -613,12 +612,14 @@ function applyCustomActionVelocityModifier(player, dt) {
     player.vx = Number(player.vx || 0) + Number(velocity.x || 0) * mirrorSign * frameDelta;
     player.vy = Number(player.vy || 0) + Number(velocity.y || 0) * frameDelta;
   } else {
-    player.vx = x;
-    player.vy = y;
+    const preserveVx = player.velocityControl?.x === true;
+    const preserveVy = player.velocityControl?.y === true;
+    if (!preserveVx) player.vx = x;
+    if (!preserveVy) player.vy = y;
   }
   player.velocityControl = {
-    x: Math.abs(x) > 0.0001,
-    y: Math.abs(y) > 0.0001,
+    x: player.velocityControl?.x === true || Math.abs(x) > 0.0001,
+    y: player.velocityControl?.y === true || Math.abs(y) > 0.0001,
   };
   if (y < 0) player.onGround = false;
 }

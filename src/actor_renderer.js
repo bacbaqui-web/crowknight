@@ -22,6 +22,7 @@ import {
   tintedSilhouetteFor,
 } from './puppet_player_geometry_helper.js';
 import {
+  ATTACK_INTERACTION_OBJECT_KEY,
   INTERACTION_OBJECT_TARGET_TYPE,
   interactionObjectPartKeysForParent,
 } from './interaction_object_editor_controller.js';
@@ -48,6 +49,7 @@ export function drawPuppetPlayer(player, ctx) {
   ctx.translate(-(master.anchorX || 0), -(master.anchorY || 0));
   ctx.globalAlpha *= clamp(master.opacity ?? 1, 0, 1);
   player.layerOrder.forEach((layer) => drawPuppetLayer(player, ctx, layer, p, r));
+  drawDetachedAttackInteractionObject(player, ctx);
   ctx.restore();
 
   if (player.anchorDebugPoints.length) {
@@ -329,17 +331,13 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
   drawPuppetImageLessChildParts(player, ctx, key, drawRect.x, drawRect.y);
   ctx.globalAlpha *= clamp((part.opacity ?? 1) * (offset.opacity ?? 1), 0, 1);
-  if (player.afterimageTintColor) {
+  const tintColor = player.afterimageTintColor || player.formulaTintColor;
+  const tintOpacity = player.afterimageTintColor ? player.afterimageTintOpacity : player.formulaTintOpacity;
+  if (tintColor) {
     ctx.drawImage(image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
     ctx.save();
-    ctx.globalAlpha *= clamp(player.afterimageTintOpacity ?? 0.35, 0, 1);
-    ctx.drawImage(
-      tintedSilhouetteFor(image, player.afterimageTintColor),
-      drawRect.x,
-      drawRect.y,
-      drawRect.w,
-      drawRect.h
-    );
+    ctx.globalAlpha *= clamp(tintOpacity ?? 0.35, 0, 1);
+    ctx.drawImage(tintedSilhouetteFor(image, tintColor), drawRect.x, drawRect.y, drawRect.w, drawRect.h);
     ctx.restore();
     ctx.restore();
     if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, transform.x, transform.y);
@@ -358,11 +356,27 @@ function drawPuppetImageLessChildParts(player, ctx, parentKey, parentX, parentY)
   imageLessChildPartsForParent(parentKey).forEach(({ key: partKey, type }) => {
     const part = player.rig?.[partKey];
     if (!part) return;
+    if (partKey === ATTACK_INTERACTION_OBJECT_KEY && !attackInteractionFollowsWeapon(player)) return;
 
     drawPuppetImageLessRectPart(player, ctx, partKey, part, parentX, parentY, {
       type,
     });
   });
+}
+
+function drawDetachedAttackInteractionObject(player, ctx) {
+  if (attackInteractionFollowsWeapon(player)) return;
+  const part = player.rig?.[ATTACK_INTERACTION_OBJECT_KEY];
+  if (!part) return;
+  drawPuppetImageLessRectPart(player, ctx, ATTACK_INTERACTION_OBJECT_KEY, part, 0, 0, {
+    type: INTERACTION_OBJECT_TARGET_TYPE,
+  });
+}
+
+function attackInteractionFollowsWeapon(player) {
+  const offset = player.getPartOffset?.(ATTACK_INTERACTION_OBJECT_KEY) || {};
+  const part = player.rig?.[ATTACK_INTERACTION_OBJECT_KEY] || {};
+  return Number(offset.followWeapon ?? part.followWeapon ?? 1) >= 0.5;
 }
 
 function imageLessChildPartsForParent(parentKey) {

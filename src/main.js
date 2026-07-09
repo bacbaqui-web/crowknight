@@ -24,6 +24,7 @@ import { isSettingsPanelOpen } from './settings_panel_state.js';
 import { createTuningPanel } from './editor_panel_controller.js';
 import { actorDefsFromSavedState, createActors } from './actor_factory.js';
 import { drawFormulaAfterimages, updateFormulaAfterimages } from './afterimage_runtime_helper.js';
+import { updateFormulaColorChanges } from './color_change_formula_runtime_helper.js';
 import { updateFormulaShakes } from './shake_formula_runtime_helper.js';
 import { syncCanvasToLayout } from './canvas_layout_helper.js';
 import { DEATH_RESULT_DELAY } from './game_config_data.js';
@@ -37,7 +38,7 @@ import {
 import { createProjectStateController } from './project_state_controller.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
-import { isTrashCharacter } from './character_group_data.js';
+import { isPlayerCharacter, isTrashCharacter } from './character_group_data.js';
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
@@ -69,6 +70,7 @@ const {
 } = getMainDomElements();
 const keys = new Set();
 const pressed = new Set();
+const SETUP_SELECTED_ACTOR_STORAGE_KEY = 'crowKnight.setup.selectedActorId';
 
 const savedState = await loadStoredSavedState();
 const sceneSessions = savedState.sessions;
@@ -91,7 +93,7 @@ const actors = await createActors({ ...characterSourceState, characters: charact
 });
 const effectAssetSources = savedState.effectAssets || {};
 const effectAssets = await loadEffectAssets('', effectAssetSources);
-const playerActor = actors[0];
+let playerActor = defaultRunPlayerActor(actors);
 const particleEffects = createParticleEffects({ actors, world, ctx });
 const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshStagePsdAsset } =
   createProjectStateController({
@@ -105,7 +107,7 @@ const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refre
     onSceneBackgroundUpdate: preloadSceneBackground,
   });
 if (initialPsdBackgroundChanged) saveState();
-let selectedActor = playerActor;
+let selectedActor = readSetupSelectedActor() || playerActor;
 let battleActive = false;
 let playerDeathPending = false;
 let resultOpen = false;
@@ -191,6 +193,7 @@ const tuningPanel = createTuningPanel({
   getSelectedActor: () => selectedActor,
   setSelectedActor: (actor) => {
     selectedActor = actor;
+    writeSetupSelectedActor(actor);
   },
   getSceneSession: () => sceneSession,
   saveState,
@@ -239,6 +242,7 @@ function update(dt) {
       { clearAttackTime: true }
     );
     updateRollGhosts(gameActors, dt);
+    updateFormulaColorChanges(gameActors);
     updateFormulaAfterimages(gameActors, dt);
     updateFormulaShakes(gameActors, particleEffects);
     particleEffects.emitDust(dt);
@@ -270,6 +274,7 @@ function update(dt) {
 
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects });
   updateRollGhosts(gameActors, dt);
+  updateFormulaColorChanges(gameActors);
   updateFormulaAfterimages(gameActors, dt);
   updateFormulaShakes(gameActors, particleEffects);
   particleEffects.emitDust(dt);
@@ -467,7 +472,7 @@ function normalizeScreenZoom(value) {
 
 function startRun() {
   hideResultScreen();
-  const gameActors = activeGameActors();
+  const gameActors = syncRunPlayerFromSetupSelection();
   lineUpActorPositions(gameActors, world);
   battleActive = true;
   playerDeathPending = false;
@@ -488,11 +493,57 @@ function startRun() {
 }
 
 function activeGameActors() {
-  return actors.filter((actor) => !isTrashCharacter(actor));
+  const gameActors = baseGameActors();
+  return runActorOrderActive() ? runOrderedActors(gameActors) : gameActors;
 }
 
 function editorControlActor(gameActors = activeGameActors()) {
   return gameActors.includes(selectedActor) ? selectedActor : playerActor;
+}
+
+function syncRunPlayerFromSetupSelection() {
+  const gameActors = baseGameActors();
+  playerActor = setupSelectedRunActor(gameActors);
+  return runOrderedActors(gameActors);
+}
+
+function setupSelectedRunActor(gameActors = baseGameActors()) {
+  if (gameActors.includes(selectedActor)) return selectedActor;
+  return defaultRunPlayerActor(gameActors) || playerActor;
+}
+
+function runOrderedActors(gameActors = baseGameActors()) {
+  if (!gameActors.includes(playerActor)) return gameActors;
+  return [playerActor, ...gameActors.filter((actor) => actor !== playerActor)];
+}
+
+function runActorOrderActive() {
+  return battleActive || playerDeathPending || resultOpen;
+}
+
+function baseGameActors() {
+  return actors.filter((actor) => !isTrashCharacter(actor));
+}
+
+function defaultRunPlayerActor(gameActors = baseGameActors()) {
+  return gameActors.find((actor) => isPlayerCharacter(actor)) || gameActors[0] || null;
+}
+
+function readSetupSelectedActor() {
+  try {
+    const actorId = window.localStorage?.getItem(SETUP_SELECTED_ACTOR_STORAGE_KEY);
+    return actorId ? baseGameActors().find((actor) => actor.id === actorId) || null : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSetupSelectedActor(actor) {
+  try {
+    if (actor?.id) window.localStorage?.setItem(SETUP_SELECTED_ACTOR_STORAGE_KEY, actor.id);
+  } catch {
+    // Ignore private browsing or blocked storage.
+  }
 }
 
 function localCharacterActors(savedStateSource, characterDefinitions) {
