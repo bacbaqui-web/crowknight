@@ -10,6 +10,7 @@ import { linkFormula } from './formulas/link_formula.js';
 import { cooldownFormula } from './formulas/cooldown_formula.js';
 import { targetMoveFormula } from './formulas/target_move_formula.js';
 import { afterimageFormula } from './formulas/afterimage_formula.js';
+import { shakeFormula } from './formulas/shake_formula.js';
 
 export const FORMULA_DEFS = Object.freeze([
   velocityFormula,
@@ -22,6 +23,7 @@ export const FORMULA_DEFS = Object.freeze([
   cooldownFormula,
   targetMoveFormula,
   afterimageFormula,
+  shakeFormula,
 ]);
 
 export function formulaDef(type) {

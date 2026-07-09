@@ -24,6 +24,7 @@ import { isSettingsPanelOpen } from './settings_panel_state.js';
 import { createTuningPanel } from './editor_panel_controller.js';
 import { actorDefsFromSavedState, createActors } from './actor_factory.js';
 import { drawFormulaAfterimages, updateFormulaAfterimages } from './afterimage_runtime_helper.js';
+import { updateFormulaShakes } from './shake_formula_runtime_helper.js';
 import { syncCanvasToLayout } from './canvas_layout_helper.js';
 import { DEATH_RESULT_DELAY } from './game_config_data.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
@@ -239,6 +240,7 @@ function update(dt) {
     );
     updateRollGhosts(gameActors, dt);
     updateFormulaAfterimages(gameActors, dt);
+    updateFormulaShakes(gameActors, particleEffects);
     particleEffects.emitDust(dt);
     particleEffects.update(dt);
     return;
@@ -269,6 +271,7 @@ function update(dt) {
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects });
   updateRollGhosts(gameActors, dt);
   updateFormulaAfterimages(gameActors, dt);
+  updateFormulaShakes(gameActors, particleEffects);
   particleEffects.emitDust(dt);
   particleEffects.update(dt);
 }

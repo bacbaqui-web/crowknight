@@ -148,12 +148,14 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `formula_editor_engine.js`: Formula library / applied Formula card 공통 renderer.
 - `formula_runtime_engine.js`: Runtime이 현재 frame의 Formula를 읽는 helper.
 - `afterimage_runtime_helper.js`: 잔상 Formula runtime snapshot update / draw helper.
+- `shake_formula_runtime_helper.js`: 흔들림 Formula runtime trigger helper.
 - `graph_picker_view.js`: Formula / modifier graph 선택 UI view.
 - `formulas/cast_formula.js`: 시전 Formula definition.
 - `formulas/cooldown_formula.js`: 쿨타임 Formula definition.
 - `formulas/velocity_formula.js`: 속도 Formula definition / editor / runtime metadata.
 - `formulas/inertia_formula.js`: 관성 Formula definition.
 - `formulas/afterimage_formula.js`: 잔상 Formula definition.
+- `formulas/shake_formula.js`: 흔들림 Formula definition.
 - `formulas/lock_formula.js`: 고정 Formula definition.
 - `formulas/blend_formula.js`: 보간 Formula definition.
 - `formulas/cancel_formula.js`: 캔슬 Formula definition.
