@@ -45,7 +45,7 @@ export function resolveEnemyAiSettings(settings = {}) {
     return normalizeEnemyAiSettings(settings.ai);
   }
 
-  const rangeFormula = actionFormula(settings, 'range');
+  const rangeFormula = legacyRangeFormula(settings);
   if (rangeFormula?.enabled) {
     return normalizeEnemyAiSettings({
       enabled: true,
@@ -58,4 +58,14 @@ export function resolveEnemyAiSettings(settings = {}) {
   }
 
   return defaultEnemyAiSettings();
+}
+
+export function isEnemyAiActionRegistered(settings = {}) {
+  if (actionFormula(settings, 'ai')?.enabled) return true;
+  return Boolean(legacyRangeFormula(settings)?.enabled);
+}
+
+function legacyRangeFormula(settings = {}) {
+  if (Array.isArray(settings.formulas) || settings?.ai) return null;
+  return actionFormula(settings, 'range');
 }

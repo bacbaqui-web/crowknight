@@ -120,6 +120,7 @@ function createDefaultEnemyRules() {
       cameraOffsetMax: 960,
     },
     spawnRulesByActor: {},
+    actorRulesByActor: {},
     growth: {
       hpMultiplier: 1,
       damageMultiplier: 1,
@@ -204,6 +205,7 @@ function normalizeEnemyRules(saved) {
       cameraOffsetMax: clampNumber(saved?.spawnRule?.cameraOffsetMax, -4000, 4000, defaults.spawnRule.cameraOffsetMax),
     },
     spawnRulesByActor: normalizeEnemySpawnRulesByActor(saved?.spawnRulesByActor, defaults.spawnRulesByActor),
+    actorRulesByActor: normalizeEnemyActorRulesByActor(saved?.actorRulesByActor, defaults.actorRulesByActor),
     growth: {
       hpMultiplier: clampNumber(saved?.growth?.hpMultiplier, 0.1, 100, defaults.growth.hpMultiplier),
       damageMultiplier: clampNumber(saved?.growth?.damageMultiplier, 0.1, 100, defaults.growth.damageMultiplier),
@@ -239,6 +241,34 @@ function normalizeEnemySpawnRulesByActor(saved, fallback = {}) {
             intervalSec: clampNumber(rule?.intervalSec, 0.1, 300, 2),
           },
         ];
+      })
+      .filter(Boolean)
+  );
+}
+
+export function createDefaultEnemyActorRule() {
+  return {
+    hitCancelChance: 0,
+    hitCancelFlashFrames: 3,
+  };
+}
+
+export function normalizeEnemyActorRule(saved) {
+  const defaults = createDefaultEnemyActorRule();
+  return {
+    hitCancelChance: clampNumber(saved?.hitCancelChance, 0, 100, defaults.hitCancelChance),
+    hitCancelFlashFrames: clampNumber(saved?.hitCancelFlashFrames, 1, 120, defaults.hitCancelFlashFrames),
+  };
+}
+
+function normalizeEnemyActorRulesByActor(saved, fallback = {}) {
+  const source = saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : fallback;
+  return Object.fromEntries(
+    Object.entries(source || {})
+      .map(([actorId, rule]) => {
+        const id = nonEmptyString(actorId);
+        if (!id) return null;
+        return [id, normalizeEnemyActorRule(rule)];
       })
       .filter(Boolean)
   );

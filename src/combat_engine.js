@@ -1,12 +1,15 @@
 import { requestRuntimeAction } from './action_trigger_engine.js';
+import { isActionMirrorEnabled } from './action_mirror_helper.js';
 import { resetPlayerActionState } from './actor_state.js';
 import { syncActorHealthCapacity } from './actor_tuning_helper.js';
-import { resolveEnemyAiSettings } from './enemy_ai_settings_helper.js';
+import { isEnemyAiActionRegistered, resolveEnemyAiSettings } from './enemy_ai_settings_helper.js';
+import { activeActionFormulaAtProgress } from './formula_runtime_engine.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
 import { ACTION_FPS } from './game_config_data.js';
 import { normalizeCharacterGroup } from './character_group_data.js';
 import { startDeathRagdoll } from './death_ragdoll_engine.js';
+import { timelineFrameCount } from './timeline_playback_helper.js';
 import {
   cloneInteractionRegionSnapshot,
   regionPoints,
@@ -31,9 +34,42 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
 
 function faceNpcActorTowardPlayer(actor, playerActor) {
   if (!shouldNpcFacePlayer(actor, playerActor)) return;
+  const lockedFacing = npcLockFormulaFacing(actor, playerActor);
+  if (lockedFacing) {
+    actor.player.facing = lockedFacing;
+    return;
+  }
   const deltaX = Number(playerActor.player.x || 0) - Number(actor.player.x || 0);
   if (Math.abs(deltaX) <= 0.0001) return;
   actor.player.facing = deltaX < 0 ? -1 : 1;
+}
+
+function npcLockFormulaFacing(actor, playerActor) {
+  const player = actor?.player;
+  const targetPlayer = playerActor?.player;
+  if (!player || !targetPlayer) return null;
+  const settings = player.actionSettings?.[player.actionKey] || {};
+  const lock = activeActionFormulaAtProgress(
+    settings,
+    'lock',
+    player.getActionFrameProgress?.() || 0,
+    timelineFrameCount(settings)
+  );
+  if (!lock) return null;
+  if (lock.direction === 'away') return oppositeFacingFromPlayer(actor, playerActor);
+  if (lock.direction === 'left' || lock.direction === 'right') {
+    const originalFacing = lock.direction === 'left' ? -1 : 1;
+    const actionFacing = player.customActionFacing || player.facing;
+    const mirrorSign = isActionMirrorEnabled(settings) && Number(actionFacing) < 0 ? -1 : 1;
+    return originalFacing * mirrorSign;
+  }
+  return null;
+}
+
+function oppositeFacingFromPlayer(actor, playerActor) {
+  const deltaX = Number(playerActor?.player?.x || 0) - Number(actor?.player?.x || 0);
+  if (Math.abs(deltaX) <= 0.0001) return Number(actor?.player?.facing || 1) < 0 ? -1 : 1;
+  return deltaX < 0 ? 1 : -1;
 }
 
 function shouldNpcFacePlayer(actor, playerActor) {
@@ -59,10 +95,12 @@ function enemyRangeActionCandidate(actor, distance) {
   return (actor.player.actions || [])
     .map((action, index) => ({
       action,
+      registered: isEnemyAiActionRegistered(actor.player.actionSettings?.[action.key] || {}),
       ai: resolveEnemyAiSettings(actor.player.actionSettings?.[action.key] || {}),
       index,
     }))
-    .filter(({ action, ai }) => {
+    .filter(({ action, ai, registered }) => {
+      if (!registered) return false;
       if (!ai.enabled) return false;
       if (Number(cooldowns[action.key] || 0) > 0) return false;
       if (distance < ai.minRange || distance > ai.maxRange) return false;
@@ -136,6 +174,19 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
         return;
       }
 
+      if (cancelHitByActorRule(target, world)) {
+        if (isRuntimeDebugEnabled()) {
+          debugInteractionRuntimeLog('hit-cancelled', {
+            attacker: attacker.id,
+            target: target.id,
+            attackerAction: attacker.player.actionKey,
+            targetAction: target.player.actionKey,
+            chance: enemyActorRuleForActor(world, target).hitCancelChance,
+          });
+        }
+        return;
+      }
+
       triggerWorldAttackCameraShake(world, particleEffects);
       if (isRuntimeDebugEnabled()) {
         debugInteractionRuntimeLog('attack-hurt-overlap', {
@@ -191,6 +242,19 @@ export function resolveProjectileCombat({
       if (!hurtRegion) return;
 
       projectile.hitTargets?.add(target);
+      if (cancelHitByActorRule(target, world)) {
+        if (isRuntimeDebugEnabled()) {
+          debugInteractionRuntimeLog('projectile-hit-cancelled', {
+            attacker: projectile.owner.id,
+            target: target.id,
+            attackerAction: projectile.owner.player.actionKey,
+            targetAction: target.player.actionKey,
+            chance: enemyActorRuleForActor(world, target).hitCancelChance,
+          });
+        }
+        removeProjectile(projectile);
+        return;
+      }
       triggerWorldAttackCameraShake(world, particleEffects);
       const removed = applyInteractionDamage({
         attacker: projectile.owner,
@@ -436,6 +500,7 @@ export function maintainEnemyFlow({ actors = [], playerActor = null, world = nul
 function hideEnemyActor(actor) {
   actor.respawning = true;
   actor.enemyRespawnTimer = null;
+  actor.hitCancelFlashTime = 0;
   actor.player.dead = true;
   actor.player.deathRagdoll = null;
   actor.player.vx = 0;
@@ -487,6 +552,7 @@ function respawnEnemyActor(actor, playerActor, world) {
   actor.invulnTime = 0;
   actor.hurtCooldown = 0;
   actor.hitStun = 0;
+  actor.hitCancelFlashTime = 0;
   actor.lastHitSerials = {};
   actor.aiActionCooldowns = {};
   actor.player.dead = false;
@@ -517,6 +583,7 @@ function updateActorCombatTimers(actors, dt) {
     actor.hurtCooldown = Math.max(0, actor.hurtCooldown - dt);
     actor.hitStun = Math.max(0, actor.hitStun - dt);
     actor.invulnTime = Math.max(0, actor.invulnTime - dt);
+    actor.hitCancelFlashTime = Math.max(0, Number(actor.hitCancelFlashTime || 0) - dt);
     updateEnemyAiCooldowns(actor, dt);
   });
 }
@@ -538,6 +605,28 @@ function shouldSkipTarget(attacker, target) {
     target.invulnTime > 0 ||
     target.player.isRolling
   );
+}
+
+function cancelHitByActorRule(target, world) {
+  const rule = enemyActorRuleForActor(world, target);
+  const chance = Math.max(0, Math.min(100, Number(rule.hitCancelChance || 0)));
+  if (chance <= 0) return false;
+  if (chance < 100 && Math.random() * 100 >= chance) return false;
+
+  target.hitCancelFlashTime = Math.max(
+    Number(target.hitCancelFlashTime || 0),
+    Math.max(1, Number(rule.hitCancelFlashFrames || 3)) / ACTION_FPS
+  );
+  return true;
+}
+
+function enemyActorRuleForActor(world, actor) {
+  const actorId = actor?.runtimeSourceActorId || actor?.id || '';
+  const rules = world?.enemyRules?.actorRulesByActor || {};
+  return {
+    hitCancelChance: Math.max(0, Math.min(100, Number(rules[actorId]?.hitCancelChance || 0))),
+    hitCancelFlashFrames: Math.max(1, Math.min(120, Number(rules[actorId]?.hitCancelFlashFrames || 3))),
+  };
 }
 
 function applyInteractionDamage({

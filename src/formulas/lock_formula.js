@@ -27,6 +27,7 @@ export const lockFormula = {
         [
           { value: 'left', label: '← 왼쪽' },
           { value: 'right', label: '→ 오른쪽' },
+          { value: 'away', label: '반대' },
         ],
         (value) => context.onChange('direction', value)
       )
@@ -38,5 +39,6 @@ export const lockFormula = {
 };
 
 function normalizeLockDirection(value) {
+  if (value === 'away') return 'away';
   return value === 'left' ? 'left' : 'right';
 }

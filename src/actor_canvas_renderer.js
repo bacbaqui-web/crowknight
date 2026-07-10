@@ -34,6 +34,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   actor.player.glowParts = previousGlowParts;
 
   drawSelectedPartGlow(ctx, actor, selectedActor, selectedGlowParts);
+  if (actor.hitCancelFlashTime > 0) drawHitCancelFlash(ctx, actor);
   if (actor.hurtCooldown > 0) drawHitFlash(ctx, actor);
   if (actor.hurtCooldown > 0) ctx.restore();
   if (flicker) ctx.restore();
@@ -192,6 +193,16 @@ function drawHitFlash(ctx, actor) {
   ctx.globalAlpha *= pulse;
   ctx.filter =
     'brightness(0) saturate(1) invert(18%) sepia(97%) saturate(7480%) hue-rotate(357deg) brightness(118%) contrast(118%)';
+  actor.player.draw(ctx);
+  ctx.restore();
+}
+
+function drawHitCancelFlash(ctx, actor) {
+  const pulse = 0.36 + Math.sin(actor.hitCancelFlashTime * 90) * 0.12;
+
+  ctx.save();
+  ctx.globalAlpha *= pulse;
+  ctx.filter = 'brightness(0) invert(1)';
   actor.player.draw(ctx);
   ctx.restore();
 }

@@ -41,7 +41,7 @@ import { PuppetPlayer } from './actor_runtime_engine.js';
 import { createProjectStateController } from './project_state_controller.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
-import { isPlayerCharacter, isTrashCharacter } from './character_group_data.js';
+import { isPlayerCharacter, isTrashCharacter, normalizeCharacterGroup } from './character_group_data.js';
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
@@ -592,7 +592,18 @@ function setupSelectedRunActor(gameActors = baseGameActors()) {
 
 function runOrderedActors(gameActors = baseGameActors()) {
   if (!gameActors.includes(playerActor)) return gameActors;
-  return [playerActor, ...gameActors.filter((actor) => actor !== playerActor)];
+  return [playerActor, ...gameActors.filter((actor) => actor !== playerActor).sort(compareEnemyRunOrder)];
+}
+
+function compareEnemyRunOrder(a, b) {
+  return enemyRunOrderPriority(a) - enemyRunOrderPriority(b);
+}
+
+function enemyRunOrderPriority(actor) {
+  const group = normalizeCharacterGroup(actor?.group, '');
+  if (group === 'mobs') return 0;
+  if (group === 'bosses') return 1;
+  return 2;
 }
 
 function runActorOrderActive() {

@@ -1,6 +1,6 @@
 import { actionDescriptors } from './action_authoring_data.js';
 import { normalizeCharacterGroup } from './character_group_data.js';
-import { resolveEnemyAiSettings, writeEnemyAiSettings } from './enemy_ai_settings_helper.js';
+import { isEnemyAiActionRegistered, resolveEnemyAiSettings, writeEnemyAiSettings } from './enemy_ai_settings_helper.js';
 
 const ENEMY_AI_GROUPS = new Set(['mobs', 'bosses']);
 
@@ -28,6 +28,7 @@ export function createStageAiPanelController({
     const actor = actors.find((item) => item.id === activeGuide.actorId);
     if (!actor) return null;
     const settings = actor.tuning?.actionSettings?.[activeGuide.actionKey] || {};
+    if (!isEnemyAiActionRegistered(settings)) return null;
     const ai = resolveEnemyAiSettings(settings);
     if (!ai.enabled) return null;
     return {
@@ -91,14 +92,29 @@ export function createStageAiPanelController({
         min: 0.1,
         max: 300,
         step: 0.1,
-      })
+      }),
+      createActorRuleNumberInput(
+        actor.id,
+        '피격 무효 %',
+        'hitCancelChance',
+        actorRule(actor.id, stageRulesController).hitCancelChance,
+        {
+          min: 0,
+          max: 100,
+          step: 1,
+        }
+      )
     );
 
     actorHeader.append(title, spawnFields);
 
     const table = document.createElement('div');
     table.className = 'stage-ai-action-table';
-    table.append(renderHeaderRow(), ...actionDescriptors(actor.tuning).map((action) => renderActionRow(actor, action)));
+    const aiActions = actionDescriptors(actor.tuning).filter((action) =>
+      isEnemyAiActionRegistered(actor.tuning?.actionSettings?.[action.key] || {})
+    );
+    table.append(renderHeaderRow(), ...aiActions.map((action) => renderActionRow(actor, action)));
+    if (!aiActions.length) table.append(emptyMessage('AI 수식이 켜진 Action이 없습니다.'));
 
     block.append(actorHeader, table);
     return block;
@@ -169,6 +185,28 @@ export function createStageAiPanelController({
     return input;
   }
 
+  function createActorRuleNumberInput(actorId, labelText, field, value, { min, max, step }) {
+    const label = document.createElement('label');
+    label.className = 'stage-ai-spawn-field';
+    label.title = labelText;
+    label.addEventListener('click', (event) => event.stopPropagation());
+
+    const text = document.createElement('span');
+    text.textContent = labelText;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.value = String(value ?? 0);
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.dataset.enemyActorRuleField = field;
+    input.dataset.actorId = actorId;
+
+    label.append(text, input);
+    return label;
+  }
+
   function setFieldDataset(input, actorId, actionKey, field) {
     input.dataset.aiField = field;
     input.dataset.actorId = actorId;
@@ -191,6 +229,11 @@ export function createStageAiPanelController({
       updateSpawnField(spawnInput, { commit: false });
       return;
     }
+    const actorRuleInput = event.target.closest?.('[data-enemy-actor-rule-field]');
+    if (actorRuleInput) {
+      updateActorRuleField(actorRuleInput, { commit: false });
+      return;
+    }
     const input = event.target.closest?.('[data-ai-field]');
     if (!input) return;
     updateField(input, { commit: false });
@@ -200,6 +243,11 @@ export function createStageAiPanelController({
     const spawnInput = event.target.closest?.('[data-enemy-actor-spawn-field]');
     if (spawnInput) {
       updateSpawnField(spawnInput, { commit: true });
+      return;
+    }
+    const actorRuleInput = event.target.closest?.('[data-enemy-actor-rule-field]');
+    if (actorRuleInput) {
+      updateActorRuleField(actorRuleInput, { commit: true });
       return;
     }
     const input = event.target.closest?.('[data-ai-field]');
@@ -213,6 +261,16 @@ export function createStageAiPanelController({
     if (!field || !stageRulesController) return;
     beginChange();
     stageRulesController.setEnemyActorSpawnRule?.(actorId, { [field]: input.value });
+    saveState();
+    if (commit) commitChange();
+  }
+
+  function updateActorRuleField(input, { commit = false } = {}) {
+    const field = input.dataset.enemyActorRuleField;
+    const actorId = input.dataset.actorId;
+    if (!field || !stageRulesController) return;
+    beginChange();
+    stageRulesController.setEnemyActorRule?.(actorId, { [field]: input.value });
     saveState();
     if (commit) commitChange();
   }
@@ -246,6 +304,10 @@ export function createStageAiPanelController({
     getActiveGuide,
     sync,
   };
+}
+
+function actorRule(actorId, stageRulesController) {
+  return stageRulesController?.getEnemyActorRule?.(actorId) || { hitCancelChance: 0, hitCancelFlashFrames: 3 };
 }
 
 function isEnemyAiActor(actor) {

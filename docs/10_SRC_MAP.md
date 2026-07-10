@@ -153,6 +153,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `zoom_formula_runtime_helper.js`: 확대 Formula runtime screen zoom resolver.
 - `graph_picker_view.js`: Formula / modifier graph 선택 UI view.
 - `formulas/cast_formula.js`: 시전 Formula definition.
+- `formulas/ai_formula.js`: Enemy AI Action 등록 Formula definition.
 - `formulas/cooldown_formula.js`: 쿨타임 Formula definition.
 - `formulas/velocity_formula.js`: 속도 Formula definition / editor / runtime metadata.
 - `formulas/inertia_formula.js`: 관성 Formula definition.

@@ -1,22 +1,27 @@
 # 99 Task Report
 
-## Player Death Result Delay 재조정
+## 고정 Formula 반대 방향 옵션
 
-### 1. 변경 내용
+### 1. 변경한 UI
 
-- 주인공 사망 후 점수판이 뜨기까지의 지연 시간을 2초로 변경했다.
+- 고정 Formula 방향 선택에 `반대` 옵션을 추가했다.
+- 기존 `왼쪽` / `오른쪽` 옵션은 유지했다.
 
-### 2. 수정 파일
+### 2. 저장 구조
 
-- `src/game_config_data.js`
+- `direction: "away"`를 추가했다.
+- 기존 direction 없는 데이터는 계속 `right`로 normalize한다.
 
-### 3. 실제 적용 값
+### 3. Runtime 적용 방식
 
-- `DEATH_RESULT_DELAY = 2`
+- `left` / `right`는 기존 고정 Formula facing 계산을 유지한다.
+- `away`는 플레이어 위치가 필요한 옵션이라 NPC motion 단계에서 플레이어와 actor 위치를 비교해 계산한다.
+- 플레이어가 actor 왼쪽에 있으면 actor는 오른쪽을 보고, 플레이어가 actor 오른쪽에 있으면 actor는 왼쪽을 본다.
 
-### 4. 이유
+### 4. AI 자동 주시보다 우선 적용
 
-- 3초는 체감상 길어서, 사망 Action 20프레임 / 10fps 기준에 맞춰 2초로 조정했다.
+- `mobs` / `bosses` actor의 자동 플레이어 주시보다 활성 고정 Formula를 먼저 확인한다.
+- 따라서 궁수 / 보스처럼 기본적으로 플레이어를 바라보는 actor도 고정 `반대` 구간에서는 플레이어 반대 방향을 본다.
 
 ### 5. QA 결과
 
@@ -26,5 +31,5 @@
 
 ### 6. 코덱스 의견
 
-- 현재 사망 모션 길이와 가장 직접적으로 맞는 값은 2초다.
-- 이후 사망 Action 길이가 바뀌면 상수 대신 Action frame 길이 기반 자동 계산을 검토할 수 있다.
+- `away`는 target actor 위치가 필요한 값이라 Formula 정의에 계산을 넣지 않고 Runtime motion에서 계산하는 것이 맞다.
+- 장기적으로는 `left` / `right` / `away` 같은 facing resolve를 별도 helper로 빼면 Action Trigger와 NPC motion 양쪽의 중복을 더 줄일 수 있다.

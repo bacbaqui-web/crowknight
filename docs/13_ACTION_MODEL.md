@@ -379,8 +379,10 @@ MVP formula:
 
 - `direction: "left"`이면 활성 구간 동안 왼쪽을 바라본다.
 - `direction: "right"`이면 활성 구간 동안 오른쪽을 바라본다.
+- `direction: "away"`이면 활성 구간 동안 플레이어의 반대 방향을 바라본다.
 - direction이 없는 legacy 데이터는 `right`로 normalize한다.
 - mirror Action에서 원본 기준 direction은 Runtime에서 자동 반전된다. 예: 원본 `right` + mirror 실행이면 실제 facing은 `left`다.
+- 적 자동 주시보다 고정 Formula를 우선한다. 따라서 `away`는 궁수 / 보스처럼 기본적으로 플레이어를 바라보는 actor도 구간 동안 무조건 플레이어 반대 방향을 본다.
 
 공통 원칙:
 
@@ -512,7 +514,7 @@ Runtime
 현재 MVP:
 
 - 속도: `startFrame`~`endFrame` 구간에서 Action Timeline frame 기준 `px/f` velocity를 만든다. Runtime FPS 기준 속도로 변환하지 않는다.
-- 고정: 구간 동안 선택한 direction으로 facing을 강제한다.
+- 고정: 구간 동안 선택한 direction으로 facing을 강제한다. `away` direction은 플레이어의 반대 방향을 바라본다.
 - 보간: Action 전환 포즈를 연결한다.
 - 캔슬: 구간 안에서만 다른 Action으로 전환 가능하게 한다.
 - 연계: 지정한 source Action의 구간 안에서만 target Action 실행을 허용한다.

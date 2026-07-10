@@ -1,4 +1,4 @@
-import { createStageRulesState, normalizeStageRules } from './stage_rules_state.js';
+import { createStageRulesState, normalizeEnemyActorRule, normalizeStageRules } from './stage_rules_state.js';
 
 export function createStageRulesController({ stageRulesState = null, initialRules = null, onChange = null } = {}) {
   const state = stageRulesState || createStageRulesState(initialRules);
@@ -60,6 +60,21 @@ export function createStageRulesController({ stageRulesState = null, initialRule
         [key]: mergePlainObject(resolveEnemyActorSpawnRule(readStageRules(), key), spawnRule),
       };
       return setEnemyRules({ spawnRulesByActor: next }).spawnRulesByActor[key];
+    },
+    getEnemyActorRulesByActor: () => selectEnemyActorRulesByActor(readStageRules()),
+    getEnemyActorRule: (actorId) => resolveEnemyActorRule(readStageRules(), actorId),
+    setEnemyActorRule: (actorId, actorRule) => {
+      const key = String(actorId || '').trim();
+      if (!key) return null;
+      const current = selectEnemyActorRulesByActor(readStageRules());
+      const next = {
+        ...current,
+        [key]: normalizeEnemyActorRule({
+          ...resolveEnemyActorRule(readStageRules(), key),
+          ...actorRule,
+        }),
+      };
+      return setEnemyRules({ actorRulesByActor: next }).actorRulesByActor[key];
     },
     getEnemyGrowthRules: () => selectEnemyGrowthRules(readStageRules()),
     setEnemyGrowthRules: (growth) =>
@@ -129,6 +144,10 @@ function selectEnemySpawnRulesByActor(source) {
   return selectEnemyRules(source).spawnRulesByActor || {};
 }
 
+function selectEnemyActorRulesByActor(source) {
+  return selectEnemyRules(source).actorRulesByActor || {};
+}
+
 function resolveEnemyActorSpawnRule(source, actorId) {
   const key = String(actorId || '').trim();
   const enemyRules = selectEnemyRules(source);
@@ -138,6 +157,11 @@ function resolveEnemyActorSpawnRule(source, actorId) {
     maxAlive: actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1,
     intervalSec: actorRule?.intervalSec ?? enemyRules.spawnRule?.intervalSec ?? 2,
   };
+}
+
+function resolveEnemyActorRule(source, actorId) {
+  const key = String(actorId || '').trim();
+  return normalizeEnemyActorRule(key ? selectEnemyActorRulesByActor(source)?.[key] : null);
 }
 
 function selectEnemyGrowthRules(source) {

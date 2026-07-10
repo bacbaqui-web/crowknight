@@ -149,6 +149,7 @@ function applyCustomActionViewLock(player) {
 }
 
 function lockFormulaFacing(lock, settings, actionFacing) {
+  if (lock.direction === 'away') return null;
   const originalFacing = lock.direction === 'left' ? -1 : 1;
   const mirrorSign = isActionMirrorEnabled(settings) && Number(actionFacing) < 0 ? -1 : 1;
   return originalFacing * mirrorSign;
