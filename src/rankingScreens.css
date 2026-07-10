@@ -7,9 +7,9 @@
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 26px;
+  gap: 28px;
   padding: 28px;
-  background: linear-gradient(180deg, rgba(16, 16, 20, 0.4), rgba(16, 16, 20, 0.88)), rgba(14, 15, 20, 0.62);
+  background: rgba(0, 0, 0, 0.9);
   text-align: center;
   transition:
     opacity 160ms ease,
@@ -22,43 +22,30 @@
   pointer-events: none;
 }
 
-.start-copy {
-  display: grid;
-  gap: 8px;
-}
-
-.eyebrow {
-  margin: 0;
-  color: #93d5ac;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.start-copy h1 {
-  margin: 0;
-  color: #fff;
-  font-size: 68px;
-  line-height: 0.95;
+.title-logo {
+  display: block;
+  width: min(92vw, 1440px);
+  max-height: min(78vh, 890px);
+  object-fit: contain;
 }
 
 .primary-start {
-  min-width: 160px;
-  min-height: 48px;
-  border: 1px solid rgba(147, 213, 172, 0.8);
-  border-radius: 6px;
-  background: #93d5ac;
-  color: #11141a;
-  padding: 0 22px;
+  min-width: 172px;
+  min-height: 50px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  padding: 0 34px;
   font-size: 18px;
-  font-weight: 850;
+  font-weight: 900;
+  letter-spacing: 0;
   cursor: pointer;
 }
 
 .primary-start:hover,
 .primary-start:focus-visible {
-  background: #a7e9c0;
+  background: #e6e6e6;
 }
 
 .primary-start:disabled {
@@ -86,10 +73,10 @@
   gap: 7px;
   min-width: 92px;
   min-height: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 6px;
-  background: rgba(12, 14, 20, 0.52);
-  color: #f7fbff;
+  background: rgba(0, 0, 0, 0.52);
+  color: #fff;
   padding: 0 10px;
   font-size: 17px;
   font-weight: 850;
@@ -102,7 +89,7 @@
   width: 21px;
   height: 21px;
   flex: 0 0 auto;
-  stroke: #93d5ac;
+  stroke: #fff;
   stroke-width: 2.25;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -110,27 +97,49 @@
 }
 
 .run-hud-item svg .skull-eye {
-  fill: #93d5ac;
+  fill: #fff;
 }
 
 .result-screen {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  inset: 0;
   z-index: 4;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  overflow: auto;
+}
+
+.result-title-top {
+  display: block;
+  width: min(30vw, 250px);
+  max-height: 15vh;
+  object-fit: contain;
+}
+
+.result-title-bottom {
+  display: block;
+  width: min(54vw, 420px);
+  max-height: 14vh;
+  object-fit: contain;
+}
+
+.result-panel {
   display: grid;
   grid-template-columns: minmax(250px, 0.95fr) minmax(280px, 1.15fr) 86px;
   gap: 12px;
   align-items: stretch;
   width: min(860px, calc(100vw - 36px));
-  max-height: calc(100vh - 36px);
+  max-height: min(58vh, 540px);
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 6px;
-  background: rgba(10, 11, 16, 0.88);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
-  color: #f8fbff;
-  transform: translate(-50%, -50%);
+  background: rgba(14, 14, 14, 0.96);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
@@ -138,9 +147,9 @@
 .score-register,
 .result-actions {
   min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 6px;
-  background: rgba(18, 20, 28, 0.86);
+  background: rgba(26, 26, 26, 0.92);
 }
 
 .ranking-board {
@@ -155,6 +164,7 @@
 .ranking-board h2,
 .score-register h2 {
   margin: 0 0 8px;
+  color: #fff;
   font-size: 18px;
 }
 
@@ -174,12 +184,12 @@
   min-height: 34px;
   padding: 4px 6px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .ranking-list b {
   grid-row: 1 / 4;
-  color: #93d5ac;
+  color: #fff;
   font-size: 13px;
 }
 
@@ -199,7 +209,7 @@
 .ranking-list p,
 .ranking-list small {
   margin: 0;
-  color: #aeb6c7;
+  color: #bcbcbc;
   font-size: 10px;
   line-height: 1.15;
   overflow: hidden;
@@ -209,7 +219,7 @@
 
 .ranking-empty {
   display: block;
-  color: #aeb6c7;
+  color: #bcbcbc;
 }
 
 .score-details {
@@ -224,17 +234,17 @@
   gap: 4px;
   padding: 10px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .score-details dt {
-  color: #aeb6c7;
+  color: #bcbcbc;
   font-size: 12px;
 }
 
 .score-details dd {
   margin: 0;
-  color: #93d5ac;
+  color: #fff;
   font-size: 20px;
   font-weight: 850;
 }
@@ -247,27 +257,27 @@
 .ranking-form label {
   display: grid;
   gap: 5px;
-  color: #cfd5e3;
+  color: #d8d8d8;
   font-size: 13px;
 }
 
 .ranking-form input,
 .ranking-form textarea {
   width: 100%;
-  border: 1px solid #3b4050;
+  border: 1px solid #5a5a5a;
   border-radius: 5px;
-  background: #11131a;
-  color: #f8fbff;
+  background: #0e0e0e;
+  color: #fff;
   padding: 9px 10px;
   resize: none;
 }
 
 .ranking-form button {
   min-height: 40px;
-  border: 1px solid rgba(147, 213, 172, 0.8);
-  border-radius: 6px;
-  background: #93d5ac;
-  color: #10141a;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
   font-weight: 850;
   cursor: pointer;
 }
@@ -289,7 +299,7 @@
   place-items: center;
   min-width: 0;
   min-height: 64px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
@@ -317,6 +327,7 @@
 .icon-action[href$='x.com/govy9807'] img {
   color: #fff;
   border-radius: 0;
+  filter: grayscale(1);
 }
 
 .icon-action span {
@@ -329,12 +340,13 @@
 
 @media (max-width: 560px) {
   .start-screen {
-    gap: 18px;
+    gap: 22px;
     padding: 22px;
   }
 
-  .start-copy h1 {
-    font-size: 42px;
+  .title-logo {
+    width: min(96vw, 1120px);
+    max-height: 72vh;
   }
 
   .primary-start {
@@ -343,9 +355,25 @@
   }
 
   .result-screen {
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .result-title-top {
+    width: min(46vw, 180px);
+    max-height: 12vh;
+  }
+
+  .result-title-bottom {
+    width: min(74vw, 320px);
+    max-height: 10vh;
+  }
+
+  .result-panel {
     grid-template-columns: 1fr;
     gap: 10px;
     padding: 10px;
+    max-height: 70vh;
     overflow: auto;
   }
 
