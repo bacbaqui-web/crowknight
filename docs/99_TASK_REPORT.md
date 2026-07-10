@@ -1,60 +1,45 @@
 # 99 Task Report
 
-## 시작/결과 화면 타이틀 UI 및 플레이어 중앙 카메라
+## Camera Player Screen Y 기능 추가
 
-### 1. 카메라 변경 내용
+### 1. 의도 정리
 
-- `src/camera_view.js`에서 카메라 focus를 항상 `playerActor.player.x / y` 기준으로 반환하게 했다.
-- 기존 selected actor 중심, floor clamp, zoom별 edit focus 분기는 제거했다.
-- 화면 흔들림은 기존처럼 focus 좌표에 반영한다.
+- 카메라는 플레이어를 계속 따라간다.
+- 플레이어가 점프해도 카메라는 세로로 따라간다.
+- 단, 플레이어가 화면 세로 어디에 보일지는 사용자가 직접 정한다.
+- 실제 물리 바닥 `world.floorY`나 캐릭터 위치를 직접 옮기는 기능이 아니다.
 
-### 2. 시작 화면 변경 내용
+### 2. 저장 구조
 
-- 기존 `Puppet Action Beta`, `Crow Knight`, `게임 시작` 문구를 제거했다.
-- `assets/title/crow_knight_title_2.webp`를 시작 화면 중앙에 배치했다.
-- 시작 화면 타이틀 이미지 표시 크기를 기존 제한 대비 약 2배로 키웠다.
-- 타이틀 바로 아래에 흰색 캡슐형 `PLAY` 버튼을 배치했다.
-- 시작 화면 배경은 `rgba(0, 0, 0, 0.9)`로 변경했다.
+- 기존 `sceneSession.view.floorScreenY` 필드를 호환으로 유지했다.
+- 의미는 “바닥선”이 아니라 “플레이어 화면 기준 높이”로 정리했다.
+- 새 저장 구조 대개편은 하지 않았다.
 
-### 3. 결과 화면 변경 내용
+### 3. Camera Runtime 적용
 
-- 결과 화면 배경도 `rgba(0, 0, 0, 0.9)`로 변경했다.
-- 기존 결과 패널은 `result-panel`로 유지했다.
-- 결과 패널 위에 `assets/title/dashboard_top.webp`를 배치했다.
-- 결과 패널 아래에 `assets/title/dashboard_bottom.webp`를 배치했다.
-- `Run Complete` 문구를 제거했다.
-- 랭킹 등록 메시지 라벨을 `하고 싶은 말`로 변경했다.
-- 다시하기 버튼 SVG를 더 완성도 있는 회전 화살표 형태로 수정했다.
+`src/camera_view.js`에서 플레이어의 화면 Y 위치를 맞추도록 focusY를 계산한다.
 
-### 4. 색상 정리
+```js
+focusY = player.y - (playerScreenY - world.viewH / 2) / zoom - shake.y;
+```
 
-- 시작/결과 화면과 Run HUD의 초록 계열 색을 제거했다.
-- 버튼, 점수, 랭킹 강조색, HUD 아이콘을 흰색/검정/회색 계열로 맞췄다.
-- 인스타/X 아이콘은 grayscale 처리했다.
-- 레진 아이콘은 원본 빨간색을 유지하도록 grayscale 대상에서 제외했다.
+### 4. UI 변경
 
-### 5. 추가된 Title Asset
+- Stage > 스테이지 물리의 기존 `바닥선` 라벨을 `카메라 높이`로 변경했다.
+- 입력값은 플레이어가 화면 세로에서 보일 기준 위치다.
 
-- `assets/title/crow_knight_title.webp`
-- `assets/title/crow_knight_title_2.webp`
-- `assets/title/dashboard_top.webp`
-- `assets/title/dashboard_bottom.webp`
+### 5. Guide 처리
+
+- Stage 탭 점선은 현재 카메라 view 기준으로 `floorScreenY` 화면 위치에 보이도록 유지했다.
+- 카메라가 플레이어를 따라가므로, 이 점선은 플레이어가 화면에서 놓일 목표 높이를 보여주는 가이드 역할을 한다.
 
 ### 6. QA 결과
 
-- 코드 구조 확인 완료.
-- 로컬 dev server는 `http://127.0.0.1:4177/setting.html`로 열렸다.
-- 시작 화면 스크린샷 QA에서 타이틀 이미지와 `PLAY` 버튼만 표시되는 것을 확인했다.
-- title asset 로컬 응답 확인:
-  - `crow_knight_title_2.webp`: `200`
-  - `dashboard_top.webp`: `200`
-  - `dashboard_bottom.webp`: `200`
-- 결과 화면은 DOM/CSS 구조와 asset 경로를 확인했다. 실제 결과 화면 수동 QA는 아직 별도 실행하지 않았다.
 - `npm run check` 통과.
 - `git diff --check` 통과.
+- 브라우저에서 점프 중 카메라 추적과 카메라 높이 입력 반영은 수동 확인이 필요하다.
 
 ### 7. 코덱스 의견
 
-- 결과 화면의 랭킹/등록 로직은 그대로 두고 DOM wrapper만 추가한 방식이라 기능 영향이 작다.
-- 카메라를 플레이어 좌표에 완전히 고정하면 바닥/벽 경계 클램프가 사라지므로, 스테이지 가장자리에서도 플레이어가 항상 가운데에 남는다.
-- 플레이어의 발밑 좌표가 화면 중앙에 오는 구조라, 시각적으로 몸 중심을 정확히 가운데에 두고 싶으면 이후 `player.y - visualCenterOffset` 옵션을 별도로 두는 것이 좋다.
+- 이번 기능은 물리 바닥 조절이 아니라 카메라 framing 조절이다.
+- 기존 `floorScreenY` 이름은 의미가 어긋나지만 저장 호환을 위해 유지하고, UI/문서에서 의미를 바로잡는 방식이 현재 단계에서는 가장 안전하다.

@@ -185,7 +185,7 @@
 
 .background-layer-controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3px;
   cursor: default;
 }
@@ -193,7 +193,7 @@
 .background-compact-input {
   position: relative;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
   min-height: 24px;
   border: 1px solid #384156;
@@ -217,44 +217,23 @@
   font-weight: 900;
 }
 
-.background-compact-input input[type='number'] {
+.background-compact-input input {
   height: 100%;
   min-width: 0;
+  width: 100%;
   border: 0;
   border-left: 1px solid rgba(68, 73, 89, 0.5);
   border-radius: 0;
   background: transparent;
-  padding: 2px 17px 2px 4px;
+  padding: 2px 8px;
+  color: #f3f6ff;
   text-align: right;
   font-size: 12px;
   font-weight: 850;
   cursor: ns-resize;
 }
 
-.background-stepper-buttons {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  display: grid;
-  width: 15px;
-  height: calc(100% - 2px);
-  border-left: 1px solid #353b49;
-}
-
-.background-stepper-buttons button {
-  display: grid;
-  place-items: center;
-  min-width: 0;
-  min-height: 0;
-  border: 0;
-  background: transparent;
-  color: #cdd4e4;
-  font-size: 7px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-}
-
-.background-stepper-buttons button:hover {
-  color: #7cc3a2;
+.background-compact-input input:focus {
+  outline: 1px solid rgba(214, 225, 255, 0.9);
+  outline-offset: -1px;
 }

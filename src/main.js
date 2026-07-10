@@ -218,7 +218,7 @@ const tuningPanel = createTuningPanel({
   downloadSettings: downloadSettingsFromFirebase,
   refreshStagePsdAsset,
 });
-const runtimeDebugHud = createRuntimeDebugHud({ parent: canvas?.parentElement });
+const runtimeDebugHud = isEditorPage ? createRuntimeDebugHud({ parent: canvas?.parentElement }) : { render: () => {} };
 bindKeyboardControls({
   keys,
   pressed,
@@ -414,6 +414,7 @@ function draw() {
     resultOpen,
     isEditPanelOpen: isSettingsPanelOpen(),
     screenZoom: formulaScreenZoom(gameActors, screenZoom),
+    playerScreenY: sceneSession.view?.floorScreenY,
   });
   drawWorld(ctx, world, view, sceneSession);
 
@@ -434,7 +435,7 @@ function draw() {
   particleEffects.drawDeathParticles();
   renderActors.forEach((actor) => drawAttackTrail(ctx, actor, effectAssets));
 
-  tuningPanel.drawSettingsDebugBoxes();
+  tuningPanel.drawSettingsDebugBoxes(view);
   ctx.restore();
   drawSceneForeground(ctx, world, view, sceneSession.background);
 

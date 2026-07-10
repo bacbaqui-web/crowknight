@@ -52,6 +52,7 @@ export function getTuningPanelElements(panel) {
     backgroundRefresh: document.querySelector('#backgroundRefresh'),
     backgroundReset: document.querySelector('#backgroundReset'),
     backgroundLayerList: document.querySelector('#backgroundLayerList'),
+    stageFloorScreenY: document.querySelector('#stageFloorScreenY'),
     worldPhysicsGravity: document.querySelector('#worldPhysicsGravity'),
     worldPhysicsInertia: document.querySelector('#worldPhysicsInertia'),
     worldPhysicsAirControl: document.querySelector('#worldPhysicsAirControl'),

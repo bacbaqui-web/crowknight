@@ -85,17 +85,13 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
 
     const layerId = target.closest('[data-layer-id]')?.dataset.layerId;
     const field = target.dataset.backgroundField;
-    updateLayer(layerId, { [field]: Number(target.value) });
+    const value = Number(target.value);
+    if (!Number.isFinite(value)) return;
+    updateLayer(layerId, { [field]: value });
     syncLayerFieldInputs(target);
   }
 
   function handleClick(event) {
-    const stepButton = event.target.closest('[data-background-step]');
-    if (stepButton) {
-      stepBackgroundInput(stepButton);
-      return;
-    }
-
     const enabledButton = event.target.closest('[data-background-enabled]');
     if (enabledButton) {
       const layerId = enabledButton.closest('[data-layer-id]')?.dataset.layerId;
@@ -165,21 +161,8 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
     });
   }
 
-  function stepBackgroundInput(button) {
-    const input = button.closest('.background-compact-input')?.querySelector('[data-background-field]');
-    if (!input) return;
-
-    const step = Number(input.step) || 1;
-    const direction = Number(button.dataset.backgroundStep) || 0;
-    const min = Number(input.min);
-    const max = Number(input.max);
-    const nextValue = clampBackgroundNumber(Number(input.value) + step * direction, min, max);
-    input.value = formatBackgroundInputValue(nextValue, step);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
   function handlePointerDown(event) {
-    if (event.button !== 0 || event.target.closest('[data-background-step]')) return;
+    if (event.button !== 0) return;
 
     const control = event.target.closest('.background-compact-input');
     if (!control) return;
@@ -195,9 +178,9 @@ export function createBackgroundPanelController({ elements, getSceneSession, sav
       startValue: Number(input.value) || 0,
       lastStepCount: 0,
       moved: false,
-      min: Number(input.min),
-      max: Number(input.max),
-      step: Number(input.step) || 1,
+      min: Number(input.dataset.min),
+      max: Number(input.dataset.max),
+      step: Number(input.dataset.step) || 1,
     };
     control.classList.add('is-number-dragging');
     control.setPointerCapture?.(event.pointerId);

@@ -75,7 +75,8 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   const imageState = getCachedImage(layer.imageSrc);
   if (!imageState.loaded || imageState.error) return;
 
-  const baseLayout = getCoverImageLayout(world, imageState.image, {
+  const layerCanvas = getPsdLayerCanvasSize(background, layer, imageState.image);
+  const baseLayout = getCoverImageLayout(world, layerCanvas, {
     opacity: 1,
     offsetX: 0,
     offsetY: 0,
@@ -88,16 +89,21 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   if (width <= 0 || height <= 0) return;
 
   const scrollX = layer.role === 'ground' ? getGroundScrollX(world, view) : view.focusX * layer.influence;
-  const scrollOffset = modulo(scrollX, width);
-  const naturalX = baseLayout.x + layer.offsetX;
-  const naturalY = baseLayout.y + layer.offsetY + getClipLayerVerticalDeltaY(world, view, layer);
-  const startX = naturalX - scrollOffset - width;
+  const pixelRatio = currentDevicePixelRatio();
+  const tileStep = Math.max(1 / pixelRatio, width + Number(layer.tileSpacing || 0));
+  const scrollOffset = modulo(scrollX, tileStep);
+  const naturalX = baseLayout.x + getPsdLayerOriginX(layer) * imageScaleX + layer.offsetX;
+  const naturalY =
+    baseLayout.y +
+    getPsdLayerOriginY(layer) * imageScaleY +
+    layer.offsetY +
+    getClipLayerVerticalDeltaY(world, view, layer);
+  const startX = naturalX - scrollOffset - tileStep;
 
   drawWithScreenZoom(ctx, world, getPsdLayerScreenZoom(view, layer), () => {
     ctx.save();
     ctx.globalAlpha = clamp(layer.opacity, 0, 1);
-    const pixelRatio = currentDevicePixelRatio();
-    for (let x = startX; x < world.viewW + width; x += width) {
+    for (let x = startX; x < world.viewW + width; x += tileStep) {
       const left = alignDevicePixelDown(x, pixelRatio);
       const right = alignDevicePixelUp(x + width, pixelRatio);
       const drawWidth = Math.max(1 / pixelRatio, right - left);
@@ -115,6 +121,23 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
     }
     ctx.restore();
   });
+}
+
+function getPsdLayerCanvasSize(background, layer, image) {
+  const width = Number(layer?.exportCanvasWidth ?? background?.psdPreview?.width);
+  const height = Number(layer?.exportCanvasHeight ?? background?.psdPreview?.height);
+  if (Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0) return { width, height };
+  return image;
+}
+
+function getPsdLayerOriginX(layer) {
+  const value = Number(layer?.originX ?? layer?.cropX ?? 0);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function getPsdLayerOriginY(layer) {
+  const value = Number(layer?.originY ?? layer?.cropY ?? 0);
+  return Number.isFinite(value) ? value : 0;
 }
 
 function getPsdLayerScreenZoom(view, layer) {

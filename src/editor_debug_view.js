@@ -31,13 +31,17 @@ export function drawTuningPanelDebugBoxes(
     activeActionKey = null,
     activeWorkflowSession = null,
     stageAiGuide = null,
+    stageFloorGuide = null,
   } = {}
 ) {
   if (!isSettingsPanelOpen()) return;
 
   drawActionRangeFormulaGuide(ctx, selectedActor, activeActionKey);
   drawActionProjectileFormulaGuide(ctx, selectedActor, activeActionKey);
-  if (activeWorkflowSession === 'stage') drawStageAiRangeGuide(ctx, stageAiGuide);
+  if (activeWorkflowSession === 'stage') {
+    drawStageFloorGuide(ctx, stageFloorGuide);
+    drawStageAiRangeGuide(ctx, stageAiGuide);
+  }
 
   if (isCollisionSectionOpen()) {
     drawSetupFallbackInteractionPreview(ctx, selectedActor, activeSetupPartKey);
@@ -57,6 +61,21 @@ export function drawTuningPanelDebugBoxes(
   if (!effectKey) return;
 
   drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
+}
+
+function drawStageFloorGuide(ctx, guide) {
+  const floorY = Number(guide?.floorY);
+  if (!Number.isFinite(floorY)) return;
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(245, 247, 251, 0.82)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([18, 10]);
+  ctx.beginPath();
+  ctx.moveTo(-100000, floorY);
+  ctx.lineTo(100000, floorY);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawStageAiRangeGuide(ctx, guide) {

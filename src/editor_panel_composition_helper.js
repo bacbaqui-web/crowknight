@@ -104,10 +104,14 @@ export function createTuningPanelComposition({
     },
   });
   const stageRulesPanelController = createStageRulesPanelController({
+    actors,
     beginChange: beginUndoSnapshot,
     commitChange: commitUndoSnapshot,
     elements,
+    getSceneSession,
+    saveState,
     stageRulesController,
+    world,
   });
   const stageAiPanelController = createStageAiPanelController({
     actors,

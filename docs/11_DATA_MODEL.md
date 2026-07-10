@@ -528,7 +528,9 @@ Asset reference 규칙:
 - 새 캐릭터는 `id`, `type`, `name`, `folder`, `storageFolder`, `psdFileName`, `deletable`을 가진다. `folder`는 로컬 `assets/characters/{folder}`와 Firebase Storage `crow-knight/assets/characters/{folder}`를 연결하는 기준이다.
 - `effectAssets`: 이펙트 PNG source를 저장한다. actor별 업로드 source key는 `{actorId}/{imageKey}`이며 로컬 업로드 source는 `assets/effects/{actorId}/{imageKey}.png`를 사용한다. 기존 `assets/effects/custom/{imageKey}.png`는 fallback source로만 남긴다.
 - `sessions[id].background.psdPreview`: 배경 preview URL과 크기 metadata를 저장한다. 로컬 PSD export는 `assets/backgrounds/current/background-preview.webp`만 사용하며, 배포 metadata에는 PSD source URL을 넣지 않는다.
-- `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다. 로컬 PSD layer export는 `assets/backgrounds/current/layers/*.webp`만 사용한다.
+- `sessions[id].background.psdLayers`: 배경 PSD layer 이미지 URL과 layer별 편집 metadata를 저장한다. 로컬 PSD layer export는 `assets/backgrounds/current/layers/*.webp`만 사용한다. 각 layer는 수동 반복 간격 `tileSpacing`을 가질 수 있다.
+- PSD layer WebP는 반복 폭을 위해 alpha가 없는 좌우 column만 제거한 cropped image다. 위/아래 여백은 유지한다. `originX`는 cropped image의 좌측이 PSD preview export canvas 안에서 있던 X 위치이며, `originY`는 0이다. `cropX` / `cropWidth`는 좌우 crop bounds, `cropY = 0`, `cropHeight = exportCanvasHeight`다. Renderer는 첫 타일 배치에만 `originX`를 사용하고, 반복 간격은 cropped image natural width와 `tileSpacing`만 사용한다.
+- `sessions[id].view.floorScreenY`: legacy 이름을 유지하는 카메라 기준 높이 값이다. 플레이어가 화면 세로에서 보일 Y 좌표이며, Run 카메라는 플레이어를 계속 따라가되 이 값만큼 화면상 위치를 오프셋한다.
 - `releaseVersion`: 배포 업로드 성공 시 증가하는 cache busting 버전이다. Storage URL은 `?v=releaseVersion`을 사용한다.
 - 상단 Firebase 업로드 버튼은 로컬 `assets`의 PNG/WebP를 Firebase Storage에 올린 뒤 Project State metadata를 Firestore에 저장한다.
 - 상단 Firebase 다운로드 버튼은 제거한다. `setting.html`은 로컬 제작 상태를 Source of Truth로 사용하고, `index.html`만 Firebase metadata를 읽는다.

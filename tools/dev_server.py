@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import importlib
 import json
 import shutil
 from functools import partial
@@ -9,7 +10,6 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from effect_asset_exporter import effect_asset_path, effect_source_psd_path, export_effect_asset
 from export_character_psd_parts import export_character_parts, find_character_psd
-from psd_preview_exporter import export_psd_preview
 
 
 class CrowKnightHandler(SimpleHTTPRequestHandler):
@@ -449,6 +449,7 @@ def export_background_preview(source_path, output_path, manifest_path, layer_out
     suffix = source_path.suffix.lower()
     if suffix != ".psd":
         raise RuntimeError("Background source must be a PSD file")
+    export_psd_preview = current_psd_preview_exporter()
     manifest = export_psd_preview(source_path, output_path.with_suffix(".webp"), manifest_path, layer_output_dir)
     try:
         manifest["assetBase"] = f"./{manifest_path.parent.resolve().relative_to(CrowKnightHandler.root_dir).as_posix()}"
@@ -460,6 +461,11 @@ def export_background_preview(source_path, output_path, manifest_path, layer_out
         manifest["sourceUrl"] = ""
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return manifest
+
+
+def current_psd_preview_exporter():
+    module = importlib.import_module("psd_preview_exporter")
+    return importlib.reload(module).export_psd_preview
 
 
 def main():

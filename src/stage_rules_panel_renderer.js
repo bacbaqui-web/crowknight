@@ -12,6 +12,16 @@ const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
     fields: [
       {
         type: 'number',
+        id: 'stageFloorScreenY',
+        label: '카메라 높이',
+        min: 0,
+        max: 4000,
+        step: 1,
+        unit: 'px',
+        title: '플레이어가 화면 세로에서 보일 기준 위치입니다.',
+      },
+      {
+        type: 'number',
         id: 'worldPhysicsGravity',
         label: '중력',
         min: 0,

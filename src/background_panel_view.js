@@ -53,6 +53,7 @@ export function createBackgroundLayerItem(layer, index, layerCount) {
     createCompactInput('X', 'offsetX', layer.offsetX, -600, 600, 1),
     createCompactInput('Y', 'offsetY', layer.offsetY, -600, 600, 1),
     createCompactInput('W', 'scale', layer.scale, 0.2, 3, 0.05),
+    createCompactInput('간격', 'tileSpacing', layer.tileSpacing, -200, 400, 1),
     createCompactInput('V', 'verticalInfluence', layer.verticalInfluence, 0, 2, 0.05),
     createCompactInput('O', 'opacity', layer.opacity, 0, 1, 0.05)
   );
@@ -72,6 +73,7 @@ export function renderBackgroundLayerSignature(layers) {
         layer.imageSrc,
         layer.influence,
         layer.verticalInfluence,
+        layer.tileSpacing,
         layer.order,
       ].join(':')
     )
@@ -106,19 +108,15 @@ function createCompactInput(labelText, field, value, min, max, step) {
   label.textContent = labelText;
 
   const input = document.createElement('input');
-  input.type = 'number';
-  input.min = min;
-  input.max = max;
-  input.step = step;
+  input.type = 'text';
+  input.inputMode = 'decimal';
   input.value = formatBackgroundInputValue(value, step);
   input.dataset.backgroundField = field;
+  input.dataset.min = String(min);
+  input.dataset.max = String(max);
+  input.dataset.step = String(step);
 
-  const steppers = document.createElement('span');
-  steppers.className = 'background-stepper-buttons';
-  steppers.innerHTML =
-    '<button type="button" data-background-step="1" aria-label="값 증가">▲</button><button type="button" data-background-step="-1" aria-label="값 감소">▼</button>';
-
-  wrap.append(label, input, steppers);
+  wrap.append(label, input);
   return wrap;
 }
 

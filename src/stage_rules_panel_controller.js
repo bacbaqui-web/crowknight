@@ -1,10 +1,14 @@
 export function createStageRulesPanelController({
   elements,
+  getSceneSession = () => null,
+  saveState = () => {},
   stageRulesController,
+  world = null,
   beginChange = () => {},
   commitChange = () => {},
 } = {}) {
   const {
+    stageFloorScreenY,
     worldPhysicsGravity,
     worldPhysicsInertia,
     worldPhysicsAirControl,
@@ -13,6 +17,7 @@ export function createStageRulesPanelController({
     worldPhysicsCameraShakeDecay,
   } = elements;
 
+  bindStageFloorScreenInput(stageFloorScreenY);
   bindWorldPhysicsNumberInput(worldPhysicsGravity, 'gravity');
   bindWorldPhysicsNumberInput(worldPhysicsInertia, 'inertia');
   bindWorldPhysicsNumberInput(worldPhysicsAirControl, 'airControl');
@@ -30,6 +35,12 @@ export function createStageRulesPanelController({
     input?.addEventListener('blur', commitChange);
   }
 
+  function bindStageFloorScreenInput(input) {
+    input?.addEventListener('input', () => updateStageFloorScreenY(input.value));
+    input?.addEventListener('change', commitChange);
+    input?.addEventListener('blur', commitChange);
+  }
+
   function bindWorldPhysicsCheckboxInput(input, prop) {
     input?.addEventListener('change', () => {
       updateWorldPhysicsValue(prop, input.checked ? 1 : 0);
@@ -39,6 +50,7 @@ export function createStageRulesPanelController({
 
   function renderWorldPhysicsPanel() {
     const rules = stageRulesController.getWorldPhysicsRules();
+    syncNumberInput(stageFloorScreenY, currentFloorScreenY());
     syncNumberInput(worldPhysicsGravity, rules.gravity);
     syncNumberInput(worldPhysicsInertia, rules.inertia);
     syncNumberInput(worldPhysicsAirControl, rules.airControl);
@@ -53,6 +65,23 @@ export function createStageRulesPanelController({
     renderWorldPhysicsPanel();
   }
 
+  function updateStageFloorScreenY(value) {
+    beginChange();
+    const session = getSceneSession();
+    if (session) {
+      session.view ||= {};
+      session.view.floorScreenY = clampNumber(value, 0, 4000, currentFloorScreenY());
+    }
+    saveState();
+    renderWorldPhysicsPanel();
+  }
+
+  function currentFloorScreenY() {
+    const sessionValue = getSceneSession()?.view?.floorScreenY;
+    if (Number.isFinite(sessionValue)) return sessionValue;
+    return Number.isFinite(world?.viewH) ? Math.round(world.viewH / 2) : 480;
+  }
+
   return {
     sync,
   };
@@ -64,4 +93,10 @@ function syncNumberInput(input, value) {
 
 function syncCheckboxInput(input, value) {
   if (input) input.checked = Number(value || 0) >= 0.5;
+}
+
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, number));
 }

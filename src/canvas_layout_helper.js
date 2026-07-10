@@ -1,5 +1,5 @@
-const INITIAL_DEVICE_PIXEL_RATIO = currentDevicePixelRatio();
-let fullStageLayoutSize = null;
+const FULL_STAGE_VIEW_HEIGHT = 960;
+const FULL_STAGE_FLOOR_OFFSET = 110;
 
 export function syncCanvasToLayout({ canvas, world, actors = [], isFullStage, adjustActors = false }) {
   if (!isFullStage) {
@@ -8,17 +8,17 @@ export function syncCanvasToLayout({ canvas, world, actors = [], isFullStage, ad
     return;
   }
 
-  fullStageLayoutSize ||= measureFullStageLayoutSize(canvas, world);
-  const { width, height } = fullStageLayoutSize;
-  const previousFloorY = world.floorY;
-  const nextFloorY = height - 110;
+  const { cssWidth, cssHeight, worldWidth, worldHeight } = measureFullStageLayoutSize(canvas, world);
+  const automaticFloorY = worldHeight - FULL_STAGE_FLOOR_OFFSET;
+  const previousFloorY = Number.isFinite(world.floorY) ? world.floorY : automaticFloorY;
+  const nextFloorY = Number.isFinite(world.floorY) ? world.floorY : automaticFloorY;
 
-  if (canvas.width !== width) canvas.width = width;
-  if (canvas.height !== height) canvas.height = height;
-  canvas.style.setProperty('--stage-canvas-width', `${width}px`);
-  canvas.style.setProperty('--stage-canvas-height', `${height}px`);
-  world.viewW = width;
-  world.viewH = height;
+  if (canvas.width !== worldWidth) canvas.width = worldWidth;
+  if (canvas.height !== worldHeight) canvas.height = worldHeight;
+  canvas.style.setProperty('--stage-canvas-width', `${cssWidth}px`);
+  canvas.style.setProperty('--stage-canvas-height', `${cssHeight}px`);
+  world.viewW = worldWidth;
+  world.viewH = worldHeight;
   world.floorY = nextFloorY;
 
   if (!adjustActors) return;
@@ -30,15 +30,16 @@ export function syncCanvasToLayout({ canvas, world, actors = [], isFullStage, ad
   });
 }
 
-function currentDevicePixelRatio() {
-  return Number.isFinite(window.devicePixelRatio) && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
-}
-
 function measureFullStageLayoutSize(canvas, world) {
   const rect = canvas.getBoundingClientRect();
-  const pageZoomCompensation = currentDevicePixelRatio() / INITIAL_DEVICE_PIXEL_RATIO;
+  const cssWidth = Math.max(1, Math.round(rect.width || window.innerWidth || world.viewW || 960));
+  const cssHeight = Math.max(1, Math.round(rect.height || window.innerHeight || world.viewH || FULL_STAGE_VIEW_HEIGHT));
+  const aspect = cssWidth / cssHeight;
+
   return {
-    width: Math.max(320, Math.round((rect.width || window.innerWidth || world.viewW) * pageZoomCompensation)),
-    height: Math.max(320, Math.round((rect.height || window.innerHeight || world.viewH) * pageZoomCompensation)),
+    cssWidth,
+    cssHeight,
+    worldWidth: Math.max(1, Math.round(FULL_STAGE_VIEW_HEIGHT * aspect)),
+    worldHeight: FULL_STAGE_VIEW_HEIGHT,
   };
 }

@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Start / Result Screen Title UI</p>
+            <p>Camera Player Screen Y</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>게임 시작/결과 화면을 신규 title asset 중심의 흑백 UI로 정리하고 플레이어를 항상 화면 중앙에 둔다.</p>
+            <p>카메라가 플레이어를 따라가되 플레이어의 화면 세로 기준 위치를 조절하게 한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>타이틀 화면 / 결과 화면 / 플레이어 중앙 카메라 수정</p>
+            <p>카메라 높이 기능 추가</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>시작 화면은 타이틀 이미지와 PLAY 버튼만 표시한다.</li>
-              <li>결과 화면은 검정 오버레이와 dashboard 장식 이미지를 사용한다.</li>
-              <li>카메라는 항상 플레이어 좌표를 화면 중앙으로 삼는다.</li>
+              <li>카메라가 플레이어를 계속 따라가게 한다.</li>
+              <li>플레이어가 화면 세로 어디에 보일지 입력값으로 조절한다.</li>
+              <li>기존 `floorScreenY` 저장값을 호환으로 재사용한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`crow_knight_title_2.webp`와 PLAY 버튼을 시작 화면 중앙에 배치했다.</li>
-              <li>`dashboard_top.webp` / `dashboard_bottom.webp`를 결과 패널 위아래에 배치했다.</li>
-              <li>시작/결과/HUD 색상을 흰색/검정/회색 계열로 정리했다.</li>
+              <li>`src/camera_view.js`에서 `playerScreenY` 기반 focusY 계산을 추가했다.</li>
+              <li>`src/main.js`에서 `sceneSession.view.floorScreenY`를 `playerScreenY`로 전달했다.</li>
+              <li>Stage UI 라벨을 `바닥선`에서 `카메라 높이`로 변경했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 시작 화면과 결과 화면의 실제 배치 QA가 필요하다.</li>
-              <li>플레이어 발밑 좌표가 아닌 몸 중심 기준 카메라가 필요하면 별도 offset 옵션을 검토한다.</li>
+              <li>브라우저에서 점프 중 카메라 추적 수동 QA가 필요하다.</li>
+              <li>카메라 높이 입력값에 따라 플레이어 화면 위치가 바뀌는지 수동 QA가 필요하다.</li>
             </ul>
           </div>
         </div>
@@ -236,25 +236,25 @@
               <li>
                 <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>시작 화면에 기존 문구 없이 타이틀 이미지와 PLAY 버튼만 보이는지 확인한다.</span>
+                  <span>`camera_view.js`가 playerScreenY 기반 focusY를 계산하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>결과 화면에 dashboard top/bottom 이미지와 결과 패널이 함께 보이는지 확인한다.</span>
+                  <span>`main.js`가 저장된 `floorScreenY`를 `playerScreenY`로 전달하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>게임 중 플레이어가 항상 화면 중앙에 유지되는지 확인한다.</span>
+                  <span>Stage UI가 `카메라 높이`로 표시되는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>결과 화면에서 Run Complete 문구와 초록색 강조색이 사라졌는지 확인한다.</span>
+                  <span>점프 중에도 카메라가 플레이어를 따라가고 화면 위치 오프셋을 유지하는지 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -265,13 +265,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 이번 타이틀 화면 작업 내용만 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 이번 카메라 높이 기능만 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>결과 화면의 랭킹 저장/등록 로직은 유지됐는지 확인한다.</span>
+                  <span>docs/11_DATA_MODEL.md가 `floorScreenY`의 새 의미를 설명하는지 확인한다.</span>
                 </label>
               </li>
               <li>

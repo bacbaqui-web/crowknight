@@ -105,6 +105,7 @@ export function createDefaultWorldSettings() {
 export function createDefaultViewSettings() {
   return {
     screenZoom: DEFAULT_SCREEN_ZOOM,
+    floorScreenY: null,
   };
 }
 
@@ -158,6 +159,7 @@ export function normalizeSceneView(saved) {
   const defaults = createDefaultViewSettings();
   return {
     screenZoom: clampNumber(saved?.screenZoom, MIN_SCREEN_ZOOM, MAX_SCREEN_ZOOM, defaults.screenZoom),
+    floorScreenY: Number.isFinite(saved?.floorScreenY) ? clampNumber(saved.floorScreenY, 0, 4000, 480) : null,
   };
 }
 
@@ -263,6 +265,7 @@ export function mergePsdBackgroundLayers(savedLayers, manifestLayers, { useManif
       const manifestName = nonEmptyString(manifestLayer?.name);
       const saved = savedById.get(id) || savedByName.get(manifestName);
       const hasLayerImage = typeof manifestLayer?.image === 'string' && manifestLayer.image.trim();
+      const isEmptyLayer = manifestLayer?.empty === true;
       const savedHadLayerImage = typeof saved?.imageSrc === 'string' && saved.imageSrc.trim();
       return normalizePsdBackgroundLayer(
         {
@@ -270,11 +273,26 @@ export function mergePsdBackgroundLayers(savedLayers, manifestLayers, { useManif
           id,
           name: manifestName || saved?.name || `레이어 ${index + 1}`,
           sourceId: manifestLayer?.sourceId ?? saved?.sourceId ?? null,
-          imageSrc: hasLayerImage ? psdManifestLayerImageSrc(manifestLayer.image) : saved?.imageSrc,
-          enabled: saved?.enabled ?? manifestLayer?.visible ?? true,
+          imageSrc: isEmptyLayer ? '' : hasLayerImage ? psdManifestLayerImageSrc(manifestLayer.image) : saved?.imageSrc,
+          enabled: isEmptyLayer ? false : (saved?.enabled ?? manifestLayer?.visible ?? true),
           opacity: saved?.opacity ?? manifestLayer?.opacity ?? 1,
           offsetX: hasLayerImage && !savedHadLayerImage ? 0 : (saved?.offsetX ?? manifestLayer?.offsetX ?? 0),
           offsetY: hasLayerImage && !savedHadLayerImage ? 0 : (saved?.offsetY ?? manifestLayer?.offsetY ?? 0),
+          empty: isEmptyLayer,
+          sourceWidth: manifestLayer?.sourceWidth ?? saved?.sourceWidth,
+          sourceHeight: manifestLayer?.sourceHeight ?? saved?.sourceHeight,
+          exportCanvasWidth: manifestLayer?.exportCanvasWidth ?? saved?.exportCanvasWidth,
+          exportCanvasHeight: manifestLayer?.exportCanvasHeight ?? saved?.exportCanvasHeight,
+          cropX: manifestLayer?.cropX ?? saved?.cropX,
+          cropY: manifestLayer?.cropY ?? saved?.cropY,
+          cropWidth: manifestLayer?.cropWidth ?? saved?.cropWidth,
+          cropHeight: manifestLayer?.cropHeight ?? saved?.cropHeight,
+          originX: manifestLayer?.originX ?? saved?.originX,
+          originY: manifestLayer?.originY ?? saved?.originY,
+          sourceCropX: manifestLayer?.sourceCropX ?? saved?.sourceCropX,
+          sourceCropY: manifestLayer?.sourceCropY ?? saved?.sourceCropY,
+          sourceCropWidth: manifestLayer?.sourceCropWidth ?? saved?.sourceCropWidth,
+          sourceCropHeight: manifestLayer?.sourceCropHeight ?? saved?.sourceCropHeight,
           order: useManifestOrder ? index : saved?.order,
         },
         index
@@ -310,8 +328,23 @@ function normalizePsdBackgroundLayer(layer, fallbackOrder) {
     sourceId: Number.isFinite(layer?.sourceId) ? layer.sourceId : null,
     name: nonEmptyString(layer?.name) || id,
     imageSrc: typeof layer?.imageSrc === 'string' ? layer.imageSrc : '',
+    empty: layer?.empty === true,
     role,
     enabled: layer?.enabled !== false,
+    sourceWidth: finiteOrNull(layer?.sourceWidth),
+    sourceHeight: finiteOrNull(layer?.sourceHeight),
+    exportCanvasWidth: finiteOrNull(layer?.exportCanvasWidth),
+    exportCanvasHeight: finiteOrNull(layer?.exportCanvasHeight),
+    cropX: finiteOrNull(layer?.cropX),
+    cropY: finiteOrNull(layer?.cropY),
+    cropWidth: finiteOrNull(layer?.cropWidth),
+    cropHeight: finiteOrNull(layer?.cropHeight),
+    originX: finiteOrNull(layer?.originX),
+    originY: finiteOrNull(layer?.originY),
+    sourceCropX: finiteOrNull(layer?.sourceCropX),
+    sourceCropY: finiteOrNull(layer?.sourceCropY),
+    sourceCropWidth: finiteOrNull(layer?.sourceCropWidth),
+    sourceCropHeight: finiteOrNull(layer?.sourceCropHeight),
     influence: clampNumber(layer?.influence, 0, 2, defaultPsdLayerInfluence(fallbackOrder)),
     verticalInfluence: clampNumber(
       layer?.verticalInfluence,
@@ -321,10 +354,15 @@ function normalizePsdBackgroundLayer(layer, fallbackOrder) {
     ),
     offsetX: clampNumber(layer?.offsetX, -1200, 1200, 0),
     offsetY: clampNumber(layer?.offsetY, -1200, 1200, 0),
+    tileSpacing: clampNumber(layer?.tileSpacing, -200, 400, 0),
     scale: clampNumber(layer?.scale, 0.2, 3, 1),
     opacity: clampNumber(layer?.opacity, 0, 1, 1),
     order: clampNumber(layer?.order, -1000, 1000, fallbackOrder),
   };
+}
+
+function finiteOrNull(value) {
+  return Number.isFinite(value) ? value : null;
 }
 
 function defaultPsdLayerInfluence(index) {

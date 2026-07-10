@@ -87,14 +87,27 @@ export function createTuningPanel({
     });
   }
 
-  function drawSettingsDebugBoxes() {
+  function drawSettingsDebugBoxes(view = null) {
     drawTuningPanelDebugBoxes(ctx, selectedActor, effectAssets, {
       activeSetupPartKey: selectionState.getActivePartKeyGlobal(),
       activeActionPartKey: currentActionActiveActionPartKey(),
       activeActionKey: currentOpenEditContext() === EDIT_CONTEXT_ACTION ? getCurrentActionKey() : null,
       activeWorkflowSession: workflowSessionState.getActiveSession(),
       stageAiGuide: stageAiPanelController?.getActiveGuide?.() || null,
+      stageFloorGuide: stageFloorGuideFromView(view),
     });
+  }
+
+  function stageFloorGuideFromView(view) {
+    const screenY = Number(getSceneSession()?.view?.floorScreenY);
+    if (!Number.isFinite(screenY) || !view || !Number.isFinite(view.focusY) || !Number.isFinite(view.zoom)) {
+      return { floorY: world.floorY };
+    }
+    const zoom = view.zoom || 1;
+    return {
+      floorY: view.focusY + (screenY - world.viewH / 2) / zoom,
+      screenY,
+    };
   }
 
   function getEditHandleGeometry() {

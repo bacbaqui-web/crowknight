@@ -45,6 +45,7 @@ def export_psd_layers(psd, layer_output_dir, runtime_dir):
 
     layer_output_dir.mkdir(parents=True, exist_ok=True)
     layers = []
+    preview_width, preview_height = scaled_dimension(psd.width, psd.height)
     for index, layer in enumerate(flatten_layers(psd), start=1):
         layer_id = stable_layer_id(layer, index)
         output_path = layer_output_dir / f"{layer_id}.webp"
@@ -54,30 +55,73 @@ def export_psd_layers(psd, layer_output_dir, runtime_dir):
 
         canvas = transparent_canvas(psd.width, psd.height)
         composite_layer_image(canvas, image.convert("RGBA"), layer.left, layer.top)
-        export_width, export_height = save_webp(canvas, output_path)
+        cropped = crop_transparent_x_bounds(downscale_image_for_export(canvas))
 
-        layers.append(
+        layer_entry = {
+            "id": layer_id,
+            "sourceId": valid_layer_source_id(layer, index),
+            "rowId": index,
+            "name": layer.name or f"레이어 {index}",
+            "visible": bool(layer.visible),
+            "sourceOffsetX": int(layer.left or 0),
+            "sourceOffsetY": int(layer.top or 0),
+            "sourceWidth": psd.width,
+            "sourceHeight": psd.height,
+            "sourceCanvasWidth": psd.width,
+            "sourceCanvasHeight": psd.height,
+            "exportCanvasWidth": preview_width,
+            "exportCanvasHeight": preview_height,
+            "maxDimension": PSD_BACKGROUND_MAX_DIMENSION,
+            "offsetX": 0,
+            "offsetY": 0,
+            "opacity": clamp_opacity(getattr(layer, "opacity", 255)),
+        }
+
+        if cropped is None:
+            layer_entry.update(
+                {
+                    "empty": True,
+                    "visible": False,
+                    "width": 0,
+                    "height": 0,
+                    "exportWidth": 0,
+                    "exportHeight": 0,
+                    "cropX": 0,
+                    "cropY": 0,
+                    "cropWidth": 0,
+                    "cropHeight": 0,
+                    "originX": 0,
+                    "originY": 0,
+                    "image": "",
+                }
+            )
+            layers.append(layer_entry)
+            continue
+
+        cropped_image, crop = cropped
+        export_width, export_height = save_webp(cropped_image, output_path)
+        source_crop = export_crop_to_source_crop(crop, psd.width, psd.height, preview_width, preview_height)
+        layer_entry.update(
             {
-                "id": layer_id,
-                "sourceId": valid_layer_source_id(layer, index),
-                "rowId": index,
-                "name": layer.name or f"레이어 {index}",
-                "visible": bool(layer.visible),
-                "sourceOffsetX": int(layer.left or 0),
-                "sourceOffsetY": int(layer.top or 0),
-                "sourceWidth": psd.width,
-                "sourceHeight": psd.height,
+                "empty": False,
                 "width": export_width,
                 "height": export_height,
                 "exportWidth": export_width,
                 "exportHeight": export_height,
-                "maxDimension": PSD_BACKGROUND_MAX_DIMENSION,
-                "offsetX": 0,
-                "offsetY": 0,
-                "opacity": clamp_opacity(getattr(layer, "opacity", 255)),
+                "cropX": crop["x"],
+                "cropY": crop["y"],
+                "cropWidth": crop["width"],
+                "cropHeight": crop["height"],
+                "originX": crop["x"],
+                "originY": crop["y"],
+                "sourceCropX": source_crop["x"],
+                "sourceCropY": source_crop["y"],
+                "sourceCropWidth": source_crop["width"],
+                "sourceCropHeight": source_crop["height"],
                 "image": output_path.relative_to(runtime_dir).as_posix(),
             }
         )
+        layers.append(layer_entry)
 
     return layers
 
@@ -131,6 +175,34 @@ def composite_layer_image(canvas, image, left, top):
 
     visible = image.crop((source_x, source_y, source_x + width, source_y + height))
     canvas.alpha_composite(visible, (dest_x, dest_y))
+
+
+def crop_transparent_x_bounds(image):
+    rgba = image.convert("RGBA")
+    alpha_bounds = rgba.getchannel("A").getbbox()
+    if alpha_bounds is None:
+        return None
+
+    left, _, right, _ = alpha_bounds
+    bounds = (left, 0, right, rgba.height)
+    crop = {
+        "x": int(left),
+        "y": 0,
+        "width": int(right - left),
+        "height": int(rgba.height),
+    }
+    return rgba.crop(bounds), crop
+
+
+def export_crop_to_source_crop(crop, source_width, source_height, export_width, export_height):
+    scale_x = source_width / export_width if export_width else 1
+    scale_y = source_height / export_height if export_height else 1
+    return {
+        "x": int(round(crop["x"] * scale_x)),
+        "y": int(round(crop["y"] * scale_y)),
+        "width": int(round(crop["width"] * scale_x)),
+        "height": int(round(crop["height"] * scale_y)),
+    }
 
 
 def save_webp(image, path):
