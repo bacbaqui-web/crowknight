@@ -249,7 +249,7 @@ Input
 - `asset_loader_helper.js`: asset load helper.
 - `asset_refresh_helper.js`: local asset refresh helper.
 - `editor_asset_controller.js`: Setup / Effect / Background asset button controller.
-- `firebase_asset_storage_helper.js`: Firebase asset storage helper.
+- `firebase_asset_storage_helper.js`: Firebase asset storage helper; 배포 업로드는 PNG/WebP만 Storage에 올리고 PSD는 제외한다.
 - `local_api_helper.js`: local API request helper.
 - `local_character_asset_storage_helper.js`: local character asset storage helper.
 - `psd_background_helper.js`: PSD background helper; 로컬 background export는 `assets/backgrounds/current`만 사용.
@@ -257,7 +257,7 @@ Input
 ## Save / Project / Data
 
 - `project_state_controller.js`: project state controller.
-- `project_storage_helper.js`: local / remote project metadata storage helper.
+- `project_storage_helper.js`: local / remote project metadata storage helper; `setting.html`은 local, `index.html`은 Firebase metadata source를 사용한다.
 - `firebase_ranking_storage_helper.js`: Firebase ranking storage helper.
 - `game_config_data.js`: game constants and config data.
 - `character_group_data.js`: character group definitions.

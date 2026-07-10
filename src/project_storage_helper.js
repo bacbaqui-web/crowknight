@@ -13,8 +13,12 @@ const PROJECT_DEFAULT_STATE_URL = './runtime/project-default-state.json';
 const PROJECT_DEFAULT_STATE_SAVE_URL = './api/state/default';
 const LOCAL_CHARACTER_INDEX_SAVE_URL = './api/characters/index';
 
-export async function loadSavedState() {
+export async function loadSavedState({ source = 'local' } = {}) {
   removeObsoleteLocalTuningState();
+
+  if (source === 'firebase') {
+    return normalizeNullableSavedState(await loadRemoteProjectState());
+  }
 
   let localState = null;
   try {
@@ -72,6 +76,7 @@ export function createSavedStateSnapshot({
   activeSessionId,
   sessions,
   effectAssetSources = {},
+  releaseVersion = 0,
 }) {
   const actorsState = {};
   actors.forEach((actor) => {
@@ -84,6 +89,7 @@ export function createSavedStateSnapshot({
 
   return {
     version: 2,
+    releaseVersion: Number.isFinite(Number(releaseVersion)) ? Number(releaseVersion) : 0,
     savedAt: Date.now(),
     activeSessionId,
     sessions,
@@ -99,9 +105,18 @@ export async function uploadSavedStateToFirebase({
   activeSessionId,
   sessions,
   effectAssetSources,
+  releaseVersion = Date.now(),
+  saveLocal = true,
 }) {
-  const state = createSavedStateSnapshot({ actors, characterDefs, activeSessionId, sessions, effectAssetSources });
-  saveLocalState(state);
+  const state = createSavedStateSnapshot({
+    actors,
+    characterDefs,
+    activeSessionId,
+    sessions,
+    effectAssetSources,
+    releaseVersion,
+  });
+  if (saveLocal) saveLocalState(state);
   return saveRemoteProjectState(state);
 }
 
@@ -123,6 +138,7 @@ function normalizeSavedState(saved) {
 
   return {
     version: 2,
+    releaseVersion: Number.isFinite(Number(saved?.releaseVersion)) ? Number(saved.releaseVersion) : 0,
     savedAt: Number.isFinite(saved?.savedAt) ? saved.savedAt : 0,
     activeSessionId: normalized.activeSessionId,
     sessions: normalized.sessions,
@@ -221,7 +237,7 @@ async function saveRemoteProjectState(state) {
     const stateJson = JSON.stringify(state);
     const stateFields = await createFirestoreStateFields(stateJson);
     const response = await window.fetch(
-      remoteProjectStateDocumentUrl(['stateEncoding', 'stateData', 'stateJson', 'savedAt']),
+      remoteProjectStateDocumentUrl(['stateEncoding', 'stateData', 'stateJson', 'savedAt', 'releaseVersion']),
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -229,6 +245,7 @@ async function saveRemoteProjectState(state) {
           fields: {
             ...stateFields,
             savedAt: { integerValue: String(state.savedAt || Date.now()) },
+            releaseVersion: { integerValue: String(state.releaseVersion || 0) },
           },
         }),
       }

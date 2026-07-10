@@ -1,35 +1,67 @@
 # 99 Task Report
 
-## 고정 Formula 반대 방향 옵션
+## 로컬 제작 / 웹 플레이 배포 구조 정리
 
-### 1. 변경한 UI
+### 1. 최종 제작/배포 구조
 
-- 고정 Formula 방향 선택에 `반대` 옵션을 추가했다.
-- 기존 `왼쪽` / `오른쪽` 옵션은 유지했다.
+- `setting.html`: 로컬 제작툴로 유지한다.
+- `index.html`: 웹 플레이용 Runtime으로 Firebase metadata / Storage asset만 읽는다.
 
-### 2. 저장 구조
+### 2. setting.html 역할
 
-- `direction: "away"`를 추가했다.
-- 기존 direction 없는 데이터는 계속 `right`로 normalize한다.
+- 로컬 `assets`와 로컬 project metadata를 사용한다.
+- PSD Import / PNG-WebP 생성 / Character / Action / Effect / Background / AI / Stage / 저장 작업을 담당한다.
+- 우측 상단 버튼은 `업로드`와 `닫기`만 남겼다.
 
-### 3. Runtime 적용 방식
+### 3. index.html 역할
 
-- `left` / `right`는 기존 고정 Formula facing 계산을 유지한다.
-- `away`는 플레이어 위치가 필요한 옵션이라 NPC motion 단계에서 플레이어와 actor 위치를 비교해 계산한다.
-- 플레이어가 actor 왼쪽에 있으면 actor는 오른쪽을 보고, 플레이어가 actor 오른쪽에 있으면 actor는 왼쪽을 본다.
+- `loadSavedState({ source: "firebase" })`로 Firebase metadata만 읽는다.
+- 로컬 character index, 로컬 project-default-state, PSD background refresh를 사용하지 않는다.
+- Firebase metadata를 못 읽으면 로컬 fallback 없이 오류 안내를 표시한다.
 
-### 4. AI 자동 주시보다 우선 적용
+### 4. Storage 업로드 대상
 
-- `mobs` / `bosses` actor의 자동 플레이어 주시보다 활성 고정 Formula를 먼저 확인한다.
-- 따라서 궁수 / 보스처럼 기본적으로 플레이어를 바라보는 actor도 고정 `반대` 구간에서는 플레이어 반대 방향을 본다.
+- 캐릭터 파츠 PNG.
+- Effect PNG.
+- Background preview WebP/PNG.
+- Background layer WebP/PNG.
+- PSD는 업로드하지 않는다.
 
-### 5. QA 결과
+### 5. Database 업로드 대상
+
+- Project state metadata.
+- Character metadata.
+- Effect metadata.
+- Background metadata.
+- Runtime metadata.
+- `releaseVersion`.
+
+### 6. 업로드 순서
+
+1. 로컬 state를 저장한다.
+2. 로컬 PNG/WebP asset을 Firebase Storage에 업로드한다.
+3. Storage URL을 담은 배포용 snapshot을 만든다.
+4. 배포용 metadata snapshot을 Firestore `projectSettings/crowKnight`에 업로드한다.
+
+### 7. Asset Resolver 구조
+
+- `setting.html`은 로컬 effect / character source를 우선 사용한다.
+- `index.html`은 Firebase metadata에 들어 있는 Storage URL만 사용한다.
+- 배포 snapshot은 로컬 제작 state를 직접 Firebase URL로 덮어쓰지 않는다.
+
+### 8. releaseVersion 처리
+
+- 업로드 시 `Date.now()` 기반 `releaseVersion`을 생성한다.
+- Firestore metadata와 state JSON에 `releaseVersion`을 저장한다.
+- Storage download URL은 `?v=releaseVersion`을 사용한다.
+
+### 9. QA 결과
 
 - `npm run check` 통과.
 - `git diff --check` 통과.
-- 브라우저 수동 QA는 아직 별도 실행하지 않았다.
+- 브라우저 Firebase 업로드 / Storage 생성 / Database 갱신 / index 반영 수동 QA는 아직 별도 실행하지 않았다.
 
-### 6. 코덱스 의견
+### 10. 코덱스 의견
 
-- `away`는 target actor 위치가 필요한 값이라 Formula 정의에 계산을 넣지 않고 Runtime motion에서 계산하는 것이 맞다.
-- 장기적으로는 `left` / `right` / `away` 같은 facing resolve를 별도 helper로 빼면 Action Trigger와 NPC motion 양쪽의 중복을 더 줄일 수 있다.
+- 제작툴과 웹 Runtime이 같은 `main.js`를 공유하므로, 페이지 mode에 따른 source 선택 분리가 현재 구조에서 가장 작은 변경이다.
+- 장기적으로는 `editor_main.js`와 `runtime_main.js`를 분리하면 로컬 API / Firebase Runtime 경계가 더 명확해진다.

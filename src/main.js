@@ -80,15 +80,20 @@ const {
 const keys = new Set();
 const pressed = new Set();
 const SETUP_SELECTED_ACTOR_STORAGE_KEY = 'crowKnight.setup.selectedActorId';
+const isEditorPage = document.body.classList.contains('settings-page');
 
-const savedState = await loadStoredSavedState();
+const savedState = await loadStoredSavedState({ source: isEditorPage ? 'local' : 'firebase' });
+if (!savedState) {
+  showRuntimeLoadError();
+  throw new Error('Firebase project metadata is required for index.html.');
+}
 const sceneSessions = savedState.sessions;
 let sceneSession = savedState.sceneSession;
-const initialPsdBackgroundChanged = await refreshInitialPsdBackground();
+const initialPsdBackgroundChanged = isEditorPage ? await refreshInitialPsdBackground() : false;
 preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
-const localCharacterState = await loadCharacterStateFromLocalAssets();
+const localCharacterState = isEditorPage ? await loadCharacterStateFromLocalAssets() : null;
 const characterSourceState = localCharacterState
   ? {
       ...savedState,
@@ -100,7 +105,9 @@ const characterDefs = actorDefsFromSavedState(characterSourceState, { includeTra
 const actors = await createActors({ ...characterSourceState, characters: characterDefs }, world, {
   includeTrash: true,
 });
-const effectAssetSources = savedState.effectAssets || {};
+const effectAssetSources = isEditorPage
+  ? localEffectAssetSourceKeys(savedState.effectAssets)
+  : savedState.effectAssets || {};
 const effectAssets = await loadEffectAssets('', effectAssetSources);
 let playerActor = defaultRunPlayerActor(actors);
 const particleEffects = createParticleEffects({ actors, world, ctx });
@@ -637,13 +644,25 @@ function writeSetupSelectedActor(actor) {
 
 function localCharacterActors(savedStateSource, characterDefinitions) {
   return Object.fromEntries(
-    characterDefinitions.map((def) => [
-      def.id,
-      {
-        ...(savedStateSource.actors?.[def.id] || {}),
-        name: def.name,
-      },
-    ])
+    characterDefinitions.map((def) => {
+      const savedActor = { ...(savedStateSource.actors?.[def.id] || {}) };
+      delete savedActor.assets;
+      return [
+        def.id,
+        {
+          ...savedActor,
+          name: def.name,
+        },
+      ];
+    })
+  );
+}
+
+function localEffectAssetSourceKeys(sources = {}) {
+  return Object.fromEntries(
+    Object.keys(sources || {})
+      .filter((key) => !key.endsWith('Psd'))
+      .map((key) => [key, ''])
   );
 }
 
@@ -663,4 +682,12 @@ function showResultScreen() {
 
 function hideResultScreen() {
   resultOpen = rankingController.hideResultScreen();
+}
+
+function showRuntimeLoadError() {
+  const parent = canvas?.parentElement || document.body;
+  const message = document.createElement('div');
+  message.className = 'runtime-load-error';
+  message.textContent = '게임 데이터를 불러오지 못했습니다. Firebase 배포 업로드를 먼저 완료해 주세요.';
+  parent.append(message);
 }

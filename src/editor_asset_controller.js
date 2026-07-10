@@ -67,7 +67,7 @@ function bindFirebaseButtons({ elements, uploadSettings, downloadSettings }) {
   const { firebaseUpload, firebaseDownload } = elements;
 
   firebaseUpload?.addEventListener('click', async () => {
-    await runPanelButtonAction(firebaseUpload, '메타데이터 업로드', uploadSettings);
+    await runPanelButtonAction(firebaseUpload, '배포 업로드', uploadSettings);
   });
   firebaseDownload?.addEventListener('click', async () => {
     await runPanelButtonAction(firebaseDownload, '메타데이터 다운로드', downloadSettings);

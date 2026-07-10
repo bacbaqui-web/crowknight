@@ -30,6 +30,33 @@ export async function uploadGameAssetsToFirebase({ actors, effectAssetSources = 
   }
 }
 
+export async function uploadDeploymentAssetsToFirebase({
+  actors,
+  effectAssetSources = {},
+  background = null,
+  version = Date.now(),
+}) {
+  if (!isFirebaseStorageEnabled()) return { ok: false, error: 'Firebase Storage is not configured.' };
+
+  try {
+    const [characterAssetSourcesByActor, deployedEffectSources, deployedBackground] = await Promise.all([
+      uploadCharacterDeploymentAssets(actors, version),
+      uploadEffectDeploymentAssets(effectAssetSources, version),
+      uploadBackgroundDeploymentAssets(background, version),
+    ]);
+    return {
+      ok: true,
+      characterAssetSourcesByActor,
+      effectAssetSources: deployedEffectSources,
+      background: deployedBackground,
+      releaseVersion: version,
+    };
+  } catch (error) {
+    window.console?.warn('Firebase deployment asset upload failed.', error);
+    return { ok: false, error: error?.message || String(error || '') };
+  }
+}
+
 export async function loadCharacterStateFromFirebaseStorage() {
   if (!isFirebaseStorageEnabled()) return null;
 
@@ -112,28 +139,41 @@ async function uploadCharacterAssetsToFirebase(actors) {
           return [partKey, url];
         })
       );
-      const psdUrl = await uploadFirstAvailableAsset(
-        characterPsdSourceCandidates(actor, sources),
-        () => characterPsdStoragePath(actor),
-        version
-      );
       actor.assetSources = {
         ...sources,
         ...Object.fromEntries(entries),
-        ...(psdUrl ? { psd: psdUrl } : {}),
       };
     })
   );
 }
 
+async function uploadCharacterDeploymentAssets(actors, version) {
+  const entries = await Promise.all(
+    (actors || []).map(async (actor) => {
+      const sources = { ...(actor.assetSources || {}) };
+      const uploaded = await Promise.all(
+        Object.entries(CHARACTER_ASSET_PATHS).map(async ([partKey, filename]) => {
+          const localUrl = `./assets/characters/${actor.folder}/${filename}`;
+          const url = await uploadFirstAvailableAsset(
+            [localUrl, sources[partKey]],
+            characterPngStoragePath(actor, filename),
+            version
+          );
+          if (!url) throw new Error(`Character asset upload failed: ${actor.folder}/${filename}`);
+          return [partKey, url];
+        })
+      );
+      return [actor.id, Object.fromEntries(uploaded)];
+    })
+  );
+  return Object.fromEntries(entries);
+}
+
 export async function uploadCharacterPsdFileToFirebase(actor, file, version = Date.now()) {
-  if (!isFirebaseStorageEnabled() || !actor || !file) return null;
-  try {
-    return await uploadBlob(file, characterPsdStoragePath(actor), version, file.type || 'image/vnd.adobe.photoshop');
-  } catch (error) {
-    window.console?.warn('Firebase character PSD upload failed.', error);
-    return null;
+  if (actor || file || version) {
+    window.console?.warn('Firebase PSD upload is disabled. PSD files are local authoring assets only.');
   }
+  return null;
 }
 
 export async function moveCharacterPsdFileInFirebase(actor, nextStorageFolder, version = Date.now()) {
@@ -150,15 +190,6 @@ async function transferCharacterAssetsInFirebase(actor, nextStorageFolder, { del
 
   try {
     const movedSources = {};
-    const psdUrl = await moveStorageObject({
-      sourceUrl: actor.assetSources?.psd,
-      previousPath: characterPsdStoragePath(actor),
-      nextPath: characterPsdStoragePath(nextActor),
-      version,
-      contentType: 'image/vnd.adobe.photoshop',
-      deletePrevious,
-    });
-    if (psdUrl) movedSources.psd = psdUrl;
 
     const partEntries = await Promise.all(
       Object.entries(CHARACTER_ASSET_PATHS).map(async ([partKey, filename]) => {
@@ -214,6 +245,27 @@ async function uploadEffectAssetsToFirebase(effectAssetSources) {
   );
 }
 
+async function uploadEffectDeploymentAssets(effectAssetSources = {}, version) {
+  const nextSources = { ...(effectAssetSources || {}) };
+  const results = await Promise.all(
+    effectAssetKeys(nextSources).map(async (assetKey) => {
+      const path = effectAssetPath(assetKey);
+      if (!path) return null;
+      const url = await uploadFirstAvailableAsset(
+        [nextSources[assetKey], path],
+        objectPath(`effects/${assetKey}${extensionFromUrl(path)}`),
+        version
+      );
+      return url ? [assetKey, url] : null;
+    })
+  );
+  results.filter(Boolean).forEach(([assetKey, url]) => {
+    nextSources[assetKey] = url;
+    delete nextSources[`${assetKey}Psd`];
+  });
+  return nextSources;
+}
+
 export async function uploadEffectAssetToFirebase(effectAssetSources, assetKey, version = Date.now()) {
   if (!isFirebaseStorageEnabled()) return false;
 
@@ -228,17 +280,10 @@ export async function uploadEffectAssetToFirebase(effectAssetSources, assetKey, 
     );
     if (!url) throw new Error(`Effect asset upload failed: ${assetKey}`);
 
-    const sourceKey = `${assetKey}Psd`;
-    const psdUrl = await uploadFirstAvailableAsset(
-      [effectAssetSources[sourceKey], path.replace(/\.[^.]+$/, '.psd')],
-      () => objectPath(`effects/${assetKey}.psd`),
-      version
-    );
-
     Object.assign(effectAssetSources, {
       [assetKey]: url,
-      ...(psdUrl ? { [sourceKey]: psdUrl } : {}),
     });
+    delete effectAssetSources[`${assetKey}Psd`];
     return true;
   } catch (error) {
     window.console?.warn(`Firebase effect asset upload failed: ${assetKey}`, error);
@@ -260,18 +305,6 @@ export async function uploadScenePsdAssetsToFirebase(background) {
 
   const version = background.psdPreview?.updatedAt || Date.now();
   const uploadTasks = [];
-  const sourceUrl = background.psdPreview?.sourceUrl || './assets/backgrounds/background_01.psd';
-
-  uploadTasks.push(
-    uploadFirstAvailableAsset([sourceUrl], () => objectPath('backgrounds/source.psd'), version).then((url) => {
-      if (!url) return;
-      background.psdPreview = {
-        ...(background.psdPreview || {}),
-        sourceUrl: url,
-      };
-    })
-  );
-
   if (isLocalRuntimeAsset(background.psdPreview?.url)) {
     uploadTasks.push(
       uploadAsset(
@@ -309,6 +342,50 @@ export async function uploadScenePsdAssetsToFirebase(background) {
     window.console?.warn('Firebase scene asset upload failed.', error);
     return false;
   }
+}
+
+async function uploadBackgroundDeploymentAssets(background, version) {
+  if (!background) return background;
+
+  const deployed = structuredCloneSafe(background);
+  const previewUrl = deployed.psdPreview?.url;
+  if (previewUrl) {
+    const extension = extensionFromUrl(previewUrl);
+    const uploadedPreviewUrl = await uploadFirstAvailableAsset(
+      [previewUrl],
+      objectPath(`backgrounds/current/background-preview${extension}`),
+      version
+    );
+    if (!uploadedPreviewUrl) throw new Error(`Background preview upload failed: ${previewUrl}`);
+    deployed.psdPreview = {
+      ...(deployed.psdPreview || {}),
+      url: uploadedPreviewUrl,
+    };
+    delete deployed.psdPreview.sourceUrl;
+  }
+
+  if (Array.isArray(deployed.psdLayers)) {
+    const layers = await Promise.all(
+      deployed.psdLayers.map(async (layer, index) => {
+        if (!layer?.imageSrc) return layer;
+        const extension = extensionFromUrl(layer.imageSrc);
+        const layerId = sanitizePathPart(layer.id || layer.name || `layer_${index + 1}`);
+        const uploadedLayerUrl = await uploadFirstAvailableAsset(
+          [layer.imageSrc],
+          objectPath(`backgrounds/current/layers/${layerId}${extension}`),
+          version
+        );
+        if (!uploadedLayerUrl) throw new Error(`Background layer upload failed: ${layer.imageSrc}`);
+        return {
+          ...layer,
+          imageSrc: uploadedLayerUrl,
+        };
+      })
+    );
+    deployed.psdLayers = layers;
+  }
+
+  return deployed;
 }
 
 function isFirebaseStorageEnabled() {
@@ -376,17 +453,6 @@ async function responseText(response) {
   } catch {
     return '';
   }
-}
-
-function characterPsdSourceCandidates(actor, sources) {
-  const folder = actor.folder || actor.id;
-  return [
-    sources.psd,
-    `./assets/characters/${folder}/${folder}.psd`,
-    `./assets/characters/${folder}/${actor.id}.psd`,
-    `./assets/characters/${folder}/player.psd`,
-    `./assets/characters/${folder}/enemy.psd`,
-  ];
 }
 
 function characterMetadataSnapshot(actor, version) {
@@ -527,8 +593,8 @@ function characterPsdSourceFromObjects(objects, psdFileName) {
   return psdPath ? { psd: downloadUrl(psdPath, Date.now()) } : {};
 }
 
-function characterMetadataAssetSources(sources = {}) {
-  return sources?.psd ? { psd: sources.psd } : {};
+function characterMetadataAssetSources() {
+  return {};
 }
 
 function firstPsdFileName(objects) {
@@ -688,4 +754,9 @@ function sanitizeStoragePath(value) {
     .map((part) => sanitizePathPart(part))
     .filter(Boolean);
   return parts.length ? parts.join('/') : 'character';
+}
+
+function structuredCloneSafe(value) {
+  if (typeof window.structuredClone === 'function') return window.structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
 }

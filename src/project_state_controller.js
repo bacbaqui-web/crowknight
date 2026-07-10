@@ -1,5 +1,6 @@
 import { refreshPsdBackground } from './psd_background_helper.js';
-import { uploadCharacterMetadataSetToFirebase } from './firebase_asset_storage_helper.js';
+import { isTrashCharacter } from './character_group_data.js';
+import { uploadDeploymentAssetsToFirebase } from './firebase_asset_storage_helper.js';
 import {
   downloadSavedStateFromFirebase,
   saveGameState,
@@ -39,16 +40,37 @@ export function createProjectStateController({
   }
 
   async function uploadSettingsToFirebase() {
-    syncCurrentSceneSession();
-    const metadataUploaded = await uploadSavedStateToFirebase({
-      actors,
-      characterDefs,
-      activeSessionId: activeSceneSessionId,
-      sessions: sceneSessions,
+    const sceneSession = syncCurrentSceneSession();
+    saveState();
+    const releaseVersion = Date.now();
+    const deploymentSourceActors = actors.filter((actor) => !isTrashCharacter(actor));
+    const deployedAssets = await uploadDeploymentAssetsToFirebase({
+      actors: deploymentSourceActors,
       effectAssetSources,
+      background: sceneSession.background,
+      version: releaseVersion,
     });
-    const characterMetadataUploaded = await uploadCharacterMetadataSetToFirebase(actors);
-    return metadataUploaded && characterMetadataUploaded;
+    if (!deployedAssets.ok) return false;
+
+    const deploymentActors = actors.map((actor) => ({
+      ...actor,
+      assetSources: deployedAssets.characterAssetSourcesByActor?.[actor.id] || actor.assetSources || {},
+    }));
+    const deploymentSessions = structuredCloneSafe(sceneSessions);
+    deploymentSessions[sceneSession.id] = {
+      ...structuredCloneSafe(sceneSession),
+      background: deployedAssets.background || sceneSession.background,
+    };
+
+    return uploadSavedStateToFirebase({
+      actors: deploymentActors.filter((actor) => !isTrashCharacter(actor)),
+      characterDefs: characterDefs.filter((def) => !isTrashCharacter(def)),
+      activeSessionId: activeSceneSessionId,
+      sessions: deploymentSessions,
+      effectAssetSources: deployedAssets.effectAssetSources,
+      releaseVersion,
+      saveLocal: false,
+    });
   }
 
   async function downloadSettingsFromFirebase() {
@@ -78,4 +100,9 @@ export function createProjectStateController({
     saveState,
     uploadSettingsToFirebase,
   };
+}
+
+function structuredCloneSafe(value) {
+  if (typeof window.structuredClone === 'function') return window.structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
 }

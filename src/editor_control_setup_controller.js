@@ -273,7 +273,7 @@ export function initializeTuningPanelControls({
     pasteCurrentFrame: callbacks.pasteCurrentFrame,
     hasFrameSelection: callbacks.hasFrameSelection,
   });
-  resetButton.addEventListener('click', () => {
+  resetButton?.addEventListener('click', () => {
     if (!window.confirm('선택 캐릭터 설정을 모두 초기화할까요?')) return;
     callbacks.resetSelectedActorTuning();
   });

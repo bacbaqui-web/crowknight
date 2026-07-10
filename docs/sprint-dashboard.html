@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Lock Formula Facing Option</p>
+            <p>Local Authoring / Web Runtime Deploy</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>고정 Formula에 플레이어 반대 방향을 바라보는 옵션을 추가한다.</p>
+            <p>제작툴은 로컬, 웹 플레이는 Firebase 전용 구조로 분리한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>고정 Formula 반대 방향 옵션</p>
+            <p>로컬 제작 / 웹 플레이 배포 구조 정리</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>고정 Formula 방향 선택에 `반대` 옵션을 추가한다.</li>
-              <li>활성 구간 동안 플레이어의 반대 방향을 바라보게 한다.</li>
-              <li>적 자동 주시보다 고정 Formula를 우선 적용한다.</li>
+              <li>`setting.html`은 로컬 assets / metadata만 사용한다.</li>
+              <li>`index.html`은 Firebase metadata / Storage asset만 사용한다.</li>
+              <li>상단 업로드 버튼 하나로 Storage와 Database 배포를 수행한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`direction: "away"` 저장값을 추가했다.</li>
-              <li>NPC motion 단계에서 플레이어와 actor 위치를 비교해 반대 방향 facing을 계산한다.</li>
-              <li>기존 `left` / `right`와 mirror 계산은 유지했다.</li>
+              <li>업로드 / 닫기 버튼만 남기고 다운로드 / 초기화 버튼을 제거했다.</li>
+              <li>배포 업로드는 PNG/WebP만 Storage에 올리고 PSD는 제외한다.</li>
+              <li>Remote metadata에 `releaseVersion`을 저장한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 궁수 / 보스 Action에 `반대`를 설정한 뒤 실제 facing 확인이 필요하다.</li>
-              <li>플레이어가 좌우로 지나갈 때 반대 방향이 즉시 갱신되는지 확인이 필요하다.</li>
+              <li>실제 Firebase 업로드와 `index.html` 반영 브라우저 QA가 필요하다.</li>
+              <li>배포 후 Storage에 PSD가 올라가지 않는지 확인이 필요하다.</li>
             </ul>
           </div>
         </div>
@@ -234,21 +234,21 @@
             <h3>View QA</h3>
             <ul>
               <li>
-                <label class="qa-item" data-qa-id="lock-away-ui">
+                <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>고정 Formula 방향 선택에 반대 옵션이 표시되는지 확인한다.</span>
+                  <span>setting.html 우측 상단에 업로드 / 닫기만 표시되는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="lock-away-runtime">
+                <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>반대 옵션 활성 구간에서 actor가 플레이어 반대 방향을 보는지 확인한다.</span>
+                  <span>업로드 후 Storage에 PNG/WebP asset이 생성되는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="lock-away-auto-face-priority">
+                <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>mobs / bosses 자동 주시보다 고정 Formula가 우선하는지 확인한다.</span>
+                  <span>index.html이 Firebase metadata / Storage URL만 사용하는지 확인한다.</span>
                 </label>
               </li>
               <li>
