@@ -121,6 +121,7 @@ function createDefaultEnemyRules() {
     },
     spawnRulesByActor: {},
     actorRulesByActor: {},
+    difficulty: createDefaultEnemyDifficultyRules(),
     growth: {
       hpMultiplier: 1,
       damageMultiplier: 1,
@@ -134,6 +135,18 @@ function createDefaultEnemyRules() {
       spacing: 1,
       attackCooldownScale: 1,
     },
+  };
+}
+
+export function createDefaultEnemyDifficultyRules() {
+  return {
+    bossKillInterval: 10,
+    bossHpPerLevel: 3,
+    spawnIncreaseByActor: {
+      swordman: 1,
+      archer: 1,
+    },
+    warningText: '적이 강해집니다!',
   };
 }
 
@@ -206,6 +219,7 @@ function normalizeEnemyRules(saved) {
     },
     spawnRulesByActor: normalizeEnemySpawnRulesByActor(saved?.spawnRulesByActor, defaults.spawnRulesByActor),
     actorRulesByActor: normalizeEnemyActorRulesByActor(saved?.actorRulesByActor, defaults.actorRulesByActor),
+    difficulty: normalizeEnemyDifficultyRules(saved?.difficulty, defaults.difficulty),
     growth: {
       hpMultiplier: clampNumber(saved?.growth?.hpMultiplier, 0.1, 100, defaults.growth.hpMultiplier),
       damageMultiplier: clampNumber(saved?.growth?.damageMultiplier, 0.1, 100, defaults.growth.damageMultiplier),
@@ -224,6 +238,29 @@ function normalizeEnemyRules(saved) {
         defaults.pattern.attackCooldownScale
       ),
     },
+  };
+}
+
+export function normalizeEnemyDifficultyRules(saved, fallback = createDefaultEnemyDifficultyRules()) {
+  const spawnIncreaseSource =
+    saved?.spawnIncreaseByActor &&
+    typeof saved.spawnIncreaseByActor === 'object' &&
+    !Array.isArray(saved.spawnIncreaseByActor)
+      ? saved.spawnIncreaseByActor
+      : fallback.spawnIncreaseByActor;
+  return {
+    bossKillInterval: clampNumber(saved?.bossKillInterval, 1, 999, fallback.bossKillInterval),
+    bossHpPerLevel: clampNumber(saved?.bossHpPerLevel, 0, 999, fallback.bossHpPerLevel),
+    spawnIncreaseByActor: Object.fromEntries(
+      Object.entries(spawnIncreaseSource || {})
+        .map(([actorId, value]) => {
+          const id = nonEmptyString(actorId);
+          if (!id) return null;
+          return [id, clampNumber(value, 0, 200, 0)];
+        })
+        .filter(Boolean)
+    ),
+    warningText: nonEmptyString(saved?.warningText) || fallback.warningText,
   };
 }
 

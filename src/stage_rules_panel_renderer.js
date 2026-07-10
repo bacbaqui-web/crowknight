@@ -79,6 +79,50 @@ const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
     ],
   },
   {
+    key: 'difficultyIncrease',
+    title: '난이도 증가',
+    fields: [
+      {
+        type: 'number',
+        id: 'difficultyBossKillInterval',
+        label: '단계 상승 보스 처치 수',
+        min: 1,
+        max: 999,
+        step: 1,
+      },
+      {
+        type: 'number',
+        id: 'difficultyBossHpPerLevel',
+        label: '단계당 보스 HP 증가',
+        min: 0,
+        max: 999,
+        step: 1,
+      },
+      {
+        type: 'number',
+        id: 'difficultySwordmanSpawnPerLevel',
+        label: '칼잡이 단계당 동시 등장 증가',
+        min: 0,
+        max: 200,
+        step: 1,
+      },
+      {
+        type: 'number',
+        id: 'difficultyArcherSpawnPerLevel',
+        label: '활잡이 단계당 동시 등장 증가',
+        min: 0,
+        max: 200,
+        step: 1,
+      },
+      {
+        type: 'text',
+        id: 'difficultyWarningText',
+        label: '경고 문구',
+        maxLength: 40,
+      },
+    ],
+  },
+  {
     key: 'enemyAi',
     title: 'Enemy AI',
     fields: [
@@ -114,6 +158,7 @@ function createFieldElement(field) {
   if (field.type === 'rangeNumber') return createRangeNumberField(field);
   if (field.type === 'checkbox') return createCheckboxField(field);
   if (field.type === 'number') return createNumberField(field);
+  if (field.type === 'text') return createTextField(field);
   if (field.type === 'mount') return createMountField(field);
   if (field.type === 'summary') return createSummaryField(field);
   return document.createTextNode('');
@@ -201,6 +246,22 @@ function createNumberField(field) {
     unit.setAttribute('aria-label', unit.title);
     row.append(unit);
   }
+  return row;
+}
+
+function createTextField(field) {
+  const row = document.createElement('label');
+  row.className = 'select-row';
+
+  const label = document.createElement('span');
+  label.textContent = field.label;
+
+  const input = document.createElement('input');
+  input.id = field.id;
+  input.type = 'text';
+  if (field.maxLength) input.maxLength = Number(field.maxLength);
+
+  row.append(label, input);
   return row;
 }
 

@@ -1,4 +1,9 @@
-import { createStageRulesState, normalizeEnemyActorRule, normalizeStageRules } from './stage_rules_state.js';
+import {
+  createStageRulesState,
+  normalizeEnemyActorRule,
+  normalizeEnemyDifficultyRules,
+  normalizeStageRules,
+} from './stage_rules_state.js';
 
 export function createStageRulesController({ stageRulesState = null, initialRules = null, onChange = null } = {}) {
   const state = stageRulesState || createStageRulesState(initialRules);
@@ -76,6 +81,14 @@ export function createStageRulesController({ stageRulesState = null, initialRule
       };
       return setEnemyRules({ actorRulesByActor: next }).actorRulesByActor[key];
     },
+    getEnemyDifficultyRules: () => selectEnemyDifficultyRules(readStageRules()),
+    setEnemyDifficultyRules: (difficulty) =>
+      setEnemyRules({
+        difficulty: normalizeEnemyDifficultyRules({
+          ...selectEnemyDifficultyRules(readStageRules()),
+          ...difficulty,
+        }),
+      }).difficulty,
     getEnemyGrowthRules: () => selectEnemyGrowthRules(readStageRules()),
     setEnemyGrowthRules: (growth) =>
       setEnemyRules({ growth: mergePlainObject(selectEnemyGrowthRules(readStageRules()), growth) }).growth,
@@ -162,6 +175,10 @@ function resolveEnemyActorSpawnRule(source, actorId) {
 function resolveEnemyActorRule(source, actorId) {
   const key = String(actorId || '').trim();
   return normalizeEnemyActorRule(key ? selectEnemyActorRulesByActor(source)?.[key] : null);
+}
+
+function selectEnemyDifficultyRules(source) {
+  return selectEnemyRules(source).difficulty;
 }
 
 function selectEnemyGrowthRules(source) {

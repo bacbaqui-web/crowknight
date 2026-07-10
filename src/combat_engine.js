@@ -118,10 +118,18 @@ function startEnemyAiActionCooldown(actor, action) {
   actor.aiActionCooldowns[action.key] = cooldown;
 }
 
-export function resolveCombat({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill }) {
+export function resolveCombat({
+  actors,
+  playerActor,
+  world,
+  particleEffects,
+  onPlayerDeath,
+  onPlayerKill,
+  onEnemyDeath,
+}) {
   const regionCache = createInteractionRegionFrameCache();
   resolveCollisionInteractions(actors, regionCache);
-  resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, regionCache });
+  resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, onEnemyDeath, regionCache });
 
   actors.forEach((attacker) => {
     if (attacker.player?.dead) return;
@@ -131,6 +139,10 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
 
     actors.forEach((target) => {
       if (shouldSkipTarget(attacker, target)) return;
+      if (shouldBlockMobBossDamage(attacker, target)) {
+        logMobBossDamageBlocked(attacker, target, 'attack-hurt-mob-boss-blocked');
+        return;
+      }
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
       const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
       const guardBlockAttackRegion = overlappingGuardBlockAttackRegion(
@@ -210,6 +222,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
         world,
         onPlayerDeath,
         onPlayerKill,
+        onEnemyDeath,
       });
       if (removed) return;
 
@@ -228,6 +241,7 @@ export function resolveProjectileCombat({
   particleEffects = null,
   onPlayerDeath = () => {},
   onPlayerKill = () => {},
+  onEnemyDeath = () => {},
 } = {}) {
   const regionCache = createInteractionRegionFrameCache();
   projectiles.forEach((projectile) => {
@@ -236,6 +250,10 @@ export function resolveProjectileCombat({
     actors.forEach((target) => {
       if (!projectile.active) return;
       if (shouldSkipTarget(projectile.owner, target)) return;
+      if (shouldBlockMobBossDamage(projectile.owner, target)) {
+        logMobBossDamageBlocked(projectile.owner, target, 'projectile-mob-boss-blocked');
+        return;
+      }
       if (projectile.hitTargets?.has(target)) return;
       const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
       const hurtRegion = overlappingAttackRegion(projectile.owner, [attackRegion], targetHurtRegions);
@@ -268,6 +286,7 @@ export function resolveProjectileCombat({
         world,
         onPlayerDeath,
         onPlayerKill,
+        onEnemyDeath,
       });
       removeProjectile(projectile);
       if (!removed) applyHitReaction(projectile.owner, target, attackRegion, 1, particleEffects, world);
@@ -298,13 +317,15 @@ function resolveActorCollisionPair(a, b, regionCache) {
   const aPush = Number(aRegion.reaction.pushPower || 0) * Number(bRegion.reaction.resistance ?? 1);
   const bPush = Number(bRegion.reaction.pushPower || 0) * Number(aRegion.reaction.resistance ?? 1);
   const total = aPush + bPush;
-  const aShare = total > 0 ? bPush / total : 0.5;
-  const bShare = total > 0 ? aPush / total : 0.5;
+  const shares = collisionPushShares(a, b, {
+    aShare: total > 0 ? bPush / total : 0.5,
+    bShare: total > 0 ? aPush / total : 0.5,
+  });
 
-  a.player.x -= push.x * aShare;
-  a.player.y -= push.y * aShare;
-  b.player.x += push.x * bShare;
-  b.player.y += push.y * bShare;
+  a.player.x -= push.x * shares.aShare;
+  a.player.y -= push.y * shares.aShare;
+  b.player.x += push.x * shares.bShare;
+  b.player.y += push.y * shares.bShare;
   invalidateCachedInteractionRegions(regionCache, a);
   invalidateCachedInteractionRegions(regionCache, b);
   if (isRuntimeDebugEnabled()) {
@@ -325,6 +346,12 @@ function firstCollisionRegion(regions = []) {
   return regions.find((region) => region?.active !== false) || null;
 }
 
+function collisionPushShares(a, b, shares) {
+  if (isBossActor(a) && isMobActor(b)) return { aShare: 0, bShare: 1 };
+  if (isMobActor(a) && isBossActor(b)) return { aShare: 1, bShare: 0 };
+  return shares;
+}
+
 function collisionPushVector(a, b) {
   const aCenterX = a.x + a.w / 2;
   const aCenterY = a.y + a.h / 2;
@@ -339,7 +366,14 @@ function collisionPushVector(a, b) {
   return { x: 0, y: aCenterY <= bCenterY ? overlapY : -overlapY };
 }
 
-function resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, regionCache }) {
+function resolveCollisionHurtInteractions({
+  actors,
+  playerActor,
+  onPlayerDeath,
+  onPlayerKill,
+  onEnemyDeath,
+  regionCache,
+}) {
   actors.forEach((source) => {
     if (source.player?.dead) return;
     if (source.respawning) return;
@@ -348,6 +382,10 @@ function resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, 
 
     actors.forEach((target) => {
       if (shouldSkipTarget(source, target)) return;
+      if (shouldBlockMobBossDamage(source, target)) {
+        logMobBossDamageBlocked(source, target, 'collision-hurt-mob-boss-blocked');
+        return;
+      }
       const hurtRegion = overlappingCollisionHurtRegion(
         collisionRegion,
         cachedInteractionRegions(regionCache, target, 'hurt')
@@ -373,6 +411,7 @@ function resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, 
         particleEffects: null,
         onPlayerDeath,
         onPlayerKill,
+        onEnemyDeath,
       });
     });
   });
@@ -538,14 +577,18 @@ function resolveEnemyActorSpawnRule(world, actorId) {
   const enemyRules = world?.enemyRules || {};
   const actorRule = enemyRules.spawnRulesByActor?.[actorId] || null;
   const poolRule = Array.isArray(enemyRules.pool) ? enemyRules.pool.find((entry) => entry?.actorId === actorId) : null;
+  const baseMaxAlive = Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1)));
+  const difficultyLevel = Math.max(0, Math.round(Number(world?.runtimeDifficulty?.difficultyLevel || 0)));
+  const perLevel = Math.max(0, Number(enemyRules.difficulty?.spawnIncreaseByActor?.[actorId] || 0));
   return {
-    maxAlive: Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1))),
+    maxAlive: Math.max(0, Math.round(baseMaxAlive + difficultyLevel * perLevel)),
     intervalSec: Math.max(0.1, Number(actorRule?.intervalSec ?? enemyRules.spawnRule?.intervalSec ?? 2)),
   };
 }
 
 function respawnEnemyActor(actor, playerActor, world) {
   syncActorHealthCapacity(actor, true);
+  applyRuntimeDifficultyHealthCapacity(actor, world, true);
   actor.hpPips = actor.maxHpPips;
   actor.respawning = false;
   actor.enemyRespawnTimer = null;
@@ -555,6 +598,7 @@ function respawnEnemyActor(actor, playerActor, world) {
   actor.hitCancelFlashTime = 0;
   actor.lastHitSerials = {};
   actor.aiActionCooldowns = {};
+  actor.runtimeBossKillCounted = false;
   actor.player.dead = false;
   actor.player.deathRagdoll = null;
   actor.player.x = enemyRespawnX(actor, playerActor, world);
@@ -567,6 +611,26 @@ function respawnEnemyActor(actor, playerActor, world) {
   resetPlayerActionState(actor.player);
   actor.player.onGround = true;
   actor.player.updateState();
+}
+
+function applyRuntimeDifficultyHealthCapacity(actor, world, refill = false) {
+  if (!isBossActor(actor)) return;
+  const baseMax = runtimeBaseMaxHp(actor);
+  const bonus = Math.max(
+    0,
+    Math.round(Number(actor.runtimeDifficultyHpBonus ?? world?.runtimeDifficulty?.bossHpBonus ?? 0))
+  );
+  actor.runtimeBaseMaxHpPips = baseMax;
+  actor.maxHpPips = baseMax + bonus;
+  actor.hpPips = refill
+    ? actor.maxHpPips
+    : Math.min(actor.maxHpPips, Math.max(0, Math.round(Number(actor.hpPips || 0))));
+}
+
+function runtimeBaseMaxHp(actor) {
+  const saved = Number(actor.runtimeBaseMaxHpPips);
+  if (Number.isFinite(saved) && saved > 0) return Math.round(saved);
+  return Math.max(1, Math.round(Number(actor.tuning?.maxHpPips ?? actor.maxHpPips ?? 1)));
 }
 
 function enemyRespawnX(actor, playerActor, world) {
@@ -607,6 +671,31 @@ function shouldSkipTarget(attacker, target) {
   );
 }
 
+function shouldBlockMobBossDamage(attacker, target) {
+  return isMobActor(attacker) && isBossActor(target);
+}
+
+function isMobActor(actor) {
+  return normalizeCharacterGroup(actor?.group, '') === 'mobs';
+}
+
+function isBossActor(actor) {
+  return normalizeCharacterGroup(actor?.group, '') === 'bosses';
+}
+
+function logMobBossDamageBlocked(attacker, target, event) {
+  if (!isRuntimeDebugEnabled()) return;
+  debugInteractionRuntimeLog(event, {
+    attacker: attacker?.id,
+    target: target?.id,
+    attackerGroup: normalizeCharacterGroup(attacker?.group, ''),
+    targetGroup: normalizeCharacterGroup(target?.group, ''),
+    attackerAction: attacker?.player?.actionKey,
+    targetAction: target?.player?.actionKey,
+    reason: 'mob attacks do not affect bosses',
+  });
+}
+
 function cancelHitByActorRule(target, world) {
   const rule = enemyActorRuleForActor(world, target);
   const chance = Math.max(0, Math.min(100, Number(rule.hitCancelChance || 0)));
@@ -641,6 +730,7 @@ function applyInteractionDamage({
   world,
   onPlayerDeath,
   onPlayerKill,
+  onEnemyDeath,
 }) {
   const damage = Math.max(0, Math.round(Number(rawDamage ?? 1)));
   if (damage <= 0) return false;
@@ -667,6 +757,7 @@ function applyInteractionDamage({
   }
 
   if (attacker === playerActor) onPlayerKill();
+  onEnemyDeath?.(target);
   startDeathRagdoll(target.player, deathRagdollImpulse(attacker, target, attackRegion), world);
   particleEffects?.triggerHitImpact(attacker, target, comboStep, true);
   target.respawning = false;

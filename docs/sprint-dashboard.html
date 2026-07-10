@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Ranking Message Encouragement Bubbles</p>
+            <p>Boss Kill HP Recover</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>랭킹 메시지를 index.html 응원 말풍선으로 표시한다.</p>
+            <p>보스 처치 시 주인공 HP를 1 회복하고 화면에 보상 알림을 표시한다.</p>
           </div>
         </div>
       </section>
@@ -199,33 +199,30 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>랭킹 메시지 응원 말풍선 추가</p>
+            <p>보스 처치 HP 회복 기믹 추가</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>랭킹 등록의 하고 싶은 말을 Firebase 랭킹 메시지로 유지한다.</li>
-              <li>결과 대시보드가 열렸을 때 응원 말풍선을 주변에 둥실거리게 표시한다.</li>
-              <li>채팅이 아닌 플레이어 흔적 UI로 작게 구현한다.</li>
+              <li>보스 1명 처치마다 주인공 HP를 1 회복한다.</li>
+              <li>같은 보스 사망으로 회복이 중복 실행되지 않게 한다.</li>
+              <li>보스 처치 시 화면 중간 위에 `HP+1` 알림을 표시한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`index.html`에 `encouragementBubbles` DOM 레이어를 추가했다.</li>
-              <li>`encouragement_bubble_view.js`를 추가해 말풍선 생성/이동을 분리했다.</li>
-              <li>결과 대시보드가 열렸을 때만 말풍선을 활성화하도록 연결했다.</li>
-              <li>말풍선이 화면을 돌아다니지 않고 자기 자리 주변에서만 움직이게 했다.</li>
-              <li>말풍선을 드래그해 원하는 위치로 옮길 수 있게 했다.</li>
-              <li>긴 메시지는 말풍선 크기를 유지하고 글씨만 줄여 끝까지 표시한다.</li>
-              <li>`ranking_message_helper.js`로 20자/한 줄/URL 금지 제한을 공통화했다.</li>
+              <li>`main.js`의 `handleEnemyDeath()`에서 Boss 처치 회복을 연결했다.</li>
+              <li>`playerActor.hpPips`를 `maxHpPips`까지만 1 회복한다.</li>
+              <li>`index.html`과 `rankingScreens.css`에 `HP+1` 알림 UI를 추가했다.</li>
+              <li>알림 queue를 사용해 여러 알림이 겹치지 않도록 했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 결과 대시보드 주변 표시와 실제 이동 수동 QA가 필요하다.</li>
-              <li>좋아요/신고/시즌 메시지는 향후 확장 범위다.</li>
+              <li>브라우저에서 실제 보스 처치 후 HP 회복과 `HP+1` 표시를 수동 확인해야 한다.</li>
+              <li>HP가 이미 최대일 때도 알림은 보상 피드백으로 표시된다.</li>
             </ul>
           </div>
         </div>
@@ -240,25 +237,25 @@
               <li>
                 <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>랭킹 등록 메시지가 20자로 제한되는지 확인한다.</span>
+                  <span>보스 처치 시 주인공 HP가 1 회복되는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>URL이 포함된 메시지 등록이 막히는지 확인한다.</span>
+                  <span>주인공 HP가 maxHpPips를 넘지 않는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>결과 대시보드가 열렸을 때만 응원 말풍선이 표시되는지 확인한다.</span>
+                  <span>같은 Boss 사망으로 HP가 중복 회복되지 않는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>말풍선 클릭 시 잠깐 멈추고 확대되는지 확인한다.</span>
+                  <span>`HP+1` 알림이 화면 중간 위에 짧게 표시되는지 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -269,13 +266,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 이번 응원 말풍선 작업만 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 이번 HP 회복 작업만 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>메시지 저장/조회/동시 표시 개수와 성능 고려가 보고서에 기록됐는지 확인한다.</span>
+                  <span>회복 연결 위치, 중복 방지, 알림 UI가 보고서에 기록됐는지 확인한다.</span>
                 </label>
               </li>
               <li>

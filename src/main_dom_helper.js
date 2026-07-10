@@ -18,6 +18,8 @@ export function getMainDomElements() {
     rankingName: document.querySelector('#rankingName'),
     rankingMessage: document.querySelector('#rankingMessage'),
     encouragementBubbles: document.querySelector('#encouragementBubbles'),
+    bossHealNotice: document.querySelector('#bossHealNotice'),
+    difficultyWarning: document.querySelector('#difficultyWarning'),
     resultScore: document.querySelector('#resultScore'),
     resultSurvival: document.querySelector('#resultSurvival'),
     resultKills: document.querySelector('#resultKills'),
