@@ -2,7 +2,6 @@ import { MAX_SCREEN_ZOOM, MIN_SCREEN_ZOOM, normalizeSceneBackground } from './sc
 import { clamp } from './common_helper.js';
 
 const imageCache = new Map();
-const REPEATED_TILE_OVERLAP_PX = 1;
 const PSD_LAYER_ZOOM_DEPTH_POWER = 4;
 
 export function preloadSceneBackground(background) {
@@ -97,10 +96,11 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   drawWithScreenZoom(ctx, world, getPsdLayerScreenZoom(view, layer), () => {
     ctx.save();
     ctx.globalAlpha = clamp(layer.opacity, 0, 1);
+    const pixelRatio = currentDevicePixelRatio();
     for (let x = startX; x < world.viewW + width; x += width) {
-      const left = Math.round(x);
-      const right = Math.round(x + width);
-      const drawWidth = Math.max(1, right - left + REPEATED_TILE_OVERLAP_PX);
+      const left = alignDevicePixelDown(x, pixelRatio);
+      const right = alignDevicePixelUp(x + width, pixelRatio);
+      const drawWidth = Math.max(1 / pixelRatio, right - left);
       ctx.drawImage(
         imageState.image,
         0,
@@ -186,8 +186,11 @@ function drawParallaxLayer(ctx, world, view, image, layer) {
 
   ctx.save();
   ctx.globalAlpha = clamp(layer.opacity, 0, 1);
+  const pixelRatio = currentDevicePixelRatio();
   for (let x = startX; x < world.viewW + width; x += width) {
-    ctx.drawImage(image, x, y, width + REPEATED_TILE_OVERLAP_PX, height);
+    const left = alignDevicePixelDown(x, pixelRatio);
+    const right = alignDevicePixelUp(x + width, pixelRatio);
+    ctx.drawImage(image, left, y, Math.max(1 / pixelRatio, right - left), height);
   }
   ctx.restore();
 }
@@ -470,4 +473,16 @@ function getCachedImage(src) {
 
 function modulo(value, divisor) {
   return ((value % divisor) + divisor) % divisor;
+}
+
+function currentDevicePixelRatio() {
+  return Number.isFinite(window.devicePixelRatio) && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+}
+
+function alignDevicePixelDown(value, pixelRatio) {
+  return Math.floor(value * pixelRatio) / pixelRatio;
+}
+
+function alignDevicePixelUp(value, pixelRatio) {
+  return Math.ceil(value * pixelRatio) / pixelRatio;
 }
