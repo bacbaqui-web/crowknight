@@ -58,6 +58,7 @@ export function getTuningPanelElements(panel) {
     worldPhysicsCameraShakePower: document.querySelector('#worldPhysicsCameraShakePower'),
     worldPhysicsCameraShakeFrames: document.querySelector('#worldPhysicsCameraShakeFrames'),
     worldPhysicsCameraShakeDecay: document.querySelector('#worldPhysicsCameraShakeDecay'),
+    enemyAiPanelMount: document.querySelector('#enemyAiPanelMount'),
     characterPsdUpload: document.querySelector('#characterPsdUpload'),
     characterPsdFile: document.querySelector('#characterPsdFile'),
     characterAdd: document.querySelector('#characterAdd'),

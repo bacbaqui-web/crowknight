@@ -49,6 +49,18 @@ export function createStageRulesController({ stageRulesState = null, initialRule
     getEnemySpawnRule: () => selectEnemySpawnRule(readStageRules()),
     setEnemySpawnRule: (spawnRule) =>
       setEnemyRules({ spawnRule: mergePlainObject(selectEnemySpawnRule(readStageRules()), spawnRule) }).spawnRule,
+    getEnemySpawnRulesByActor: () => selectEnemySpawnRulesByActor(readStageRules()),
+    getEnemyActorSpawnRule: (actorId) => resolveEnemyActorSpawnRule(readStageRules(), actorId),
+    setEnemyActorSpawnRule: (actorId, spawnRule) => {
+      const key = String(actorId || '').trim();
+      if (!key) return null;
+      const current = selectEnemySpawnRulesByActor(readStageRules());
+      const next = {
+        ...current,
+        [key]: mergePlainObject(resolveEnemyActorSpawnRule(readStageRules(), key), spawnRule),
+      };
+      return setEnemyRules({ spawnRulesByActor: next }).spawnRulesByActor[key];
+    },
     getEnemyGrowthRules: () => selectEnemyGrowthRules(readStageRules()),
     setEnemyGrowthRules: (growth) =>
       setEnemyRules({ growth: mergePlainObject(selectEnemyGrowthRules(readStageRules()), growth) }).growth,
@@ -111,6 +123,21 @@ function selectEnemyPool(source) {
 
 function selectEnemySpawnRule(source) {
   return selectEnemyRules(source).spawnRule;
+}
+
+function selectEnemySpawnRulesByActor(source) {
+  return selectEnemyRules(source).spawnRulesByActor || {};
+}
+
+function resolveEnemyActorSpawnRule(source, actorId) {
+  const key = String(actorId || '').trim();
+  const enemyRules = selectEnemyRules(source);
+  const actorRule = key ? enemyRules.spawnRulesByActor?.[key] : null;
+  const poolRule = key ? enemyRules.pool?.find((entry) => entry.actorId === key) : null;
+  return {
+    maxAlive: actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1,
+    intervalSec: actorRule?.intervalSec ?? enemyRules.spawnRule?.intervalSec ?? 2,
+  };
 }
 
 function selectEnemyGrowthRules(source) {

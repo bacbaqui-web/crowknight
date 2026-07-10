@@ -1,14 +1,18 @@
 import { requestRuntimeAction } from './action_trigger_engine.js';
-import { actionFormula } from './formula_runtime_engine.js';
+import { resetPlayerActionState } from './actor_state.js';
+import { syncActorHealthCapacity } from './actor_tuning_helper.js';
+import { resolveEnemyAiSettings } from './enemy_ai_settings_helper.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
 import { ACTION_FPS } from './game_config_data.js';
 import { normalizeCharacterGroup } from './character_group_data.js';
+import { startDeathRagdoll } from './death_ragdoll_engine.js';
 import {
   cloneInteractionRegionSnapshot,
   regionPoints,
   sweptInteractionRegion,
 } from './interaction_swept_region_helper.js';
+import { projectileAttackRegion, removeProjectile } from './projectile_runtime_engine.js';
 
 export function updateBattleActorMotion({ actors, playerActor, keys, pressed, world, dt }) {
   updateActorCombatTimers(actors, dt);
@@ -18,6 +22,7 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
   actors
     .filter((actor) => actor !== playerActor)
     .forEach((actor) => {
+      if (actor.respawning) return;
       faceNpcActorTowardPlayer(actor, playerActor);
       runEnemyRangeAi(actor, playerActor);
       actor.player.updateNpc(dt, playerActor.player, world);
@@ -42,18 +47,37 @@ function runEnemyRangeAi(actor, playerActor) {
   if (actor.player.isCustomActionActive) return;
 
   const distance = Math.abs(Number(playerActor.player.x || 0) - Number(actor.player.x || 0));
-  const candidate = enemyRangeActionCandidate(actor.player, distance);
+  const candidate = enemyRangeActionCandidate(actor, distance);
   if (!candidate) return;
 
-  requestRuntimeAction(actor.player, candidate.key, actor.player.facing, 'tap');
+  const started = requestRuntimeAction(actor.player, candidate.key, actor.player.facing, 'tap');
+  if (started) startEnemyAiActionCooldown(actor, candidate);
 }
 
-function enemyRangeActionCandidate(player, distance) {
-  return (player.actions || []).find((action) => {
-    const formula = actionFormula(player.actionSettings?.[action.key] || {}, 'range');
-    if (!formula?.enabled) return false;
-    return distance >= Number(formula.minRange || 0) && distance <= Number(formula.maxRange || 0);
-  });
+function enemyRangeActionCandidate(actor, distance) {
+  const cooldowns = actor.aiActionCooldowns || {};
+  return (actor.player.actions || [])
+    .map((action, index) => ({
+      action,
+      ai: resolveEnemyAiSettings(actor.player.actionSettings?.[action.key] || {}),
+      index,
+    }))
+    .filter(({ action, ai }) => {
+      if (!ai.enabled) return false;
+      if (Number(cooldowns[action.key] || 0) > 0) return false;
+      if (distance < ai.minRange || distance > ai.maxRange) return false;
+      if (ai.chance <= 0) return false;
+      return ai.chance >= 100 || Math.random() * 100 <= ai.chance;
+    })
+    .sort((a, b) => b.ai.priority - a.ai.priority || a.index - b.index)[0]?.action;
+}
+
+function startEnemyAiActionCooldown(actor, action) {
+  const ai = resolveEnemyAiSettings(actor.player.actionSettings?.[action.key] || {});
+  const cooldown = Math.max(0, Number(ai.cooldown || 0));
+  if (!cooldown) return;
+  actor.aiActionCooldowns ||= {};
+  actor.aiActionCooldowns[action.key] = cooldown;
 }
 
 export function resolveCombat({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill }) {
@@ -62,6 +86,7 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
   resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, regionCache });
 
   actors.forEach((attacker) => {
+    if (attacker.player?.dead) return;
     if (attacker.respawning) return;
     const attackRegions = cachedInteractionRegions(regionCache, attacker, 'attack');
     if (!attackRegions.length) return;
@@ -125,11 +150,13 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
       const removed = applyInteractionDamage({
         attacker,
         target,
+        attackRegion,
         damage: 1,
         invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
         comboStep,
         playerActor,
         particleEffects,
+        world,
         onPlayerDeath,
         onPlayerKill,
       });
@@ -142,12 +169,54 @@ export function resolveCombat({ actors, playerActor, world, particleEffects, onP
   actors.forEach((actor) => syncPreviousAttackRegions(actor, cachedInteractionRegions(regionCache, actor, 'attack')));
 }
 
+export function resolveProjectileCombat({
+  projectiles = [],
+  actors = [],
+  playerActor = null,
+  world = null,
+  particleEffects = null,
+  onPlayerDeath = () => {},
+  onPlayerKill = () => {},
+} = {}) {
+  const regionCache = createInteractionRegionFrameCache();
+  projectiles.forEach((projectile) => {
+    if (!projectile?.active || !projectile.owner) return;
+    const attackRegion = projectileAttackRegion(projectile);
+    actors.forEach((target) => {
+      if (!projectile.active) return;
+      if (shouldSkipTarget(projectile.owner, target)) return;
+      if (projectile.hitTargets?.has(target)) return;
+      const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
+      const hurtRegion = overlappingAttackRegion(projectile.owner, [attackRegion], targetHurtRegions);
+      if (!hurtRegion) return;
+
+      projectile.hitTargets?.add(target);
+      triggerWorldAttackCameraShake(world, particleEffects);
+      const removed = applyInteractionDamage({
+        attacker: projectile.owner,
+        target,
+        attackRegion,
+        damage: 1,
+        invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
+        comboStep: 1,
+        playerActor,
+        particleEffects,
+        world,
+        onPlayerDeath,
+        onPlayerKill,
+      });
+      removeProjectile(projectile);
+      if (!removed) applyHitReaction(projectile.owner, target, attackRegion, 1, particleEffects, world);
+    });
+  });
+}
+
 function resolveCollisionInteractions(actors, regionCache) {
   for (let aIndex = 0; aIndex < actors.length; aIndex += 1) {
     for (let bIndex = aIndex + 1; bIndex < actors.length; bIndex += 1) {
       const a = actors[aIndex];
       const b = actors[bIndex];
-      if (a.respawning || b.respawning) continue;
+      if (a.respawning || b.respawning || a.player?.dead || b.player?.dead) continue;
       resolveActorCollisionPair(a, b, regionCache);
     }
   }
@@ -208,6 +277,7 @@ function collisionPushVector(a, b) {
 
 function resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, regionCache }) {
   actors.forEach((source) => {
+    if (source.player?.dead) return;
     if (source.respawning) return;
     const collisionRegion = firstCollisionRegion(cachedInteractionRegions(regionCache, source, 'collision'));
     if (!collisionRegion) return;
@@ -350,8 +420,96 @@ function projectPolygon(points, axis) {
   };
 }
 
-export function maintainEnemyFlow() {
-  // Enemy flow is no longer hardcoded. Spawn, despawn, and movement should be data-authored rules.
+export function maintainEnemyFlow({ actors = [], playerActor = null, world = null, dt = 0 } = {}) {
+  const enemyActors = actors.filter((actor) => shouldNpcFacePlayer(actor, playerActor));
+  const byActorId = groupEnemyActorsById(enemyActors);
+
+  byActorId.forEach((actorGroup, actorId) => {
+    const rule = resolveEnemyActorSpawnRule(world, actorId);
+    const aliveActors = actorGroup.filter((actor) => !actor.respawning && !actor.player?.dead);
+
+    aliveActors.slice(rule.maxAlive).forEach((actor) => hideEnemyActor(actor));
+    actorGroup.forEach((actor) => updateEnemyRespawn(actor, playerActor, world, actorGroup, rule, dt));
+  });
+}
+
+function hideEnemyActor(actor) {
+  actor.respawning = true;
+  actor.enemyRespawnTimer = null;
+  actor.player.dead = true;
+  actor.player.deathRagdoll = null;
+  actor.player.vx = 0;
+  actor.player.vy = 0;
+}
+
+function updateEnemyRespawn(actor, playerActor, world, actorGroup, rule, dt) {
+  if (!actor.player?.dead && !actor.respawning) return;
+
+  if (actor.enemyRespawnTimer == null) actor.enemyRespawnTimer = actor.respawning ? 0 : rule.intervalSec;
+  actor.enemyRespawnTimer = Math.max(0, Number(actor.enemyRespawnTimer || 0) - Math.max(0, Number(dt || 0)));
+  if (actor.enemyRespawnTimer > 0) return;
+  if (activeEnemyCount(actorGroup, playerActor) >= rule.maxAlive) return;
+
+  respawnEnemyActor(actor, playerActor, world);
+}
+
+function activeEnemyCount(enemyActors, playerActor) {
+  return enemyActors.filter(
+    (actor) => shouldNpcFacePlayer(actor, playerActor) && !actor.respawning && !actor.player?.dead
+  ).length;
+}
+
+function groupEnemyActorsById(enemyActors) {
+  const groups = new Map();
+  enemyActors.forEach((actor) => {
+    const actorId = actor?.id || 'enemy';
+    if (!groups.has(actorId)) groups.set(actorId, []);
+    groups.get(actorId).push(actor);
+  });
+  return groups;
+}
+
+function resolveEnemyActorSpawnRule(world, actorId) {
+  const enemyRules = world?.enemyRules || {};
+  const actorRule = enemyRules.spawnRulesByActor?.[actorId] || null;
+  const poolRule = Array.isArray(enemyRules.pool) ? enemyRules.pool.find((entry) => entry?.actorId === actorId) : null;
+  return {
+    maxAlive: Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1))),
+    intervalSec: Math.max(0.1, Number(actorRule?.intervalSec ?? enemyRules.spawnRule?.intervalSec ?? 2)),
+  };
+}
+
+function respawnEnemyActor(actor, playerActor, world) {
+  syncActorHealthCapacity(actor, true);
+  actor.hpPips = actor.maxHpPips;
+  actor.respawning = false;
+  actor.enemyRespawnTimer = null;
+  actor.invulnTime = 0;
+  actor.hurtCooldown = 0;
+  actor.hitStun = 0;
+  actor.lastHitSerials = {};
+  actor.aiActionCooldowns = {};
+  actor.player.dead = false;
+  actor.player.deathRagdoll = null;
+  actor.player.x = enemyRespawnX(actor, playerActor, world);
+  actor.respawnTargetX = actor.player.x;
+  actor.player.y = Number(world?.floorY ?? actor.player.y);
+  actor.player.vx = 0;
+  actor.player.vy = 0;
+  actor.player.facing = Number(playerActor?.player?.x || 0) < Number(actor.player.x || 0) ? -1 : 1;
+  actor.player.hurtTime = 0;
+  resetPlayerActionState(actor.player);
+  actor.player.onGround = true;
+  actor.player.updateState();
+}
+
+function enemyRespawnX(actor, playerActor, world) {
+  const spawnRule = world?.enemyRules?.spawnRule || {};
+  const min = Math.min(Number(spawnRule.cameraOffsetMin ?? 740), Number(spawnRule.cameraOffsetMax ?? 960));
+  const max = Math.max(Number(spawnRule.cameraOffsetMin ?? 740), Number(spawnRule.cameraOffsetMax ?? 960));
+  const offset = min + Math.random() * Math.max(0, max - min);
+  const playerX = Number(playerActor?.player?.x ?? actor.respawnTargetX ?? actor.player.x ?? 0);
+  return playerX + offset;
 }
 
 function updateActorCombatTimers(actors, dt) {
@@ -359,12 +517,22 @@ function updateActorCombatTimers(actors, dt) {
     actor.hurtCooldown = Math.max(0, actor.hurtCooldown - dt);
     actor.hitStun = Math.max(0, actor.hitStun - dt);
     actor.invulnTime = Math.max(0, actor.invulnTime - dt);
+    updateEnemyAiCooldowns(actor, dt);
+  });
+}
+
+function updateEnemyAiCooldowns(actor, dt) {
+  if (!actor.aiActionCooldowns) return;
+  Object.keys(actor.aiActionCooldowns).forEach((key) => {
+    actor.aiActionCooldowns[key] = Math.max(0, Number(actor.aiActionCooldowns[key] || 0) - dt);
+    if (actor.aiActionCooldowns[key] <= 0) delete actor.aiActionCooldowns[key];
   });
 }
 
 function shouldSkipTarget(attacker, target) {
   return (
     target === attacker ||
+    target.player?.dead === true ||
     target.respawning ||
     target.hurtCooldown > 0 ||
     target.invulnTime > 0 ||
@@ -375,11 +543,13 @@ function shouldSkipTarget(attacker, target) {
 function applyInteractionDamage({
   attacker,
   target,
+  attackRegion,
   damage: rawDamage,
   invincibleTime = 0,
   comboStep,
   playerActor,
   particleEffects,
+  world,
   onPlayerDeath,
   onPlayerKill,
 }) {
@@ -397,8 +567,10 @@ function applyInteractionDamage({
       targetHp: target.hpPips,
     });
   }
-  requestHurtAction(target, attacker);
-  if (target.hpPips > 0) return false;
+  if (target.hpPips > 0) {
+    requestHurtAction(target, attacker);
+    return false;
+  }
 
   if (target === playerActor) {
     onPlayerDeath();
@@ -406,8 +578,10 @@ function applyInteractionDamage({
   }
 
   if (attacker === playerActor) onPlayerKill();
+  startDeathRagdoll(target.player, deathRagdollImpulse(attacker, target, attackRegion), world);
   particleEffects?.triggerHitImpact(attacker, target, comboStep, true);
   target.respawning = false;
+  target.enemyRespawnTimer = null;
   target.hurtCooldown = 0;
   target.hitStun = 0;
   target.invulnTime = 0;
@@ -508,6 +682,31 @@ function knockbackDirection(attacker, target, attackRegion) {
   const deltaX = Number(target.player.x || 0) - Number(attacker.player.x || 0);
   const x = deltaX === 0 ? Number(attacker.player.facing || 1) : Math.sign(deltaX);
   return { x, y: 0, source: 'attacker-to-target' };
+}
+
+function deathRagdollImpulse(attacker, target, attackRegion) {
+  const previous = previousAttackRegion(attacker, attackRegion);
+  if (previous) {
+    const previousCenter = interactionRegionCenter(previous);
+    const currentCenter = interactionRegionCenter(attackRegion);
+    const dx = currentCenter.x - previousCenter.x;
+    const dy = currentCenter.y - previousCenter.y;
+    const speed = Math.hypot(dx, dy);
+    if (speed > 0.0001) {
+      return {
+        x: dx,
+        y: dy,
+        power: Math.max(0.9, speed / 34 + Number(attackRegion?.reaction?.knockback || 0) / 420),
+      };
+    }
+  }
+  const direction = knockbackDirection(attacker, target, attackRegion);
+  const power = Math.max(0.9, Number(attackRegion?.reaction?.knockback || 0) / 420);
+  return {
+    x: direction.x,
+    y: direction.y - 0.22,
+    power,
+  };
 }
 
 function interactionRegionCenter(region) {

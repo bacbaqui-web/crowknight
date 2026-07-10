@@ -11,7 +11,8 @@ import {
   bindKeyboardControls,
   bindTouchControls,
 } from './input_control_controller.js';
-import { maintainEnemyFlow, resolveCombat, updateBattleActorMotion } from './combat_engine.js';
+import { maintainEnemyFlow, resolveCombat, resolveProjectileCombat, updateBattleActorMotion } from './combat_engine.js';
+import { advanceCustomActionRuntime, requestRuntimeAction } from './action_trigger_engine.js';
 import { drawRankingHud } from './ranking_view.js';
 import { createRankingController } from './ranking_controller.js';
 import { createParticleEffects } from './particle_effects_engine.js';
@@ -35,6 +36,7 @@ import {
   MIN_SCREEN_ZOOM,
   createWorldFromSceneSession,
 } from './scene_session_data.js';
+import { PuppetPlayer } from './actor_runtime_engine.js';
 import { createProjectStateController } from './project_state_controller.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
@@ -42,6 +44,12 @@ import { isPlayerCharacter, isTrashCharacter } from './character_group_data.js';
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
+import {
+  activeProjectiles,
+  drawProjectiles,
+  resetProjectileRuntime,
+  updateProjectileRuntime,
+} from './projectile_runtime_engine.js';
 
 const {
   canvas,
@@ -117,6 +125,7 @@ let runSurvivalTime = 0;
 let runKills = 0;
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
+let runtimeEnemyActors = [];
 
 async function refreshInitialPsdBackground() {
   const previousSignature = backgroundAssetSignature(sceneSession.background);
@@ -251,6 +260,7 @@ function update(dt) {
   }
 
   runSurvivalTime += dt;
+  maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt: 0 });
 
   updateBattleActorMotion({
     actors: gameActors,
@@ -260,6 +270,7 @@ function update(dt) {
     world,
     dt,
   });
+  updateProjectileRuntime({ actors: gameActors, playerActor, world, dt });
 
   resolveCombat({
     actors: gameActors,
@@ -271,8 +282,19 @@ function update(dt) {
       runKills += 1;
     },
   });
+  resolveProjectileCombat({
+    projectiles: activeProjectiles(),
+    actors: gameActors,
+    playerActor,
+    world,
+    particleEffects,
+    onPlayerDeath: beginPlayerDeath,
+    onPlayerKill: () => {
+      runKills += 1;
+    },
+  });
 
-  maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects });
+  maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt });
   updateRollGhosts(gameActors, dt);
   updateFormulaColorChanges(gameActors);
   updateFormulaAfterimages(gameActors, dt);
@@ -296,6 +318,8 @@ function beginPlayerDeath() {
   if (endBattleButton) endBattleButton.disabled = true;
 
   const player = playerActor.player;
+  player.fallbackActionKey = 'death';
+  requestRuntimeAction(player, 'death', player.facing, 'tap');
   player.dead = true;
   player.state = 'death';
   player.stateTime = 0;
@@ -317,6 +341,7 @@ function updatePlayerDeathSequence(dt) {
   deathSequenceTime += dt;
   player.animTime += dt;
   player.stateTime += dt;
+  advanceCustomActionRuntime(player, dt);
   player.y = world.floorY;
   player.vx = 0;
   player.vy = 0;
@@ -356,13 +381,17 @@ function finishRun({ showResult = false } = {}) {
     lastRecordedScore = getRunScore();
   }
   battleActive = false;
+  resetProjectileRuntime();
   keys.clear();
   pressed.clear();
   if (startBattleButton) startBattleButton.disabled = false;
   if (homeStartButton) homeStartButton.disabled = false;
   if (endBattleButton) endBattleButton.disabled = true;
   if (showResult) showResultScreen();
-  else showStartScreen();
+  else {
+    runtimeEnemyActors = [];
+    showStartScreen();
+  }
 }
 
 function draw() {
@@ -392,6 +421,7 @@ function draw() {
       activeEditPartKeys: tuningPanel.activeEditPartKeys,
     })
   );
+  drawProjectiles(ctx, effectAssets);
   particleEffects.drawHitSparks();
   particleEffects.drawDeathParticles();
   renderActors.forEach((actor) => drawAttackTrail(ctx, actor, effectAssets));
@@ -472,7 +502,9 @@ function normalizeScreenZoom(value) {
 
 function startRun() {
   hideResultScreen();
-  const gameActors = syncRunPlayerFromSetupSelection();
+  syncRunPlayerFromSetupSelection();
+  rebuildRuntimeEnemyActors();
+  const gameActors = runOrderedActors([...baseGameActors(), ...runtimeEnemyActors]);
   lineUpActorPositions(gameActors, world);
   battleActive = true;
   playerDeathPending = false;
@@ -482,6 +514,7 @@ function startRun() {
   runSurvivalTime = 0;
   runKills = 0;
   particleEffects.reset();
+  resetProjectileRuntime();
   keys.clear();
   pressed.clear();
   placeEnemyActorsAhead(gameActors, playerActor, world);
@@ -494,7 +527,8 @@ function startRun() {
 
 function activeGameActors() {
   const gameActors = baseGameActors();
-  return runActorOrderActive() ? runOrderedActors(gameActors) : gameActors;
+  const runtimeActors = runActorOrderActive() ? [...gameActors, ...runtimeEnemyActors] : gameActors;
+  return runActorOrderActive() ? runOrderedActors(runtimeActors) : runtimeActors;
 }
 
 function editorControlActor(gameActors = activeGameActors()) {
@@ -505,6 +539,49 @@ function syncRunPlayerFromSetupSelection() {
   const gameActors = baseGameActors();
   playerActor = setupSelectedRunActor(gameActors);
   return runOrderedActors(gameActors);
+}
+
+function rebuildRuntimeEnemyActors() {
+  runtimeEnemyActors = [];
+  baseGameActors()
+    .filter((actor) => actor !== playerActor && !isPlayerCharacter(actor))
+    .forEach((actor) => {
+      const maxAlive = resolveRuntimeEnemyMaxAlive(actor);
+      for (let index = 1; index < maxAlive; index += 1) {
+        runtimeEnemyActors.push(createRuntimeEnemyClone(actor, index));
+      }
+    });
+}
+
+function resolveRuntimeEnemyMaxAlive(actor) {
+  const enemyRules = world?.enemyRules || {};
+  const actorRule = enemyRules.spawnRulesByActor?.[actor.id] || null;
+  const poolRule = Array.isArray(enemyRules.pool) ? enemyRules.pool.find((entry) => entry?.actorId === actor.id) : null;
+  return Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1)));
+}
+
+function createRuntimeEnemyClone(source, index) {
+  const player = new PuppetPlayer(source.player.x, world.floorY, source.player.assets);
+  player.applyTuning(source.tuning);
+  player.debugInteractionObjects = source.player.debugInteractionObjects;
+  return {
+    ...source,
+    runtimeClone: true,
+    runtimeSourceActorId: source.id,
+    runtimeInstanceId: `${source.id}#${index + 1}`,
+    respawning: false,
+    respawnTargetX: source.respawnTargetX,
+    invulnTime: 0,
+    wasRolling: false,
+    hurtCooldown: 0,
+    hitStun: 0,
+    rollGhosts: [],
+    rollGhostTimer: 0,
+    lastHitSerials: {},
+    aiActionCooldowns: {},
+    hpPips: source.maxHpPips,
+    player,
+  };
 }
 
 function setupSelectedRunActor(gameActors = baseGameActors()) {

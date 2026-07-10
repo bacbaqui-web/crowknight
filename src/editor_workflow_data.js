@@ -1,9 +1,10 @@
-export const TUNING_PANEL_WORKFLOW_SESSIONS = Object.freeze(['setup', 'animation', 'effect', 'stage']);
+export const TUNING_PANEL_WORKFLOW_SESSIONS = Object.freeze(['setup', 'animation', 'effect', 'bg', 'stage']);
 export const DEFAULT_TUNING_PANEL_WORKFLOW_SESSION = 'setup';
 export const TUNING_PANEL_WORKFLOW_SESSION_LABELS = Object.freeze({
   setup: 'Setup',
   animation: 'Action',
   effect: 'Effect',
+  bg: 'BG',
   stage: 'Stage',
 });
 
@@ -39,10 +40,15 @@ export const TUNING_PANEL_WORKFLOW_SECTIONS = Object.freeze({
   scene: {
     key: 'scene',
     part: 'stage',
-    session: 'stage',
+    session: 'bg',
   },
   worldPhysics: {
     key: 'worldPhysics',
+    part: 'stage',
+    session: 'stage',
+  },
+  enemyAi: {
+    key: 'enemyAi',
     part: 'stage',
     session: 'stage',
   },

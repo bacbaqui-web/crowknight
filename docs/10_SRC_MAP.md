@@ -157,6 +157,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `formulas/inertia_formula.js`: 관성 Formula definition.
 - `formulas/afterimage_formula.js`: 잔상 Formula definition.
 - `formulas/color_change_formula.js`: 색변화 Formula definition.
+- `formulas/projectile_formula.js`: 포물선 투사체 Formula definition.
 - `formulas/shake_formula.js`: 흔들림 Formula definition.
 - `formulas/range_formula.js`: 사정거리 Formula definition.
 - `formulas/lock_formula.js`: 고정 Formula definition.
@@ -178,6 +179,8 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `action_trigger_engine.js`: trigger matching과 custom Action start.
 - `input_control_controller.js`: runtime input state controller.
 - `combat_engine.js`: hit / guard / collision combat resolve.
+- `death_ragdoll_engine.js`: actor 사망 시 파츠별 ragdoll 상태 생성 / 갱신 / 렌더.
+- `projectile_runtime_engine.js`: 투사체 Formula runtime pool / 이동 / draw / attack region helper.
 - `runtime_debug_state.js`: runtime debug ON/OFF, action snapshot, event buffer state.
 - `roll_ghost_engine.js`: roll ghost update / draw.
 - `particle_effects_engine.js`: dust / hit spark / death particle engine.
@@ -234,6 +237,8 @@ Input
 - `background_panel_controller.js`: background panel controller.
 - `background_panel_view.js`: background panel view.
 - `stage_rules_controller.js`: stage rules controller.
+- `stage_ai_panel_controller.js`: Stage 탭 Enemy AI settings panel controller.
+- `enemy_ai_settings_helper.js`: Enemy AI action settings normalize / runtime resolver.
 - `stage_rules_panel_controller.js`: stage rules panel input controller.
 - `stage_rules_panel_renderer.js`: stage rules panel renderer.
 - `stage_rules_state.js`: stage rules state / normalize.

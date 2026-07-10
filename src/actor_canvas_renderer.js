@@ -11,6 +11,7 @@ import { timelinePlaybackProgress } from './timeline_playback_helper.js';
 import { resolveEffectAsset } from './asset_loader_helper.js';
 
 export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey, activeEditPartKeys }) {
+  if (actor.respawning) return;
   drawActorShadow(ctx, world, actor);
   const flicker = actor.invulnTime > 0 && Math.floor(actor.invulnTime * 24) % 2 === 0;
   if (flicker) {
@@ -36,6 +37,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   if (actor.hurtCooldown > 0) drawHitFlash(ctx, actor);
   if (actor.hurtCooldown > 0) ctx.restore();
   if (flicker) ctx.restore();
+  if (actor.player.dead) return;
 
   const width = Math.max(72, actor.maxHpPips * 9);
   const hud = actorHudLayout(actor, { useCustomOffset: actor === selectedActor && isSettingsPanelOpen() });
@@ -49,6 +51,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
 }
 
 export function drawAttackTrail(ctx, actor, effectAssets) {
+  if (actor.respawning) return;
   const player = actor.player;
   const active = activePlayerEffectAction(player);
   if (!active) return;

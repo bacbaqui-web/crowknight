@@ -117,6 +117,7 @@ export function createWorldFromSceneSession(session) {
     minX: settings.minX,
     maxX: settings.maxX ?? Infinity,
     worldPhysics: stageRules.worldPhysics,
+    enemyRules: stageRules.enemy,
     viewW: 960,
     viewH: 540,
   };
@@ -124,9 +125,10 @@ export function createWorldFromSceneSession(session) {
 
 export function syncWorldPhysicsToWorld(world, stageRules) {
   if (!world) return null;
-  const normalized = normalizeWorldPhysicsRules(stageRules?.worldPhysics);
-  world.worldPhysics = normalized;
-  return normalized;
+  const normalizedStageRules = normalizeStageRules(stageRules);
+  world.worldPhysics = normalizeWorldPhysicsRules(normalizedStageRules.worldPhysics);
+  world.enemyRules = normalizedStageRules.enemy;
+  return world.worldPhysics;
 }
 
 export function syncWorldToSceneSession(session, world) {

@@ -194,6 +194,7 @@ export class PuppetPlayer {
     this.guardBreakTime = 0;
     this.guardLockedUntilRelease = false;
     this.dead = false;
+    this.deathRagdoll = null;
     this.debugInteractionObjects = false;
     this.velocityControl = null;
     this.aiTimer = 0;

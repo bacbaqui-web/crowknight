@@ -17,6 +17,7 @@ import {
 } from './puppet_player_geometry_helper.js';
 import { isRuntimeDebugEnabled, recordRuntimeDebugEvent } from './runtime_debug_state.js';
 import { normalizeInteractionSelectValue } from './interaction_field_data.js';
+import { formulaFrameBoundary } from './formula_runtime_engine.js';
 
 export function debugInteractionRuntimeLog(type, payload = {}) {
   if (!isRuntimeDebugEnabled()) return;
@@ -206,6 +207,7 @@ function createGuardAttackInteractionRegion(player) {
   const attackFlags = interactionFlagSnapshot(attackOffset);
   const actionAttackSettings =
     player.actionSettings?.[player.actionKey]?.interactions?.[ATTACK_INTERACTION_OBJECT_KEY] || {};
+  if (!attackFrameWindowActive(player, actionAttackSettings)) return null;
   const attackSettings =
     attackFlags.active && attackFlags.attack ? attackOffset : { ...attackOffset, ...actionAttackSettings };
   const attackInteraction = {
@@ -231,6 +233,16 @@ function createGuardAttackInteractionRegion(player) {
     reason: fallback ? null : 'active=true attack=true but guard geometry is missing',
   });
   return fallback;
+}
+
+function attackFrameWindowActive(player, settings = {}) {
+  if (settings.startFrame === undefined && settings.endFrame === undefined) return true;
+  const frameCount = Math.max(1, timelineFrameCount(player.actionSettings?.[player.actionKey] || {}));
+  const progress = Math.max(0, Math.min(1, Number(player.getActionFrameProgress?.() || 0)));
+  const frame = Math.max(1, Math.min(frameCount, Math.floor(progress * frameCount) + 1));
+  const start = formulaFrameBoundary(settings.startFrame, frameCount, 1);
+  const end = formulaFrameBoundary(settings.endFrame, frameCount, frameCount);
+  return frame >= Math.min(start, end) && frame <= Math.max(start, end);
 }
 
 export function createHurtInteractionRegion(player) {

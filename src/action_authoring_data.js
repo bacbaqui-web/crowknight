@@ -5,6 +5,7 @@ import { defaultActionCondition, normalizeActionCondition } from './action_condi
 import { normalizeActionEditPivot } from './action_timeline_edit_helper.js';
 import { defaultActionRuntimeRules } from './action_runtime_rule_helper.js';
 import { migrateActionFormulasFromModifiers, normalizeActionFormulas } from './formula_registry.js';
+import { defaultEnemyAiSettings } from './enemy_ai_settings_helper.js';
 import {
   defaultActionTrigger,
   defaultActionTriggerForKey,
@@ -330,6 +331,7 @@ export function defaultActionSettings(group = 'movement', condition = 'any') {
     editPivot: normalizeActionEditPivot(),
     interactions: {},
     formulas: [],
+    ai: defaultEnemyAiSettings(),
     runtimeRules: defaultActionRuntimeRules(),
   };
 }

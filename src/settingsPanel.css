@@ -98,7 +98,7 @@
 
 .workflow-session-nav {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -298,6 +298,124 @@
   font-weight: 850;
   line-height: 1;
   white-space: nowrap;
+}
+
+.stage-ai-panel-mount {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.stage-ai-actor {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.stage-ai-spawn-field {
+  display: grid;
+  grid-template-columns: auto minmax(42px, 58px);
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  color: #d9deec;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.stage-ai-spawn-field input {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 4px 3px;
+  text-align: center;
+}
+
+.stage-ai-actor-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.stage-ai-actor-title {
+  margin: 0;
+  color: #d9deec;
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-ai-actor-spawn-fields {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 6px;
+  align-items: center;
+}
+
+.stage-ai-action-table {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stage-ai-row {
+  display: grid;
+  grid-template-columns: minmax(64px, 1fr) 34px repeat(5, minmax(42px, 58px));
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+}
+
+.stage-ai-header-row {
+  color: #8f98ad;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.stage-ai-action-row {
+  border: 1px solid #343947;
+  border-radius: 6px;
+  padding: 5px;
+  background: rgba(18, 22, 32, 0.54);
+  color: #d9deec;
+  cursor: pointer;
+}
+
+.stage-ai-action-row:hover,
+.stage-ai-action-row:focus-visible,
+.stage-ai-action-row.is-selected {
+  border-color: #7cc3a2;
+}
+
+.stage-ai-action-row.is-selected {
+  background: rgba(124, 195, 162, 0.12);
+}
+
+.stage-ai-action-name {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-ai-checkbox-cell {
+  display: grid;
+  justify-items: center;
+}
+
+.stage-ai-row input[type='number'] {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 4px 3px;
+  text-align: center;
 }
 
 .action-select-row {

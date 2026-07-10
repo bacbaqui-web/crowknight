@@ -22,6 +22,7 @@ import {
 } from './action_authoring_data.js';
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
 import { normalizeActionRuntimeRules } from './action_runtime_rule_helper.js';
+import { normalizeEnemyAiSettings } from './enemy_ai_settings_helper.js';
 import { normalizeActionFormulas, migrateActionFormulasFromModifiers } from './formula_registry.js';
 import { defaultActionCondition, normalizeActionCondition } from './action_condition_helper.js';
 import { defaultActionGroup, normalizeActionGroup } from './action_group_helper.js';
@@ -226,6 +227,7 @@ function normalizeActionSettings(current = {}, fallback = {}, customActions = []
         runtimeRules: source.runtimeRules ?? base.runtimeRules ?? defaultSettings.runtimeRules,
       }),
     };
+    if (source.ai || base.ai) normalized[key].ai = normalizeEnemyAiSettings(source.ai ?? base.ai);
     normalized[key].runtimeRules = normalizeActionRuntimeRules(
       source.runtimeRules ?? base.runtimeRules ?? defaultSettings.runtimeRules,
       normalized[key]

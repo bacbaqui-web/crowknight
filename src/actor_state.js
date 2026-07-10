@@ -1,4 +1,6 @@
 export function resetPlayerActionState(player) {
+  player.dead = false;
+  player.deathRagdoll = null;
   player.attackTime = 0;
   player.jumpAttackTime = 0;
   player.jumpHoldTime = 0;

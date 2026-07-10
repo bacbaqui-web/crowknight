@@ -13,6 +13,7 @@ export function createTuningPanelSync({
   effectTimeline,
   backgroundController,
   stageRulesPanelController,
+  stageAiPanelController,
   actionTimeline,
   syncAnchorDebugPart,
 }) {
@@ -52,9 +53,13 @@ export function createTuningPanelSync({
     effectTimeline.syncPreview();
   }
 
-  function syncStage() {
+  function syncBg() {
     backgroundController.sync();
+  }
+
+  function syncStage() {
     stageRulesPanelController.sync();
+    stageAiPanelController.sync();
   }
 
   function sync(selectedLayerValue = layerOrder.value) {
@@ -62,6 +67,7 @@ export function createTuningPanelSync({
     syncSetup(selectedLayerValue);
     syncAnimation();
     syncEffect();
+    syncBg();
     syncStage();
   }
 
@@ -72,6 +78,7 @@ export function createTuningPanelSync({
     if (activeSession === 'setup') syncSetup(selectedLayerValue);
     else if (activeSession === 'animation') syncAnimation();
     else if (activeSession === 'effect') syncEffect();
+    else if (activeSession === 'bg') syncBg();
     else if (activeSession === 'stage') syncStage();
   }
 

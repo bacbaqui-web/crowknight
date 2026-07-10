@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": 1783572364004,
+  "updatedAt": 1783666253008,
   "characters": [
     {
       "id": "player_01",
@@ -22,12 +22,40 @@
       "label": "에너미",
       "name": "도끼맨",
       "x": 260,
-      "folder": "mobs/enemy_01",
+      "folder": "bosses/enemy_01",
       "tint": "#ef767a",
       "deletable": false,
+      "group": "bosses",
+      "deleted": false,
+      "storageFolder": "bosses/enemy_01",
+      "psdFileName": "enemy.psd"
+    },
+    {
+      "id": "swordman",
+      "type": "enemy",
+      "label": "칼잡몹",
+      "name": "칼잡이",
+      "x": 620,
+      "folder": "mobs/swordman",
+      "tint": "#ef767a",
+      "deletable": true,
       "group": "mobs",
       "deleted": false,
-      "storageFolder": "mobs/enemy_01",
+      "storageFolder": "mobs/swordman",
+      "psdFileName": "enemy.psd"
+    },
+    {
+      "id": "archer",
+      "type": "enemy",
+      "label": "활잡이",
+      "name": "활잡이",
+      "x": 760,
+      "folder": "mobs/archer",
+      "tint": "#ef767a",
+      "deletable": true,
+      "group": "mobs",
+      "deleted": false,
+      "storageFolder": "mobs/archer",
       "psdFileName": "enemy.psd"
     }
   ]

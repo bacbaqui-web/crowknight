@@ -68,6 +68,16 @@ const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
       },
     ],
   },
+  {
+    key: 'enemyAi',
+    title: 'Enemy AI',
+    fields: [
+      {
+        type: 'mount',
+        id: 'enemyAiPanelMount',
+      },
+    ],
+  },
 ]);
 
 function createStageRulesPanel(definition) {
@@ -94,6 +104,7 @@ function createFieldElement(field) {
   if (field.type === 'rangeNumber') return createRangeNumberField(field);
   if (field.type === 'checkbox') return createCheckboxField(field);
   if (field.type === 'number') return createNumberField(field);
+  if (field.type === 'mount') return createMountField(field);
   if (field.type === 'summary') return createSummaryField(field);
   return document.createTextNode('');
 }
@@ -188,6 +199,13 @@ function createSummaryField(field) {
   summary.id = field.id;
   summary.className = 'part-fields';
   return summary;
+}
+
+function createMountField(field) {
+  const mount = document.createElement('div');
+  mount.id = field.id;
+  mount.className = 'stage-ai-panel-mount';
+  return mount;
 }
 
 function createOption(optionDefinition) {

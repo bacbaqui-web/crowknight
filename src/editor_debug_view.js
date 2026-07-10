@@ -25,11 +25,19 @@ export function drawTuningPanelDebugBoxes(
   ctx,
   selectedActor,
   effectAssets,
-  { activeSetupPartKey = null, activeActionPartKey = null, activeActionKey = null } = {}
+  {
+    activeSetupPartKey = null,
+    activeActionPartKey = null,
+    activeActionKey = null,
+    activeWorkflowSession = null,
+    stageAiGuide = null,
+  } = {}
 ) {
   if (!isSettingsPanelOpen()) return;
 
   drawActionRangeFormulaGuide(ctx, selectedActor, activeActionKey);
+  drawActionProjectileFormulaGuide(ctx, selectedActor, activeActionKey);
+  if (activeWorkflowSession === 'stage') drawStageAiRangeGuide(ctx, stageAiGuide);
 
   if (isCollisionSectionOpen()) {
     drawSetupFallbackInteractionPreview(ctx, selectedActor, activeSetupPartKey);
@@ -49,6 +57,34 @@ export function drawTuningPanelDebugBoxes(
   if (!effectKey) return;
 
   drawEffectSettingsPreview(ctx, selectedActor, effectKey, effectAssets);
+}
+
+function drawStageAiRangeGuide(ctx, guide) {
+  if (!guide?.actor?.player) return;
+  const minRange = Math.max(0, Number(guide.minRange || 0));
+  const maxRange = Math.max(minRange, Number(guide.maxRange || 0));
+  const x = Number(guide.actor.player.x || 0);
+  const y = Number(guide.actor.player.y || 0);
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(105, 183, 229, 0.08)';
+  ctx.strokeStyle = 'rgba(105, 183, 229, 0.92)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, maxRange, 0, Math.PI * 2);
+  ctx.arc(x, y, minRange, 0, Math.PI * 2, true);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, maxRange, 0, Math.PI * 2);
+  ctx.stroke();
+  if (minRange > 0) {
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = 'rgba(245, 247, 251, 0.72)';
+    ctx.beginPath();
+    ctx.arc(x, y, minRange, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawActionRangeFormulaGuide(ctx, actor, actionKey) {
@@ -79,6 +115,46 @@ function drawActionRangeFormulaGuide(ctx, actor, actionKey) {
     ctx.arc(x, y, minRange, 0, Math.PI * 2);
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+function drawActionProjectileFormulaGuide(ctx, actor, actionKey) {
+  if (!actor?.player || !actionKey) return;
+  const formula = actionFormula(actor.tuning?.actionSettings?.[actionKey] || {}, 'projectile');
+  if (!formula?.enabled) return;
+
+  const facing = Number(actor.player.facing || 1) < 0 ? -1 : 1;
+  const startX = Number(actor.player.x || 0) + Number(formula.offsetX || 0) * facing;
+  const startY = Number(actor.player.y || 0) + Number(formula.offsetY || 0);
+  const targetX = startX + facing * 260;
+  const targetY = Number(actor.player.y || 0);
+  const arcHeight = Math.max(0, Number(formula.arcHeight || 0));
+  const hitboxWidth = Math.max(1, Number(formula.hitboxWidth || 1));
+  const hitboxHeight = Math.max(1, Number(formula.hitboxHeight || 1));
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(245, 247, 251, 0.82)';
+  ctx.fillStyle = 'rgba(245, 247, 251, 0.16)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  for (let index = 0; index <= 24; index += 1) {
+    const t = index / 24;
+    const x = lerp(startX, targetX, t);
+    const y = lerp(startY, targetY, t) - arcHeight * 4 * t * (1 - t);
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(124, 195, 162, 0.92)';
+  ctx.beginPath();
+  ctx.arc(startX, startY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(124, 195, 162, 0.16)';
+  ctx.strokeStyle = 'rgba(124, 195, 162, 0.92)';
+  ctx.strokeRect(startX - hitboxWidth / 2, startY - hitboxHeight / 2, hitboxWidth, hitboxHeight);
+  ctx.fillRect(startX - hitboxWidth / 2, startY - hitboxHeight / 2, hitboxWidth, hitboxHeight);
   ctx.restore();
 }
 
@@ -244,4 +320,8 @@ function effectPreviewMetrics(actor, key, frame) {
     ax: Number(frame.ax ?? width / 2),
     ay: Number(frame.ay ?? height / 2),
   };
+}
+
+function lerp(a, b, t) {
+  return Number(a || 0) + (Number(b || 0) - Number(a || 0)) * t;
 }

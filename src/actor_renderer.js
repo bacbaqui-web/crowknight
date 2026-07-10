@@ -6,6 +6,7 @@ import {
   scaledEditableAnchor,
 } from './editable_object_model_helper.js';
 import { drawPuppetAnchorDot, drawPuppetDebug } from './puppet_player_debug_view.js';
+import { drawDeathRagdoll } from './death_ragdoll_engine.js';
 import {
   recordPuppetAnchorDebugPoint,
   recordPuppetEditHandle,
@@ -28,6 +29,8 @@ import {
 } from './interaction_object_editor_controller.js';
 
 export function drawPuppetPlayer(player, ctx) {
+  if (drawDeathRagdoll(player, ctx)) return;
+
   const p = player.getPose();
   const r = player.rig;
   const master = player.getPartOffset('master');

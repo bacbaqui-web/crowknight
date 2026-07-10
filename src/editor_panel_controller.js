@@ -68,6 +68,7 @@ export function createTuningPanel({
   let frameSelectionCheckGlobal = () => actionFrameSelectionActive;
   let actionEditSessions = null;
   let getCurrentActionKey = () => null;
+  let stageAiPanelController = null;
 
   function activeEditPartKey() {
     return getEditTarget(currentOpenEditContext())?.targetKey || null;
@@ -91,6 +92,8 @@ export function createTuningPanel({
       activeSetupPartKey: selectionState.getActivePartKeyGlobal(),
       activeActionPartKey: currentActionActiveActionPartKey(),
       activeActionKey: currentOpenEditContext() === EDIT_CONTEXT_ACTION ? getCurrentActionKey() : null,
+      activeWorkflowSession: workflowSessionState.getActiveSession(),
+      stageAiGuide: stageAiPanelController?.getActiveGuide?.() || null,
     });
   }
 
@@ -231,6 +234,7 @@ export function createTuningPanel({
       partController,
       stageRulesController,
       stageRulesPanelController,
+      stageAiPanelController,
       canvasController,
       lifecycleController,
     } = createTuningPanelComposition({
@@ -326,6 +330,7 @@ export function createTuningPanel({
       effectTimeline,
       backgroundController,
       stageRulesPanelController,
+      stageAiPanelController,
       actionTimeline,
       syncAnchorDebugPart,
     });
@@ -408,6 +413,7 @@ export function createTuningPanel({
       if (session === 'setup') enterSetupWorkflowSession();
       else if (session === 'animation') enterAnimationWorkflowSession();
       else if (session === 'effect') enterEffectWorkflowSession();
+      else if (session === 'bg') enterBgWorkflowSession();
       else if (session === 'stage') enterStageWorkflowSession();
     }
 
@@ -439,9 +445,13 @@ export function createTuningPanel({
       );
     }
 
-    function enterStageWorkflowSession() {
+    function enterBgWorkflowSession() {
       openWorkflowSection(panelElements.sceneSection);
+    }
+
+    function enterStageWorkflowSession() {
       openWorkflowSection(panelElements.worldPhysicsSection);
+      openWorkflowSection(panelElements.enemyAiSection);
     }
 
     function openWorkflowSection(section, onOpen) {

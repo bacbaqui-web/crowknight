@@ -1,9 +1,14 @@
 import { advanceCustomActionRuntime, updateActionTriggerRuntime } from './action_trigger_engine.js';
+import { updateDeathRagdoll } from './death_ragdoll_engine.js';
 import { activeActionFormulaAtProgress } from './formula_runtime_engine.js';
 import { isRuntimeDebugEnabled, recordRuntimeDebugEvent } from './runtime_debug_state.js';
 import { timelineFrameCount, timelineFrameDelta } from './timeline_playback_helper.js';
 
 export function updatePuppetPlayer(player, dt, keys, pressed, world) {
+  if (player.dead) {
+    updateDeadPuppet(player, dt, world);
+    return;
+  }
   advanceActorClock(player, dt);
   updateActionTriggerRuntime(player, dt, keys, airControlPressedInputs(player, world, keys, pressed));
   advanceCustomActionRuntime(player, dt);
@@ -14,6 +19,10 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
 export function updatePuppetNpc(player, dt, target, world, bounds = null) {
   void target;
   void bounds;
+  if (player.dead) {
+    updateDeadPuppet(player, dt, world);
+    return;
+  }
   advanceActorClock(player, dt);
   advanceCustomActionRuntime(player, dt);
   applyWorldPhysics(player, dt, world);
@@ -21,6 +30,10 @@ export function updatePuppetNpc(player, dt, target, world, bounds = null) {
 }
 
 export function updatePuppetPlayerState(player) {
+  if (player.dead) {
+    player.state = 'death';
+    return;
+  }
   const fallbackActionKey = player.resolveFallbackActionKey?.() || 'idle';
   player.fallbackActionKey = fallbackActionKey;
   if (player.state !== fallbackActionKey) {
@@ -29,6 +42,16 @@ export function updatePuppetPlayerState(player) {
     return;
   }
   player.state = fallbackActionKey;
+}
+
+function updateDeadPuppet(player, dt, world) {
+  player.animTime += dt;
+  player.stateTime += dt;
+  player.state = 'death';
+  player.vx = 0;
+  player.vy = 0;
+  player.velocityControl = null;
+  updateDeathRagdoll(player, dt, world);
 }
 
 export function getPuppetJumpRiseProgress() {

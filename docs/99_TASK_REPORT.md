@@ -1,33 +1,28 @@
 # 99 Task Report
 
-## Attack Interaction Knockback Mode 추가
+## Projectile Landing Marker 추가
 
-### 1. 재사용한 Velocity UI
+### 1. 변경 내용
 
-- Velocity Formula의 SET / ADD mode 토글 버튼을 export해서 Attack Interaction UI에서 그대로 재사용했다.
-- 새 아이콘이나 별도 mode 컴포넌트는 만들지 않았다.
+- 투사체가 날아가는 동안 고정된 목표 위치에 흰색 반짝임 marker를 표시한다.
+- marker는 작은 흰 점과 십자 sparkle로 그린다.
 
-### 2. Knockback Mode 저장 위치
+### 2. 적용 위치
 
-- `attackInteractionObject.knockbackMode`에 `"add"` 또는 `"set"`으로 저장한다.
-- 기본값은 `"add"`다.
+- `src/projectile_runtime_engine.js`
+- `drawProjectiles()`에서 landing marker를 먼저 그리고 projectile 이미지를 그린다.
 
-### 3. ADD Runtime
+### 3. Runtime 영향
 
-- 기존 구현을 유지한다.
-- 무기박스 이동 벡터 기반 넉백 + facing 기준 추가 X + 추가 Y를 합산한다.
+- Combat / hitbox / projectile 이동 계산은 변경하지 않았다.
+- marker는 시각 표시 전용이며 충돌에는 사용하지 않는다.
 
-### 4. SET Runtime
+### 4. QA 결과
 
-- 무기박스 이동 벡터를 사용하지 않는다.
-- 공격자 facing 기준 `knockback` + facing 기준 추가 X + 월드 기준 추가 Y만 적용한다.
+- `npm run check`: 실행 예정.
+- `git diff --check`: 실행 예정.
 
-### 5. QA 결과
+### 5. 코덱스 의견
 
-- `npm run check` 통과.
-- `git diff --check` 통과.
-
-### 6. 코덱스 의견
-
-- 방향 선택 UI 없이 SET을 추가하는 현재 요구에서는 `knockback`을 공격자 전방 px/f로 해석하는 것이 가장 단순하다.
-- 나중에 상하/대각 고정 넉백이 필요하면 방향 프리셋을 별도 옵션으로 추가하는 편이 안전하다.
+- 목표 위치는 projectile 생성 순간 이미 `targetX/targetY`로 고정되어 있으므로, 별도 저장 구조 없이 marker를 그리는 방식이 가장 단순하다.
+- 나중에 옵션이 필요해지면 Projectile Formula에 `landingMarker` ON/OFF 정도만 추가하면 된다.

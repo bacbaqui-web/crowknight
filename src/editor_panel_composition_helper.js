@@ -1,4 +1,5 @@
 import { createBackgroundPanelController } from './background_panel_controller.js';
+import { createStageAiPanelController } from './stage_ai_panel_controller.js';
 import { createStageRulesController } from './stage_rules_controller.js';
 import { createStageRulesPanelController } from './stage_rules_panel_controller.js';
 import { createTuningPanelCanvasController } from './transform_editor_controller.js';
@@ -108,6 +109,14 @@ export function createTuningPanelComposition({
     elements,
     stageRulesController,
   });
+  const stageAiPanelController = createStageAiPanelController({
+    actors,
+    beginChange: beginUndoSnapshot,
+    commitChange: commitUndoSnapshot,
+    elements,
+    saveState,
+    stageRulesController,
+  });
 
   partController = createTuningPanelPartController({
     elements,
@@ -207,6 +216,7 @@ export function createTuningPanelComposition({
     actionTimeline,
     stageRulesController,
     stageRulesPanelController,
+    stageAiPanelController,
     timelineFrameActions,
   };
 }
