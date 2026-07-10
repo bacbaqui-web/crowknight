@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Camera Player Screen Y</p>
+            <p>Ranking Message Encouragement Bubbles</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>카메라가 플레이어를 따라가되 플레이어의 화면 세로 기준 위치를 조절하게 한다.</p>
+            <p>랭킹 메시지를 index.html 응원 말풍선으로 표시한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,33 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>카메라 높이 기능 추가</p>
+            <p>랭킹 메시지 응원 말풍선 추가</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>카메라가 플레이어를 계속 따라가게 한다.</li>
-              <li>플레이어가 화면 세로 어디에 보일지 입력값으로 조절한다.</li>
-              <li>기존 `floorScreenY` 저장값을 호환으로 재사용한다.</li>
+              <li>랭킹 등록의 하고 싶은 말을 Firebase 랭킹 메시지로 유지한다.</li>
+              <li>결과 대시보드가 열렸을 때 응원 말풍선을 주변에 둥실거리게 표시한다.</li>
+              <li>채팅이 아닌 플레이어 흔적 UI로 작게 구현한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`src/camera_view.js`에서 `playerScreenY` 기반 focusY 계산을 추가했다.</li>
-              <li>`src/main.js`에서 `sceneSession.view.floorScreenY`를 `playerScreenY`로 전달했다.</li>
-              <li>Stage UI 라벨을 `바닥선`에서 `카메라 높이`로 변경했다.</li>
+              <li>`index.html`에 `encouragementBubbles` DOM 레이어를 추가했다.</li>
+              <li>`encouragement_bubble_view.js`를 추가해 말풍선 생성/이동을 분리했다.</li>
+              <li>결과 대시보드가 열렸을 때만 말풍선을 활성화하도록 연결했다.</li>
+              <li>말풍선이 화면을 돌아다니지 않고 자기 자리 주변에서만 움직이게 했다.</li>
+              <li>말풍선을 드래그해 원하는 위치로 옮길 수 있게 했다.</li>
+              <li>긴 메시지는 말풍선 크기를 유지하고 글씨만 줄여 끝까지 표시한다.</li>
+              <li>`ranking_message_helper.js`로 20자/한 줄/URL 금지 제한을 공통화했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 점프 중 카메라 추적 수동 QA가 필요하다.</li>
-              <li>카메라 높이 입력값에 따라 플레이어 화면 위치가 바뀌는지 수동 QA가 필요하다.</li>
+              <li>브라우저에서 결과 대시보드 주변 표시와 실제 이동 수동 QA가 필요하다.</li>
+              <li>좋아요/신고/시즌 메시지는 향후 확장 범위다.</li>
             </ul>
           </div>
         </div>
@@ -236,25 +240,25 @@
               <li>
                 <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>`camera_view.js`가 playerScreenY 기반 focusY를 계산하는지 확인한다.</span>
+                  <span>랭킹 등록 메시지가 20자로 제한되는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>`main.js`가 저장된 `floorScreenY`를 `playerScreenY`로 전달하는지 확인한다.</span>
+                  <span>URL이 포함된 메시지 등록이 막히는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>Stage UI가 `카메라 높이`로 표시되는지 확인한다.</span>
+                  <span>결과 대시보드가 열렸을 때만 응원 말풍선이 표시되는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>점프 중에도 카메라가 플레이어를 따라가고 화면 위치 오프셋을 유지하는지 확인한다.</span>
+                  <span>말풍선 클릭 시 잠깐 멈추고 확대되는지 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -265,13 +269,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 이번 카메라 높이 기능만 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 이번 응원 말풍선 작업만 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>docs/11_DATA_MODEL.md가 `floorScreenY`의 새 의미를 설명하는지 확인한다.</span>
+                  <span>메시지 저장/조회/동시 표시 개수와 성능 고려가 보고서에 기록됐는지 확인한다.</span>
                 </label>
               </li>
               <li>

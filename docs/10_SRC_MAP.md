@@ -50,6 +50,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `editor_local_only_helper.js`: local-only 실행 guard.
 - `settings_panel_state.js`: settings panel open/close state.
 - `main_dom_helper.js`: main DOM element lookup helper.
+- `encouragement_bubble_view.js`: index 랭킹 메시지 응원 말풍선 DOM / 이동 controller.
 
 ## Setup / Action / Effect Authoring
 
@@ -230,6 +231,7 @@ Input
 - `runtime_debug_hud_view.js`: runtime debug HUD DOM view.
 - `ranking_view.js`: ranking HUD and ranking DOM view.
 - `ranking_controller.js`: ranking flow controller.
+- `ranking_message_helper.js`: ranking message length / URL normalize helper.
 - `score_format_helper.js`: score / survival time format helper.
 - `puppet_player_geometry_helper.js`: puppet geometry / silhouette helper.
 - `puppet_player_edit_region_helper.js`: puppet edit region / handle recorder.

@@ -41,6 +41,42 @@
           </div>
         </div>
 
+        <aside class="game-control-guide" aria-label="조작법">
+          <h2>조작법</h2>
+          <dl>
+            <div>
+              <dt>← →</dt>
+              <dd>이동</dd>
+            </div>
+            <div>
+              <dt>Space</dt>
+              <dd>점프</dd>
+            </div>
+            <div>
+              <dt>Q</dt>
+              <dd>공격</dd>
+            </div>
+            <div>
+              <dt>W</dt>
+              <dd>구르기</dd>
+            </div>
+            <div>
+              <dt>Space + Q</dt>
+              <dd>점프공격</dd>
+            </div>
+            <div>
+              <dt>↓ + Space + Q</dt>
+              <dd>낙하공격</dd>
+            </div>
+            <div>
+              <dt>↑ + W</dt>
+              <dd>백플립</dd>
+            </div>
+          </dl>
+        </aside>
+
+        <div id="encouragementBubbles" class="encouragement-bubbles" aria-label="응원 말풍선"></div>
+
         <div id="startScreen" class="start-screen">
           <img class="title-logo" src="./assets/title/crow_knight_title_2.webp" alt="Crow Knight" />
           <button id="homeStart" class="primary-start" type="button">PLAY</button>
@@ -77,7 +113,7 @@
                 </label>
                 <label>
                   <span>하고 싶은 말</span>
-                  <textarea id="rankingMessage" maxlength="48" rows="2"></textarea>
+                  <textarea id="rankingMessage" maxlength="20" rows="2"></textarea>
                 </label>
                 <button type="submit">랭킹등록하기</button>
               </form>

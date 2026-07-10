@@ -1,4 +1,5 @@
 import { RANKING_KEY } from './game_config_data.js';
+import { RANKING_MESSAGE_MAX_LENGTH, hasRankingMessageUrl, normalizeRankingMessage } from './ranking_message_helper.js';
 import { formatSurvivalTime } from './score_format_helper.js';
 
 export function drawRankingHud(ctx, { rankings, battleActive, lastRecordedScore }) {
@@ -62,7 +63,7 @@ export function recordRankingEntry(rankings, score, survivalTime = 0, kills = 0,
 export function createRankingEntry(score, survivalTime = 0, kills = 0, name = '주인공', message = '') {
   return {
     name,
-    message,
+    message: normalizeRankingMessage(message),
     score,
     survivalTime,
     kills,
@@ -77,13 +78,20 @@ export function sortRankingEntries(rankings) {
 
 export function bindResultScreen({ retryRunButton, rankingForm, rankingName, rankingMessage }, actions) {
   retryRunButton?.addEventListener('click', actions.startRun);
+  bindRankingMessageInput(rankingMessage);
   rankingForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const name = rankingName.value.trim();
-    const message = rankingMessage.value.trim();
+    const message = normalizeRankingMessage(rankingMessage.value);
     const submit = rankingForm.querySelector('button[type="submit"]');
     if (!name) {
       rankingName.focus();
+      return;
+    }
+    if (hasRankingMessageUrl(message)) {
+      rankingMessage.setCustomValidity('URL은 입력할 수 없습니다.');
+      rankingMessage.reportValidity();
+      rankingMessage.focus();
       return;
     }
 
@@ -94,6 +102,17 @@ export function bindResultScreen({ retryRunButton, rankingForm, rankingName, ran
     await record;
     actions.renderRankingList();
     actions.renderSettingsRankingList();
+  });
+}
+
+function bindRankingMessageInput(rankingMessage) {
+  if (!rankingMessage) return;
+
+  rankingMessage.maxLength = RANKING_MESSAGE_MAX_LENGTH;
+  rankingMessage.addEventListener('input', () => {
+    const normalized = normalizeRankingMessage(rankingMessage.value);
+    if (rankingMessage.value !== normalized) rankingMessage.value = normalized;
+    rankingMessage.setCustomValidity(hasRankingMessageUrl(normalized) ? 'URL은 입력할 수 없습니다.' : '');
   });
 }
 

@@ -1,4 +1,5 @@
 import { FIREBASE_PROJECT_STATE_CONFIG } from './firebase_config_data.js';
+import { normalizeRankingMessage } from './ranking_message_helper.js';
 
 const FIRESTORE_BASE_URL = 'https://firestore.googleapis.com/v1';
 const REMOTE_RANKING_LIMIT = 100;
@@ -66,7 +67,7 @@ function normalizeRankingEntryDocument(document) {
   return {
     remotePath: document.name,
     name: stringField(fields.name) || '이름 없음',
-    message: stringField(fields.message),
+    message: normalizeRankingMessage(stringField(fields.message)),
     score: numberField(fields.score),
     survivalTime: numberField(fields.survivalTime),
     kills: numberField(fields.kills),
@@ -78,7 +79,7 @@ function normalizeRankingEntryDocument(document) {
 function rankingEntryToFirestoreFields(entry) {
   return {
     name: { stringValue: String(entry.name || '이름 없음').slice(0, 12) },
-    message: { stringValue: String(entry.message || '').slice(0, 48) },
+    message: { stringValue: normalizeRankingMessage(entry.message) },
     score: { integerValue: String(Math.max(0, Math.round(Number(entry.score || 0)))) },
     survivalTime: { doubleValue: Number(entry.survivalTime || 0) },
     kills: { integerValue: String(Math.max(0, Math.round(Number(entry.kills || 0)))) },

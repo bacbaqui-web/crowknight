@@ -15,6 +15,7 @@ import { maintainEnemyFlow, resolveCombat, resolveProjectileCombat, updateBattle
 import { advanceCustomActionRuntime, requestRuntimeAction } from './action_trigger_engine.js';
 import { drawRankingHud } from './ranking_view.js';
 import { createRankingController } from './ranking_controller.js';
+import { createEncouragementBubbleController } from './encouragement_bubble_view.js';
 import { createParticleEffects } from './particle_effects_engine.js';
 import { drawRollGhosts, updateRollGhosts } from './roll_ghost_engine.js';
 import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './run_hud_view.js';
@@ -68,6 +69,7 @@ const {
   rankingForm,
   rankingName,
   rankingMessage,
+  encouragementBubbles,
   resultScore,
   resultSurvival,
   resultKills,
@@ -134,6 +136,7 @@ let runKills = 0;
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
 let runtimeEnemyActors = [];
+const encouragementBubbleController = createEncouragementBubbleController({ root: encouragementBubbles });
 
 async function refreshInitialPsdBackground() {
   const previousSignature = backgroundAssetSignature(sceneSession.background);
@@ -192,6 +195,7 @@ const rankingController = createRankingController({
   getPlayerName: () => playerActor.name || '주인공',
   hideStartScreen,
   showStartScreen,
+  onRankingsChange: (rankings) => encouragementBubbleController.refresh(rankings),
 });
 rankingController.renderSettingsRankingList();
 if (!settingsRankingList) {
@@ -679,10 +683,12 @@ function showStartScreen() {
 
 function showResultScreen() {
   resultOpen = rankingController.showResultScreen();
+  encouragementBubbleController.setActive(resultOpen);
 }
 
 function hideResultScreen() {
   resultOpen = rankingController.hideResultScreen();
+  encouragementBubbleController.setActive(false);
 }
 
 function showRuntimeLoadError() {

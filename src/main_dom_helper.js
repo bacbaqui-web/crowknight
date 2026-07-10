@@ -17,6 +17,7 @@ export function getMainDomElements() {
     rankingForm: document.querySelector('#rankingForm'),
     rankingName: document.querySelector('#rankingName'),
     rankingMessage: document.querySelector('#rankingMessage'),
+    encouragementBubbles: document.querySelector('#encouragementBubbles'),
     resultScore: document.querySelector('#resultScore'),
     resultSurvival: document.querySelector('#resultSurvival'),
     resultKills: document.querySelector('#resultKills'),

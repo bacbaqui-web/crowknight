@@ -23,6 +23,7 @@ export function createRankingController({
   getPlayerName,
   hideStartScreen,
   showStartScreen,
+  onRankingsChange,
 }) {
   const {
     rankingList,
@@ -39,6 +40,7 @@ export function createRankingController({
     retryRunButton,
   } = elements;
   let rankings = loadStoredRankings();
+  notifyRankingsChange();
 
   bindResultScreenControls(
     { retryRunButton, rankingForm, rankingName, rankingMessage },
@@ -89,6 +91,7 @@ export function createRankingController({
     saveRankings();
     renderSettingsRankingList();
     renderRankingList();
+    notifyRankingsChange();
     if (!removed?.remotePath) return;
 
     const deleted = await deleteRemoteRankingEntry(removed);
@@ -109,6 +112,7 @@ export function createRankingController({
     saveRankings();
     renderRankingList();
     renderSettingsRankingList();
+    notifyRankingsChange();
     return true;
   }
 
@@ -119,6 +123,7 @@ export function createRankingController({
     const entry = createRankingEntry(score, survivalTime, kills, name || getPlayerName(), message);
     rankings = sortRankingEntries([...rankings, entry]);
     saveRankings();
+    notifyRankingsChange();
 
     const remoteEntry = await addRemoteRankingEntry(entry);
     if (!remoteEntry) return;
@@ -128,6 +133,11 @@ export function createRankingController({
 
     rankings = sortRankingEntries(rankings.map((item) => (item === entry ? remoteEntry : item)));
     saveRankings();
+    notifyRankingsChange();
+  }
+
+  function notifyRankingsChange() {
+    onRankingsChange?.(rankings);
   }
 
   return {
