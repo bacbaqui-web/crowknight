@@ -14,6 +14,7 @@ import { shakeFormula } from './formulas/shake_formula.js';
 import { colorChangeFormula } from './formulas/color_change_formula.js';
 import { rangeFormula } from './formulas/range_formula.js';
 import { projectileFormula } from './formulas/projectile_formula.js';
+import { zoomFormula } from './formulas/zoom_formula.js';
 
 export const FORMULA_DEFS = Object.freeze([
   velocityFormula,
@@ -28,6 +29,7 @@ export const FORMULA_DEFS = Object.freeze([
   afterimageFormula,
   shakeFormula,
   colorChangeFormula,
+  zoomFormula,
   projectileFormula,
   rangeFormula,
 ]);

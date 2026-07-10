@@ -1,28 +1,30 @@
 # 99 Task Report
 
-## Projectile Landing Marker 추가
+## Player Death Result Delay 재조정
 
 ### 1. 변경 내용
 
-- 투사체가 날아가는 동안 고정된 목표 위치에 흰색 반짝임 marker를 표시한다.
-- marker는 작은 흰 점과 십자 sparkle로 그린다.
+- 주인공 사망 후 점수판이 뜨기까지의 지연 시간을 2초로 변경했다.
 
-### 2. 적용 위치
+### 2. 수정 파일
 
-- `src/projectile_runtime_engine.js`
-- `drawProjectiles()`에서 landing marker를 먼저 그리고 projectile 이미지를 그린다.
+- `src/game_config_data.js`
 
-### 3. Runtime 영향
+### 3. 실제 적용 값
 
-- Combat / hitbox / projectile 이동 계산은 변경하지 않았다.
-- marker는 시각 표시 전용이며 충돌에는 사용하지 않는다.
+- `DEATH_RESULT_DELAY = 2`
 
-### 4. QA 결과
+### 4. 이유
 
-- `npm run check`: 실행 예정.
-- `git diff --check`: 실행 예정.
+- 3초는 체감상 길어서, 사망 Action 20프레임 / 10fps 기준에 맞춰 2초로 조정했다.
 
-### 5. 코덱스 의견
+### 5. QA 결과
 
-- 목표 위치는 projectile 생성 순간 이미 `targetX/targetY`로 고정되어 있으므로, 별도 저장 구조 없이 marker를 그리는 방식이 가장 단순하다.
-- 나중에 옵션이 필요해지면 Projectile Formula에 `landingMarker` ON/OFF 정도만 추가하면 된다.
+- `npm run check` 통과.
+- `git diff --check` 통과.
+- 브라우저 수동 QA는 아직 별도 실행하지 않았다.
+
+### 6. 코덱스 의견
+
+- 현재 사망 모션 길이와 가장 직접적으로 맞는 값은 2초다.
+- 이후 사망 Action 길이가 바뀌면 상수 대신 Action frame 길이 기반 자동 계산을 검토할 수 있다.

@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Action Projectile Formula MVP</p>
+            <p>Action Zoom Formula</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>Action Formula로 Runtime 전용 포물선 투사체를 발사하고 기존 Combat hit 경로에 연결한다.</p>
+            <p>Action Formula의 미니 타임라인 구간 동안 화면 확대 배율을 임시 적용한다.</p>
           </div>
         </div>
       </section>
@@ -199,29 +199,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Action Projectile Formula MVP</p>
+            <p>Action Zoom Formula 추가</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>Action Formula Library에 투사체를 추가한다.</li>
-              <li>발사 frame에서 player 위치를 목표로 고정한 포물선 projectile을 생성한다.</li>
-              <li>Projectile hitbox를 기존 Combat hit 경로에 연결한다.</li>
+              <li>Action Formula Library에 확대를 추가한다.</li>
+              <li>미니 타임라인 구간 동안 설정 배율을 화면에 적용한다.</li>
+              <li>프로젝트 기본 화면 배율 저장값은 변경하지 않는다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`projectile_runtime_engine.js`가 Runtime 전용 projectile pool을 관리한다.</li>
-              <li>Projectile Formula는 `actionSettings[actionKey].formulas[]`에 저장한다.</li>
-              <li>기존 Effect asset은 projectile 그림으로만 재사용한다.</li>
+              <li>`zoom_formula_runtime_helper.js`가 활성 확대 Formula 배율을 계산한다.</li>
+              <li>저장 구조는 `actionSettings[actionKey].formulas[]`의 `type: "zoom"`이다.</li>
+              <li>Camera view에는 기본 배율과 활성 Formula 배율 중 큰 값을 전달한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 궁수 여러 명 동시 발사 수동 QA가 필요하다.</li>
-              <li>Effect Timeline 기반 이동은 사용하지 않는다.</li>
+              <li>브라우저에서 Action 구간별 확대 적용 수동 QA가 필요하다.</li>
+              <li>여러 actor가 동시에 확대 Formula를 켜면 가장 큰 배율을 사용한다.</li>
             </ul>
           </div>
         </div>
@@ -234,24 +234,21 @@
             <h3>View QA</h3>
             <ul>
               <li>
-                <label class="qa-item" data-qa-id="projectile-single-archer">
+                <label class="qa-item" data-qa-id="zoom-formula-library">
                   <input type="checkbox" />
-                  <span>궁수 1명이 Projectile Formula로 화살을 발사하는지 확인한다.</span>
+                  <span>수식 라이브러리에 확대가 표시되는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="projectile-multi-archer">
+                <label class="qa-item" data-qa-id="zoom-formula-window">
                   <input type="checkbox" />
-                  <span>여러 enemy가 동시에 독립 화살을 발사하는지 확인한다.</span>
+                  <span>미니 타임라인 구간 안에서만 화면이 확대되는지 확인한다.</span>
                 </label>
               </li>
               <li>
-                <label class="qa-item" data-qa-id="projectile-hit-combat">
+                <label class="qa-item" data-qa-id="zoom-formula-save">
                   <input type="checkbox" />
-                  <span
-                    >Projectile이 player Hurt Region에 맞으면 damage / knockback / hit effect가 적용되는지
-                    확인한다.</span
-                  >
+                  <span>저장 후 reload해도 확대 Formula 설정이 유지되는지 확인한다.</span>
                 </label>
               </li>
               <li>

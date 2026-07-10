@@ -27,6 +27,7 @@ import { actorDefsFromSavedState, createActors } from './actor_factory.js';
 import { drawFormulaAfterimages, updateFormulaAfterimages } from './afterimage_runtime_helper.js';
 import { updateFormulaColorChanges } from './color_change_formula_runtime_helper.js';
 import { updateFormulaShakes } from './shake_formula_runtime_helper.js';
+import { formulaScreenZoom } from './zoom_formula_runtime_helper.js';
 import { syncCanvasToLayout } from './canvas_layout_helper.js';
 import { DEATH_RESULT_DELAY } from './game_config_data.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
@@ -405,7 +406,7 @@ function draw() {
     playerDeathPending,
     resultOpen,
     isEditPanelOpen: isSettingsPanelOpen(),
-    screenZoom,
+    screenZoom: formulaScreenZoom(gameActors, screenZoom),
   });
   drawWorld(ctx, world, view, sceneSession);
 

@@ -80,6 +80,7 @@ tuning.actionSettings[actionKey]
     { type: "link", enabled: true, fromActions: ["attack1"], startFrame: 6, endFrame: 12 },
     { type: "cooldown", enabled: true, seconds: 0.5 },
     { type: "afterimage", enabled: true, startFrame: 1, endFrame: 8, amount: 1, opacity: 0.35, color: "#8edab8", colorOpacity: 0.35, fadeFrames: 10 },
+    { type: "zoom", enabled: true, startFrame: 1, endFrame: 8, scale: 2 },
     { type: "projectile", enabled: true, spawnFrame: 5, imageKey: "effect_arrow", offsetX: 30, offsetY: -40, flightFrames: 45, arcHeight: 180, hitboxWidth: 30, hitboxHeight: 8 }
   ]
 }
@@ -97,7 +98,7 @@ tuning.actionSettings[actionKey]
 - `editPivot`: Action Timeline에서 파츠 선택 없이 전체 키프레임을 그룹처럼 편집할 때 쓰는 Action 공통 Pivot이다. `{ x, y }` 형태이며 기본값은 `{ x: 0, y: 0 }`이다. Pivot은 Action별로 하나만 저장하고 키프레임별로 저장하지 않는다.
 - `interactions`: Action 단위 Interaction 설정이다. Interaction box를 Action 탭에서 클릭하면 Timeline keyframe 선택과 무관하게 이 위치에 저장한다.
 - `ai`: Stage 탭 Enemy AI 전용 설정이다. `enabled`, `minRange`, `maxRange`, `cooldown`, `chance`, `priority`를 가진다. 이는 Action 연출 Formula가 아니며, Enemy AI 후보 선택에서만 사용한다.
-- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `시전`, `쿨타임`, `속도`, `목표이동`, `관성`, `잔상`, `색변화`, `흔들림`, `투사체`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
+- `formulas`: Action 단위 Formula Card 저장 위치다. 수식 라이브러리에서 `시전`, `쿨타임`, `속도`, `목표이동`, `관성`, `잔상`, `색변화`, `흔들림`, `확대`, `투사체`, `고정`, `보간`, `캔슬`, `연계`를 켜면 이 배열에 저장한다.
 - `runtimeRules`: legacy compatibility 저장 위치다. UI에는 직접 표시하지 않으며 normalize/migration 단계에서 `formulas[]`로 변환한다.
 
 Formula Card:
@@ -108,6 +109,7 @@ Formula Card:
 - `targetMove` / UI `목표이동`: `triggerFrame`에 발동해 그림자 / 발밑 기준 목표 좌표까지 이동한다. `triggerFrame`, `x`, `y`, `moveFrames`를 가진다. `moveFrames`는 `0`이면 즉시 도달, `1~10`이면 해당 Action Timeline frame 수 동안 목표까지 보간한다. Mini Timeline은 사용하지 않는다.
 - `inertia` / UI `관성`: `startFrame~endFrame` 동안 World Physics 기본 관성에 `addInertia`를 더한다. `applyTarget`은 `ground`, `air`, `all` 중 하나다.
 - `afterimage` / UI `잔상`: `startFrame~endFrame` 동안 actor pose snapshot을 남기는 시각 효과다. `amount`, `opacity`, `color`, `colorOpacity`, `fadeFrames`를 가진다. `amount`는 Action Timeline 1프레임당 생성 수다. 원본 캐릭터 잔상은 `opacity`로 그리고, 색상 실루엣은 그 위에 `colorOpacity`로 얹는다. Runtime 판정에는 영향을 주지 않는다.
+- `zoom` / UI `확대`: `startFrame~endFrame` 동안 화면 배율을 임시로 키운다. `scale`을 가지며 저장된 기본 화면 배율은 변경하지 않는다. 여러 actor에서 동시에 활성화되면 Runtime은 가장 큰 배율을 사용한다.
 - `projectile` / UI `투사체`: `spawnFrame`에 Runtime 전용 투사체 객체를 1개 생성한다. `imageKey`, `offsetX`, `offsetY`, `flightFrames`, `arcHeight`, `hitboxWidth`, `hitboxHeight`를 가진다. 생성 순간 player 위치를 목표로 고정하고, Effect asset은 그림으로만 사용한다. Effect Timeline frame data는 사용하지 않는다.
 - `lock` / UI `고정`: 구간 동안 지정한 방향을 바라보게 한다. `direction`은 `left`, `right` 중 하나이며, 기존 direction 없는 데이터는 `right`로 normalize한다.
 - `blend` / UI `보간`: Action 전환 포즈 연결을 적용한다. `frames`를 가진다.

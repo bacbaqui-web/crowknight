@@ -14,7 +14,7 @@ export const SURVIVAL_SCORE_PER_SECOND = 10;
 export const KILL_SCORE = 1000;
 export const SURVIVAL_SCORE_WEIGHT = 0.3;
 export const KILL_SCORE_WEIGHT = 0.7;
-export const DEATH_RESULT_DELAY = 1.15;
+export const DEATH_RESULT_DELAY = 2;
 export const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyQ', 'KeyW', 'KeyE']);
 
 export const ACTOR_DEFS = [
