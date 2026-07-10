@@ -185,11 +185,13 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Local Authoring / Web Runtime Deploy</p>
+            <p>배포 Runtime Background 반복 수정</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>제작툴은 로컬, 웹 플레이는 Firebase 전용 구조로 분리한다.</p>
+            <p>
+              Firebase Storage / Firestore Runtime에서 PSD background 좌우 반복 폭을 실제 렌더 이미지 폭과 일치시킨다.
+            </p>
           </div>
         </div>
       </section>
@@ -199,29 +201,29 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>로컬 제작 / 웹 플레이 배포 구조 정리</p>
+            <p>배포 index.html Background 좌우 반복 깨짐 조사/수정</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>`setting.html`은 로컬 assets / metadata만 사용한다.</li>
-              <li>`index.html`은 Firebase metadata / Storage asset만 사용한다.</li>
-              <li>상단 업로드 버튼 하나로 Storage와 Database 배포를 수행한다.</li>
+              <li>Storage 이미지 크기와 Firestore metadata 크기를 비교한다.</li>
+              <li>PSD layer 반복 폭 계산이 어떤 값을 쓰는지 확인한다.</li>
+              <li>해상도 변경 없이 반복 폭 불일치만 최소 수정한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>업로드 / 닫기 버튼만 남기고 다운로드 / 초기화 버튼을 제거했다.</li>
-              <li>배포 업로드는 PNG/WebP만 Storage에 올리고 PSD는 제외한다.</li>
-              <li>Remote metadata에 `releaseVersion`을 저장한다.</li>
+              <li>원격 background preview/layer WebP가 `2048 x 752`임을 확인했다.</li>
+              <li>metadata의 preview 크기도 `2048 x 752`라 이미지/metadata 크기 불일치는 아니었다.</li>
+              <li>PSD layer 반복 폭을 alpha trim 폭이 아니라 전체 WebP 캔버스 폭 기준으로 변경했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>실제 Firebase 업로드와 `index.html` 반영 브라우저 QA가 필요하다.</li>
-              <li>배포 후 Storage에 PSD가 올라가지 않는지 확인이 필요하다.</li>
+              <li>실제 배포 브라우저 화면에서 경계가 사라졌는지 최종 수동 QA가 필요하다.</li>
+              <li>새 background 업로드 후에도 같은 전체 캔버스 기준 반복이 유지되는지 확인이 필요하다.</li>
             </ul>
           </div>
         </div>
@@ -236,25 +238,25 @@
               <li>
                 <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>setting.html 우측 상단에 업로드 / 닫기만 표시되는지 확인한다.</span>
+                  <span>배포 Runtime이 읽는 background URL에 releaseVersion cache busting이 붙는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>업로드 후 Storage에 PNG/WebP asset이 생성되는지 확인한다.</span>
+                  <span>Storage image natural size와 Firestore metadata size가 일치하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>index.html이 Firebase metadata / Storage URL만 사용하는지 확인한다.</span>
+                  <span>배포 index.html에서 좌우 반복 경계가 보이지 않는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>npm run check와 git diff --check를 통과하는지 확인한다.</span>
+                  <span>다양한 브라우저 폭에서 빈틈/겹침 없이 반복되는지 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -265,13 +267,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/10_SRC_MAP.md와 실제 src 파일명이 일치하는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 이번 Background 반복 수정 내용만 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>docs/03_ARCHITECTURE.md와 SRC_MAP의 용어가 충돌하지 않는지 확인한다.</span>
+                  <span>일반 image background 반복 경로는 변경하지 않았는지 확인한다.</span>
                 </label>
               </li>
               <li>

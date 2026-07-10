@@ -2,9 +2,7 @@ import { MAX_SCREEN_ZOOM, MIN_SCREEN_ZOOM, normalizeSceneBackground } from './sc
 import { clamp } from './common_helper.js';
 
 const imageCache = new Map();
-const metricsCache = new WeakMap();
 const REPEATED_TILE_OVERLAP_PX = 1;
-const REPEATED_TILE_ALPHA_THRESHOLD = 128;
 const PSD_LAYER_ZOOM_DEPTH_POWER = 4;
 
 export function preloadSceneBackground(background) {
@@ -78,7 +76,6 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   const imageState = getCachedImage(layer.imageSrc);
   if (!imageState.loaded || imageState.error) return;
 
-  const metrics = getImageMetrics(imageState.image, REPEATED_TILE_ALPHA_THRESHOLD);
   const baseLayout = getCoverImageLayout(world, imageState.image, {
     opacity: 1,
     offsetX: 0,
@@ -87,19 +84,14 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
   });
   const imageScaleX = baseLayout.scaleX * layer.scale;
   const imageScaleY = baseLayout.scaleY * layer.scale;
-  const width = metrics.width * imageScaleX;
-  const height = metrics.height * imageScaleY;
+  const width = imageState.image.width * imageScaleX;
+  const height = imageState.image.height * imageScaleY;
   if (width <= 0 || height <= 0) return;
 
   const scrollX = layer.role === 'ground' ? getGroundScrollX(world, view) : view.focusX * layer.influence;
   const scrollOffset = modulo(scrollX, width);
-  const sourceX = metrics.x;
-  const sourceY = metrics.y;
-  const sourceWidth = metrics.width;
-  const sourceHeight = metrics.height;
-  const naturalX = baseLayout.x + metrics.x * imageScaleX + layer.offsetX;
-  const naturalY =
-    baseLayout.y + metrics.y * imageScaleY + layer.offsetY + getClipLayerVerticalDeltaY(world, view, layer);
+  const naturalX = baseLayout.x + layer.offsetX;
+  const naturalY = baseLayout.y + layer.offsetY + getClipLayerVerticalDeltaY(world, view, layer);
   const startX = naturalX - scrollOffset - width;
 
   drawWithScreenZoom(ctx, world, getPsdLayerScreenZoom(view, layer), () => {
@@ -109,7 +101,17 @@ function drawClipLayerImage(ctx, world, view, background, layer) {
       const left = Math.round(x);
       const right = Math.round(x + width);
       const drawWidth = Math.max(1, right - left + REPEATED_TILE_OVERLAP_PX);
-      ctx.drawImage(imageState.image, sourceX, sourceY, sourceWidth, sourceHeight, left, naturalY, drawWidth, height);
+      ctx.drawImage(
+        imageState.image,
+        0,
+        0,
+        imageState.image.width,
+        imageState.image.height,
+        left,
+        naturalY,
+        drawWidth,
+        height
+      );
     }
     ctx.restore();
   });
@@ -447,57 +449,6 @@ function drawRepeatedImage(ctx, world, image, background) {
     world.viewW / background.scale,
     world.viewH / background.scale
   );
-}
-
-function getImageMetrics(image, alphaThreshold = 8) {
-  const cached = metricsCache.get(image);
-  if (cached?.alphaThreshold === alphaThreshold) return cached.metrics;
-
-  const fallback = {
-    x: 0,
-    y: 0,
-    width: image.width,
-    height: image.height,
-  };
-
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    context.drawImage(image, 0, 0);
-    const pixels = context.getImageData(0, 0, image.width, image.height).data;
-    let minX = image.width;
-    let minY = image.height;
-    let maxX = -1;
-    let maxY = -1;
-
-    for (let y = 0; y < image.height; y += 1) {
-      for (let x = 0; x < image.width; x += 1) {
-        const alpha = pixels[(y * image.width + x) * 4 + 3];
-        if (alpha <= alphaThreshold) continue;
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-      }
-    }
-
-    const metrics =
-      maxX >= minX && maxY >= minY
-        ? {
-            x: minX,
-            y: minY,
-            width: maxX - minX + 1,
-            height: maxY - minY + 1,
-          }
-        : fallback;
-    metricsCache.set(image, { alphaThreshold, metrics });
-    return metrics;
-  } catch {
-    metricsCache.set(image, { alphaThreshold, metrics: fallback });
-    return fallback;
-  }
 }
 
 function getCachedImage(src) {
