@@ -46,6 +46,7 @@ import { isPlayerCharacter, isTrashCharacter, normalizeCharacterGroup } from './
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
+import { layoutMobileActionControls } from './mobile_control_layout_helper.js';
 import {
   activeProjectiles,
   drawProjectiles,
@@ -62,6 +63,9 @@ const {
   homeStartButton,
   startScreen,
   resultScreen,
+  mobileGameControls,
+  controlGuideButton,
+  gameControlGuide,
   rankingList,
   settingsRankingList,
   settingsRankingPanel,
@@ -75,14 +79,18 @@ const {
   resultScore,
   resultSurvival,
   resultKills,
+  resultBossKills,
   hudSurvivalTime,
   hudKills,
+  hudBossKills,
   screenZoomRange,
   screenZoomValue,
   retryRunButton,
 } = getMainDomElements();
 const keys = new Set();
 const pressed = new Set();
+const mobileLayoutQuery = window.matchMedia('(max-width: 820px)');
+const MOBILE_SCREEN_ZOOM_OFFSET = 0.2;
 const SETUP_SELECTED_ACTOR_STORAGE_KEY = 'crowKnight.setup.selectedActorId';
 const isEditorPage = document.body.classList.contains('settings-page');
 
@@ -136,11 +144,14 @@ let last = performance.now();
 let runSurvivalTime = 0;
 let runKills = 0;
 let bossKills = 0;
+let controlGuideOpen = false;
 let difficultyLevel = 0;
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
 let runtimeEnemyActors = [];
 const encouragementBubbleController = createEncouragementBubbleController({ root: encouragementBubbles });
+mobileLayoutQuery.addEventListener('change', syncEncouragementBubbleVisibility);
+bindControlGuide();
 let difficultyWarningQueue = [];
 let difficultyWarningActive = false;
 let bossHealNoticeQueue = [];
@@ -166,9 +177,10 @@ function backgroundAssetSignature(background = {}) {
   return `${preview}::${layers}`;
 }
 
-window.addEventListener('resize', () =>
-  syncCanvasToLayout({ canvas, world, actors: activeGameActors(), isFullStage, adjustActors: true })
-);
+window.addEventListener('resize', () => {
+  syncCanvasToLayout({ canvas, world, actors: activeGameActors(), isFullStage, adjustActors: true });
+  layoutMobileActionControls(mobileGameControls);
+});
 lineUpActorPositions(activeGameActors(), world);
 bindBattleControls(
   { startBattleButton, homeStartButton, endBattleButton },
@@ -196,6 +208,7 @@ const rankingController = createRankingController({
     resultScore,
     resultSurvival,
     resultKills,
+    resultBossKills,
     retryRunButton,
   },
   startRun,
@@ -252,6 +265,8 @@ function update(dt) {
   const gameActors = activeGameActors();
   captureActorMotionStart(gameActors);
 
+  if (controlGuideOpen) return;
+
   if (playerDeathPending) {
     updatePlayerDeathSequence(dt);
     return;
@@ -298,9 +313,7 @@ function update(dt) {
     world,
     particleEffects,
     onPlayerDeath: beginPlayerDeath,
-    onPlayerKill: () => {
-      runKills += 1;
-    },
+    onPlayerKill: handlePlayerKill,
     onEnemyDeath: handleEnemyDeath,
   });
   resolveProjectileCombat({
@@ -310,9 +323,7 @@ function update(dt) {
     world,
     particleEffects,
     onPlayerDeath: beginPlayerDeath,
-    onPlayerKill: () => {
-      runKills += 1;
-    },
+    onPlayerKill: handlePlayerKill,
     onEnemyDeath: handleEnemyDeath,
   });
 
@@ -332,6 +343,9 @@ function beginPlayerDeath() {
   playerDeathPending = true;
   deathSequenceTime = 0;
   battleActive = false;
+  closeControlGuide();
+  setControlGuideButtonVisible(false);
+  setMobileControlsVisible(false);
   keys.clear();
   pressed.clear();
   hideStartScreen();
@@ -403,6 +417,9 @@ function finishRun({ showResult = false } = {}) {
     lastRecordedScore = getRunScore();
   }
   battleActive = false;
+  closeControlGuide();
+  setControlGuideButtonVisible(false);
+  setMobileControlsVisible(false);
   resetProjectileRuntime();
   keys.clear();
   pressed.clear();
@@ -427,7 +444,7 @@ function draw() {
     playerDeathPending,
     resultOpen,
     isEditPanelOpen: isSettingsPanelOpen(),
-    screenZoom: formulaScreenZoom(gameActors, screenZoom),
+    screenZoom: runtimeScreenZoom(gameActors),
     playerScreenY: sceneSession.view?.floorScreenY,
   });
   drawWorld(ctx, world, view, sceneSession);
@@ -470,7 +487,7 @@ function actorRenderOrder(gameActors) {
 }
 
 function getRunScore() {
-  return calculateRunScore(runSurvivalTime, runKills);
+  return calculateRunScore(runSurvivalTime, runKills, bossKills);
 }
 
 function getRunResult() {
@@ -478,6 +495,7 @@ function getRunResult() {
     score: lastRecordedScore,
     survivalTime: runSurvivalTime,
     kills: runKills,
+    bossKills,
   };
 }
 
@@ -495,6 +513,10 @@ function handleEnemyDeath(actor) {
 
   applyDifficultyLevelIncrease(previousLevel, difficultyLevel);
   queueDifficultyWarning();
+}
+
+function handlePlayerKill(actor) {
+  if (!isBossRuntimeActor(actor)) runKills += 1;
 }
 
 function runDifficultyLevel() {
@@ -574,7 +596,14 @@ function isBossRuntimeActor(actor) {
 }
 
 function syncRunHud() {
-  syncRunHudView({ survivalTime: runSurvivalTime, kills: runKills, hudSurvivalTime, hudKills });
+  syncRunHudView({
+    survivalTime: runSurvivalTime,
+    kills: runKills,
+    bossKills,
+    hudSurvivalTime,
+    hudKills,
+    hudBossKills,
+  });
 }
 
 function bindScreenZoomControl() {
@@ -615,6 +644,12 @@ function normalizeScreenZoom(value) {
   return Math.min(MAX_SCREEN_ZOOM, Math.max(MIN_SCREEN_ZOOM, zoom));
 }
 
+function runtimeScreenZoom(gameActors) {
+  const formulaZoom = formulaScreenZoom(gameActors, screenZoom);
+  const mobileOffset = mobileLayoutQuery.matches ? MOBILE_SCREEN_ZOOM_OFFSET : 0;
+  return normalizeScreenZoom(formulaZoom - mobileOffset);
+}
+
 function startRun() {
   hideResultScreen();
   syncRunPlayerFromSetupSelection();
@@ -630,6 +665,8 @@ function startRun() {
   const gameActors = runOrderedActors([...baseGameActors(), ...runtimeEnemyActors]);
   lineUpActorPositions(gameActors, world);
   battleActive = true;
+  setControlGuideButtonVisible(true);
+  setMobileControlsVisible(true);
   playerDeathPending = false;
   resultOpen = false;
   deathSequenceTime = 0;
@@ -801,13 +838,60 @@ function showStartScreen() {
 }
 
 function showResultScreen() {
+  setMobileControlsVisible(false);
   resultOpen = rankingController.showResultScreen();
-  encouragementBubbleController.setActive(resultOpen);
+  syncEncouragementBubbleVisibility();
 }
 
 function hideResultScreen() {
   resultOpen = rankingController.hideResultScreen();
   encouragementBubbleController.setActive(false);
+}
+
+function setMobileControlsVisible(isVisible) {
+  if (!mobileGameControls) return;
+  mobileGameControls.hidden = !isVisible;
+  if (isVisible) requestAnimationFrame(() => layoutMobileActionControls(mobileGameControls));
+}
+
+function bindControlGuide() {
+  controlGuideButton?.addEventListener('click', openControlGuide);
+  window.addEventListener('keydown', dismissControlGuide, true);
+  window.addEventListener('pointerdown', dismissControlGuide, true);
+}
+
+function openControlGuide() {
+  if (!battleActive || controlGuideOpen || !gameControlGuide) return;
+  controlGuideOpen = true;
+  gameControlGuide.hidden = false;
+  controlGuideButton?.setAttribute('aria-expanded', 'true');
+  keys.clear();
+  pressed.clear();
+}
+
+function dismissControlGuide(event) {
+  if (!controlGuideOpen) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  closeControlGuide();
+}
+
+function closeControlGuide() {
+  if (!controlGuideOpen && gameControlGuide?.hidden) return;
+  controlGuideOpen = false;
+  if (gameControlGuide) gameControlGuide.hidden = true;
+  controlGuideButton?.setAttribute('aria-expanded', 'false');
+  keys.clear();
+  pressed.clear();
+  last = performance.now();
+}
+
+function setControlGuideButtonVisible(isVisible) {
+  if (controlGuideButton) controlGuideButton.hidden = !isVisible;
+}
+
+function syncEncouragementBubbleVisibility() {
+  encouragementBubbleController.setActive(resultOpen && !mobileLayoutQuery.matches);
 }
 
 function queueBossHealNotice() {

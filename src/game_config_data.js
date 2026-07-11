@@ -10,10 +10,11 @@ export const OBSOLETE_TUNING_KEYS = [
 ];
 export const OBSOLETE_EFFECT_FRAME_KEYS = ['anchorX', 'anchorY'];
 export const RANKING_KEY = 'crowKnight.rankings.v1';
-export const SURVIVAL_SCORE_PER_SECOND = 10;
-export const KILL_SCORE = 1000;
-export const SURVIVAL_SCORE_WEIGHT = 0.3;
-export const KILL_SCORE_WEIGHT = 0.7;
+export const SURVIVAL_SCORE_PER_SECOND = 5;
+export const KILL_SCORE = 100;
+export const BOSS_KILL_SCORE = 1000;
+export const SURVIVAL_SCORE_WEIGHT = 1;
+export const KILL_SCORE_WEIGHT = 1;
 export const DEATH_RESULT_DELAY = 2;
 export const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyQ', 'KeyW', 'KeyE']);
 

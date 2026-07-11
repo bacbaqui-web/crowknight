@@ -25,7 +25,7 @@ export function drawRankingHud(ctx, { rankings, battleActive, lastRecordedScore 
       ctx.fillText(`${index + 1}. ${entry.name} ${entry.score}점`, x, rowY);
       if (survivalTime || kills) {
         ctx.fillStyle = '#9fa7b8';
-        ctx.fillText(`생존 ${formatSurvivalTime(survivalTime)} / 처치 ${kills}`, x + 18, rowY + 13);
+        ctx.fillText(`생존 ${formatSurvivalTime(survivalTime)} / 잡몹 ${kills}`, x + 18, rowY + 13);
       }
     });
   }
@@ -122,6 +122,7 @@ export function showResultScreen(elements, state, actions) {
     resultScore,
     resultSurvival,
     resultKills,
+    resultBossKills,
     rankingName,
     rankingMessage,
     rankingForm,
@@ -137,6 +138,7 @@ export function showResultScreen(elements, state, actions) {
   resultScore.textContent = `${state.score}점`;
   resultSurvival.textContent = formatSurvivalTime(state.survivalTime);
   resultKills.textContent = `${state.kills}명`;
+  resultBossKills.textContent = `${state.bossKills || 0}명`;
   rankingName.value = '';
   rankingMessage.value = '';
   rankingForm.querySelector('button[type="submit"]').disabled = false;

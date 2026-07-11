@@ -17,6 +17,32 @@
       <section class="stage-wrap player-stage" aria-label="게임 화면">
         <canvas id="game" width="960" height="540"></canvas>
 
+        <div id="mobileGameControls" class="mobile-game-controls" aria-label="모바일 게임 조작" hidden>
+          <div class="mobile-direction-pad" aria-label="방향 조작">
+            <button class="direction-up" type="button" data-hold-code="ArrowUp" aria-label="위쪽">▲</button>
+            <button class="direction-left" type="button" data-hold-code="ArrowLeft" aria-label="왼쪽">◀</button>
+            <button class="direction-down" type="button" data-hold-code="ArrowDown" aria-label="아래쪽">▼</button>
+            <button class="direction-right" type="button" data-hold-code="ArrowRight" aria-label="오른쪽">▶</button>
+          </div>
+
+          <div class="mobile-action-pad" aria-label="액션 조작">
+            <button class="mobile-skill-button mobile-skill-w" type="button" data-hold-code="KeyW" aria-label="W 스킬">
+              W
+            </button>
+            <button
+              class="mobile-skill-button mobile-skill-space"
+              type="button"
+              data-hold-code="Space"
+              aria-label="스페이스 스킬"
+            >
+              SPACE
+            </button>
+            <button class="mobile-primary-action" type="button" data-hold-code="KeyQ" aria-label="Q 공격">
+              <span>Q</span>
+            </button>
+          </div>
+        </div>
+
         <div class="run-hud" aria-label="플레이 기록">
           <div class="run-hud-item" aria-label="생존 시간">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -25,7 +51,7 @@
             </svg>
             <span id="hudSurvivalTime">0:00</span>
           </div>
-          <div class="run-hud-item" aria-label="처치 수">
+          <div class="run-hud-item" aria-label="잡몹 처치 수">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M12 3c-4 0-7 2.8-7 6.8 0 2.4 1.2 4.4 3 5.6V20h8v-4.6c1.8-1.2 3-3.2 3-5.6C19 5.8 16 3 12 3z"
@@ -39,14 +65,36 @@
             </svg>
             <span id="hudKills">0</span>
           </div>
+          <div class="run-hud-item" aria-label="보스 처치 수">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 17 3 7l5 4 4-7 4 7 5-4-1 10z"></path>
+              <path d="M4 20h16"></path>
+            </svg>
+            <span id="hudBossKills">0</span>
+          </div>
         </div>
 
-        <aside class="game-control-guide" aria-label="조작법">
+        <button
+          id="controlGuideButton"
+          class="control-guide-button"
+          type="button"
+          aria-controls="gameControlGuide"
+          aria-expanded="false"
+          hidden
+        >
+          조작법
+        </button>
+
+        <aside id="gameControlGuide" class="game-control-guide" aria-label="조작법" hidden>
           <h2>조작법</h2>
           <dl>
             <div>
               <dt>← →</dt>
               <dd>이동</dd>
+            </div>
+            <div>
+              <dt>← ← / → →</dt>
+              <dd>질주</dd>
             </div>
             <div>
               <dt>Space</dt>
@@ -61,16 +109,16 @@
               <dd>구르기</dd>
             </div>
             <div>
-              <dt>Space + Q</dt>
+              <dt>↑ + W</dt>
+              <dd>백플립</dd>
+            </div>
+            <div>
+              <dt>공중 + Q</dt>
               <dd>점프공격</dd>
             </div>
             <div>
-              <dt>↓ + Space + Q</dt>
+              <dt>공중 + ↓ + Q</dt>
               <dd>낙하공격</dd>
-            </div>
-            <div>
-              <dt>↑ + W</dt>
-              <dd>백플립</dd>
             </div>
           </dl>
         </aside>
@@ -80,7 +128,10 @@
         <div id="difficultyWarning" class="difficulty-warning" hidden role="status" aria-live="polite"></div>
 
         <div id="startScreen" class="start-screen">
-          <img class="title-logo" src="./assets/title/crow_knight_title_2.webp" alt="Crow Knight" />
+          <picture>
+            <source media="(max-width: 820px)" srcset="./assets/title/crow_knight_title.webp" />
+            <img class="title-logo" src="./assets/title/crow_knight_title_2.webp" alt="Crow Knight" />
+          </picture>
           <button id="homeStart" class="primary-start" type="button">PLAY</button>
         </div>
 
@@ -92,20 +143,25 @@
               <ol id="rankingList" class="ranking-list"></ol>
             </section>
 
-            <section class="score-register" aria-labelledby="scoreTitle">
-              <h2 id="scoreTitle">획득 점수</h2>
-              <dl class="score-details">
+            <section class="score-register" aria-label="게임 결과와 랭킹 등록">
+              <dl class="score-total">
                 <div>
                   <dt>총점</dt>
                   <dd id="resultScore">0</dd>
                 </div>
+              </dl>
+              <dl class="score-breakdown">
                 <div>
                   <dt>생존</dt>
                   <dd id="resultSurvival">0:00</dd>
                 </div>
                 <div>
-                  <dt>처치</dt>
+                  <dt>잡몹 처치</dt>
                   <dd id="resultKills">0</dd>
+                </div>
+                <div>
+                  <dt>보스 처치</dt>
+                  <dd id="resultBossKills">0</dd>
                 </div>
               </dl>
               <form id="rankingForm" class="ranking-form">

@@ -756,7 +756,7 @@ function applyInteractionDamage({
     return true;
   }
 
-  if (attacker === playerActor) onPlayerKill();
+  if (attacker === playerActor) onPlayerKill(target);
   onEnemyDeath?.(target);
   startDeathRagdoll(target.player, deathRagdollImpulse(attacker, target, attackRegion), world);
   particleEffects?.triggerHitImpact(attacker, target, comboStep, true);

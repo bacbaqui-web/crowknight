@@ -37,6 +37,7 @@ export function createEncouragementBubbleController({ root, maxBubbles = DEFAULT
     root.hidden = !active || messages.length === 0;
     if (root.hidden) return;
 
+    const placedBubbleBounds = [];
     messages.forEach((entry, index) => {
       const element = document.createElement('button');
       const message = document.createElement('span');
@@ -54,6 +55,7 @@ export function createEncouragementBubbleController({ root, maxBubbles = DEFAULT
       bubble.element = element;
       bubbles.push(bubble);
       root.append(element);
+      placeBubbleOutsideResultPanel(root, bubble, index, placedBubbleBounds);
       applyBubblePosition(bubble);
     });
 
@@ -84,6 +86,106 @@ export function createEncouragementBubbleController({ root, maxBubbles = DEFAULT
     setActive,
     stop,
   };
+}
+
+function placeBubbleOutsideResultPanel(root, bubble, index, placedBounds) {
+  const panel = document.querySelector('.result-panel');
+  if (!panel || !bubble.element) return;
+
+  const rootBounds = root.getBoundingClientRect();
+  const panelBounds = panel.getBoundingClientRect();
+  const bubbleWidth = Math.max(1, bubble.element.offsetWidth);
+  const bubbleHeight = Math.max(1, bubble.element.offsetHeight);
+  const edgePadding = 8;
+  const panelGap = 32;
+  const panelLeft = panelBounds.left - rootBounds.left;
+  const panelTop = panelBounds.top - rootBounds.top;
+  const panelRight = panelBounds.right - rootBounds.left;
+  const panelBottom = panelBounds.bottom - rootBounds.top;
+  const regions = [
+    createBubbleRegion(edgePadding, panelLeft - panelGap - bubbleWidth, edgePadding, rootBounds.height - bubbleHeight),
+    createBubbleRegion(
+      panelRight + panelGap,
+      rootBounds.width - bubbleWidth - edgePadding,
+      edgePadding,
+      rootBounds.height - bubbleHeight
+    ),
+    createBubbleRegion(edgePadding, rootBounds.width - bubbleWidth, edgePadding, panelTop - panelGap - bubbleHeight),
+    createBubbleRegion(
+      edgePadding,
+      rootBounds.width - bubbleWidth,
+      panelBottom + panelGap,
+      rootBounds.height - bubbleHeight - edgePadding
+    ),
+  ].filter(Boolean);
+
+  if (!regions.length) {
+    bubble.element.hidden = true;
+    return;
+  }
+
+  const placement = selectLeastOverlappingPlacement(regions, placedBounds, bubbleWidth, bubbleHeight, index);
+  bubble.baseX = placement.x;
+  bubble.baseY = placement.y;
+  bubble.x = bubble.baseX;
+  bubble.y = bubble.baseY;
+  placedBounds.push(expandBubbleBounds(placement, bubbleWidth, bubbleHeight));
+}
+
+function createBubbleRegion(xMin, xMax, yMin, yMax) {
+  if (xMax < xMin || yMax < yMin) return null;
+  return { xMin, xMax, yMin, yMax };
+}
+
+function selectLeastOverlappingPlacement(regions, placedBounds, width, height, index) {
+  const candidateCount = Math.max(36, regions.length * 12);
+  let bestCandidate = null;
+  let bestOverlap = Infinity;
+  let bestDistance = -Infinity;
+
+  for (let attempt = 0; attempt < candidateCount; attempt += 1) {
+    const region = regions[(index + attempt) % regions.length];
+    const candidate = {
+      x: randomRange(region.xMin, region.xMax),
+      y: randomRange(region.yMin, region.yMax),
+    };
+    const bounds = expandBubbleBounds(candidate, width, height);
+    const overlap = placedBounds.reduce((total, placed) => total + overlapArea(bounds, placed), 0);
+    const nearestDistance = nearestBubbleDistance(bounds, placedBounds);
+    if (overlap > bestOverlap || (overlap === bestOverlap && nearestDistance <= bestDistance)) continue;
+    bestOverlap = overlap;
+    bestDistance = nearestDistance;
+    bestCandidate = candidate;
+  }
+
+  return bestCandidate;
+}
+
+function expandBubbleBounds(position, width, height) {
+  const driftPadding = 18;
+  return {
+    left: position.x - driftPadding,
+    top: position.y - driftPadding,
+    right: position.x + width + driftPadding,
+    bottom: position.y + height + driftPadding,
+  };
+}
+
+function overlapArea(a, b) {
+  const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+  const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  return width * height;
+}
+
+function nearestBubbleDistance(candidate, placedBounds) {
+  if (!placedBounds.length) return 0;
+  const centerX = (candidate.left + candidate.right) / 2;
+  const centerY = (candidate.top + candidate.bottom) / 2;
+  return Math.min(
+    ...placedBounds.map((placed) =>
+      Math.hypot(centerX - (placed.left + placed.right) / 2, centerY - (placed.top + placed.bottom) / 2)
+    )
+  );
 }
 
 function selectBubbleMessages(entries, limit) {

@@ -37,6 +37,7 @@ export function createRankingController({
     resultScore,
     resultSurvival,
     resultKills,
+    resultBossKills,
     retryRunButton,
   } = elements;
   let rankings = loadStoredRankings();
@@ -64,6 +65,7 @@ export function createRankingController({
         resultScore,
         resultSurvival,
         resultKills,
+        resultBossKills,
         rankingName,
         rankingMessage,
         rankingForm,

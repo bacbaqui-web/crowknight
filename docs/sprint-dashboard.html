@@ -176,7 +176,7 @@
   <body>
     <main>
       <header>
-        <p class="updated">Updated 2026-07-10 KST</p>
+        <p class="updated">Updated 2026-07-11 KST</p>
         <h1>Current Task Report</h1>
       </header>
 
@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Boss Kill HP Recover</p>
+            <p>Mobile Responsive Controls</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>보스 처치 시 주인공 HP를 1 회복하고 화면에 보상 알림을 표시한다.</p>
+            <p>작은 화면에서도 주인공을 중앙에 유지하고 모바일 터치 조작 UI를 제공한다.</p>
           </div>
         </div>
       </section>
@@ -199,30 +199,41 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>보스 처치 HP 회복 기믹 추가</p>
+            <p>모바일 반응형 조작 UI 추가</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>보스 1명 처치마다 주인공 HP를 1 회복한다.</li>
-              <li>같은 보스 사망으로 회복이 중복 실행되지 않게 한다.</li>
-              <li>보스 처치 시 화면 중간 위에 `HP+1` 알림을 표시한다.</li>
+              <li>화면 폭 변경 시 주인공의 가로 중앙 배치를 유지하고 세로 카메라 높이는 보존한다.</li>
+              <li>820px 이하에서 좌우 모바일 터치 패드를 표시한다.</li>
+              <li>조합 입력과 멀티터치를 기존 입력 시스템에 연결한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>완료 내용</strong></p>
             <ul>
-              <li>`main.js`의 `handleEnemyDeath()`에서 Boss 처치 회복을 연결했다.</li>
-              <li>`playerActor.hpPips`를 `maxHpPips`까지만 1 회복한다.</li>
-              <li>`index.html`과 `rankingScreens.css`에 `HP+1` 알림 UI를 추가했다.</li>
-              <li>알림 queue를 사용해 여러 알림이 겹치지 않도록 했다.</li>
+              <li>`index.html`에 Q/W/Space 및 네 방향 버튼을 추가했다.</li>
+              <li>모바일에서도 데스크톱과 같은 세로 카메라 높이와 safe area를 적용했다.</li>
+              <li>기존 `data-hold-code` 바인딩을 재사용해 멀티터치 조합을 지원한다.</li>
+              <li>왼쪽은 원을 네 부채꼴 터치 영역으로 나눈 고정 방향키로 개편했다.</li>
+              <li>오른쪽 아래에는 4분의 1만 보이는 큰 Q 버튼을 배치했다.</li>
+              <li>Q 곡선을 따라 SPACE/W/빈 E 슬롯을 30도 간격으로 구성했다.</li>
+              <li>
+                Q를 직전 위치보다 50px 올리고 방향 조작을 1.1배, W/SPACE를 1.2배 확대해 간격과 각도를 다시 계산한다.
+              </li>
+              <li>모바일 렌더링 배율은 세팅 및 수식 결과보다 0.2 낮게 적용한다.</li>
+              <li>타이틀·사망·결과 화면에서는 조작 패드를 숨긴다.</li>
+              <li>모바일 결과 화면의 말풍선을 제거하고 점수·입력·아이콘·랭킹 순서로 재배치했다.</li>
+              <li>데스크톱 결과 말풍선은 결과창보다 앞에 두고 패널 바깥의 계산된 여유 공간에만 생성한다.</li>
+              <li>점수를 생존 초×5 + 잡몹×100 + 보스×1,000으로 변경하고 상단 HUD와 결과 화면에 세 항목을 표시한다.</li>
+              <li>상단 HUD를 축소하고 공통 조작법 버튼, 중앙 안내 패널, 입력 시 재개되는 일시정지를 추가했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>브라우저에서 실제 보스 처치 후 HP 회복과 `HP+1` 표시를 수동 확인해야 한다.</li>
-              <li>HP가 이미 최대일 때도 알림은 보상 피드백으로 표시된다.</li>
+              <li>내장 브라우저 미제공으로 모바일 화면 자동 스크린샷 QA는 진행하지 못했다.</li>
+              <li>실제 휴대전화에서 회전 및 멀티터치 조합을 수동 확인해야 한다.</li>
             </ul>
           </div>
         </div>
@@ -237,25 +248,25 @@
               <li>
                 <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>보스 처치 시 주인공 HP가 1 회복되는지 확인한다.</span>
+                  <span>820px 이하에서 모바일 조작 UI가 표시되는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>주인공 HP가 maxHpPips를 넘지 않는지 확인한다.</span>
+                  <span>주인공은 가로 중앙에 유지되고 세로 카메라 높이는 데스크톱과 같은지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>같은 Boss 사망으로 HP가 중복 회복되지 않는지 확인한다.</span>
+                  <span>Q/W/Space와 방향키를 두 손가락으로 동시에 입력할 수 있는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>`HP+1` 알림이 화면 중간 위에 짧게 표시되는지 확인한다.</span>
+                  <span>홈 인디케이터와 하단 조작 버튼이 겹치지 않는지 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -266,13 +277,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 이번 HP 회복 작업만 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 이번 모바일 조작 작업을 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>회복 연결 위치, 중복 방지, 알림 UI가 보고서에 기록됐는지 확인한다.</span>
+                  <span>breakpoint, 입력 연결, safe area 대응이 보고서에 기록됐는지 확인한다.</span>
                 </label>
               </li>
               <li>
