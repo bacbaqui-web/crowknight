@@ -1,7 +1,7 @@
 const VERSION_STORAGE_KEY = 'crowKnight.deploymentVersion';
 const VERSION_CHECK_INTERVAL = 300_000;
 
-export function createDeploymentVersionController({ canReload = () => true } = {}) {
+export function createDeploymentVersionController({ canReload = () => true, onVersion = () => {} } = {}) {
   let pendingVersion = '';
   let intervalId = 0;
 
@@ -13,6 +13,7 @@ export function createDeploymentVersionController({ canReload = () => true } = {
   async function checkForUpdate() {
     const serverVersion = await loadServerVersion();
     if (!serverVersion) return false;
+    onVersion(serverVersion);
 
     const storedVersion = readStoredVersion();
     if (!storedVersion) {

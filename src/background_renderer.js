@@ -4,18 +4,23 @@ import { clamp } from './common_helper.js';
 const imageCache = new Map();
 const PSD_LAYER_ZOOM_DEPTH_POWER = 4;
 
-export function preloadSceneBackground(background) {
+export async function preloadSceneBackground(background) {
   const normalized = normalizeSceneBackground(background);
-  if (normalized.psdPreview.enabled && normalized.psdPreview.url.trim()) getCachedImage(normalized.psdPreview.url);
+  const imageStates = [];
+  const preload = (src) => imageStates.push(getCachedImage(src));
+
+  if (normalized.psdPreview.enabled && normalized.psdPreview.url.trim()) preload(normalized.psdPreview.url);
   normalized.psdLayers.forEach((layer) => {
-    if (layer.enabled && layer.imageSrc.trim()) getCachedImage(layer.imageSrc);
+    if (layer.enabled && layer.imageSrc.trim()) preload(layer.imageSrc);
   });
-  if (normalized.type === 'image' && normalized.imageSrc.trim()) getCachedImage(normalized.imageSrc);
+  if (normalized.type === 'image' && normalized.imageSrc.trim()) preload(normalized.imageSrc);
   if (normalized.type === 'layers') {
     normalized.layers.forEach((layer) => {
-      if (layer.enabled) getCachedImage(layer.src);
+      if (layer.enabled) preload(layer.src);
     });
   }
+
+  await Promise.all(imageStates.map((state) => state.promise));
 }
 
 export function drawSceneBackground(ctx, world, view, background) {
@@ -482,12 +487,22 @@ function getCachedImage(src) {
   if (imageCache.has(key)) return imageCache.get(key);
 
   const image = new Image();
-  const state = { image, loaded: false, error: false };
+  let settleLoad;
+  const state = {
+    image,
+    loaded: false,
+    error: false,
+    promise: new Promise((resolve) => {
+      settleLoad = resolve;
+    }),
+  };
   image.onload = () => {
     state.loaded = true;
+    settleLoad();
   };
   image.onerror = () => {
     state.error = true;
+    settleLoad();
   };
   image.src = key;
   imageCache.set(key, state);

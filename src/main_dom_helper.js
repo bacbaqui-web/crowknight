@@ -13,6 +13,7 @@ export function getMainDomElements() {
     mobileGameControls: document.querySelector('#mobileGameControls'),
     controlGuideButton: document.querySelector('#controlGuideButton'),
     gameControlGuide: document.querySelector('#gameControlGuide'),
+    gameVersionLabel: document.querySelector('#gameVersionLabel'),
     rankingList: document.querySelector('#rankingList'),
     settingsRankingList: document.querySelector('#settingsRankingList'),
     settingsRankingPanel: document.querySelector('.settings-ranking-panel'),

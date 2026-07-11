@@ -30,6 +30,10 @@
 }
 
 .primary-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   min-width: 172px;
   min-height: 50px;
   border: 0;
@@ -41,6 +45,22 @@
   font-weight: 900;
   letter-spacing: 0;
   cursor: pointer;
+}
+
+.primary-start.is-loading::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.22);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: start-loading-spin 720ms linear infinite;
+}
+
+@keyframes start-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .primary-start:hover,

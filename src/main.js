@@ -67,6 +67,7 @@ const {
   mobileGameControls,
   controlGuideButton,
   gameControlGuide,
+  gameVersionLabel,
   rankingList,
   settingsRankingList,
   settingsRankingPanel,
@@ -103,7 +104,7 @@ if (!savedState) {
 const sceneSessions = savedState.sessions;
 let sceneSession = savedState.sceneSession;
 const initialPsdBackgroundChanged = isEditorPage ? await refreshInitialPsdBackground() : false;
-preloadSceneBackground(sceneSession.background);
+await preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
 const localCharacterState = isEditorPage ? await loadCharacterStateFromLocalAssets() : null;
@@ -150,6 +151,9 @@ const deploymentVersionController = isEditorPage
   ? { applyPendingUpdate: () => false }
   : createDeploymentVersionController({
       canReload: () => !battleActive && !playerDeathPending && !resultOpen,
+      onVersion: (version) => {
+        if (gameVersionLabel) gameVersionLabel.textContent = version;
+      },
     });
 let difficultyLevel = 0;
 let lastRecordedScore = 0;
@@ -255,6 +259,7 @@ bindKeyboardControls({
   pressed,
   handleShortcut: (event) => tuningPanel.handleKeyboardShortcut(event),
 });
+markGameReady();
 requestAnimationFrame(loop);
 
 function loop(now) {
@@ -960,9 +965,21 @@ function hideDifficultyWarning() {
 }
 
 function showRuntimeLoadError() {
+  if (homeStartButton) {
+    homeStartButton.classList.remove('is-loading');
+    homeStartButton.textContent = 'LOAD ERROR';
+    homeStartButton.disabled = true;
+  }
   const parent = canvas?.parentElement || document.body;
   const message = document.createElement('div');
   message.className = 'runtime-load-error';
   message.textContent = '게임 데이터를 불러오지 못했습니다. Firebase 배포 업로드를 먼저 완료해 주세요.';
   parent.append(message);
+}
+
+function markGameReady() {
+  if (!homeStartButton) return;
+  homeStartButton.classList.remove('is-loading');
+  homeStartButton.textContent = 'PLAY';
+  homeStartButton.disabled = false;
 }
