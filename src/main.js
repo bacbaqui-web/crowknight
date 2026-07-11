@@ -47,6 +47,7 @@ import { loadCharacterStateFromLocalAssets } from './local_character_asset_stora
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
 import { layoutMobileActionControls } from './mobile_control_layout_helper.js';
+import { createDeploymentVersionController } from './deployment_version_controller.js';
 import {
   activeProjectiles,
   drawProjectiles,
@@ -145,6 +146,11 @@ let runSurvivalTime = 0;
 let runKills = 0;
 let bossKills = 0;
 let controlGuideOpen = false;
+const deploymentVersionController = isEditorPage
+  ? { applyPendingUpdate: () => false }
+  : createDeploymentVersionController({
+      canReload: () => !battleActive && !playerDeathPending && !resultOpen,
+    });
 let difficultyLevel = 0;
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
@@ -651,6 +657,7 @@ function runtimeScreenZoom(gameActors) {
 }
 
 function startRun() {
+  if (deploymentVersionController.applyPendingUpdate()) return;
   hideResultScreen();
   syncRunPlayerFromSetupSelection();
   bossKills = 0;
@@ -835,6 +842,7 @@ function showStartScreen() {
   if (!startScreen) return;
 
   startScreen.classList.remove('is-hidden');
+  deploymentVersionController.applyPendingUpdate();
 }
 
 function showResultScreen() {
