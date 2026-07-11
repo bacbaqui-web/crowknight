@@ -122,7 +122,6 @@
               <dd>낙하공격</dd>
             </div>
           </dl>
-          <small id="gameVersionLabel" class="game-version-label">버전 확인 중</small>
         </aside>
 
         <div id="encouragementBubbles" class="encouragement-bubbles" aria-label="응원 말풍선"></div>
@@ -218,6 +217,25 @@
             </nav>
           </div>
           <img class="result-title-bottom" src="./assets/title/dashboard_bottom.webp" alt="" />
+          <button
+            id="gameVersionButton"
+            class="result-version-button"
+            type="button"
+            aria-controls="updateHistoryModal"
+            aria-expanded="false"
+          >
+            버전 확인 중
+          </button>
+        </div>
+
+        <div id="updateHistoryModal" class="update-history-modal" hidden>
+          <section class="update-history-dialog" role="dialog" aria-modal="true" aria-labelledby="updateHistoryTitle">
+            <header>
+              <h2 id="updateHistoryTitle">업데이트 내역</h2>
+              <button id="updateHistoryClose" type="button" aria-label="업데이트 내역 닫기">×</button>
+            </header>
+            <div id="updateHistoryList" class="update-history-list"></div>
+          </section>
         </div>
       </section>
     </main>

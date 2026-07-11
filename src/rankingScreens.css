@@ -322,6 +322,126 @@
   object-fit: contain;
 }
 
+.result-version-button {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 7;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.result-version-button:hover,
+.result-version-button:focus-visible {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+}
+
+.update-history-modal {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.update-history-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(76vh, 640px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(14, 15, 20, 0.98);
+  color: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.56);
+}
+
+.update-history-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.update-history-dialog h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.update-history-dialog > header button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.update-history-list {
+  display: grid;
+  gap: 14px;
+  max-height: calc(min(76vh, 640px) - 65px);
+  overflow: auto;
+  padding: 16px 18px 20px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+}
+
+.update-history-list article {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.update-history-list h3,
+.update-history-list p {
+  margin: 0;
+}
+
+.update-history-list h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  color: #fff;
+  font-size: 18px;
+}
+
+.update-history-list h3 small {
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.update-history-list p {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 750;
+}
+
+.update-history-list ul {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
 .result-panel {
   display: grid;
   grid-template-columns: minmax(250px, 0.95fr) minmax(280px, 1.15fr) 86px;

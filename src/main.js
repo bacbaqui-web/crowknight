@@ -48,6 +48,7 @@ import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
 import { layoutMobileActionControls } from './mobile_control_layout_helper.js';
 import { createDeploymentVersionController } from './deployment_version_controller.js';
+import { createUpdateHistoryController } from './update_history_controller.js';
 import {
   activeProjectiles,
   drawProjectiles,
@@ -67,7 +68,10 @@ const {
   mobileGameControls,
   controlGuideButton,
   gameControlGuide,
-  gameVersionLabel,
+  gameVersionButton,
+  updateHistoryModal,
+  updateHistoryClose,
+  updateHistoryList,
   rankingList,
   settingsRankingList,
   settingsRankingPanel,
@@ -152,9 +156,15 @@ const deploymentVersionController = isEditorPage
   : createDeploymentVersionController({
       canReload: () => !battleActive && !playerDeathPending && !resultOpen,
       onVersion: (version) => {
-        if (gameVersionLabel) gameVersionLabel.textContent = version;
+        if (gameVersionButton) gameVersionButton.textContent = version;
       },
     });
+createUpdateHistoryController({
+  modal: updateHistoryModal,
+  openButton: gameVersionButton,
+  closeButton: updateHistoryClose,
+  list: updateHistoryList,
+});
 let difficultyLevel = 0;
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
