@@ -119,10 +119,10 @@ export function createRankingController({
   }
 
   async function recordRanking(name, message) {
-    const { score, survivalTime, kills } = getRunResult();
+    const { score, survivalTime, kills, bossKills } = getRunResult();
     if (score < 0) return;
 
-    const entry = createRankingEntry(score, survivalTime, kills, name || getPlayerName(), message);
+    const entry = createRankingEntry(score, survivalTime, kills, name || getPlayerName(), message, bossKills);
     rankings = sortRankingEntries([...rankings, entry]);
     saveRankings();
     notifyRankingsChange();

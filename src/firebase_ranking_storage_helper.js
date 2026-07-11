@@ -71,6 +71,7 @@ function normalizeRankingEntryDocument(document) {
     score: numberField(fields.score),
     survivalTime: numberField(fields.survivalTime),
     kills: numberField(fields.kills),
+    bossKills: numberField(fields.bossKills),
     date: stringField(fields.date),
     createdAt: numberField(fields.createdAt),
   };
@@ -83,6 +84,7 @@ function rankingEntryToFirestoreFields(entry) {
     score: { integerValue: String(Math.max(0, Math.round(Number(entry.score || 0)))) },
     survivalTime: { doubleValue: Number(entry.survivalTime || 0) },
     kills: { integerValue: String(Math.max(0, Math.round(Number(entry.kills || 0)))) },
+    bossKills: { integerValue: String(Math.max(0, Math.round(Number(entry.bossKills || 0)))) },
     date: { stringValue: entry.date || new Date().toISOString() },
     createdAt: { integerValue: String(Number(entry.createdAt || Date.now())) },
   };

@@ -22,10 +22,11 @@ export function drawRankingHud(ctx, { rankings, battleActive, lastRecordedScore 
       ctx.fillStyle = index === 0 ? '#7cc3a2' : '#d9deec';
       const survivalTime = Number(entry.survivalTime ?? entry.distance ?? 0);
       const kills = Number(entry.kills || 0);
+      const bossKills = Number(entry.bossKills || 0);
       ctx.fillText(`${index + 1}. ${entry.name} ${entry.score}점`, x, rowY);
-      if (survivalTime || kills) {
+      if (survivalTime || kills || bossKills) {
         ctx.fillStyle = '#9fa7b8';
-        ctx.fillText(`생존 ${formatSurvivalTime(survivalTime)} / 잡몹 ${kills}`, x + 18, rowY + 13);
+        ctx.fillText(`생존 ${formatSurvivalTime(survivalTime)} / 잡몹 ${kills} / 보스 ${bossKills}`, x + 18, rowY + 13);
       }
     });
   }
@@ -60,13 +61,14 @@ export function recordRankingEntry(rankings, score, survivalTime = 0, kills = 0,
   return nextRankings;
 }
 
-export function createRankingEntry(score, survivalTime = 0, kills = 0, name = '주인공', message = '') {
+export function createRankingEntry(score, survivalTime = 0, kills = 0, name = '주인공', message = '', bossKills = 0) {
   return {
     name,
     message: normalizeRankingMessage(message),
     score,
     survivalTime,
     kills,
+    bossKills,
     date: new Date().toISOString(),
     createdAt: Date.now(),
   };
@@ -177,7 +179,7 @@ export function renderRankingList(rankingList, rankings) {
     rank.textContent = `${index + 1}`;
     name.textContent = entry.name || '이름 없음';
     score.textContent = `${Number(entry.score || 0)}점`;
-    detail.textContent = `생존 ${formatSurvivalTime(entry.survivalTime ?? entry.distance ?? 0)} / 처치 ${Number(entry.kills || 0)}`;
+    detail.textContent = `생존 ${formatSurvivalTime(entry.survivalTime ?? entry.distance ?? 0)} / 잡몹 ${Number(entry.kills || 0)} / 보스 ${Number(entry.bossKills || 0)}`;
     message.textContent = entry.message || '';
     head.append(name, score);
     item.append(rank, head, detail);
