@@ -149,6 +149,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `interaction_field_data.js`: collision / hurt / attack / guard option field definitions and defaults.
 - `interaction_object_editor_controller.js`: interaction object edit source controller.
 - `interaction_region_engine.js`: runtime interaction region 계산.
+- `interaction_overlap_helper.js`: rect / polygon SAT / swept Interaction Region 순수 overlap 계산.
 - `interaction_swept_region_helper.js`: 이전 / 현재 Interaction Region swept polygon helper.
 - `action_modifier_panel_controller.js`: Action Formula panel 연결 controller.
 - `formula_registry.js`: Formula module registry / normalize / migration.
@@ -189,7 +190,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `actor_runtime_engine.js`: actor physics / state runtime update.
 - `action_trigger_engine.js`: trigger matching과 custom Action start.
 - `input_control_controller.js`: runtime input state controller.
-- `combat_engine.js`: Enemy AI / respawn, 근접·투사체 hit, guard, collision, damage resolve.
+- `combat_engine.js`: Enemy AI / respawn, 근접·투사체 Combat Resolve, guard, collision, damage 처리.
 - `death_ragdoll_engine.js`: actor 사망 시 파츠별 ragdoll 상태 생성 / 갱신 / 렌더.
 - `projectile_runtime_engine.js`: 투사체 Formula runtime pool / 이동 / draw / attack region helper.
 - `runtime_debug_state.js`: runtime debug ON/OFF, action snapshot, event buffer state.
@@ -215,7 +216,8 @@ Input
 - Action Runtime: `actor_action_helper.js`, `actor_runtime_engine.js` - Action 시간, physics, actor 상태를 갱신한다.
 - Current Frame: `actor_runtime_engine.js` - `actionKey`, `getActionFrameProgress()`, `getPartOffset()`로 현재 frame 값을 읽는다.
 - Interaction Region: `interaction_region_engine.js` - 현재 Runtime frame에서 Attack/Hurt/Collision/Guard region을 계산한다.
-- Combat: `combat_engine.js` - InteractionRegion overlap, damage, guard, collision push를 처리한다.
+- Overlap Geometry: `interaction_overlap_helper.js` - Combat 호출 안에서 rect / polygon SAT / swept overlap 결과만 계산한다.
+- Combat: `combat_engine.js` - overlap 결과를 사용해 Combat Resolve, damage, guard, collision push를 처리한다.
 - Render: `actor_renderer.js`, `actor_canvas_renderer.js` - actor와 edit/debug overlay를 그린다.
 - Debug HUD: `runtime_debug_state.js`, `runtime_debug_hud_view.js` - Runtime snapshot과 최근 판정 이벤트를 표시한다.
 
@@ -223,7 +225,7 @@ Input
 
 - `player.hitRegions`는 Combat source가 아니다.
 - `player.hitRegions`는 draw/edit/debug overlay용이다.
-- Combat은 `interaction_region_engine.js`가 현재 Runtime frame에서 계산한 InteractionRegion을 읽는다.
+- Combat은 `interaction_region_engine.js`가 현재 Runtime frame에서 계산한 InteractionRegion을 읽고, `interaction_overlap_helper.js`에 순수 overlap 계산을 요청한다.
 
 ## Rendering / Camera / HUD
 
@@ -298,5 +300,6 @@ Input
 - Timeline 현재 frame: `timeline_frame_reader.js`
 - Project normalize: `project_data_normalizer_helper.js`
 - Runtime trigger: `action_trigger_engine.js`
-- Enemy AI / respawn / combat: `combat_engine.js`
+- Overlap geometry: `interaction_overlap_helper.js`
+- Enemy AI / respawn / Combat Resolve / damage: `combat_engine.js`
 - Deployment update: `deployment_version_controller.js`, `update_history_controller.js`

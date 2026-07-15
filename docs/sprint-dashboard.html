@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Runtime Structure Refactor — Task1</p>
+            <p>Runtime Structure Refactor — Task2</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>기능 변경 없이 Runtime 책임을 단계별로 분리하며 현재 진행률은 15%다.</p>
+            <p>기능 변경 없이 Runtime 책임을 단계별로 분리하며 현재 진행률은 30%다.</p>
           </div>
         </div>
       </section>
@@ -199,32 +199,31 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Task1 — 기준점 구축 및 Characterization Test 계획</p>
+            <p>Task2 — Interaction Overlap 분리</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>기준 커밋 뒤에 현재 Runtime 동작과 frame 순서를 고정한다.</li>
-              <li>Node 내장 test로 검증할 Characterization Test 범위를 정한다.</li>
-              <li>Runtime 소스 변경 없이 Task2를 시작할 안전 기준을 만든다.</li>
+              <li>순수 Geometry overlap 함수만 별도 Helper로 이동한다.</li>
+              <li>Combat 상태와 실행 순서를 변경하지 않는다.</li>
+              <li>Node 내장 test로 rect, polygon SAT와 swept overlap을 고정한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>작성 내용</strong></p>
             <ul>
-              <li>기준 커밋과 깨끗한 작업 트리를 확인했다.</li>
-              <li>공통, Battle, Combat, Render의 실제 호출 순서를 기록했다.</li>
-              <li>Run 시작·종료, Actor, Kill 집계, Attack, 저장 호환성의 회귀 기준을 정했다.</li>
-              <li>Node에서 import 가능한 모듈과 브라우저 QA가 필요한 흐름을 구분했다.</li>
-              <li>Region cache, previousAttackRegions, 중복 hit와 callback 순서 위험을 기록했다.</li>
-              <li>Task2의 새 helper와 이동·유지할 함수 범위를 확정했다.</li>
+              <li>지정된 overlap 함수 9개를 이름과 시그니처 변경 없이 이동했다.</li>
+              <li>combat_engine.js는 Helper를 import해 기존 위치에서 호출한다.</li>
+              <li>Region cache와 previousAttackRegions 상태 함수는 원래 위치에 유지했다.</li>
+              <li>Node 내장 Geometry test 5개를 추가했다.</li>
+              <li>SRC Map의 Interaction / Runtime 파일 목록과 책임을 갱신했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>Runtime 구현과 저장 구조는 변경하지 않았다.</li>
-              <li>다음 Task는 interaction_overlap_helper 분리이며 누적 진행률 목표는 30%다.</li>
+              <li>Damage, Guard, Hit Cancel, Knockback, Death와 Respawn은 변경하지 않았다.</li>
+              <li>다음 Task는 Enemy Runtime 분리이며 누적 진행률 목표는 55%다.</li>
             </ul>
           </div>
         </div>
@@ -239,25 +238,25 @@
               <li>
                 <label class="qa-item" data-qa-id="deploy-upload-button">
                   <input type="checkbox" />
-                  <span>Run 시작·종료와 Player 선택의 브라우저 기준 동작을 확인한다.</span>
+                  <span>index.html이 HTTP 200으로 응답하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="deploy-firebase-assets">
                   <input type="checkbox" />
-                  <span>일반 적과 Boss 생성·처치 집계가 현재와 같은지 확인한다.</span>
+                  <span>setting.html이 HTTP 200으로 응답하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>근접·trace·Projectile 공격의 중복 방지 기준을 확인한다.</span>
+                  <span>trace swept overlap test가 통과하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>설정 페이지와 게임 페이지의 기존 데이터 load를 확인한다.</span>
+                  <span>Region cache와 Combat 상태 함수가 원래 파일에 남아 있는지 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -268,19 +267,19 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 Task1 기준점과 Characterization Test 계획을 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 Task2 실제 결과와 줄 수를 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>Runtime 소스와 저장 데이터에 Task1 변경이 없는지 확인한다.</span>
+                  <span>SRC Map이 새 Helper와 Combat 책임 변경을 반영하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="check-commands">
                   <input type="checkbox" />
-                  <span>npm run check와 git diff --check를 통과하는지 확인한다.</span>
+                  <span>npm run check, node --test와 git diff --check를 통과하는지 확인한다.</span>
                 </label>
               </li>
             </ul>

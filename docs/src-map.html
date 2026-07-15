@@ -678,7 +678,7 @@
 
     <script>
       const SOURCE_FILES = Object.freeze(
-        `+src/action_authoring_controller.js
+        `src/action_authoring_controller.js
 src/action_authoring_data.js
 src/action_blend_helper.js
 src/action_condition_helper.js
@@ -784,6 +784,7 @@ src/input_control_controller.js
 src/interaction_editor_engine.js
 src/interaction_field_data.js
 src/interaction_object_editor_controller.js
+src/interaction_overlap_helper.js
 src/interaction_region_engine.js
 src/interaction_swept_region_helper.js
 src/local_api_helper.js
@@ -992,6 +993,7 @@ src/zoom_formula_runtime_helper.js
             'interaction_editor_engine.js',
             'interaction_field_data.js',
             'interaction_object_editor_controller.js',
+            'interaction_overlap_helper.js',
             'interaction_region_engine.js',
             'action_modifier_panel_controller.js',
             'formula_registry.js',
@@ -1052,6 +1054,7 @@ src/zoom_formula_runtime_helper.js
             'actor_renderer.js',
             'actor_canvas_renderer.js',
             'combat_engine.js',
+            'interaction_overlap_helper.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
             'color_change_formula_runtime_helper.js',
@@ -1093,12 +1096,12 @@ src/zoom_formula_runtime_helper.js
         },
         {
           name: 'Interaction Region',
-          role: '현재 Runtime frame에서 Attack/Hurt/Collision/Guard region을 계산한다.',
-          js: ['interaction_region_engine.js'],
+          role: '현재 Runtime frame의 region과 rect / polygon SAT / swept overlap geometry를 계산한다.',
+          js: ['interaction_region_engine.js', 'interaction_overlap_helper.js'],
         },
         {
           name: 'Combat',
-          role: 'Enemy AI와 respawn, 근접·투사체 overlap, damage, guard, collision push를 처리한다.',
+          role: 'Enemy AI와 respawn, 근접·투사체 Combat Resolve, damage, guard, collision push를 처리한다.',
           js: ['combat_engine.js', 'projectile_runtime_engine.js'],
         },
         {
@@ -1306,6 +1309,7 @@ src/zoom_formula_runtime_helper.js
           status: 'common',
           js: [
             'interaction_object_editor_controller.js',
+            'interaction_overlap_helper.js',
             'interaction_region_engine.js',
             'combat_engine.js',
             'editable_object_model_helper.js',
@@ -1357,6 +1361,7 @@ src/zoom_formula_runtime_helper.js
             'world_renderer.js',
             'camera_view.js',
             'canvas_layout_helper.js',
+            'interaction_overlap_helper.js',
             'interaction_swept_region_helper.js',
             'puppet_player_geometry_helper.js',
             'puppet_player_edit_region_helper.js',
@@ -1569,7 +1574,8 @@ src/zoom_formula_runtime_helper.js
 
       const FILE_RESPONSIBILITY_AUDIT = {
         'main.js': ['Bootstrap', 'Runtime Loop', 'Run Lifecycle', 'Runtime Actor Roster', 'Screen State'],
-        'combat_engine.js': ['Enemy AI', 'Enemy Respawn', 'Melee / Projectile Combat', 'Overlap', 'Damage / Reaction'],
+        'combat_engine.js': ['Enemy AI', 'Enemy Respawn', 'Combat Resolve', 'Damage / Reaction'],
+        'interaction_overlap_helper.js': ['Rect Overlap', 'Polygon SAT', 'Swept Overlap'],
         'part_editor_controller.js': ['Selection', 'Panel Wiring'],
         'property_panel_controller.js': ['Setup Property', 'Action Property', 'Group Property'],
         'action_authoring_controller.js': ['Action UI', 'Trigger UI'],
@@ -1587,7 +1593,12 @@ src/zoom_formula_runtime_helper.js
       };
 
       const LARGE_FILES = [
-        ['combat_engine.js', '893', 'Enemy AI / Respawn / Combat / Damage', '800줄 초과, 전투 외 책임 분리 검토'],
+        [
+          'combat_engine.js',
+          '823',
+          'Enemy AI / Respawn / Combat Resolve / Damage',
+          '800줄 초과, 전투 외 책임 분리 검토',
+        ],
         ['main.js', '839', 'Bootstrap / Loop / Run / Actor / Screen', '800줄 초과, Entry 책임 축소 필요'],
         ['action_trigger_engine.js', '812', 'Trigger / Action / Formula Runtime', '800줄 초과, Formula 실행 경계 감시'],
         ['editor_asset_controller.js', '777', 'Setup / Effect / Background asset actions', '에셋 UI 흐름 3개 포함'],
