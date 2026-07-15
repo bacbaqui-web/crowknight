@@ -12,7 +12,7 @@ import {
   bindTouchControls,
 } from './input_control_controller.js';
 import { resolveCombat, resolveProjectileCombat } from './combat_engine.js';
-import { maintainEnemyFlow, resolveEnemyActorSpawnRule, updateBattleActorMotion } from './enemy_runtime_engine.js';
+import { maintainEnemyFlow, updateBattleActorMotion } from './enemy_runtime_engine.js';
 import { advanceCustomActionRuntime, requestRuntimeAction } from './action_trigger_engine.js';
 import { drawRankingHud } from './ranking_view.js';
 import { createRankingController } from './ranking_controller.js';
@@ -39,11 +39,11 @@ import {
   MIN_SCREEN_ZOOM,
   createWorldFromSceneSession,
 } from './scene_session_data.js';
-import { PuppetPlayer } from './actor_runtime_engine.js';
 import { createProjectStateController } from './project_state_controller.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
-import { isPlayerCharacter, isTrashCharacter, normalizeCharacterGroup } from './character_group_data.js';
+import { normalizeCharacterGroup } from './character_group_data.js';
+import { createRunActorState } from './run_actor_state.js';
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
@@ -126,7 +126,7 @@ const effectAssetSources = isEditorPage
   ? localEffectAssetSourceKeys(savedState.effectAssets)
   : savedState.effectAssets || {};
 const effectAssets = await loadEffectAssets('', effectAssetSources);
-let playerActor = defaultRunPlayerActor(actors);
+const runActorState = createRunActorState({ actors, world });
 const particleEffects = createParticleEffects({ actors, world, ctx });
 const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshStagePsdAsset } =
   createProjectStateController({
@@ -140,7 +140,7 @@ const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refre
     onSceneBackgroundUpdate: preloadSceneBackground,
   });
 if (initialPsdBackgroundChanged) saveState();
-let selectedActor = readSetupSelectedActor() || playerActor;
+let selectedActor = readSetupSelectedActor() || runActorState.getPlayer();
 let battleActive = false;
 let playerDeathPending = false;
 let resultOpen = false;
@@ -166,7 +166,6 @@ createUpdateHistoryController({
 });
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
-let runtimeEnemyActors = [];
 const encouragementBubbleController = createEncouragementBubbleController({ root: encouragementBubbles });
 mobileLayoutQuery.addEventListener('change', syncEncouragementBubbleVisibility);
 bindControlGuide();
@@ -191,10 +190,16 @@ function backgroundAssetSignature(background = {}) {
 }
 
 window.addEventListener('resize', () => {
-  syncCanvasToLayout({ canvas, world, actors: activeGameActors(), isFullStage, adjustActors: true });
+  syncCanvasToLayout({
+    canvas,
+    world,
+    actors: runActorState.getActiveActors({ runActive: runActorOrderActive() }),
+    isFullStage,
+    adjustActors: true,
+  });
   layoutMobileActionControls(mobileGameControls);
 });
-lineUpActorPositions(activeGameActors(), world);
+lineUpActorPositions(runActorState.getActiveActors(), world);
 bindBattleControls(
   { startBattleButton, homeStartButton, endBattleButton },
   {
@@ -202,7 +207,7 @@ bindBattleControls(
     endRun: () => {
       finishRun({ showResult: Boolean(resultScreen) });
       particleEffects.reset();
-      if (!resultScreen) lineUpActorPositions(activeGameActors(), world);
+      if (!resultScreen) lineUpActorPositions(runActorState.getActiveActors(), world);
     },
   }
 );
@@ -226,7 +231,7 @@ const rankingController = createRankingController({
   },
   startRun,
   getRunResult,
-  getPlayerName: () => playerActor.name || '주인공',
+  getPlayerName: () => runActorState.getPlayer()?.name || '주인공',
   hideStartScreen,
   showStartScreen,
   onRankingsChange: (rankings) => encouragementBubbleController.refresh(rankings),
@@ -244,7 +249,7 @@ const tuningPanel = createTuningPanel({
   world,
   effectAssets,
   effectAssetSources,
-  playerActor,
+  playerActor: runActorState.getPlayer(),
   getSelectedActor: () => selectedActor,
   setSelectedActor: (actor) => {
     selectedActor = actor;
@@ -276,7 +281,8 @@ function loop(now) {
 
 function update(dt) {
   beginRuntimeDebugFrame();
-  const gameActors = activeGameActors();
+  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const playerActor = runActorState.getPlayer();
   captureActorMotionStart(gameActors);
 
   if (controlGuideOpen) return;
@@ -292,7 +298,7 @@ function update(dt) {
   }
 
   if (!battleActive) {
-    const controlActor = editorControlActor(gameActors);
+    const controlActor = runActorState.getEditorControlActor(selectedActor, gameActors);
     controlActor.player.update(dt, keys, pressed, world);
     updatePausedActors(
       gameActors.filter((actor) => actor !== controlActor),
@@ -367,7 +373,7 @@ function beginPlayerDeath() {
   if (homeStartButton) homeStartButton.disabled = true;
   if (endBattleButton) endBattleButton.disabled = true;
 
-  const player = playerActor.player;
+  const player = runActorState.getPlayer().player;
   player.fallbackActionKey = 'death';
   requestRuntimeAction(player, 'death', player.facing, 'tap');
   player.dead = true;
@@ -386,8 +392,8 @@ function beginPlayerDeath() {
 }
 
 function updatePlayerDeathSequence(dt) {
-  const gameActors = activeGameActors();
-  const player = playerActor.player;
+  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const player = runActorState.getPlayer().player;
   deathSequenceTime += dt;
   player.animTime += dt;
   player.stateTime += dt;
@@ -409,8 +415,8 @@ function updatePlayerDeathSequence(dt) {
 }
 
 function updateResultScene(dt) {
-  const gameActors = activeGameActors();
-  const player = playerActor.player;
+  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const player = runActorState.getPlayer().player;
   player.animTime += dt;
   player.stateTime += dt;
   player.dead = true;
@@ -442,14 +448,15 @@ function finishRun({ showResult = false } = {}) {
   if (endBattleButton) endBattleButton.disabled = true;
   if (showResult) showResultScreen();
   else {
-    runtimeEnemyActors = [];
+    runActorState.clearEnemies();
     showStartScreen();
   }
 }
 
 function draw() {
-  const gameActors = activeGameActors();
-  const renderActors = actorRenderOrder(gameActors);
+  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const playerActor = runActorState.getPlayer();
+  const renderActors = runActorState.getRenderActors(gameActors);
   const view = getViewTransform({
     world,
     playerActor,
@@ -492,12 +499,6 @@ function draw() {
   if (!settingsRankingList && !isFullStage) {
     drawRankingHud(ctx, { rankings: rankingController.getRankings(), battleActive, lastRecordedScore });
   }
-}
-
-function actorRenderOrder(gameActors) {
-  return [...gameActors.filter((actor) => actor !== playerActor), playerActor].filter((actor) =>
-    gameActors.includes(actor)
-  );
 }
 
 function getRunScore() {
@@ -587,10 +588,10 @@ function runtimeScreenZoom(gameActors) {
 function startRun() {
   if (deploymentVersionController.applyPendingUpdate()) return;
   hideResultScreen();
-  syncRunPlayerFromSetupSelection();
+  const playerActor = runActorState.resolvePlayer(selectedActor);
   bossKills = 0;
-  rebuildRuntimeEnemyActors();
-  const gameActors = runOrderedActors([...baseGameActors(), ...runtimeEnemyActors]);
+  runActorState.rebuildEnemies();
+  const gameActors = runActorState.getRunActors();
   lineUpActorPositions(gameActors, world);
   battleActive = true;
   setControlGuideButtonVisible(true);
@@ -616,97 +617,14 @@ function startRun() {
   document.activeElement?.blur();
 }
 
-function activeGameActors() {
-  const gameActors = baseGameActors();
-  const runtimeActors = runActorOrderActive() ? [...gameActors, ...runtimeEnemyActors] : gameActors;
-  return runActorOrderActive() ? runOrderedActors(runtimeActors) : runtimeActors;
-}
-
-function editorControlActor(gameActors = activeGameActors()) {
-  return gameActors.includes(selectedActor) ? selectedActor : playerActor;
-}
-
-function syncRunPlayerFromSetupSelection() {
-  const gameActors = baseGameActors();
-  playerActor = setupSelectedRunActor(gameActors);
-  return runOrderedActors(gameActors);
-}
-
-function rebuildRuntimeEnemyActors() {
-  runtimeEnemyActors = [];
-  baseGameActors()
-    .filter((actor) => actor !== playerActor && !isPlayerCharacter(actor))
-    .forEach((actor) => {
-      const maxAlive = resolveEnemyActorSpawnRule(world, actor.id).maxAlive;
-      for (let index = 1; index < maxAlive; index += 1) {
-        runtimeEnemyActors.push(createRuntimeEnemyClone(actor, index));
-      }
-    });
-}
-
-function createRuntimeEnemyClone(source, index) {
-  const player = new PuppetPlayer(source.player.x, world.floorY, source.player.assets);
-  player.applyTuning(source.tuning);
-  player.debugInteractionObjects = source.player.debugInteractionObjects;
-  const clone = {
-    ...source,
-    runtimeClone: true,
-    runtimeSourceActorId: source.id,
-    runtimeInstanceId: `${source.id}#${index + 1}`,
-    respawning: false,
-    respawnTargetX: source.respawnTargetX,
-    invulnTime: 0,
-    wasRolling: false,
-    hurtCooldown: 0,
-    hitStun: 0,
-    rollGhosts: [],
-    rollGhostTimer: 0,
-    lastHitSerials: {},
-    aiActionCooldowns: {},
-    runtimeBossKillCounted: false,
-    hpPips: source.maxHpPips,
-    player,
-  };
-  return clone;
-}
-
-function setupSelectedRunActor(gameActors = baseGameActors()) {
-  if (gameActors.includes(selectedActor)) return selectedActor;
-  return defaultRunPlayerActor(gameActors) || playerActor;
-}
-
-function runOrderedActors(gameActors = baseGameActors()) {
-  if (!gameActors.includes(playerActor)) return gameActors;
-  return [playerActor, ...gameActors.filter((actor) => actor !== playerActor).sort(compareEnemyRunOrder)];
-}
-
-function compareEnemyRunOrder(a, b) {
-  return enemyRunOrderPriority(a) - enemyRunOrderPriority(b);
-}
-
-function enemyRunOrderPriority(actor) {
-  const group = normalizeCharacterGroup(actor?.group, '');
-  if (group === 'mobs') return 0;
-  if (group === 'bosses') return 1;
-  return 2;
-}
-
 function runActorOrderActive() {
   return battleActive || playerDeathPending || resultOpen;
-}
-
-function baseGameActors() {
-  return actors.filter((actor) => !isTrashCharacter(actor));
-}
-
-function defaultRunPlayerActor(gameActors = baseGameActors()) {
-  return gameActors.find((actor) => isPlayerCharacter(actor)) || gameActors[0] || null;
 }
 
 function readSetupSelectedActor() {
   try {
     const actorId = window.localStorage?.getItem(SETUP_SELECTED_ACTOR_STORAGE_KEY);
-    return actorId ? baseGameActors().find((actor) => actor.id === actorId) || null : null;
+    return actorId ? runActorState.findBaseActor(actorId) : null;
   } catch {
     return null;
   }

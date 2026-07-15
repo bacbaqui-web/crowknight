@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Runtime Structure Refactor — Task3</p>
+            <p>Runtime Structure Refactor — Task4</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>기능 변경 없이 Runtime 책임을 단계별로 분리하며 현재 진행률은 55%다.</p>
+            <p>기능 변경 없이 Runtime 책임을 단계별로 분리하며 현재 진행률은 70%다.</p>
           </div>
         </div>
       </section>
@@ -199,32 +199,32 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Task3 — Enemy Runtime 분리</p>
+            <p>Task4 — Run Actor 목록 분리</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>Enemy 방향·AI·cooldown과 생명주기를 Combat에서 분리한다.</li>
-              <li>Battle update와 Combat 판정 순서를 변경하지 않는다.</li>
-              <li>Node 내장 test로 Enemy Flow와 AI 동작을 고정한다.</li>
+              <li>현재 Run의 Player와 Runtime Enemy roster를 별도 State가 소유한다.</li>
+              <li>Preview base Actor와 Battle clone 경계를 명확히 한다.</li>
+              <li>Node 내장 test로 선택·clone·정렬·rebuild 동작을 고정한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>작성 내용</strong></p>
             <ul>
-              <li>enemy_runtime_engine.js를 Enemy Runtime Source of Truth로 생성했다.</li>
-              <li>Enemy 관련 함수 17개와 maxAlive rule 해석을 이동했다.</li>
-              <li>main.js의 Enemy Flow 전·후 호출 위치와 횟수를 유지했다.</li>
-              <li>Combat Engine에는 Damage, Reaction, Region cache와 Combat timer를 유지했다.</li>
-              <li>Node 내장 Enemy Characterization Test 6개를 추가했다.</li>
+              <li>run_actor_state.js를 Run Actor Source of Truth로 생성했다.</li>
+              <li>Player 선택, Enemy clone, maxAlive, 정렬과 활성 목록을 이동했다.</li>
+              <li>Task3의 Spawn Rule API를 재사용하고 중복 계산을 만들지 않았다.</li>
+              <li>Preview는 base Actor, Battle은 Runtime Enemy clone을 사용한다.</li>
+              <li>Node 내장 Run Actor State test 6개를 추가했다.</li>
               <li>SRC Map의 Flow, 책임 Audit, 줄 수와 위험도를 갱신했다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>Run Actor 목록과 Run Lifecycle은 분리하지 않았다.</li>
-              <li>다음 Task는 Run Actor 목록 분리이며 누적 진행률 목표는 70%다.</li>
+              <li>Run 시작·사망·점수·결과 화면 책임은 main.js에 유지했다.</li>
+              <li>다음 Task는 Run Lifecycle 분리이며 누적 진행률 목표는 90%다.</li>
             </ul>
           </div>
         </div>
@@ -251,13 +251,13 @@
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>enemy_runtime_engine.js가 HTTP 200으로 응답하는지 확인한다.</span>
+                  <span>run_actor_state.js가 HTTP 200으로 응답하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>Run 시작, Enemy AI·respawn과 결과 흐름을 브라우저에서 확인한다.</span>
+                  <span>선택 Player, Enemy 수·순서와 재시작 초기화를 브라우저에서 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -268,13 +268,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 Task3 실제 결과와 공개 API를 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 Task4 실제 결과와 State API를 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>SRC Map이 Enemy Runtime과 Combat 책임 경계를 반영하는지 확인한다.</span>
+                  <span>SRC Map이 Run Actor State와 main.js 책임 변경을 반영하는지 확인한다.</span>
                 </label>
               </li>
               <li>

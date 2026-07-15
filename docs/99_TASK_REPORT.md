@@ -2,7 +2,7 @@
 
 ## 현재 진행률
 
-55%
+70%
 
 ## 완료 Task
 
@@ -12,7 +12,7 @@
 
 ✅ Task3 — Enemy Runtime 분리
 
-⬜ Task4 — Run Actor 목록 분리
+✅ Task4 — Run Actor 목록 분리
 
 ⬜ Task5 — Run Lifecycle 분리
 
@@ -20,160 +20,164 @@
 
 ## 다음 Task
 
-Task4 — Run Actor 목록 분리
+Task5 — Run Lifecycle 분리
 
-## Task3 목표와 결과
+## Task4 목표와 결과
 
-Enemy의 행동과 생명주기를 `enemy_runtime_engine.js`로 이동했다. `combat_engine.js`는 공격 결과와 damage, reaction, Combat 상태의 Source of Truth로 유지했다.
+현재 Run의 Player와 Enemy 목록을 `run_actor_state.js`가 소유하도록 분리했다. `main.js`는 Lifecycle 상태를 유지하면서 Run Actor State가 반환하는 목록을 update와 draw에 전달한다.
 
-- Enemy 방향과 lock Formula facing 이동
-- Enemy AI 후보 선택, Action 실행과 cooldown 이동
-- Actor별 `maxAlive`와 spawn rule 해석 이동
-- Enemy 활성 수, hide, respawn timer와 위치 이동
-- respawn 시 HP, Action 상태와 Runtime flag 초기화 이동
-- `main.js`의 전투 전·후 `maintainEnemyFlow` 호출 위치와 횟수 유지
-- Combat, Run Actor 목록, Run Lifecycle와 저장 데이터 구조 변경 없음
+- 유효한 선택 Player와 기본 Player fallback 해석 이동
+- Preview base Actor와 Battle Runtime Actor 경계 이동
+- 모든 Battle Enemy를 base Actor와 분리된 Runtime clone으로 생성
+- Task3의 `resolveEnemyActorSpawnRule()` 재사용
+- Runtime Enemy 배열 단일 소유
+- Player → mobs → bosses update 순서와 Enemy → Player draw 순서 유지
+- Run 시작·종료·사망·점수·결과 화면 책임은 `main.js`에 유지
 
 ## 새 파일
 
-- `src/enemy_runtime_engine.js`
-  - Enemy 방향·AI·cooldown
-  - 활성 수·spawn rule
-  - hide·respawn·Runtime 초기화
-  - 215줄
+- `src/run_actor_state.js`
+- 선택 이유: 현재 Player와 mutable Runtime Enemy roster를 함께 소유하므로 `_roster_state`보다 프로젝트 마스터 플랜과 기존 `_state` 역할에 맞는 짧은 이름을 사용했다.
+- 실제 역할: Player 선택, Enemy clone, 최초 생성 수, 정렬, Preview/Battle 활성 Actor 목록
+- 129줄
 
-## 이동한 함수
+## 이동한 상태와 함수
 
-기존 위치: `src/combat_engine.js`
+기존 위치: `src/main.js`
 
-새 위치: `src/enemy_runtime_engine.js`
+새 위치: `src/run_actor_state.js`
 
-- `updateBattleActorMotion`
-- `faceNpcActorTowardPlayer`
-- `npcLockFormulaFacing`
-- `oppositeFacingFromPlayer`
-- `shouldNpcFacePlayer`
-- `runEnemyRangeAi`
-- `enemyRangeActionCandidate`
-- `startEnemyAiActionCooldown`
-- `maintainEnemyFlow`
-- `hideEnemyActor`
-- `updateEnemyRespawn`
-- `activeEnemyCount`
-- `groupEnemyActorsById`
-- `resolveEnemyActorSpawnRule`
-- `respawnEnemyActor`
-- `enemyRespawnX`
-- `updateEnemyAiCooldowns`
+- `playerActor` Runtime 선택 상태
+- `runtimeEnemyActors` 배열 상태
+- `activeGameActors` → `getActiveActors`
+- `editorControlActor` → `getEditorControlActor`
+- `syncRunPlayerFromSetupSelection` → `resolvePlayer`
+- `rebuildRuntimeEnemyActors` → `rebuildEnemies`
+- `createRuntimeEnemyClone`
+- `setupSelectedRunActor` → `resolvePlayer`
+- `runOrderedActors` → 내부 `orderRunActors`
+- `compareEnemyRunOrder`
+- `enemyRunOrderPriority`
+- `baseGameActors` → `baseActors`
+- `defaultRunPlayerActor`
+- `actorRenderOrder` → `getRenderActors`
 
-`main.js`에 중복되어 있던 `resolveRuntimeEnemyMaxAlive`는 제거했다. 최초 Runtime clone 생성은 `main.js`에 유지하고 `resolveEnemyActorSpawnRule()`의 결과만 사용한다.
+`readSetupSelectedActor()`와 `writeSetupSelectedActor()`는 localStorage와 Editor 선택 상태를 다루므로 `main.js`에 유지했다. 저장된 ID를 Actor로 찾는 작업만 `findBaseActor()`에 위임한다.
 
-## combat_engine.js 변화
+## 공개 API
 
-823줄
+- `createRunActorState` — `main.js`가 한 번 생성하는 State factory
+- `baseActors` — trash를 제외한 Preview base Actor 목록
+- `findBaseActor` — 저장된 선택 ID 해석
+- `resolvePlayer` — 유효한 Player 선택과 fallback
+- `getPlayer` — 현재 Runtime Player
+- `rebuildEnemies` — Spawn Rule에 맞는 Runtime Enemy clone 재구성
+- `clearEnemies` — Run 종료 시 Runtime Enemy roster 초기화
+- `getEnemyActors` — Runtime Enemy snapshot
+- `getRunActors` — Player → mobs → bosses Battle 목록
+- `getActiveActors` — Lifecycle 상태에 따른 Preview/Battle 목록
+- `getEditorControlActor` — Preview 선택 Actor fallback
+- `getRenderActors` — 기존 Enemy → Player draw 순서
+
+## main.js 변화
+
+833줄
 
 ↓
 
-611줄
+751줄
 
 남은 책임:
 
-- 근접·Projectile Combat Resolve
-- Attack/Hurt/Guard/Collision 판정 흐름
-- Damage, Hit Cancel, Knockback, Invincible Time
-- Death와 Hit Reaction
-- Region cache와 `previousAttackRegions`
-- Combat timer
+- 앱 bootstrap과 Runtime 모듈 연결
+- Runtime update와 draw 순서
+- Run 시작·종료·사망 sequence
+- 생존 시간, 일반 적·Boss 처치와 점수
+- 시작·결과·조작법 화면 상태
 
-`updateActorCombatTimers()`는 Invincible/Hurt/Hit 상태를 다루므로 `combat_engine.js`에 유지하고 export했다. Enemy Runtime이 기존 Battle Motion 순서 안에서 이를 호출한다.
+## Actor Source of Truth
 
-## enemy_runtime_engine.js 공개 API
+| 책임               | 담당 파일                 |
+| ------------------ | ------------------------- |
+| Player 선택        | `run_actor_state.js`      |
+| Runtime Enemy 배열 | `run_actor_state.js`      |
+| Enemy AI·Respawn   | `enemy_runtime_engine.js` |
+| Combat·Damage      | `combat_engine.js`        |
+| Run Lifecycle      | `main.js`                 |
 
-- `updateBattleActorMotion`
-  - 호출처: `main.js`
-  - 역할: Combat timer, AI cooldown, Player update, Enemy 방향·AI·NPC update의 기존 순서 조립
-- `maintainEnemyFlow`
-  - 호출처: `main.js`의 Combat 전 `dt: 0`, Combat 후 `dt`
-  - 역할: Actor별 활성 수, hide, respawn timer와 respawn 처리
-- `resolveEnemyActorSpawnRule`
-  - 호출처: `main.js`의 최초 Runtime clone 수 계산과 `maintainEnemyFlow`
-  - 역할: Actor rule → pool rule → 기본값 순서로 `maxAlive`와 interval 해석
+## 책임 이동 현황
 
-## 실행 순서 보존 확인
+| 기능                      | 이전 담당                 | 현재 담당            |
+| ------------------------- | ------------------------- | -------------------- |
+| Player 선택               | `main.js`                 | `run_actor_state.js` |
+| Runtime Enemy clone       | `main.js`                 | `run_actor_state.js` |
+| Actor 최초 생성 수        | `main.js`                 | `run_actor_state.js` |
+| Actor 정렬                | `main.js`                 | `run_actor_state.js` |
+| Preview/Battle Actor 조회 | `main.js`                 | `run_actor_state.js` |
+| Enemy AI                  | `enemy_runtime_engine.js` | 변경 없음            |
+| Run Lifecycle             | `main.js`                 | 변경 없음            |
 
-- 전투 전 Enemy Flow: 생존 시간 증가 직후 `maintainEnemyFlow(..., dt: 0)` 유지
-- Actor Motion: Combat timer → AI cooldown → Player update → Enemy 방향 → AI Action → NPC update 유지
-- Combat: Projectile update → 근접 Combat → Projectile Combat 유지
-- 전투 후 Enemy Flow: 두 Combat 처리 뒤 `maintainEnemyFlow(..., dt)` 유지
-- Effect: 전투 후 Enemy Flow 뒤에 기존 효과 update 유지
+## 실행 순서와 Actor 순서 보존
 
-같은 frame에서 죽은 Enemy는 Combat 뒤 Enemy Flow에서 timer를 처리하며, 전투 전 `dt: 0`은 사망 Actor의 timer를 진행하지 않는다.
+- Preview Actor: trash를 제외한 base Actor 원본 목록 유지
+- Battle Actor: 선택 Player와 Runtime Enemy clone만 사용
+- Player: update 목록 첫 번째 유지
+- mobs: 정의 순서와 clone 순서를 유지하며 bosses보다 앞에 배치
+- bosses: mobs 뒤에 정의 순서대로 배치
+- update: State 목록을 기존 Battle update 순서에 전달
+- draw: Enemy를 먼저 그리고 Player를 마지막에 그리는 기존 순서 유지
+- 사망·결과: 같은 Runtime Actor roster를 유지
 
 ## 작성한 테스트
 
-- 파일: `test/enemy_runtime_engine.test.js`
+- 파일: `test/run_actor_state.test.js`
 - 새 테스트: 6개
-- 전체 Node test: 11개
+- 전체 테스트: 17개
 
 검증 대상:
 
-- Actor rule, pool rule, 기본값의 `maxAlive` 우선순위
-- 소수 반올림과 음수 0 제한
-- Actor 종류와 mobs/bosses 활성 수 격리
-- 부족한 수만 활성화하고 충분할 때 추가 활성화하지 않는 흐름
-- `dt: 0`에서 respawn timer 미진행
-- timer 완료 전·후 respawn과 위치 규칙
-- respawn 시 HP, Action 상태, hit/AI flag 초기화
-- 다른 Enemy clone 상태 비변경
-- 고정된 `Math.random`에서 AI Action 선택
-- lock Formula 방향, AI cooldown, Player/NPC update 순서
-- Action 실행 불가 상태에서 AI Action 미실행
-- `Math.random` 원상 복구
-
-## Source of Truth
-
-| 책임                  | 담당 파일                       |
-| --------------------- | ------------------------------- |
-| Enemy 방향·AI         | `enemy_runtime_engine.js`       |
-| Enemy 활성 수·Respawn | `enemy_runtime_engine.js`       |
-| Actor 공통 Runtime    | `actor_runtime_engine.js`       |
-| Combat·Damage         | `combat_engine.js`              |
-| Overlap Geometry      | `interaction_overlap_helper.js` |
-| AI 설정 Normalize     | `enemy_ai_settings_helper.js`   |
+- 유효한 선택 Player, 잘못된 ID와 Enemy 선택 fallback
+- Editor 선택 객체 비변경
+- Runtime clone과 원본 객체 분리
+- HP, AI cooldown, hit 기록과 Action 상태의 clone별 격리
+- Asset reference의 기존 공유 규칙
+- Actor별 `maxAlive`, 0개 생성, Actor rule → pool → 기본값
+- Player → mobs → bosses 정렬과 정의 순서
+- Preview base Actor와 Battle clone 경계
+- rebuild 시 이전 hidden, dead, respawn timer와 cooldown 폐기
 
 ## Runtime 책임 분포
 
-| 파일                            | 주요 책임 수 | 실제 책임                                                                  |
-| ------------------------------- | -----------: | -------------------------------------------------------------------------- |
-| `main.js`                       |            5 | Bootstrap, Runtime Loop, Run Lifecycle, Runtime Actor Roster, Screen State |
-| `combat_engine.js`              |            4 | Combat Resolve, Damage/Reaction, Region Cache, Combat Timers               |
-| `enemy_runtime_engine.js`       |            4 | Enemy Direction/AI, Cooldown, Active Count/Spawn Rule, Respawn             |
-| `actor_runtime_engine.js`       |            3 | World Physics, Action Runtime, Actor State                                 |
-| `interaction_overlap_helper.js` |            3 | Rect Overlap, Polygon SAT, Swept Overlap                                   |
+| 파일                      | 주요 책임 수 | 실제 책임                                                          |
+| ------------------------- | -----------: | ------------------------------------------------------------------ |
+| `main.js`                 |            4 | Bootstrap/Module Wiring, Runtime Loop, Run Lifecycle, Screen State |
+| `run_actor_state.js`      |            4 | Player Selection, Enemy Clone, Actor Ordering, Active Roster       |
+| `enemy_runtime_engine.js` |            4 | Enemy Direction/AI, Cooldown, Active Count/Rule, Respawn           |
+| `combat_engine.js`        |            4 | Combat Resolve, Damage/Reaction, Region Cache, Combat Timers       |
 
 ## 문서 변경
 
-- `docs/99_TASK_REPORT.md` — Task3 결과, API, 실행 순서, 테스트와 QA 기록
-- `docs/sprint-dashboard.html` — Task3 완료와 누적 진행률 55% 반영
-- `docs/10_SRC_MAP.md` — Enemy Runtime 등록과 Combat 역할 수정
-- `docs/src-map.html` — Source inventory, Runtime Flow, Runtime/Interaction 그룹, 책임 Audit, 줄 수와 위험도 갱신
+- `docs/99_TASK_REPORT.md` — Task4 결과, State API, Actor 순서와 테스트 기록
+- `docs/sprint-dashboard.html` — Task4 완료와 누적 진행률 70% 반영
+- `docs/10_SRC_MAP.md` — Run Actor State 등록과 `main.js` 역할 수정
+- `docs/src-map.html` — Source inventory, Runtime Flow/그룹, 책임 Audit, 줄 수와 위험도 갱신
 
 ## QA 결과
 
 - `npm run check`: 통과 (ESLint, Prettier)
 - `git diff --check`: 통과
-- `node --test`: 11개 통과, 실패 0개
-- HTTP 확인: `index.html`, `setting.html`, `enemy_runtime_engine.js` 모두 `200`
-- 잔여 참조와 중복 구현 검색: 이동 함수의 `combat_engine.js` 잔여 구현 0개
-- 호출 횟수: `maintainEnemyFlow` 2회, `updateBattleActorMotion` 1회 유지
-- 순환 import: `src` JavaScript 202개 검사, cycle 0개
-- 모듈 import: Enemy Runtime, Combat, Overlap Helper 통과
-- SRC Map: 실제 파일 202/202, 누락·오래된 경로·그룹 미등록 없음
+- `node --test`: 17개 통과, 실패 0개
+- HTTP 확인: `index.html`, `setting.html`, `run_actor_state.js` 모두 `200`
+- 중복 구현 검색: Runtime Enemy 배열 소유 1곳, `main.js`의 이전 roster helper 0개
+- maxAlive Runtime 계산: `enemy_runtime_engine.js` 1곳, State는 API 재사용
+- 순환 import: `src` JavaScript 203개 검사, cycle 0개
+- 모듈 import: Run Actor State, Enemy Runtime, Combat 통과
+- base Actor mutation: State 내부 source 직접 대입 0개, Battle Enemy는 clone만 사용
+- SRC Map: 실제 파일 203/203, 누락·오래된 경로·그룹 미등록 없음
 - 저장 데이터 변경: 없음
 - 브라우저 QA: 현재 세션에 연결 가능한 인앱 브라우저가 없어 미수행
 
 ## 발견한 위험 또는 보류 사항
 
-- `main.js`는 833줄로 800줄 리팩토링 권장 기준을 넘으며 Task4의 Runtime Actor Roster 분리 대상이다.
-- `enemy_runtime_engine.js`가 Combat timer의 Source of Truth를 유지하기 위해 `combat_engine.js`의 `updateActorCombatTimers()`에 단방향으로 의존한다.
-- DOM/Canvas/Firebase가 필요한 실제 Run 동작은 자동 Node test와 별도로 브라우저 QA가 필요하다.
+- `main.js`는 751줄이며 Run Lifecycle과 Screen State가 남아 있다. Task5에서 시작·사망·결과·점수 책임만 분리해야 한다.
+- Task5에서도 `battleActive`, 사망/결과 상태가 `getActiveActors({ runActive })`에 전달되는 시점을 바꾸면 안 된다.

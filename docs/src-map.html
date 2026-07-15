@@ -824,6 +824,7 @@ src/ranking_controller.js
 src/ranking_message_helper.js
 src/ranking_view.js
 src/roll_ghost_engine.js
+src/run_actor_state.js
 src/run_hud_view.js
 src/runtime_debug_hud_view.js
 src/runtime_debug_state.js
@@ -1057,6 +1058,7 @@ src/zoom_formula_runtime_helper.js
             'combat_engine.js',
             'enemy_runtime_engine.js',
             'interaction_overlap_helper.js',
+            'run_actor_state.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
             'color_change_formula_runtime_helper.js',
@@ -1090,6 +1092,11 @@ src/zoom_formula_runtime_helper.js
             'formula_runtime_engine.js',
             'actor_runtime_engine.js',
           ],
+        },
+        {
+          name: 'Run Actor State',
+          role: 'Preview base Actor와 Battle Player / Runtime Enemy clone roster를 선택·생성·정렬한다.',
+          js: ['run_actor_state.js'],
         },
         {
           name: 'Enemy Runtime',
@@ -1358,6 +1365,7 @@ src/zoom_formula_runtime_helper.js
             'actor_canvas_renderer.js',
             'combat_engine.js',
             'enemy_runtime_engine.js',
+            'run_actor_state.js',
             'death_ragdoll_engine.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
@@ -1581,7 +1589,8 @@ src/zoom_formula_runtime_helper.js
       };
 
       const FILE_RESPONSIBILITY_AUDIT = {
-        'main.js': ['Bootstrap', 'Runtime Loop', 'Run Lifecycle', 'Runtime Actor Roster', 'Screen State'],
+        'main.js': ['Bootstrap / Module Wiring', 'Runtime Loop', 'Run Lifecycle', 'Screen State'],
+        'run_actor_state.js': ['Player Selection', 'Runtime Enemy Clone', 'Actor Ordering', 'Active Actor Roster'],
         'combat_engine.js': ['Combat Resolve', 'Damage / Reaction', 'Region Cache', 'Combat Timers'],
         'enemy_runtime_engine.js': ['Enemy Direction / AI', 'Enemy Cooldown', 'Active Count / Spawn Rule', 'Respawn'],
         'interaction_overlap_helper.js': ['Rect Overlap', 'Polygon SAT', 'Swept Overlap'],
@@ -1602,7 +1611,6 @@ src/zoom_formula_runtime_helper.js
       };
 
       const LARGE_FILES = [
-        ['main.js', '833', 'Bootstrap / Loop / Run / Actor / Screen', '800줄 초과, Entry 책임 축소 필요'],
         ['action_trigger_engine.js', '812', 'Trigger / Action / Formula Runtime', '800줄 초과, Formula 실행 경계 감시'],
         ['editor_asset_controller.js', '777', 'Setup / Effect / Background asset actions', '에셋 UI 흐름 3개 포함'],
         [
@@ -1612,6 +1620,7 @@ src/zoom_formula_runtime_helper.js
           '저장과 에셋 책임이 넓다',
         ],
         ['actor_runtime_engine.js', '760', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
+        ['main.js', '751', 'Bootstrap / Loop / Run Lifecycle / Screen', 'Task5 Run Lifecycle 분리 예정'],
         ['project_data_normalizer_helper.js', '649', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
         ['combat_engine.js', '611', 'Combat Resolve / Damage / Reaction / Region Cache', 'Combat Source of Truth 유지'],
         ['editor_panel_controller.js', '532', 'Editor shell / external API', '연결 책임만 유지 필요'],
@@ -1638,6 +1647,7 @@ src/zoom_formula_runtime_helper.js
           'Enemy direction / AI / active count / respawn',
           'Enemy Runtime Source of Truth',
         ],
+        ['run_actor_state.js', '129', 'Player selection / Enemy clone / Actor roster', 'Run Actor Source of Truth'],
       ];
 
       const NAMING_EXCEPTIONS = [];
@@ -1845,7 +1855,6 @@ src/zoom_formula_runtime_helper.js
 
       function fileAuditRisk(file) {
         if (
-          file === 'main.js' ||
           file === 'action_trigger_engine.js' ||
           file === 'actor_runtime_engine.js' ||
           file === 'firebase_asset_storage_helper.js' ||
