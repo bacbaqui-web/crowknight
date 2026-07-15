@@ -185,11 +185,11 @@
         <div class="grid">
           <div class="block">
             <p><strong>Sprint 이름</strong></p>
-            <p>Runtime Structure Refactor — Task5</p>
+            <p>Runtime Structure Refactor — Complete</p>
           </div>
           <div class="block">
             <p><strong>최종 목표</strong></p>
-            <p>기능 변경 없이 Runtime 책임을 단계별로 분리하며 현재 진행률은 90%다.</p>
+            <p>기능 변경 없이 Runtime 책임 분리와 최종 구조 QA를 완료했으며 진행률은 100%다.</p>
           </div>
         </div>
       </section>
@@ -199,32 +199,42 @@
         <div class="grid">
           <div class="block">
             <p><strong>Task 이름</strong></p>
-            <p>Task5 — Run Lifecycle 분리</p>
+            <p>Task6 — 최종 QA와 문서 정리</p>
           </div>
           <div class="block">
             <p><strong>Task 목표</strong></p>
             <ul>
-              <li>Run 활성·사망·결과·시간·처치·점수 상태를 별도 Controller가 소유한다.</li>
-              <li>main.js는 기존 update/draw 순서와 외부 Runtime·UI 연결만 유지한다.</li>
-              <li>Node 내장 test로 시작·종료·사망·결과·재시작 동작을 고정한다.</li>
+              <li>Task2~Task5에서 분리한 Runtime 책임의 중복과 Dead Code를 최종 검사한다.</li>
+              <li>Runtime update/draw 순서와 Source of Truth를 코드 기준으로 확정한다.</li>
+              <li>전체 자동 QA와 문서 4종을 최종 상태로 갱신한다.</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>작성 내용</strong></p>
             <ul>
-              <li>run_lifecycle_controller.js를 Run Lifecycle Source of Truth로 생성했다.</li>
-              <li>Run 시작·종료·사망 sequence·결과 확정과 처치 집계를 이동했다.</li>
-              <li>run_hud_view.js의 기존 점수 산식을 그대로 재사용했다.</li>
-              <li>Actor, Projectile, Input, Effect, Ranking과 DOM은 callback으로 연결했다.</li>
-              <li>Node 내장 Run Lifecycle test 8개를 추가했다.</li>
-              <li>SRC Map의 Flow, 책임 Audit, 줄 수와 위험도를 갱신했다.</li>
+              <li>임시 Lifecycle wrapper 5개를 제거하고 Controller API를 직접 연결했다.</li>
+              <li>Node 내장 test 25개와 전체 JavaScript 204개 구조 검사를 통과했다.</li>
+              <li>순환 import, 누락 import, 중복 상태와 사용되지 않는 추출 export가 없음을 확인했다.</li>
+              <li>저장 schema, 전투 수치, 점수, AI와 Respawn 설정이 baseline과 동일함을 확인했다.</li>
+              <li>SRC Map 204/204와 최종 책임·줄 수·위험도를 확정했다.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <p><strong>완료 Task</strong></p>
+            <ul>
+              <li>✅ Task1 — 기준점 구축</li>
+              <li>✅ Task2 — Interaction Overlap 분리</li>
+              <li>✅ Task3 — Enemy Runtime 분리</li>
+              <li>✅ Task4 — Run Actor 목록 분리</li>
+              <li>✅ Task5 — Run Lifecycle 분리</li>
+              <li>✅ Task6 — 최종 QA와 문서 정리</li>
             </ul>
           </div>
           <div class="block">
             <p><strong>남겨둔 범위</strong></p>
             <ul>
-              <li>Task6의 광범위한 Dead Code 정리와 추가 리팩토링은 진행하지 않았다.</li>
-              <li>다음 Task는 최종 QA와 문서 정리이며 누적 진행률 목표는 100%다.</li>
+              <li>인앱 브라우저가 없어 실제 플레이와 Editor 조작 QA는 미확인 상태다.</li>
+              <li>main.js와 action_trigger_engine.js의 추가 분리는 별도 Sprint 후보로 남겼다.</li>
             </ul>
           </div>
         </div>
@@ -251,13 +261,13 @@
               <li>
                 <label class="qa-item" data-qa-id="runtime-firebase-only">
                   <input type="checkbox" />
-                  <span>run_lifecycle_controller.js가 HTTP 200으로 응답하는지 확인한다.</span>
+                  <span>Runtime 분리 모듈 5개가 모두 HTTP 200으로 응답하는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="effect-runtime-check">
                   <input type="checkbox" />
-                  <span>Run 시작·사망·결과·재시작과 처치 수 초기화를 브라우저에서 확인한다.</span>
+                  <span>미확인: 실제 브라우저에서 전투·사망·결과·재시작·Editor Preview를 확인한다.</span>
                 </label>
               </li>
             </ul>
@@ -268,13 +278,13 @@
               <li>
                 <label class="qa-item" data-qa-id="src-map-current">
                   <input type="checkbox" />
-                  <span>docs/99_TASK_REPORT.md가 Task5 실제 결과와 Lifecycle API를 담는지 확인한다.</span>
+                  <span>docs/99_TASK_REPORT.md가 전체 최종 구조와 QA 결과를 담는지 확인한다.</span>
                 </label>
               </li>
               <li>
                 <label class="qa-item" data-qa-id="architecture-terms-current">
                   <input type="checkbox" />
-                  <span>SRC Map이 Run Lifecycle Controller와 main.js 책임 변경을 반영하는지 확인한다.</span>
+                  <span>SRC Map inventory 204/204와 최종 Runtime 책임이 일치하는지 확인한다.</span>
                 </label>
               </li>
               <li>

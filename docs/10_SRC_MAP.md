@@ -4,6 +4,8 @@
 
 SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
+Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 204개와 inventory가 일치한다.
+
 ## Naming Rules
 
 - `_engine`: 핵심 규칙 / 계산.

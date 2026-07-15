@@ -555,7 +555,7 @@
         <div>
           <div class="eyebrow">Crow Knight JS Structure Audit</div>
           <h1>JS 구조 감사</h1>
-          <p>각 JS 그룹이 자기 역할만 하는지, 공통 시스템을 재사용하는지, 리팩토링 위험이 있는지 점검한다.</p>
+          <p>Runtime Structure Refactor 완료 구조와 각 JS 그룹의 역할, 의존, 유지보수 위험을 점검한다.</p>
         </div>
         <nav class="doc-links" aria-label="문서 링크">
           <a class="doc-link" href="./10_SRC_MAP.md">10_SRC_MAP 원본</a>
@@ -636,6 +636,12 @@
             <span>Trigger</span>
             <i>→</i>
             <span>Action Runtime</span>
+            <i>→</i>
+            <span>Run Lifecycle</span>
+            <i>→</i>
+            <span>Run Actor State</span>
+            <i>→</i>
+            <span>Enemy Runtime</span>
             <i>→</i>
             <span>Current Frame</span>
             <i>→</i>
@@ -1629,7 +1635,7 @@ src/zoom_formula_runtime_helper.js
           '저장과 에셋 책임이 넓다',
         ],
         ['actor_runtime_engine.js', '760', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
-        ['main.js', '724', 'Bootstrap / Runtime update·draw / Screen wiring', '500줄 초과, 조립 순서 변경 주의'],
+        ['main.js', '704', 'Bootstrap / Runtime update·draw / Screen wiring', '500줄 초과, 조립 순서 변경 주의'],
         ['project_data_normalizer_helper.js', '649', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
         ['combat_engine.js', '611', 'Combat Resolve / Damage / Reaction / Region Cache', 'Combat Source of Truth 유지'],
         ['editor_panel_controller.js', '532', 'Editor shell / external API', '연결 책임만 유지 필요'],

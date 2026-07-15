@@ -193,7 +193,7 @@ window.addEventListener('resize', () => {
   syncCanvasToLayout({
     canvas,
     world,
-    actors: runActorState.getActiveActors({ runActive: runActorOrderActive() }),
+    actors: runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() }),
     isFullStage,
     adjustActors: true,
   });
@@ -205,7 +205,7 @@ bindBattleControls(
   {
     startRun,
     endRun: () => {
-      finishRun({ showResult: Boolean(resultScreen) });
+      runLifecycle.stop({ showResult: Boolean(resultScreen) });
       particleEffects.reset();
       if (!resultScreen) lineUpActorPositions(runActorState.getActiveActors(), world);
     },
@@ -281,7 +281,7 @@ function loop(now) {
 
 function update(dt) {
   beginRuntimeDebugFrame();
-  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const playerActor = runActorState.getPlayer();
   captureActorMotionStart(gameActors);
 
@@ -332,9 +332,9 @@ function update(dt) {
     playerActor,
     world,
     particleEffects,
-    onPlayerDeath: beginPlayerDeath,
-    onPlayerKill: handlePlayerKill,
-    onEnemyDeath: handleEnemyDeath,
+    onPlayerDeath: runLifecycle.startPlayerDeath,
+    onPlayerKill: runLifecycle.recordPlayerKill,
+    onEnemyDeath: runLifecycle.recordEnemyDeath,
   });
   resolveProjectileCombat({
     projectiles: activeProjectiles(),
@@ -342,9 +342,9 @@ function update(dt) {
     playerActor,
     world,
     particleEffects,
-    onPlayerDeath: beginPlayerDeath,
-    onPlayerKill: handlePlayerKill,
-    onEnemyDeath: handleEnemyDeath,
+    onPlayerDeath: runLifecycle.startPlayerDeath,
+    onPlayerKill: runLifecycle.recordPlayerKill,
+    onEnemyDeath: runLifecycle.recordEnemyDeath,
   });
 
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt });
@@ -354,10 +354,6 @@ function update(dt) {
   updateFormulaShakes(gameActors, particleEffects);
   particleEffects.emitDust(dt);
   particleEffects.update(dt);
-}
-
-function beginPlayerDeath() {
-  runLifecycle.startPlayerDeath();
 }
 
 function handlePlayerDeathStarted() {
@@ -390,7 +386,7 @@ function handlePlayerDeathStarted() {
 }
 
 function updatePlayerDeathSequence(dt) {
-  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const player = runActorState.getPlayer().player;
   player.animTime += dt;
   player.stateTime += dt;
@@ -409,7 +405,7 @@ function updatePlayerDeathSequence(dt) {
 }
 
 function updateResultScene(dt) {
-  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const player = runActorState.getPlayer().player;
   player.animTime += dt;
   player.stateTime += dt;
@@ -422,10 +418,6 @@ function updateResultScene(dt) {
   updatePausedActors(gameActors.slice(1), dt);
 
   particleEffects.update(dt);
-}
-
-function finishRun({ showResult = false } = {}) {
-  runLifecycle.stop({ showResult });
 }
 
 function handleRunStopped({ showResult }) {
@@ -445,7 +437,7 @@ function handleRunStopped({ showResult }) {
 }
 
 function draw() {
-  const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
+  const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const playerActor = runActorState.getPlayer();
   const renderActors = runActorState.getRenderActors(gameActors);
   const lifecycle = runLifecycle.getSnapshot();
@@ -495,14 +487,6 @@ function draw() {
       lastRecordedScore: lifecycle.lastRecordedScore,
     });
   }
-}
-
-function handleEnemyDeath(actor) {
-  runLifecycle.recordEnemyDeath(actor);
-}
-
-function handlePlayerKill(actor) {
-  runLifecycle.recordPlayerKill(actor);
 }
 
 function syncRunHud() {
@@ -586,10 +570,6 @@ function handleRunStarted() {
   if (homeStartButton) homeStartButton.disabled = true;
   if (endBattleButton) endBattleButton.disabled = false;
   document.activeElement?.blur();
-}
-
-function runActorOrderActive() {
-  return runLifecycle.hasActiveRunActors();
 }
 
 function readSetupSelectedActor() {
