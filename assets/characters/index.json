@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": 1783666253008,
+  "updatedAt": 1783737702054,
   "characters": [
     {
       "id": "player_01",
@@ -20,7 +20,7 @@
       "id": "enemy_01",
       "type": "enemy",
       "label": "에너미",
-      "name": "도끼맨",
+      "name": "보스",
       "x": 260,
       "folder": "bosses/enemy_01",
       "tint": "#ef767a",

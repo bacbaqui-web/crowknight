@@ -15,11 +15,6 @@ export function createStageRulesPanelController({
     worldPhysicsCameraShakePower,
     worldPhysicsCameraShakeFrames,
     worldPhysicsCameraShakeDecay,
-    difficultyBossKillInterval,
-    difficultyBossHpPerLevel,
-    difficultySwordmanSpawnPerLevel,
-    difficultyArcherSpawnPerLevel,
-    difficultyWarningText,
   } = elements;
 
   bindStageFloorScreenInput(stageFloorScreenY);
@@ -29,15 +24,8 @@ export function createStageRulesPanelController({
   bindWorldPhysicsNumberInput(worldPhysicsCameraShakePower, 'cameraShakePower');
   bindWorldPhysicsNumberInput(worldPhysicsCameraShakeFrames, 'cameraShakeFrames');
   bindWorldPhysicsCheckboxInput(worldPhysicsCameraShakeDecay, 'cameraShakeDecay');
-  bindDifficultyNumberInput(difficultyBossKillInterval, 'bossKillInterval');
-  bindDifficultyNumberInput(difficultyBossHpPerLevel, 'bossHpPerLevel');
-  bindDifficultySpawnIncreaseInput(difficultySwordmanSpawnPerLevel, 'swordman');
-  bindDifficultySpawnIncreaseInput(difficultyArcherSpawnPerLevel, 'archer');
-  bindDifficultyWarningTextInput(difficultyWarningText);
-
   function sync() {
     renderWorldPhysicsPanel();
-    renderDifficultyPanel();
   }
 
   function bindWorldPhysicsNumberInput(input, prop) {
@@ -59,24 +47,6 @@ export function createStageRulesPanelController({
     });
   }
 
-  function bindDifficultyNumberInput(input, prop) {
-    input?.addEventListener('input', () => updateDifficultyValue(prop, input.value));
-    input?.addEventListener('change', commitChange);
-    input?.addEventListener('blur', commitChange);
-  }
-
-  function bindDifficultySpawnIncreaseInput(input, actorId) {
-    input?.addEventListener('input', () => updateDifficultySpawnIncrease(actorId, input.value));
-    input?.addEventListener('change', commitChange);
-    input?.addEventListener('blur', commitChange);
-  }
-
-  function bindDifficultyWarningTextInput(input) {
-    input?.addEventListener('input', () => updateDifficultyValue('warningText', input.value));
-    input?.addEventListener('change', commitChange);
-    input?.addEventListener('blur', commitChange);
-  }
-
   function renderWorldPhysicsPanel() {
     const rules = stageRulesController.getWorldPhysicsRules();
     syncNumberInput(stageFloorScreenY, currentFloorScreenY());
@@ -88,37 +58,10 @@ export function createStageRulesPanelController({
     syncCheckboxInput(worldPhysicsCameraShakeDecay, rules.cameraShakeDecay);
   }
 
-  function renderDifficultyPanel() {
-    const rules = stageRulesController.getEnemyDifficultyRules?.() || {};
-    syncNumberInput(difficultyBossKillInterval, rules.bossKillInterval);
-    syncNumberInput(difficultyBossHpPerLevel, rules.bossHpPerLevel);
-    syncNumberInput(difficultySwordmanSpawnPerLevel, rules.spawnIncreaseByActor?.swordman || 0);
-    syncNumberInput(difficultyArcherSpawnPerLevel, rules.spawnIncreaseByActor?.archer || 0);
-    syncTextInput(difficultyWarningText, rules.warningText);
-  }
-
   function updateWorldPhysicsValue(prop, value) {
     beginChange();
     stageRulesController.setWorldPhysicsRules({ [prop]: value });
     renderWorldPhysicsPanel();
-  }
-
-  function updateDifficultyValue(prop, value) {
-    beginChange();
-    stageRulesController.setEnemyDifficultyRules?.({ [prop]: value });
-    renderDifficultyPanel();
-  }
-
-  function updateDifficultySpawnIncrease(actorId, value) {
-    beginChange();
-    const current = stageRulesController.getEnemyDifficultyRules?.() || {};
-    stageRulesController.setEnemyDifficultyRules?.({
-      spawnIncreaseByActor: {
-        ...(current.spawnIncreaseByActor || {}),
-        [actorId]: value,
-      },
-    });
-    renderDifficultyPanel();
   }
 
   function updateStageFloorScreenY(value) {
@@ -145,10 +88,6 @@ export function createStageRulesPanelController({
 
 function syncNumberInput(input, value) {
   if (input) input.value = String(value ?? 0);
-}
-
-function syncTextInput(input, value) {
-  if (input) input.value = String(value || '');
 }
 
 function syncCheckboxInput(input, value) {

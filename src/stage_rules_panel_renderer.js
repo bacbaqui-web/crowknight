@@ -79,50 +79,6 @@ const STAGE_RULES_PANEL_DEFINITIONS = Object.freeze([
     ],
   },
   {
-    key: 'difficultyIncrease',
-    title: '난이도 증가',
-    fields: [
-      {
-        type: 'number',
-        id: 'difficultyBossKillInterval',
-        label: '단계 상승 보스 처치 수',
-        min: 1,
-        max: 999,
-        step: 1,
-      },
-      {
-        type: 'number',
-        id: 'difficultyBossHpPerLevel',
-        label: '단계당 보스 HP 증가',
-        min: 0,
-        max: 999,
-        step: 1,
-      },
-      {
-        type: 'number',
-        id: 'difficultySwordmanSpawnPerLevel',
-        label: '칼잡이 단계당 동시 등장 증가',
-        min: 0,
-        max: 200,
-        step: 1,
-      },
-      {
-        type: 'number',
-        id: 'difficultyArcherSpawnPerLevel',
-        label: '활잡이 단계당 동시 등장 증가',
-        min: 0,
-        max: 200,
-        step: 1,
-      },
-      {
-        type: 'text',
-        id: 'difficultyWarningText',
-        label: '경고 문구',
-        maxLength: 40,
-      },
-    ],
-  },
-  {
     key: 'enemyAi',
     title: 'Enemy AI',
     fields: [

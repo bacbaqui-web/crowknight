@@ -578,17 +578,14 @@ function resolveEnemyActorSpawnRule(world, actorId) {
   const actorRule = enemyRules.spawnRulesByActor?.[actorId] || null;
   const poolRule = Array.isArray(enemyRules.pool) ? enemyRules.pool.find((entry) => entry?.actorId === actorId) : null;
   const baseMaxAlive = Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1)));
-  const difficultyLevel = Math.max(0, Math.round(Number(world?.runtimeDifficulty?.difficultyLevel || 0)));
-  const perLevel = Math.max(0, Number(enemyRules.difficulty?.spawnIncreaseByActor?.[actorId] || 0));
   return {
-    maxAlive: Math.max(0, Math.round(baseMaxAlive + difficultyLevel * perLevel)),
+    maxAlive: baseMaxAlive,
     intervalSec: Math.max(0.1, Number(actorRule?.intervalSec ?? enemyRules.spawnRule?.intervalSec ?? 2)),
   };
 }
 
 function respawnEnemyActor(actor, playerActor, world) {
   syncActorHealthCapacity(actor, true);
-  applyRuntimeDifficultyHealthCapacity(actor, world, true);
   actor.hpPips = actor.maxHpPips;
   actor.respawning = false;
   actor.enemyRespawnTimer = null;
@@ -611,26 +608,6 @@ function respawnEnemyActor(actor, playerActor, world) {
   resetPlayerActionState(actor.player);
   actor.player.onGround = true;
   actor.player.updateState();
-}
-
-function applyRuntimeDifficultyHealthCapacity(actor, world, refill = false) {
-  if (!isBossActor(actor)) return;
-  const baseMax = runtimeBaseMaxHp(actor);
-  const bonus = Math.max(
-    0,
-    Math.round(Number(actor.runtimeDifficultyHpBonus ?? world?.runtimeDifficulty?.bossHpBonus ?? 0))
-  );
-  actor.runtimeBaseMaxHpPips = baseMax;
-  actor.maxHpPips = baseMax + bonus;
-  actor.hpPips = refill
-    ? actor.maxHpPips
-    : Math.min(actor.maxHpPips, Math.max(0, Math.round(Number(actor.hpPips || 0))));
-}
-
-function runtimeBaseMaxHp(actor) {
-  const saved = Number(actor.runtimeBaseMaxHpPips);
-  if (Number.isFinite(saved) && saved > 0) return Math.round(saved);
-  return Math.max(1, Math.round(Number(actor.tuning?.maxHpPips ?? actor.maxHpPips ?? 1)));
 }
 
 function enemyRespawnX(actor, playerActor, world) {

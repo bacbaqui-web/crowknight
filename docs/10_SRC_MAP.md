@@ -16,11 +16,19 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `_data`: 기본값, 설정값, 정의 목록.
 - `_factory`: 객체 생성.
 - `_reader`: 값 읽기.
+- `_registry`: definition 등록 / 조회 / normalize 연결.
 - 예외: `main.js`는 앱 entry point라 접미사를 붙이지 않는다.
 
 ## Entry
 
-- `main.js`: 앱 시작점, runtime loop, editor bootstrap 연결.
+- `main.js`: 앱 시작점, runtime loop, Run 생명주기 / Actor 목록 / 화면 상태, editor bootstrap 연결.
+
+## Runtime Shell / Deployment
+
+- `main_dom_helper.js`: main DOM element lookup helper.
+- `deployment_version_controller.js`: 배포 버전 확인, 갱신 보류, Service Worker 등록 controller.
+- `update_history_controller.js`: 배포 업데이트 내역 modal controller.
+- `mobile_control_layout_helper.js`: 모바일 Action button 원형 배치 helper.
 
 ## Selection / EditTarget
 
@@ -49,7 +57,6 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `editor_undo_data.js`: tuning undo snapshot.
 - `editor_local_only_helper.js`: local-only 실행 guard.
 - `settings_panel_state.js`: settings panel open/close state.
-- `main_dom_helper.js`: main DOM element lookup helper.
 - `encouragement_bubble_view.js`: index 랭킹 메시지 응원 말풍선 DOM / 이동 controller.
 
 ## Setup / Action / Effect Authoring
@@ -65,7 +72,6 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `action_blend_helper.js`: Action blend 설정 helper.
 - `action_keyframe_target_helper.js`: Action start/end/custom keyframe target compatibility helper.
 - `action_runtime_rule_helper.js`: Action Runtime Rule normalize / frame window helper.
-- `action_runtime_rule_panel_controller.js`: Action Runtime Rule card / Mini Timeline UI controller.
 - `action_timeline_edit_helper.js`: Action edit pivot normalize / sync helper.
 - `pose_action_authoring_helper.js`: legacy pose/action authoring helper.
 - `pose_action_authoring_controller.js`: legacy pose/action authoring controls.
@@ -156,6 +162,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `formulas/cast_formula.js`: 시전 Formula definition.
 - `formulas/ai_formula.js`: Enemy AI Action 등록 Formula definition.
 - `formulas/cooldown_formula.js`: 쿨타임 Formula definition.
+- `formulas/target_move_formula.js`: 목표이동 Formula definition.
 - `formulas/velocity_formula.js`: 속도 Formula definition / editor / runtime metadata.
 - `formulas/inertia_formula.js`: 관성 Formula definition.
 - `formulas/afterimage_formula.js`: 잔상 Formula definition.
@@ -182,7 +189,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `actor_runtime_engine.js`: actor physics / state runtime update.
 - `action_trigger_engine.js`: trigger matching과 custom Action start.
 - `input_control_controller.js`: runtime input state controller.
-- `combat_engine.js`: hit / guard / collision combat resolve.
+- `combat_engine.js`: Enemy AI / respawn, 근접·투사체 hit, guard, collision, damage resolve.
 - `death_ragdoll_engine.js`: actor 사망 시 파츠별 ragdoll 상태 생성 / 갱신 / 렌더.
 - `projectile_runtime_engine.js`: 투사체 Formula runtime pool / 이동 / draw / attack region helper.
 - `runtime_debug_state.js`: runtime debug ON/OFF, action snapshot, event buffer state.
@@ -226,6 +233,7 @@ Input
 - `background_renderer.js`: background layer renderer.
 - `camera_view.js`: camera / view transform helper.
 - `canvas_layout_helper.js`: canvas layout sync.
+- `mobile_control_layout_helper.js`: 모바일 Action button layout 계산.
 - `character_hud_layout_helper.js`: actor name / HP layout helper.
 - `run_hud_view.js`: run HUD score / text sync.
 - `runtime_debug_hud_view.js`: runtime debug HUD DOM view.
@@ -260,6 +268,8 @@ Input
 
 - `project_state_controller.js`: project state controller.
 - `project_storage_helper.js`: local / remote project metadata storage helper; `setting.html`은 local, `index.html`은 Firebase metadata source를 사용한다.
+- `deployment_version_controller.js`: 배포 version 확인과 안전한 reload controller.
+- `update_history_controller.js`: `changelog.json` update history 표시 controller.
 - `firebase_ranking_storage_helper.js`: Firebase ranking storage helper.
 - `game_config_data.js`: game constants and config data.
 - `character_group_data.js`: character group definitions.
@@ -278,7 +288,7 @@ Input
 
 ## 보류 파일
 
-- 없음. 현재 `main.js`를 제외한 `src/*.js`는 snake_case와 역할 접미사를 따른다.
+- 없음. 현재 `main.js`를 제외한 `src/*.js`는 snake_case와 역할 접미사를 따른다. `formula_registry.js`는 `_registry` 역할을 사용한다.
 
 ## 검색 힌트
 
@@ -288,3 +298,5 @@ Input
 - Timeline 현재 frame: `timeline_frame_reader.js`
 - Project normalize: `project_data_normalizer_helper.js`
 - Runtime trigger: `action_trigger_engine.js`
+- Enemy AI / respawn / combat: `combat_engine.js`
+- Deployment update: `deployment_version_controller.js`, `update_history_controller.js`

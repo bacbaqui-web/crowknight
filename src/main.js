@@ -80,8 +80,6 @@ const {
   rankingName,
   rankingMessage,
   encouragementBubbles,
-  bossHealNotice,
-  difficultyWarning,
   resultScore,
   resultSurvival,
   resultKills,
@@ -165,18 +163,12 @@ createUpdateHistoryController({
   closeButton: updateHistoryClose,
   list: updateHistoryList,
 });
-let difficultyLevel = 0;
 let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
 let runtimeEnemyActors = [];
 const encouragementBubbleController = createEncouragementBubbleController({ root: encouragementBubbles });
 mobileLayoutQuery.addEventListener('change', syncEncouragementBubbleVisibility);
 bindControlGuide();
-let difficultyWarningQueue = [];
-let difficultyWarningActive = false;
-let bossHealNoticeQueue = [];
-let bossHealNoticeActive = false;
-
 async function refreshInitialPsdBackground() {
   const previousSignature = backgroundAssetSignature(sceneSession.background);
   const refreshed = await refreshPsdBackground({
@@ -525,91 +517,11 @@ function handleEnemyDeath(actor) {
   if (actor.runtimeBossKillCounted) return;
 
   actor.runtimeBossKillCounted = true;
-  restorePlayerHpForBossKill();
-  queueBossHealNotice();
-  const previousLevel = difficultyLevel;
   bossKills += 1;
-  difficultyLevel = runDifficultyLevel();
-  if (difficultyLevel <= previousLevel) return;
-
-  applyDifficultyLevelIncrease(previousLevel, difficultyLevel);
-  queueDifficultyWarning();
 }
 
 function handlePlayerKill(actor) {
   if (!isBossRuntimeActor(actor)) runKills += 1;
-}
-
-function runDifficultyLevel() {
-  const interval = Math.max(1, Math.round(Number(difficultyRules().bossKillInterval || 10)));
-  return Math.floor(bossKills / interval);
-}
-
-function applyDifficultyLevelIncrease(previousLevel, nextLevel) {
-  const levelDelta = Math.max(0, nextLevel - previousLevel);
-  if (!levelDelta) return;
-
-  ensureRuntimeEnemyClonePool();
-  const hpDelta = levelDelta * Math.max(0, Number(difficultyRules().bossHpPerLevel || 0));
-  applyRuntimeDifficultyToActors(activeGameActors(), { hpDelta, refillBosses: false, healAliveBosses: true });
-}
-
-function applyRuntimeDifficultyToActors(
-  gameActors,
-  { hpDelta = 0, refillBosses = false, healAliveBosses = false } = {}
-) {
-  const bossHpBonus = difficultyLevel * Math.max(0, Number(difficultyRules().bossHpPerLevel || 0));
-  world.runtimeDifficulty = {
-    bossKills,
-    difficultyLevel,
-    bossHpBonus,
-  };
-
-  gameActors.forEach((actor) => {
-    if (!isBossRuntimeActor(actor)) return;
-    const baseMax = runtimeBaseMaxHp(actor);
-    actor.runtimeBaseMaxHpPips = baseMax;
-    actor.runtimeDifficultyHpBonus = bossHpBonus;
-    actor.maxHpPips = baseMax + bossHpBonus;
-    if (refillBosses) actor.hpPips = actor.maxHpPips;
-    else if (healAliveBosses && !actor.runtimeBossKillCounted && !actor.respawning && !actor.player?.dead)
-      actor.hpPips = Math.min(actor.maxHpPips, Number(actor.hpPips || 0) + hpDelta);
-    else actor.hpPips = Math.min(actor.maxHpPips, Math.max(0, Number(actor.hpPips || 0)));
-  });
-}
-
-function runtimeBaseMaxHp(actor) {
-  const saved = Number(actor.runtimeBaseMaxHpPips);
-  if (Number.isFinite(saved) && saved > 0) return Math.round(saved);
-  return Math.max(1, Math.round(Number(actor.tuning?.maxHpPips ?? actor.maxHpPips ?? 1)));
-}
-
-function restorePlayerHpForBossKill(amount = 1) {
-  const healAmount = Math.max(0, Math.round(Number(amount || 0)));
-  if (!healAmount) return;
-  const maxHp = Math.max(1, Math.round(Number(playerActor?.maxHpPips ?? playerActor?.tuning?.maxHpPips ?? 1)));
-  const currentHp = Math.max(0, Math.round(Number(playerActor?.hpPips ?? maxHp)));
-  playerActor.hpPips = Math.min(maxHp, currentHp + healAmount);
-}
-
-function ensureRuntimeEnemyClonePool() {
-  baseGameActors()
-    .filter((actor) => actor !== playerActor && !isPlayerCharacter(actor))
-    .forEach((actor) => {
-      const maxAlive = resolveRuntimeEnemyMaxAlive(actor);
-      const existing = runtimeEnemyActors.filter((clone) => clone.id === actor.id).length;
-      for (let index = existing + 1; index < maxAlive; index += 1) {
-        const clone = createRuntimeEnemyClone(actor, index);
-        clone.respawning = true;
-        clone.enemyRespawnTimer = 0;
-        clone.player.dead = true;
-        runtimeEnemyActors.push(clone);
-      }
-    });
-}
-
-function difficultyRules() {
-  return world?.enemyRules?.difficulty || {};
 }
 
 function isBossRuntimeActor(actor) {
@@ -676,13 +588,6 @@ function startRun() {
   hideResultScreen();
   syncRunPlayerFromSetupSelection();
   bossKills = 0;
-  difficultyLevel = 0;
-  difficultyWarningQueue = [];
-  difficultyWarningActive = false;
-  bossHealNoticeQueue = [];
-  bossHealNoticeActive = false;
-  hideDifficultyWarning();
-  hideBossHealNotice();
   rebuildRuntimeEnemyActors();
   const gameActors = runOrderedActors([...baseGameActors(), ...runtimeEnemyActors]);
   lineUpActorPositions(gameActors, world);
@@ -703,7 +608,6 @@ function startRun() {
   gameActors.forEach((actor) => {
     actor.runtimeBossKillCounted = false;
   });
-  applyRuntimeDifficultyToActors(gameActors, { refillBosses: true, healAliveBosses: false });
   hideStartScreen();
   if (startBattleButton) startBattleButton.disabled = true;
   if (homeStartButton) homeStartButton.disabled = true;
@@ -743,9 +647,7 @@ function resolveRuntimeEnemyMaxAlive(actor) {
   const enemyRules = world?.enemyRules || {};
   const actorRule = enemyRules.spawnRulesByActor?.[actor.id] || null;
   const poolRule = Array.isArray(enemyRules.pool) ? enemyRules.pool.find((entry) => entry?.actorId === actor.id) : null;
-  const baseMaxAlive = Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1)));
-  const perLevel = Math.max(0, Number(enemyRules.difficulty?.spawnIncreaseByActor?.[actor.id] || 0));
-  return Math.max(0, Math.round(baseMaxAlive + difficultyLevel * perLevel));
+  return Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1)));
 }
 
 function createRuntimeEnemyClone(source, index) {
@@ -771,7 +673,6 @@ function createRuntimeEnemyClone(source, index) {
     hpPips: source.maxHpPips,
     player,
   };
-  applyRuntimeDifficultyToActors([clone], { refillBosses: true, healAliveBosses: false });
   return clone;
 }
 
@@ -915,63 +816,6 @@ function setControlGuideButtonVisible(isVisible) {
 
 function syncEncouragementBubbleVisibility() {
   encouragementBubbleController.setActive(resultOpen && !mobileLayoutQuery.matches);
-}
-
-function queueBossHealNotice() {
-  bossHealNoticeQueue.push('HP+1');
-  showNextBossHealNotice();
-}
-
-function showNextBossHealNotice() {
-  if (!bossHealNotice || bossHealNoticeActive || !bossHealNoticeQueue.length) return;
-  bossHealNoticeActive = true;
-  bossHealNotice.textContent = bossHealNoticeQueue.shift();
-  bossHealNotice.hidden = false;
-  bossHealNotice.classList.remove('is-visible');
-  void bossHealNotice.offsetWidth;
-  bossHealNotice.classList.add('is-visible');
-
-  window.setTimeout(() => {
-    hideBossHealNotice();
-    bossHealNoticeActive = false;
-    showNextBossHealNotice();
-  }, 1200);
-}
-
-function hideBossHealNotice() {
-  if (!bossHealNotice) return;
-  bossHealNotice.hidden = true;
-  bossHealNotice.classList.remove('is-visible');
-  bossHealNotice.textContent = '';
-}
-
-function queueDifficultyWarning() {
-  const text = String(difficultyRules().warningText || '적이 강해집니다!').trim() || '적이 강해집니다!';
-  difficultyWarningQueue.push(text);
-  showNextDifficultyWarning();
-}
-
-function showNextDifficultyWarning() {
-  if (!difficultyWarning || difficultyWarningActive || !difficultyWarningQueue.length) return;
-  difficultyWarningActive = true;
-  difficultyWarning.textContent = difficultyWarningQueue.shift();
-  difficultyWarning.hidden = false;
-  difficultyWarning.classList.remove('is-visible');
-  void difficultyWarning.offsetWidth;
-  difficultyWarning.classList.add('is-visible');
-
-  window.setTimeout(() => {
-    hideDifficultyWarning();
-    difficultyWarningActive = false;
-    showNextDifficultyWarning();
-  }, 2000);
-}
-
-function hideDifficultyWarning() {
-  if (!difficultyWarning) return;
-  difficultyWarning.hidden = true;
-  difficultyWarning.classList.remove('is-visible');
-  difficultyWarning.textContent = '';
 }
 
 function showRuntimeLoadError() {
