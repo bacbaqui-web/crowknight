@@ -19,7 +19,7 @@ import { createRankingController } from './ranking_controller.js';
 import { createEncouragementBubbleController } from './encouragement_bubble_view.js';
 import { createParticleEffects } from './particle_effects_engine.js';
 import { drawRollGhosts, updateRollGhosts } from './roll_ghost_engine.js';
-import { getRunScore as calculateRunScore, syncRunHud as syncRunHudView } from './run_hud_view.js';
+import { syncRunHud as syncRunHudView } from './run_hud_view.js';
 import { loadSavedState as loadStoredSavedState } from './project_storage_helper.js';
 import { applyWorldView, drawWorld } from './world_renderer.js';
 import { getViewTransform } from './camera_view.js';
@@ -42,8 +42,8 @@ import {
 import { createProjectStateController } from './project_state_controller.js';
 import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
-import { normalizeCharacterGroup } from './character_group_data.js';
 import { createRunActorState } from './run_actor_state.js';
+import { createRunLifecycleController } from './run_lifecycle_controller.js';
 import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
@@ -141,19 +141,20 @@ const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refre
   });
 if (initialPsdBackgroundChanged) saveState();
 let selectedActor = readSetupSelectedActor() || runActorState.getPlayer();
-let battleActive = false;
-let playerDeathPending = false;
-let resultOpen = false;
-let deathSequenceTime = 0;
 let last = performance.now();
-let runSurvivalTime = 0;
-let runKills = 0;
-let bossKills = 0;
 let controlGuideOpen = false;
+const runLifecycle = createRunLifecycleController({
+  deathSequenceDuration: DEATH_RESULT_DELAY,
+  onRunStarted: handleRunStarted,
+  onRunStopped: handleRunStopped,
+  onPlayerDeathStarted: handlePlayerDeathStarted,
+  onResultReady: handleResultReady,
+  onResultClosed: handleResultClosed,
+});
 const deploymentVersionController = isEditorPage
   ? { applyPendingUpdate: () => false }
   : createDeploymentVersionController({
-      canReload: () => !battleActive && !playerDeathPending && !resultOpen,
+      canReload: () => !runLifecycle.hasActiveRunActors(),
       onVersion: (version) => {
         if (gameVersionButton) gameVersionButton.textContent = version;
       },
@@ -164,7 +165,6 @@ createUpdateHistoryController({
   closeButton: updateHistoryClose,
   list: updateHistoryList,
 });
-let lastRecordedScore = 0;
 let screenZoom = readSceneScreenZoom();
 const encouragementBubbleController = createEncouragementBubbleController({ root: encouragementBubbles });
 mobileLayoutQuery.addEventListener('change', syncEncouragementBubbleVisibility);
@@ -230,7 +230,7 @@ const rankingController = createRankingController({
     retryRunButton,
   },
   startRun,
-  getRunResult,
+  getRunResult: runLifecycle.getRunResult,
   getPlayerName: () => runActorState.getPlayer()?.name || '주인공',
   hideStartScreen,
   showStartScreen,
@@ -287,17 +287,17 @@ function update(dt) {
 
   if (controlGuideOpen) return;
 
-  if (playerDeathPending) {
+  if (runLifecycle.isDeathPending()) {
     updatePlayerDeathSequence(dt);
     return;
   }
 
-  if (resultOpen) {
+  if (runLifecycle.isResultOpen()) {
     updateResultScene(dt);
     return;
   }
 
-  if (!battleActive) {
+  if (!runLifecycle.isRunActive()) {
     const controlActor = runActorState.getEditorControlActor(selectedActor, gameActors);
     controlActor.player.update(dt, keys, pressed, world);
     updatePausedActors(
@@ -314,7 +314,7 @@ function update(dt) {
     return;
   }
 
-  runSurvivalTime += dt;
+  runLifecycle.updateSurvivalTime(dt);
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt: 0 });
 
   updateBattleActorMotion({
@@ -357,12 +357,10 @@ function update(dt) {
 }
 
 function beginPlayerDeath() {
-  if (playerDeathPending || resultOpen) return;
+  runLifecycle.startPlayerDeath();
+}
 
-  lastRecordedScore = getRunScore();
-  playerDeathPending = true;
-  deathSequenceTime = 0;
-  battleActive = false;
+function handlePlayerDeathStarted() {
   closeControlGuide();
   setControlGuideButtonVisible(false);
   setMobileControlsVisible(false);
@@ -394,7 +392,6 @@ function beginPlayerDeath() {
 function updatePlayerDeathSequence(dt) {
   const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
   const player = runActorState.getPlayer().player;
-  deathSequenceTime += dt;
   player.animTime += dt;
   player.stateTime += dt;
   advanceCustomActionRuntime(player, dt);
@@ -408,10 +405,7 @@ function updatePlayerDeathSequence(dt) {
   updateRollGhosts(gameActors, dt);
   particleEffects.update(dt);
 
-  if (deathSequenceTime >= DEATH_RESULT_DELAY) {
-    playerDeathPending = false;
-    finishRun({ showResult: true });
-  }
+  runLifecycle.updateDeathSequence(dt);
 }
 
 function updateResultScene(dt) {
@@ -431,12 +425,10 @@ function updateResultScene(dt) {
 }
 
 function finishRun({ showResult = false } = {}) {
-  if (!battleActive && !showResult) return;
+  runLifecycle.stop({ showResult });
+}
 
-  if (battleActive) {
-    lastRecordedScore = getRunScore();
-  }
-  battleActive = false;
+function handleRunStopped({ showResult }) {
   closeControlGuide();
   setControlGuideButtonVisible(false);
   setMobileControlsVisible(false);
@@ -446,8 +438,7 @@ function finishRun({ showResult = false } = {}) {
   if (startBattleButton) startBattleButton.disabled = false;
   if (homeStartButton) homeStartButton.disabled = false;
   if (endBattleButton) endBattleButton.disabled = true;
-  if (showResult) showResultScreen();
-  else {
+  if (!showResult) {
     runActorState.clearEnemies();
     showStartScreen();
   }
@@ -457,13 +448,14 @@ function draw() {
   const gameActors = runActorState.getActiveActors({ runActive: runActorOrderActive() });
   const playerActor = runActorState.getPlayer();
   const renderActors = runActorState.getRenderActors(gameActors);
+  const lifecycle = runLifecycle.getSnapshot();
   const view = getViewTransform({
     world,
     playerActor,
     selectedActor,
     particleEffects,
-    playerDeathPending,
-    resultOpen,
+    playerDeathPending: lifecycle.playerDeathPending,
+    resultOpen: lifecycle.resultOpen,
     isEditPanelOpen: isSettingsPanelOpen(),
     screenZoom: runtimeScreenZoom(gameActors),
     playerScreenY: sceneSession.view?.floorScreenY,
@@ -497,44 +489,28 @@ function draw() {
   captureRuntimeDebugActorSnapshot(playerActor.player);
   runtimeDebugHud.render();
   if (!settingsRankingList && !isFullStage) {
-    drawRankingHud(ctx, { rankings: rankingController.getRankings(), battleActive, lastRecordedScore });
+    drawRankingHud(ctx, {
+      rankings: rankingController.getRankings(),
+      battleActive: lifecycle.battleActive,
+      lastRecordedScore: lifecycle.lastRecordedScore,
+    });
   }
 }
 
-function getRunScore() {
-  return calculateRunScore(runSurvivalTime, runKills, bossKills);
-}
-
-function getRunResult() {
-  return {
-    score: lastRecordedScore,
-    survivalTime: runSurvivalTime,
-    kills: runKills,
-    bossKills,
-  };
-}
-
 function handleEnemyDeath(actor) {
-  if (!isBossRuntimeActor(actor)) return;
-  if (actor.runtimeBossKillCounted) return;
-
-  actor.runtimeBossKillCounted = true;
-  bossKills += 1;
+  runLifecycle.recordEnemyDeath(actor);
 }
 
 function handlePlayerKill(actor) {
-  if (!isBossRuntimeActor(actor)) runKills += 1;
-}
-
-function isBossRuntimeActor(actor) {
-  return normalizeCharacterGroup(actor?.group, '') === 'bosses';
+  runLifecycle.recordPlayerKill(actor);
 }
 
 function syncRunHud() {
+  const lifecycle = runLifecycle.getSnapshot();
   syncRunHudView({
-    survivalTime: runSurvivalTime,
-    kills: runKills,
-    bossKills,
+    survivalTime: lifecycle.runSurvivalTime,
+    kills: lifecycle.runKills,
+    bossKills: lifecycle.bossKills,
     hudSurvivalTime,
     hudKills,
     hudBossKills,
@@ -587,21 +563,16 @@ function runtimeScreenZoom(gameActors) {
 
 function startRun() {
   if (deploymentVersionController.applyPendingUpdate()) return;
-  hideResultScreen();
+  runLifecycle.start();
+}
+
+function handleRunStarted() {
   const playerActor = runActorState.resolvePlayer(selectedActor);
-  bossKills = 0;
   runActorState.rebuildEnemies();
   const gameActors = runActorState.getRunActors();
   lineUpActorPositions(gameActors, world);
-  battleActive = true;
   setControlGuideButtonVisible(true);
   setMobileControlsVisible(true);
-  playerDeathPending = false;
-  resultOpen = false;
-  deathSequenceTime = 0;
-  lastRecordedScore = 0;
-  runSurvivalTime = 0;
-  runKills = 0;
   particleEffects.reset();
   resetProjectileRuntime();
   keys.clear();
@@ -618,7 +589,7 @@ function startRun() {
 }
 
 function runActorOrderActive() {
-  return battleActive || playerDeathPending || resultOpen;
+  return runLifecycle.hasActiveRunActors();
 }
 
 function readSetupSelectedActor() {
@@ -673,15 +644,17 @@ function showStartScreen() {
   deploymentVersionController.applyPendingUpdate();
 }
 
-function showResultScreen() {
+function handleResultReady() {
   setMobileControlsVisible(false);
-  resultOpen = rankingController.showResultScreen();
-  syncEncouragementBubbleVisibility();
+  const resultShown = rankingController.showResultScreen();
+  encouragementBubbleController.setActive(Boolean(resultShown) && !mobileLayoutQuery.matches);
+  return resultShown;
 }
 
-function hideResultScreen() {
-  resultOpen = rankingController.hideResultScreen();
+function handleResultClosed() {
+  const resultShown = rankingController.hideResultScreen();
   encouragementBubbleController.setActive(false);
+  return resultShown;
 }
 
 function setMobileControlsVisible(isVisible) {
@@ -697,7 +670,7 @@ function bindControlGuide() {
 }
 
 function openControlGuide() {
-  if (!battleActive || controlGuideOpen || !gameControlGuide) return;
+  if (!runLifecycle.isRunActive() || controlGuideOpen || !gameControlGuide) return;
   controlGuideOpen = true;
   gameControlGuide.hidden = false;
   controlGuideButton?.setAttribute('aria-expanded', 'true');
@@ -727,7 +700,7 @@ function setControlGuideButtonVisible(isVisible) {
 }
 
 function syncEncouragementBubbleVisibility() {
-  encouragementBubbleController.setActive(resultOpen && !mobileLayoutQuery.matches);
+  encouragementBubbleController.setActive(runLifecycle.isResultOpen() && !mobileLayoutQuery.matches);
 }
 
 function showRuntimeLoadError() {

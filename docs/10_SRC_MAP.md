@@ -21,7 +21,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 
 ## Entry
 
-- `main.js`: 앱 시작점, runtime loop, Run 생명주기 / 화면 상태와 Runtime 모듈 연결.
+- `main.js`: 앱 시작점, runtime update/draw loop, 화면 상태와 Runtime 모듈 연결.
 
 ## Runtime Shell / Deployment
 
@@ -191,6 +191,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `action_trigger_engine.js`: trigger matching과 custom Action start.
 - `input_control_controller.js`: runtime input state controller.
 - `run_actor_state.js`: 선택 Player, Runtime Enemy clone, Actor 정렬과 활성 Runtime Actor 목록 state.
+- `run_lifecycle_controller.js`: Run 시작·종료·사망·결과·처치·점수 상태 전환 controller.
 - `enemy_runtime_engine.js`: Enemy 방향, AI Action, cooldown, 활성 수와 respawn runtime engine.
 - `combat_engine.js`: 근접·투사체 hit, guard, collision, damage와 reaction resolve.
 - `death_ragdoll_engine.js`: actor 사망 시 파츠별 ragdoll 상태 생성 / 갱신 / 렌더.
@@ -206,6 +207,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 Input
 → Trigger
 → Action Runtime
+→ Run Lifecycle
 → Run Actor State
 → Enemy Runtime
 → Current Frame
@@ -218,6 +220,7 @@ Input
 - Input: `input_control_controller.js` - keyboard/touch input을 `keys` / `pressed`로 모은다.
 - Trigger: `action_trigger_engine.js` - Trigger match, Condition, interrupt를 보고 Action start를 결정한다.
 - Action Runtime: `actor_action_helper.js`, `actor_runtime_engine.js` - Action 시간, physics, actor 상태를 갱신한다.
+- Run Lifecycle: `run_lifecycle_controller.js` - Run 활성·사망·결과 상태와 생존 시간, 처치 수, 최종 점수를 전환한다.
 - Run Actor State: `run_actor_state.js` - Preview base Actor와 Battle Player / Runtime Enemy roster를 제공한다.
 - Enemy Runtime: `enemy_runtime_engine.js` - 전투 전·후 활성 수와 respawn, Enemy 방향·AI·cooldown을 처리한다.
 - Current Frame: `actor_runtime_engine.js` - `actionKey`, `getActionFrameProgress()`, `getPartOffset()`로 현재 frame 값을 읽는다.
@@ -307,6 +310,7 @@ Input
 - Project normalize: `project_data_normalizer_helper.js`
 - Runtime trigger: `action_trigger_engine.js`
 - Run Actor roster: `run_actor_state.js`
+- Run 시작 / 종료 / 사망 / 결과 / 점수 상태: `run_lifecycle_controller.js`
 - Overlap geometry: `interaction_overlap_helper.js`
 - Enemy direction / AI / active count / respawn: `enemy_runtime_engine.js`
 - Combat Resolve / damage / reaction: `combat_engine.js`

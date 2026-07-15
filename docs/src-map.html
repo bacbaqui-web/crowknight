@@ -825,6 +825,7 @@ src/ranking_message_helper.js
 src/ranking_view.js
 src/roll_ghost_engine.js
 src/run_actor_state.js
+src/run_lifecycle_controller.js
 src/run_hud_view.js
 src/runtime_debug_hud_view.js
 src/runtime_debug_state.js
@@ -1059,6 +1060,7 @@ src/zoom_formula_runtime_helper.js
             'enemy_runtime_engine.js',
             'interaction_overlap_helper.js',
             'run_actor_state.js',
+            'run_lifecycle_controller.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
             'color_change_formula_runtime_helper.js',
@@ -1092,6 +1094,11 @@ src/zoom_formula_runtime_helper.js
             'formula_runtime_engine.js',
             'actor_runtime_engine.js',
           ],
+        },
+        {
+          name: 'Run Lifecycle',
+          role: 'Run 활성·사망·결과 상태와 생존 시간, 처치 수, 최종 점수를 전환한다.',
+          js: ['run_lifecycle_controller.js'],
         },
         {
           name: 'Run Actor State',
@@ -1366,6 +1373,7 @@ src/zoom_formula_runtime_helper.js
             'combat_engine.js',
             'enemy_runtime_engine.js',
             'run_actor_state.js',
+            'run_lifecycle_controller.js',
             'death_ragdoll_engine.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
@@ -1589,7 +1597,8 @@ src/zoom_formula_runtime_helper.js
       };
 
       const FILE_RESPONSIBILITY_AUDIT = {
-        'main.js': ['Bootstrap / Module Wiring', 'Runtime Loop', 'Run Lifecycle', 'Screen State'],
+        'main.js': ['Bootstrap / Module Wiring', 'Runtime Update', 'Runtime Draw', 'Screen Wiring'],
+        'run_lifecycle_controller.js': ['Run State', 'Death Sequence', 'Kill Count', 'Result Transition'],
         'run_actor_state.js': ['Player Selection', 'Runtime Enemy Clone', 'Actor Ordering', 'Active Actor Roster'],
         'combat_engine.js': ['Combat Resolve', 'Damage / Reaction', 'Region Cache', 'Combat Timers'],
         'enemy_runtime_engine.js': ['Enemy Direction / AI', 'Enemy Cooldown', 'Active Count / Spawn Rule', 'Respawn'],
@@ -1620,7 +1629,7 @@ src/zoom_formula_runtime_helper.js
           '저장과 에셋 책임이 넓다',
         ],
         ['actor_runtime_engine.js', '760', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
-        ['main.js', '751', 'Bootstrap / Loop / Run Lifecycle / Screen', 'Task5 Run Lifecycle 분리 예정'],
+        ['main.js', '724', 'Bootstrap / Runtime update·draw / Screen wiring', '500줄 초과, 조립 순서 변경 주의'],
         ['project_data_normalizer_helper.js', '649', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
         ['combat_engine.js', '611', 'Combat Resolve / Damage / Reaction / Region Cache', 'Combat Source of Truth 유지'],
         ['editor_panel_controller.js', '532', 'Editor shell / external API', '연결 책임만 유지 필요'],
@@ -1646,6 +1655,12 @@ src/zoom_formula_runtime_helper.js
           '215',
           'Enemy direction / AI / active count / respawn',
           'Enemy Runtime Source of Truth',
+        ],
+        [
+          'run_lifecycle_controller.js',
+          '170',
+          'Run state / Death / Kill / Result transition',
+          'Run Lifecycle Source of Truth',
         ],
         ['run_actor_state.js', '129', 'Player selection / Enemy clone / Actor roster', 'Run Actor Source of Truth'],
       ];
