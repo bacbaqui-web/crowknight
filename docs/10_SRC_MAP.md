@@ -190,7 +190,8 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 - `actor_runtime_engine.js`: actor physics / state runtime update.
 - `action_trigger_engine.js`: trigger matching과 custom Action start.
 - `input_control_controller.js`: runtime input state controller.
-- `combat_engine.js`: Enemy AI / respawn, 근접·투사체 Combat Resolve, guard, collision, damage 처리.
+- `enemy_runtime_engine.js`: Enemy 방향, AI Action, cooldown, 활성 수와 respawn runtime engine.
+- `combat_engine.js`: 근접·투사체 hit, guard, collision, damage와 reaction resolve.
 - `death_ragdoll_engine.js`: actor 사망 시 파츠별 ragdoll 상태 생성 / 갱신 / 렌더.
 - `projectile_runtime_engine.js`: 투사체 Formula runtime pool / 이동 / draw / attack region helper.
 - `runtime_debug_state.js`: runtime debug ON/OFF, action snapshot, event buffer state.
@@ -204,6 +205,7 @@ SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧�
 Input
 → Trigger
 → Action Runtime
+→ Enemy Runtime
 → Current Frame
 → Interaction Region
 → Combat
@@ -214,6 +216,7 @@ Input
 - Input: `input_control_controller.js` - keyboard/touch input을 `keys` / `pressed`로 모은다.
 - Trigger: `action_trigger_engine.js` - Trigger match, Condition, interrupt를 보고 Action start를 결정한다.
 - Action Runtime: `actor_action_helper.js`, `actor_runtime_engine.js` - Action 시간, physics, actor 상태를 갱신한다.
+- Enemy Runtime: `enemy_runtime_engine.js` - 전투 전·후 활성 수와 respawn, Enemy 방향·AI·cooldown을 처리한다.
 - Current Frame: `actor_runtime_engine.js` - `actionKey`, `getActionFrameProgress()`, `getPartOffset()`로 현재 frame 값을 읽는다.
 - Interaction Region: `interaction_region_engine.js` - 현재 Runtime frame에서 Attack/Hurt/Collision/Guard region을 계산한다.
 - Overlap Geometry: `interaction_overlap_helper.js` - Combat 호출 안에서 rect / polygon SAT / swept overlap 결과만 계산한다.
@@ -301,5 +304,6 @@ Input
 - Project normalize: `project_data_normalizer_helper.js`
 - Runtime trigger: `action_trigger_engine.js`
 - Overlap geometry: `interaction_overlap_helper.js`
-- Enemy AI / respawn / Combat Resolve / damage: `combat_engine.js`
+- Enemy direction / AI / active count / respawn: `enemy_runtime_engine.js`
+- Combat Resolve / damage / reaction: `combat_engine.js`
 - Deployment update: `deployment_version_controller.js`, `update_history_controller.js`

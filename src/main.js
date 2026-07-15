@@ -11,7 +11,8 @@ import {
   bindKeyboardControls,
   bindTouchControls,
 } from './input_control_controller.js';
-import { maintainEnemyFlow, resolveCombat, resolveProjectileCombat, updateBattleActorMotion } from './combat_engine.js';
+import { resolveCombat, resolveProjectileCombat } from './combat_engine.js';
+import { maintainEnemyFlow, resolveEnemyActorSpawnRule, updateBattleActorMotion } from './enemy_runtime_engine.js';
 import { advanceCustomActionRuntime, requestRuntimeAction } from './action_trigger_engine.js';
 import { drawRankingHud } from './ranking_view.js';
 import { createRankingController } from './ranking_controller.js';
@@ -636,18 +637,11 @@ function rebuildRuntimeEnemyActors() {
   baseGameActors()
     .filter((actor) => actor !== playerActor && !isPlayerCharacter(actor))
     .forEach((actor) => {
-      const maxAlive = resolveRuntimeEnemyMaxAlive(actor);
+      const maxAlive = resolveEnemyActorSpawnRule(world, actor.id).maxAlive;
       for (let index = 1; index < maxAlive; index += 1) {
         runtimeEnemyActors.push(createRuntimeEnemyClone(actor, index));
       }
     });
-}
-
-function resolveRuntimeEnemyMaxAlive(actor) {
-  const enemyRules = world?.enemyRules || {};
-  const actorRule = enemyRules.spawnRulesByActor?.[actor.id] || null;
-  const poolRule = Array.isArray(enemyRules.pool) ? enemyRules.pool.find((entry) => entry?.actorId === actor.id) : null;
-  return Math.max(0, Math.round(Number(actorRule?.maxAlive ?? poolRule?.maxAlive ?? 1)));
 }
 
 function createRuntimeEnemyClone(source, index) {

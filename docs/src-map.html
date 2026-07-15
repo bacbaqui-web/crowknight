@@ -753,6 +753,7 @@ src/editor_workflow_navigation_helper.js
 src/effect_property_controller.js
 src/encouragement_bubble_view.js
 src/enemy_ai_settings_helper.js
+src/enemy_runtime_engine.js
 src/firebase_asset_storage_helper.js
 src/firebase_config_data.js
 src/firebase_ranking_storage_helper.js
@@ -1054,6 +1055,7 @@ src/zoom_formula_runtime_helper.js
             'actor_renderer.js',
             'actor_canvas_renderer.js',
             'combat_engine.js',
+            'enemy_runtime_engine.js',
             'interaction_overlap_helper.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
@@ -1090,6 +1092,11 @@ src/zoom_formula_runtime_helper.js
           ],
         },
         {
+          name: 'Enemy Runtime',
+          role: '전투 전·후 활성 수와 respawn, Enemy 방향·AI Action·cooldown을 처리한다.',
+          js: ['enemy_runtime_engine.js'],
+        },
+        {
           name: 'Current Frame',
           role: 'actionKey, progress, frame value를 읽는다.',
           js: ['actor_runtime_engine.js'],
@@ -1101,7 +1108,7 @@ src/zoom_formula_runtime_helper.js
         },
         {
           name: 'Combat',
-          role: 'Enemy AI와 respawn, 근접·투사체 Combat Resolve, damage, guard, collision push를 처리한다.',
+          role: '근접·투사체 Combat Resolve, damage, guard, collision push와 reaction을 처리한다.',
           js: ['combat_engine.js', 'projectile_runtime_engine.js'],
         },
         {
@@ -1350,6 +1357,7 @@ src/zoom_formula_runtime_helper.js
             'actor_action_helper.js',
             'actor_canvas_renderer.js',
             'combat_engine.js',
+            'enemy_runtime_engine.js',
             'death_ragdoll_engine.js',
             'projectile_runtime_engine.js',
             'afterimage_runtime_helper.js',
@@ -1523,7 +1531,7 @@ src/zoom_formula_runtime_helper.js
           dependsOn: ['Interaction Editor Engine', 'Runtime', 'Transform'],
           responsibility: [
             '✔ Interaction key/type과 Runtime region 계산 담당',
-            '⚠ combat_engine.js와 Runtime 책임 연결',
+            '⚠ overlap helper와 combat resolve 경계 연결',
           ],
           risk: 'warn',
           riskReason: 'Editor 정의와 Runtime 판정이 만나는 경계다.',
@@ -1574,7 +1582,8 @@ src/zoom_formula_runtime_helper.js
 
       const FILE_RESPONSIBILITY_AUDIT = {
         'main.js': ['Bootstrap', 'Runtime Loop', 'Run Lifecycle', 'Runtime Actor Roster', 'Screen State'],
-        'combat_engine.js': ['Enemy AI', 'Enemy Respawn', 'Combat Resolve', 'Damage / Reaction'],
+        'combat_engine.js': ['Combat Resolve', 'Damage / Reaction', 'Region Cache', 'Combat Timers'],
+        'enemy_runtime_engine.js': ['Enemy Direction / AI', 'Enemy Cooldown', 'Active Count / Spawn Rule', 'Respawn'],
         'interaction_overlap_helper.js': ['Rect Overlap', 'Polygon SAT', 'Swept Overlap'],
         'part_editor_controller.js': ['Selection', 'Panel Wiring'],
         'property_panel_controller.js': ['Setup Property', 'Action Property', 'Group Property'],
@@ -1593,13 +1602,7 @@ src/zoom_formula_runtime_helper.js
       };
 
       const LARGE_FILES = [
-        [
-          'combat_engine.js',
-          '823',
-          'Enemy AI / Respawn / Combat Resolve / Damage',
-          '800줄 초과, 전투 외 책임 분리 검토',
-        ],
-        ['main.js', '839', 'Bootstrap / Loop / Run / Actor / Screen', '800줄 초과, Entry 책임 축소 필요'],
+        ['main.js', '833', 'Bootstrap / Loop / Run / Actor / Screen', '800줄 초과, Entry 책임 축소 필요'],
         ['action_trigger_engine.js', '812', 'Trigger / Action / Formula Runtime', '800줄 초과, Formula 실행 경계 감시'],
         ['editor_asset_controller.js', '777', 'Setup / Effect / Background asset actions', '에셋 UI 흐름 3개 포함'],
         [
@@ -1610,6 +1613,7 @@ src/zoom_formula_runtime_helper.js
         ],
         ['actor_runtime_engine.js', '760', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
         ['project_data_normalizer_helper.js', '649', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
+        ['combat_engine.js', '611', 'Combat Resolve / Damage / Reaction / Region Cache', 'Combat Source of Truth 유지'],
         ['editor_panel_controller.js', '532', 'Editor shell / external API', '연결 책임만 유지 필요'],
         ['background_renderer.js', '526', 'Background render / layer render', '전용 renderer가 큼'],
         ['interaction_region_engine.js', '483', 'Runtime Interaction Region calculation', 'Combat source 경계 감시'],
@@ -1628,6 +1632,12 @@ src/zoom_formula_runtime_helper.js
         ['interaction_editor_engine.js', '457', 'Interaction card / field editing', '공통 Editor 책임 증가 감시'],
         ['stage_rules_state.js', '404', 'Stage rules defaults / normalize', 'Stage schema 변경 시 감시'],
         ['scene_session_data.js', '404', 'Scene session / world creation', 'Session과 Runtime world 경계 감시'],
+        [
+          'enemy_runtime_engine.js',
+          '215',
+          'Enemy direction / AI / active count / respawn',
+          'Enemy Runtime Source of Truth',
+        ],
       ];
 
       const NAMING_EXCEPTIONS = [];
@@ -1836,7 +1846,6 @@ src/zoom_formula_runtime_helper.js
       function fileAuditRisk(file) {
         if (
           file === 'main.js' ||
-          file === 'combat_engine.js' ||
           file === 'action_trigger_engine.js' ||
           file === 'actor_runtime_engine.js' ||
           file === 'firebase_asset_storage_helper.js' ||
