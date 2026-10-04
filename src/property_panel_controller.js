@@ -20,7 +20,7 @@ import {
   interactionObjectRole,
   isInteractionObjectPartKey,
   primaryInteractionObjectPartKeyForEditFocus,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 
 const ACTION_PIVOT_PROPERTY_GROUPS = [
   {

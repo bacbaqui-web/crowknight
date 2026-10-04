@@ -1,4 +1,4 @@
-import { isInteractionObjectPartKey, interactionObjectParentPartKey } from './interaction_object_editor_controller.js';
+import { isInteractionObjectPartKey, interactionObjectParentPartKey } from './interaction_object_model_data.js';
 import { partLabel } from './editor_label_helper.js';
 import { renderEditorDataCard } from './editor_card_panel_view.js';
 import { renderScrubGroups } from './editor_scrub_helper.js';

@@ -17,7 +17,7 @@ import {
   GUARD_INTERACTION_OBJECT_KEY,
   ATTACK_INTERACTION_OBJECT_KEY,
   interactionObjectPartKeysForEditFocus,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 import { clamp } from './common_helper.js';
 import { resolveEffectAsset } from './asset_loader_helper.js';
 

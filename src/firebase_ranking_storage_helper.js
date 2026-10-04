@@ -8,13 +8,22 @@ export async function loadRemoteRankings() {
   if (!isFirebaseRankingEnabled()) return null;
 
   try {
-    const response = await window.fetch(`${collectionUrl()}?key=${apiKey()}&pageSize=${REMOTE_RANKING_LIMIT}`, {
+    const response = await window.fetch(`${documentsUrl()}:runQuery?key=${apiKey()}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: FIREBASE_RANKING_CONFIG.rankingCollection.trim() }],
+          orderBy: [{ field: { fieldPath: 'score' }, direction: 'DESCENDING' }],
+          limit: REMOTE_RANKING_LIMIT,
+        },
+      }),
     });
     if (!response.ok) return null;
 
     const payload = await response.json();
-    return normalizeRankingEntries(payload.documents || []);
+    return normalizeRankingEntries(payload.map((item) => item.document).filter(Boolean));
   } catch {
     return null;
   }
@@ -109,11 +118,12 @@ function isFirebaseRankingEnabled() {
   );
 }
 
+function documentsUrl() {
+  return `${FIRESTORE_BASE_URL}/projects/${encodeURIComponent(FIREBASE_RANKING_CONFIG.projectId.trim())}/databases/(default)/documents`;
+}
+
 function collectionUrl() {
-  const { projectId, rankingCollection } = FIREBASE_RANKING_CONFIG;
-  return `${FIRESTORE_BASE_URL}/projects/${encodeURIComponent(
-    projectId.trim()
-  )}/databases/(default)/documents/${encodeURIComponent(rankingCollection.trim())}`;
+  return `${documentsUrl()}/${encodeURIComponent(FIREBASE_RANKING_CONFIG.rankingCollection.trim())}`;
 }
 
 function apiKey() {

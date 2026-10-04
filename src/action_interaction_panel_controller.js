@@ -8,7 +8,7 @@ import {
   GUARD_INTERACTION_OBJECT_KEY,
   interactionObjectPartKeyForRole,
   interactionObjectRole,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 
 export function createActionInteractionPanelController({
   applySelected,

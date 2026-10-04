@@ -42,6 +42,7 @@ export function createRankingController({
     retryRunButton,
   } = elements;
   let rankings = remoteEnabled ? loadStoredRankings() : [];
+  let submission = null;
   notifyRankingsChange();
 
   bindResultScreenControls(
@@ -78,6 +79,7 @@ export function createRankingController({
   }
 
   function hideResultScreen() {
+    submission = null;
     return hideResultScreenView(resultScreen);
   }
 
@@ -123,23 +125,33 @@ export function createRankingController({
 
   async function recordRanking(name, message) {
     const { score, survivalTime, kills, bossKills } = getRunResult();
-    if (score < 0) return;
+    if (!Number.isFinite(score) || score < 0) return { ok: false, message: '유효한 플레이 기록이 없습니다.' };
+    if (submission?.saved) return { ok: true, message: '이미 저장한 기록입니다.' };
 
-    const entry = createRankingEntry(score, survivalTime, kills, name || getPlayerName(), message, bossKills);
-    rankings = sortRankingEntries([...rankings, entry]);
+    if (!submission) {
+      const entry = createRankingEntry(score, survivalTime, kills, name || getPlayerName(), message, bossKills);
+      submission = { entry, saved: false };
+      rankings = sortRankingEntries([...rankings, entry]);
+    } else {
+      submission.entry.name = name || getPlayerName();
+      submission.entry.message = message;
+    }
     saveRankings();
     notifyRankingsChange();
+    if (!remoteEnabled) {
+      submission.saved = true;
+      return { ok: true, message: '테스트 기록을 저장했습니다.' };
+    }
 
-    if (!remoteEnabled) return;
-    const remoteEntry = await addRemoteRankingEntry(entry);
-    if (!remoteEntry) return;
-
-    const synced = await syncFromFirebase();
-    if (synced) return;
-
+    const remoteEntry = await addRemoteRankingEntry(submission.entry);
+    if (!remoteEntry) return { ok: false, message: '공개 랭킹 제출에 실패했습니다. 다시 시도해 주세요.' };
+    submission.saved = true;
+    const entry = submission.entry;
     rankings = sortRankingEntries(rankings.map((item) => (item === entry ? remoteEntry : item)));
     saveRankings();
     notifyRankingsChange();
+    await syncFromFirebase();
+    return { ok: true, message: '공개 랭킹에 등록했습니다.' };
   }
 
   function notifyRankingsChange() {

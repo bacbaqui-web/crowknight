@@ -47,3 +47,9 @@ npm test
 ```
 
 설계는 `docs/00_MANIFEST.md`, 구조는 `docs/03_ARCHITECTURE.md`, 파일 위치는 `docs/10_SRC_MAP.md`를 참고합니다. 전체 구조 감사와 분리 후보는 `docs/21_REFACTOR_AUDIT.md`에 기록합니다.
+
+## 리팩토링 후 제작 파일 보호
+
+PSD 업로드는 `runtime/asset-sources`에 별도로 보관하고, 성공한 변환의 PNG/WebP만 제작 경로에 반영합니다. 기존 PSD를 직접 수정한 경우 다음 갱신은 해당 원본을 사용합니다. 캐릭터 이동은 새 위치로 복사하고 삭제는 프로젝트 목록에서 제외하므로 원본 폴더가 남습니다. `runtime/asset-sources`는 Git에서 제외된 로컬 제작 원본이므로 제작 환경을 옮길 때 원본 PSD와 함께 백업합니다.
+
+세팅의 저장 실패 표시에서 **저장 다시 시도**를 사용할 수 있습니다. 미저장 변경이 있으면 페이지 종료 경고가 표시됩니다. 서버는 `runtime/file-transactions`의 중단된 저장을 시작 시 복구하므로 이 폴더를 임의로 지우지 않습니다. 구조 분리와 검증 기록은 `docs/99_TASK_REPORT.md`를 참고합니다.

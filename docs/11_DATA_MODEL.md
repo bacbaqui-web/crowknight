@@ -539,3 +539,9 @@ Asset reference 규칙:
 - actor assets / effectAssets의 `__snapshot: true`는 없는 이미지에 mutable 제작 에셋 fallback을 적용하지 않도록 한다.
 - 원본 PSD sourceUrl과 PSD 파일 내용은 beta/published snapshot에 포함하지 않는다.
 - Firestore에는 공개 랭킹 `rankingEntries`만 사용한다. 이전 `projectSettings/crowKnight`와 Storage는 migration 이후 런타임에서 사용하지 않는다.
+
+## 로컬 제작 원본과 파츠 목록
+
+- `runtime/asset-sources/index.json`: 기존 원본 경로 → 업로드 원본 경로와 기존 PSD 수정 시각을 저장한다. 원본 PSD가 직접 변경되면 업로드 선택보다 직접 변경한 원본을 우선한다. 이 파일과 업로드 원본은 로컬 전용이며 beta/published에 포함하지 않는다.
+- 캐릭터 `assets.__parts`: 마지막으로 성공한 PSD 변환의 파츠 목록이다. 목록에 없는 파츠는 이전 PNG로 fallback하지 않는다. 오래된 데이터에서 목록이 없으면 기존 파츠 탐색 동작을 유지한다.
+- `runtime/file-transactions`: 파일 묶음 저장의 복구 journal과 이전 내용이다. 성공 시 정리하고 중단 시 서버 시작에서 복원한다. Git commit 이후의 기록은 이미 커밋한 배포 파일을 되돌리지 않는다.

@@ -6,7 +6,7 @@ import { EDIT_CONTEXT_ACTION, resolveEditTarget } from './edit_target_helper.js'
 import { createActionInteractionPanelController } from './action_interaction_panel_controller.js';
 import { createActionModifierPanelController } from './action_modifier_panel_controller.js';
 import { createPropertyPanelController } from './property_panel_controller.js';
-import { primaryInteractionObjectPartKeyForEditFocus } from './interaction_object_editor_controller.js';
+import { primaryInteractionObjectPartKeyForEditFocus } from './interaction_object_model_data.js';
 
 export function createTuningPanelPartController({
   elements,

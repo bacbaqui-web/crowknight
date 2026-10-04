@@ -4,7 +4,7 @@ import {
   GUARD_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
   INTERACTION_OBJECT_PART_TYPE,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 
 export const DEFAULT_PLAYER_RIG = {
   body: {

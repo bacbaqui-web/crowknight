@@ -683,215 +683,233 @@
     </main>
 
     <script>
-      const SOURCE_FILES = Object.freeze(
-        `src/action_authoring_controller.js
-src/action_authoring_data.js
-src/action_blend_helper.js
-src/action_condition_helper.js
-src/action_edit_state.js
-src/action_group_helper.js
-src/action_interaction_panel_controller.js
-src/action_keyframe_target_helper.js
-src/action_mirror_helper.js
-src/action_modifier_panel_controller.js
-src/action_runtime_rule_helper.js
-src/action_timeline_edit_helper.js
-src/action_trigger_controller.js
-src/action_trigger_data.js
-src/action_trigger_engine.js
-src/actor_action_helper.js
-src/actor_canvas_renderer.js
-src/actor_factory.js
-src/actor_frame_state.js
-src/actor_placement_helper.js
-src/actor_pose_helper.js
-src/actor_renderer.js
-src/actor_runtime_engine.js
-src/actor_state.js
-src/actor_tuning_helper.js
-src/afterimage_runtime_helper.js
-src/animation_frame_data.js
-src/asset_loader_helper.js
-src/asset_refresh_helper.js
-src/background_panel_controller.js
-src/background_panel_view.js
-src/background_renderer.js
-src/camera_view.js
-src/canvas_drag_math_helper.js
-src/canvas_drag_state.js
-src/canvas_layout_helper.js
-src/character_group_data.js
-src/character_hud_layout_helper.js
-src/color_change_formula_runtime_helper.js
-src/combat_engine.js
-src/common_helper.js
-src/control_value_transform_helper.js
-src/death_ragdoll_engine.js
-src/deployment_version_controller.js
-src/edit_handle_drawing_helper.js
-src/edit_handle_geometry_helper.js
-src/edit_handle_renderer.js
-src/edit_target_helper.js
-src/editable_object_model_helper.js
-src/editable_property_helper.js
-src/editor_asset_controller.js
-src/editor_card_panel_view.js
-src/editor_control_binding_controller.js
-src/editor_control_setup_controller.js
-src/editor_debug_view.js
-src/editor_label_helper.js
-src/editor_layer_order_helper.js
-src/editor_lifecycle_controller.js
-src/editor_local_only_helper.js
-src/editor_panel_binding_controller.js
-src/editor_panel_bootstrap_helper.js
-src/editor_panel_composition_helper.js
-src/editor_panel_controller.js
-src/editor_panel_dom_helper.js
-src/editor_panel_sync_helper.js
-src/editor_scrub_helper.js
-src/editor_shortcut_helper.js
-src/editor_timeline_section_controller.js
-src/editor_undo_data.js
-src/editor_workflow_controller.js
-src/editor_workflow_data.js
-src/editor_workflow_navigation_helper.js
-src/effect_property_controller.js
-src/encouragement_bubble_view.js
-src/enemy_ai_settings_helper.js
-src/enemy_runtime_engine.js
-src/release_panel_controller.js
-src/firebase_config_data.js
-src/firebase_ranking_storage_helper.js
-src/formula_editor_engine.js
-src/formula_registry.js
-src/formula_runtime_engine.js
-src/formulas/afterimage_formula.js
-src/formulas/ai_formula.js
-src/formulas/blend_formula.js
-src/formulas/cancel_formula.js
-src/formulas/cast_formula.js
-src/formulas/color_change_formula.js
-src/formulas/cooldown_formula.js
-src/formulas/formula_editor_fields.js
-src/formulas/inertia_formula.js
-src/formulas/link_formula.js
-src/formulas/lock_formula.js
-src/formulas/projectile_formula.js
-src/formulas/range_formula.js
-src/formulas/shake_formula.js
-src/formulas/target_move_formula.js
-src/formulas/velocity_formula.js
-src/formulas/zoom_formula.js
-src/game_config_data.js
-src/graph_picker_view.js
-src/group_edit_state.js
-src/group_transform_adapter.js
-src/input_control_controller.js
-src/interaction_editor_engine.js
-src/interaction_field_data.js
-src/interaction_object_editor_controller.js
-src/interaction_overlap_helper.js
-src/interaction_region_engine.js
-src/interaction_swept_region_helper.js
-src/local_api_helper.js
-src/local_character_asset_storage_helper.js
-src/main.js
-src/main_dom_helper.js
-src/mobile_control_layout_helper.js
-src/modifier_editor_engine.js
-src/motion_field_data.js
-src/number_input_helper.js
-src/panel_edit_state.js
-src/panel_feedback_view.js
-src/part_editor_controller.js
-src/part_source_data.js
-src/particle_effects_engine.js
-src/player_default_rig_data.js
-src/player_default_tuning_data.js
-src/pose_action_authoring_controller.js
-src/pose_action_authoring_helper.js
-src/preview_state.js
-src/project_data_normalizer_helper.js
-src/project_state_controller.js
-src/project_storage_helper.js
-src/projectile_runtime_engine.js
-src/property_field_data.js
-src/property_group_edit_helper.js
-src/property_numeric_input_helper.js
-src/property_panel_controller.js
-src/property_scrub_helper.js
-src/property_value_helper.js
-src/psd_background_helper.js
-src/puppet_player_debug_view.js
-src/puppet_player_edit_region_helper.js
-src/puppet_player_geometry_helper.js
-src/ranking_controller.js
-src/ranking_message_helper.js
-src/ranking_view.js
-src/roll_ghost_engine.js
-src/run_actor_state.js
-src/run_lifecycle_controller.js
-src/run_hud_view.js
-src/runtime_debug_hud_view.js
-src/runtime_debug_state.js
-src/scene_session_data.js
-src/score_format_helper.js
-src/selection_palette_data.js
-src/selection_state.js
-src/settings_panel_state.js
-src/shake_formula_runtime_helper.js
-src/stage_ai_panel_controller.js
-src/stage_rules_controller.js
-src/stage_rules_panel_controller.js
-src/stage_rules_panel_renderer.js
-src/stage_rules_state.js
-src/timeline_action_adapter.js
-src/timeline_action_controller.js
-src/timeline_action_helper.js
-src/timeline_action_panel_view.js
-src/timeline_adapter_contract_helper.js
-src/timeline_clipboard_helper.js
-src/timeline_command_helper.js
-src/timeline_control_helper.js
-src/timeline_controller.js
-src/timeline_dom_helper.js
-src/timeline_drag_control_helper.js
-src/timeline_drag_helper.js
-src/timeline_effect_adapter.js
-src/timeline_effect_controller.js
-src/timeline_effect_panel_view.js
-src/timeline_engine.js
-src/timeline_frame_reader.js
-src/timeline_keyframe_helper.js
-src/timeline_keyframe_target_helper.js
-src/timeline_modifier_data.js
-src/timeline_panel_sync_helper.js
-src/timeline_playback_helper.js
-src/timeline_pose_adapter.js
-src/timeline_pose_controller.js
-src/timeline_pose_panel_view.js
-src/timeline_preview_helper.js
-src/timeline_renderer.js
-src/timeline_selection_helper.js
-src/timeline_settings_helper.js
-src/timeline_state.js
-src/timeline_view.js
-src/transform_drag_apply_helper.js
-src/transform_drag_factory.js
-src/transform_drag_helper.js
-src/transform_edit_state.js
-src/transform_editor_controller.js
-src/transform_handle_geometry_helper.js
-src/transform_refresh_helper.js
-src/transform_value_helper.js
-src/update_history_controller.js
-src/world_renderer.js
-src/zoom_formula_runtime_helper.js
-`
-          .trim()
-          .split('\\n')
-      );
+      const SOURCE_FILES = Object.freeze([
+        'src/action_authoring_controller.js',
+        'src/action_authoring_data.js',
+        'src/action_blend_helper.js',
+        'src/action_condition_helper.js',
+        'src/action_edit_state.js',
+        'src/action_group_helper.js',
+        'src/action_interaction_panel_controller.js',
+        'src/action_keyframe_target_helper.js',
+        'src/action_mirror_helper.js',
+        'src/action_modifier_panel_controller.js',
+        'src/action_movement_formula_helper.js',
+        'src/action_runtime_data_helper.js',
+        'src/action_runtime_rule_helper.js',
+        'src/action_timeline_edit_helper.js',
+        'src/action_trigger_controller.js',
+        'src/action_trigger_data.js',
+        'src/action_trigger_engine.js',
+        'src/actor_action_helper.js',
+        'src/actor_canvas_renderer.js',
+        'src/actor_factory.js',
+        'src/actor_frame_state.js',
+        'src/actor_placement_helper.js',
+        'src/actor_pose_helper.js',
+        'src/actor_renderer.js',
+        'src/actor_runtime_engine.js',
+        'src/actor_runtime_pose_helper.js',
+        'src/actor_state.js',
+        'src/actor_tuning_helper.js',
+        'src/afterimage_runtime_helper.js',
+        'src/animation_frame_data.js',
+        'src/asset_loader_helper.js',
+        'src/asset_refresh_helper.js',
+        'src/background_panel_controller.js',
+        'src/background_panel_view.js',
+        'src/background_renderer.js',
+        'src/camera_view.js',
+        'src/canvas_drag_math_helper.js',
+        'src/canvas_drag_state.js',
+        'src/canvas_layout_helper.js',
+        'src/character_group_data.js',
+        'src/character_hud_layout_helper.js',
+        'src/color_change_formula_runtime_helper.js',
+        'src/combat_cache_helper.js',
+        'src/combat_collision_helper.js',
+        'src/combat_engine.js',
+        'src/combat_reaction_helper.js',
+        'src/combat_rule_helper.js',
+        'src/common_helper.js',
+        'src/control_value_transform_helper.js',
+        'src/death_ragdoll_engine.js',
+        'src/deployment_version_controller.js',
+        'src/edit_handle_drawing_helper.js',
+        'src/edit_handle_geometry_helper.js',
+        'src/edit_handle_renderer.js',
+        'src/edit_target_helper.js',
+        'src/editable_object_model_helper.js',
+        'src/editable_property_helper.js',
+        'src/editor_asset_controller.js',
+        'src/editor_card_panel_view.js',
+        'src/editor_character_asset_controller.js',
+        'src/editor_character_asset_view.js',
+        'src/editor_control_binding_controller.js',
+        'src/editor_control_setup_controller.js',
+        'src/editor_debug_view.js',
+        'src/editor_effect_asset_controller.js',
+        'src/editor_entry.js',
+        'src/editor_label_helper.js',
+        'src/editor_layer_order_helper.js',
+        'src/editor_lifecycle_controller.js',
+        'src/editor_local_only_helper.js',
+        'src/editor_panel_binding_controller.js',
+        'src/editor_panel_bootstrap_helper.js',
+        'src/editor_panel_composition_helper.js',
+        'src/editor_panel_controller.js',
+        'src/editor_panel_dom_helper.js',
+        'src/editor_panel_sync_helper.js',
+        'src/editor_scrub_helper.js',
+        'src/editor_shortcut_helper.js',
+        'src/editor_timeline_section_controller.js',
+        'src/editor_undo_data.js',
+        'src/editor_workflow_controller.js',
+        'src/editor_workflow_data.js',
+        'src/editor_workflow_navigation_helper.js',
+        'src/effect_property_controller.js',
+        'src/encouragement_bubble_view.js',
+        'src/enemy_ai_settings_helper.js',
+        'src/enemy_runtime_engine.js',
+        'src/firebase_config_data.js',
+        'src/firebase_ranking_storage_helper.js',
+        'src/formula_editor_engine.js',
+        'src/formula_registry.js',
+        'src/formula_runtime_engine.js',
+        'src/formulas/afterimage_formula.js',
+        'src/formulas/ai_formula.js',
+        'src/formulas/blend_formula.js',
+        'src/formulas/cancel_formula.js',
+        'src/formulas/cast_formula.js',
+        'src/formulas/color_change_formula.js',
+        'src/formulas/cooldown_formula.js',
+        'src/formulas/formula_editor_fields.js',
+        'src/formulas/inertia_formula.js',
+        'src/formulas/link_formula.js',
+        'src/formulas/lock_formula.js',
+        'src/formulas/projectile_formula.js',
+        'src/formulas/range_formula.js',
+        'src/formulas/shake_formula.js',
+        'src/formulas/target_move_formula.js',
+        'src/formulas/velocity_formula.js',
+        'src/formulas/zoom_formula.js',
+        'src/game_config_data.js',
+        'src/graph_picker_view.js',
+        'src/group_edit_state.js',
+        'src/group_transform_adapter.js',
+        'src/input_control_controller.js',
+        'src/interaction_editor_engine.js',
+        'src/interaction_field_data.js',
+        'src/interaction_object_editor_controller.js',
+        'src/interaction_object_model_data.js',
+        'src/interaction_overlap_helper.js',
+        'src/interaction_region_engine.js',
+        'src/interaction_swept_region_helper.js',
+        'src/local_api_helper.js',
+        'src/local_character_asset_storage_helper.js',
+        'src/main.js',
+        'src/main_dom_helper.js',
+        'src/mobile_control_layout_helper.js',
+        'src/modifier_editor_engine.js',
+        'src/motion_field_data.js',
+        'src/number_input_helper.js',
+        'src/panel_button_action_helper.js',
+        'src/panel_edit_state.js',
+        'src/panel_feedback_view.js',
+        'src/part_editor_controller.js',
+        'src/part_source_data.js',
+        'src/particle_effects_engine.js',
+        'src/player_default_rig_data.js',
+        'src/player_default_tuning_data.js',
+        'src/pose_action_authoring_controller.js',
+        'src/pose_action_authoring_helper.js',
+        'src/preview_state.js',
+        'src/project_action_normalizer_helper.js',
+        'src/project_data_normalizer_helper.js',
+        'src/project_effect_normalizer_helper.js',
+        'src/project_interaction_normalizer_helper.js',
+        'src/project_keys_normalizer_helper.js',
+        'src/project_object_merge_helper.js',
+        'src/project_rig_normalizer_helper.js',
+        'src/project_runtime_loader.js',
+        'src/project_save_queue.js',
+        'src/project_state_controller.js',
+        'src/project_storage_helper.js',
+        'src/projectile_runtime_engine.js',
+        'src/property_field_data.js',
+        'src/property_group_edit_helper.js',
+        'src/property_numeric_input_helper.js',
+        'src/property_panel_controller.js',
+        'src/property_scrub_helper.js',
+        'src/property_value_helper.js',
+        'src/psd_background_helper.js',
+        'src/puppet_player_debug_view.js',
+        'src/puppet_player_edit_region_helper.js',
+        'src/puppet_player_geometry_helper.js',
+        'src/ranking_controller.js',
+        'src/ranking_message_helper.js',
+        'src/ranking_view.js',
+        'src/release_panel_controller.js',
+        'src/roll_ghost_engine.js',
+        'src/run_actor_state.js',
+        'src/run_hud_view.js',
+        'src/run_lifecycle_controller.js',
+        'src/runtime_debug_hud_view.js',
+        'src/runtime_debug_state.js',
+        'src/scene_session_data.js',
+        'src/score_format_helper.js',
+        'src/selection_palette_data.js',
+        'src/selection_state.js',
+        'src/settings_panel_state.js',
+        'src/shake_formula_runtime_helper.js',
+        'src/stage_ai_panel_controller.js',
+        'src/stage_rules_controller.js',
+        'src/stage_rules_panel_controller.js',
+        'src/stage_rules_panel_renderer.js',
+        'src/stage_rules_state.js',
+        'src/timeline_action_adapter.js',
+        'src/timeline_action_controller.js',
+        'src/timeline_action_helper.js',
+        'src/timeline_action_panel_view.js',
+        'src/timeline_adapter_contract_helper.js',
+        'src/timeline_clipboard_helper.js',
+        'src/timeline_command_helper.js',
+        'src/timeline_control_helper.js',
+        'src/timeline_controller.js',
+        'src/timeline_dom_helper.js',
+        'src/timeline_drag_control_helper.js',
+        'src/timeline_drag_helper.js',
+        'src/timeline_effect_adapter.js',
+        'src/timeline_effect_controller.js',
+        'src/timeline_effect_panel_view.js',
+        'src/timeline_engine.js',
+        'src/timeline_frame_reader.js',
+        'src/timeline_keyframe_helper.js',
+        'src/timeline_keyframe_target_helper.js',
+        'src/timeline_modifier_data.js',
+        'src/timeline_panel_sync_helper.js',
+        'src/timeline_playback_helper.js',
+        'src/timeline_pose_adapter.js',
+        'src/timeline_pose_controller.js',
+        'src/timeline_pose_panel_view.js',
+        'src/timeline_preview_helper.js',
+        'src/timeline_renderer.js',
+        'src/timeline_selection_helper.js',
+        'src/timeline_settings_helper.js',
+        'src/timeline_state.js',
+        'src/timeline_view.js',
+        'src/transform_drag_apply_helper.js',
+        'src/transform_drag_factory.js',
+        'src/transform_drag_helper.js',
+        'src/transform_edit_state.js',
+        'src/transform_editor_controller.js',
+        'src/transform_handle_geometry_helper.js',
+        'src/transform_refresh_helper.js',
+        'src/transform_value_helper.js',
+        'src/update_history_controller.js',
+        'src/world_renderer.js',
+        'src/zoom_formula_runtime_helper.js',
+      ]);
 
       const ACTION_PARTS = [
         {
@@ -1626,14 +1644,24 @@ src/zoom_formula_runtime_helper.js
       };
 
       const LARGE_FILES = [
-        ['action_trigger_engine.js', '812', 'Trigger / Action / Formula Runtime', '800줄 초과, Formula 실행 경계 감시'],
-        ['editor_asset_controller.js', '777', 'Setup / Effect / Background asset actions', '에셋 UI 흐름 3개 포함'],
-        ['release_panel_controller.js', '762', 'Asset Storage / Metadata / Local bridge', '저장과 에셋 책임이 넓다'],
-        ['actor_runtime_engine.js', '760', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
-        ['main.js', '704', 'Bootstrap / Runtime update·draw / Screen wiring', '500줄 초과, 조립 순서 변경 주의'],
-        ['project_data_normalizer_helper.js', '649', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
-        ['combat_engine.js', '611', 'Combat Resolve / Damage / Reaction / Region Cache', 'Combat Source of Truth 유지'],
-        ['editor_panel_controller.js', '532', 'Editor shell / external API', '연결 책임만 유지 필요'],
+        [
+          'action_trigger_engine.js',
+          '596',
+          'Trigger / Action / Formula Runtime',
+          '이동 수식 분리 완료, Trigger 실행 경계 감시',
+        ],
+        [
+          'editor_asset_controller.js',
+          '48',
+          'Setup / Effect / Background asset actions',
+          '캐릭터·이펙트는 독립 controller/view로 분리',
+        ],
+        ['release_panel_controller.js', '114', 'Beta / Publish UI', '배포 UI와 snapshot 서버 경계를 유지한다'],
+        ['actor_runtime_engine.js', '623', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
+        ['main.js', '659', 'Bootstrap / Runtime update·draw / Screen wiring', '500줄 초과, 조립 순서 변경 주의'],
+        ['project_data_normalizer_helper.js', '119', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
+        ['combat_engine.js', '275', 'Combat Resolve / Damage / Reaction / Region Cache', 'Combat Source of Truth 유지'],
+        ['editor_panel_controller.js', '530', 'Editor shell / external API', '연결 책임만 유지 필요'],
         ['background_renderer.js', '526', 'Background render / layer render', '전용 renderer가 큼'],
         ['interaction_region_engine.js', '483', 'Runtime Interaction Region calculation', 'Combat source 경계 감시'],
         [

@@ -1,0 +1,89 @@
+[
+  {
+    "name": "default",
+    "saved": null,
+    "sha256": "7d55a7f0cc6ff32dabad9ec2166bd3b25d35606c0d47a44a5740bd1aa11342f0"
+  },
+  {
+    "name": "legacy-rig",
+    "saved": {
+      "speed": 999,
+      "hudAnchors": {
+        "x": 5,
+        "y": 7
+      },
+      "rig": {
+        "armL": {
+          "x": 4,
+          "y": 8,
+          "rot": 30
+        },
+        "body": {
+          "rot": 25,
+          "w": 140,
+          "h": 180
+        }
+      },
+      "actionSettings": {
+        "attack": {
+          "duration": 0.5,
+          "condition": "ground"
+        }
+      },
+      "motion": {
+        "walkBob": 20
+      }
+    },
+    "sha256": "304df3674da0cc7f8ab25d1ce73698662c5fe66db4721b196eeed36e1d7e01e2"
+  },
+  {
+    "name": "custom-action-effect",
+    "saved": {
+      "customActions": [
+        {
+          "key": "customAction1",
+          "name": "skill"
+        }
+      ],
+      "actionSettings": {
+        "customAction1": {
+          "duration": 0.8,
+          "playback": "loop",
+          "blendFrames": 4,
+          "formulas": [
+            {
+              "type": "velocity",
+              "enabled": true,
+              "x": 2,
+              "y": -1,
+              "mode": "add",
+              "startFrame": 1,
+              "endFrame": 8
+            }
+          ]
+        }
+      },
+      "effectSettings": {
+        "customAction1": {
+          "duration": 0.4,
+          "fileName": "skill.png"
+        }
+      },
+      "effectOffsets": {
+        "customAction1": {
+          "start": {
+            "x": 1,
+            "y": 2,
+            "opacity": 0.5
+          },
+          "end": {
+            "x": 10,
+            "y": 5,
+            "opacity": 1
+          }
+        }
+      }
+    },
+    "sha256": "20ce34e6469f8230bf18cc1702d79b5a56278c088d9780897d0df13a12420309"
+  }
+]

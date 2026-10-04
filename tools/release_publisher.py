@@ -1,7 +1,7 @@
 """Publish only tested snapshots to the existing GitHub Pages source branch."""
 import json
 import subprocess
-from pathlib import Path
+from file_transaction import FileTransaction
 from release_snapshot import RELEASE_LOCK, local_asset_path, promote_beta
 
 
@@ -38,13 +38,25 @@ def publish_beta(root, revision):
         # Do not create a commit that silently carries somebody else's staged work.
         if git(root, 'diff', '--cached', '--name-only'):
             raise ValueError('다른 변경이 스테이징되어 있습니다. 먼저 해당 Git 작업을 마쳐 주세요.')
-        state = promote_beta(root, revision)
+        state = json.loads((root / 'data/beta.json').read_text())
         paths = ['data/published.json', 'data/beta.json', 'data/draft.json', 'version.json'] + snapshot_asset_paths(root, state)
-        git(root, 'add', '--', *paths)
-        if git(root, 'diff', '--cached', '--name-only'):
-            git(root, 'commit', '-m', 'Publish tested beta ' + state['releaseVersion'], '--only', '--', *paths)
-        commit = git(root, 'rev-parse', 'HEAD')
-        # A retry after a push failure pushes the same commit without rewriting history.
+        previous_commit = git(root, 'rev-parse', 'HEAD')
+        with FileTransaction(root, [root / 'data/published.json', root / 'version.json'], git_head=previous_commit, staged_paths=paths) as transaction:
+            state = promote_beta(root, revision)
+            try:
+                git(root, 'add', '--', *paths)
+                if git(root, 'diff', '--cached', '--name-only'):
+                    git(root, 'commit', '-m', 'Publish tested beta ' + state['releaseVersion'], '--only', '--', *paths)
+            except Exception:
+                if git(root, 'rev-parse', 'HEAD') == previous_commit:
+                    # Only our staging exists: the preflight rejected any pre-existing staged work.
+                    git(root, 'reset', '--', *paths)
+                else:
+                    transaction.commit()
+                raise
+            commit = git(root, 'rev-parse', 'HEAD')
+            transaction.commit()
+        # A push failure keeps the committed snapshot for retry without rewriting history.
         git(root, 'push', config['remote'], config['branch'])
         return {'ok': True, 'revision': revision, 'commit': commit, 'url': config['url'],
                 'message': '배포 요청을 전송했습니다. GitHub Pages 반영까지 잠시 기다려 주세요.'}

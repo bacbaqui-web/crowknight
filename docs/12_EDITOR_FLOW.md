@@ -385,3 +385,13 @@ Editor saveState
 ```
 
 HTTP 200 push 완료와 실제 Pages 반영은 구분한다. UI는 공개 published revision을 확인한 뒤 반영 완료를 표시한다.
+
+## 저장과 에셋 갱신 실패 복구
+
+```text
+세팅 변경 → immutable snapshot → project_save_queue → /api/project/save
+→ FileTransaction → draft + beta 저장 → 저장 완료
+실패 → dirty 유지 → 저장 다시 시도 / 다음 변경 → 마지막 변경 저장
+```
+
+에셋 업로드는 임시 폴더에서 변환한 뒤 성공한 파생 이미지 묶음과 업로드 원본 index를 교체한다. 기존 PSD는 유지한다. 캐릭터는 `editor_character_asset_view/controller`, 이펙트는 `editor_effect_asset_controller`, 배경 버튼은 `editor_asset_controller`가 연결한다. 기존 Action / pose / combat 편집 데이터 구조는 유지한다.

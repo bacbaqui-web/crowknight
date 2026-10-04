@@ -100,9 +100,10 @@ export async function deleteCharacterAssetFolder(folder) {
 }
 
 async function applyCharacterRefreshResult(actor, result, { syncRigToAssetSizes = false } = {}) {
-  const assets = await loadCharacterAssets(actor.folder, result.updatedAt || Date.now());
+  const sources = nextCharacterPsdSources(actor.assetSources, localCharacterPsdSource(actor, result), result.parts);
+  const assets = await loadCharacterAssets(actor.folder, result.updatedAt || Date.now(), sources);
   if (actor.player) actor.player.assets = assets;
-  actor.assetSources = nextCharacterPsdSources(actor.assetSources, localCharacterPsdSource(actor, result));
+  actor.assetSources = sources;
   if (syncRigToAssetSizes) syncCharacterRigToAssetSizes(actor.tuning?.rig, assets);
 }
 
@@ -128,8 +129,15 @@ async function finalizeCharacterRefreshResult(actor, result, { syncRigToAssetSiz
   }
 }
 
-function nextCharacterPsdSources(currentSources, psdUrl) {
+function nextCharacterPsdSources(currentSources, psdUrl, filenames) {
   const sources = { ...(currentSources || {}), psd: psdUrl };
+  delete sources.__snapshot;
+  delete sources.__parts;
+  if (Array.isArray(filenames)) {
+    sources.__parts = Object.keys(CHARACTER_ASSET_PATHS).filter((key) =>
+      filenames.includes(CHARACTER_ASSET_PATHS[key])
+    );
+  }
   Object.keys(CHARACTER_ASSET_PATHS).forEach((partKey) => {
     delete sources[partKey];
   });
@@ -137,6 +145,7 @@ function nextCharacterPsdSources(currentSources, psdUrl) {
 }
 
 function localCharacterPsdSource(actor, result) {
+  if (result?.sourceUrl) return result.sourceUrl;
   const filename = result?.psd || actor.psdFileName || characterPsdFileNameForGroup(actor.group);
   return `./assets/characters/${actor.folder}/${filename}`;
 }

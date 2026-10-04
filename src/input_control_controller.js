@@ -2,6 +2,14 @@ import { GAME_KEYS } from './game_config_data.js';
 import { isTextInput } from './editor_shortcut_helper.js';
 
 export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
+  const releaseKeys = () => {
+    keys.clear();
+    pressed.clear();
+  };
+  addEventListener('blur', releaseKeys);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) releaseKeys();
+  });
   addEventListener(
     'keydown',
     (event) => {

@@ -5,7 +5,7 @@ import {
   ATTACK_INTERACTION_OBJECT_KEY,
   INTERACTION_OBJECT_TARGET_TYPE,
   isInteractionObjectPartKey,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 
 export const SELECTION_PALETTE_TARGETS = Object.freeze([
   { type: INTERACTION_OBJECT_TARGET_TYPE, key: COLLISION_INTERACTION_OBJECT_KEY },

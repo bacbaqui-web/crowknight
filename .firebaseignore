@@ -1,5 +1,6 @@
 setting.html
-src/editor_local_only_guard.js
+src/editor_entry.js
+src/editor_local_only_helper.js
 tools/**
 docs/**
 runtime/uploaded-psds/**

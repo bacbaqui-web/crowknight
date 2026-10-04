@@ -1,6 +1,6 @@
 import { timelineFrameCount } from './timeline_playback_helper.js';
 import { actionTriggerKeyLabel, normalizeActionTrigger } from './action_trigger_data.js';
-import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_editor_controller.js';
+import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_model_data.js';
 
 const DEBUG_STORAGE_KEY = 'crowKnight.debugInteractionRuntime';
 const MAX_DEBUG_EVENTS = 10;

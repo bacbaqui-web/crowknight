@@ -1,4 +1,4 @@
-import { flushProjectSave } from './project_storage_helper.js';
+import { flushProjectSave, retryProjectSave } from './project_storage_helper.js';
 
 export function createReleasePanel({ mode, revision }) {
   if (mode === 'published') return { markPlayed() {} };
@@ -17,6 +17,21 @@ export function createReleasePanel({ mode, revision }) {
   link.href = mode === 'editor' ? './beta.html' : './setting.html';
   link.textContent = mode === 'editor' ? '베타 플레이' : '세팅으로';
   if (mode === 'editor') {
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.textContent = '저장 다시 시도';
+    retry.hidden = true;
+    panel.append(retry);
+    retry.addEventListener('click', async () => {
+      retry.disabled = true;
+      try {
+        await retryProjectSave();
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        retry.disabled = false;
+      }
+    });
     link.addEventListener('click', async (event) => {
       event.preventDefault();
       try {
@@ -28,6 +43,7 @@ export function createReleasePanel({ mode, revision }) {
     });
     window.addEventListener('project-save-status', (event) => {
       const result = event.detail;
+      retry.hidden = result.ok !== false;
       message.textContent = result.pending ? '베타 저장 중…' : result.ok ? '베타에 저장했습니다.' : result.error;
       message.classList.toggle('is-error', result.ok === false);
     });

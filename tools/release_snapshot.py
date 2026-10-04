@@ -3,11 +3,11 @@ import base64
 import copy
 import hashlib
 import json
-import os
 import threading
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from urllib.request import urlopen
+from file_transaction import json_bytes, replace_bytes, write_json_bundle
 
 IMAGE_SUFFIXES = {'.png', '.webp', '.jpg', '.jpeg', '.gif', '.svg'}
 CHARACTER_PARTS = {
@@ -21,11 +21,7 @@ RELEASE_LOCK = threading.RLock()
 
 
 def write_json_atomic(path, payload):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + '.tmp')
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8')
-    os.replace(temporary, path)
+    replace_bytes(path, json_bytes(payload))
 
 
 def local_asset_path(root, source):
@@ -111,6 +107,8 @@ def create_snapshot(root, draft, allow_remote=False):
         if is_frozen:
             continue
         for key, filename in CHARACTER_PARTS.items():
+            if isinstance(sources.get('__parts'), list) and key not in sources['__parts']:
+                continue
             if not sources.get(key):
                 path = root / 'assets' / 'characters' / character['folder'] / filename
                 if path.is_file():
@@ -144,8 +142,7 @@ def create_snapshot(root, draft, allow_remote=False):
 def save_beta(root, draft):
     with RELEASE_LOCK:
         snapshot = create_snapshot(root, draft)
-        write_json_atomic(root / 'data/draft.json', draft)
-        write_json_atomic(root / 'data/beta.json', snapshot)
+        write_json_bundle(root, {root / 'data/draft.json': draft, root / 'data/beta.json': snapshot})
         return snapshot
 
 
@@ -157,6 +154,6 @@ def promote_beta(root, expected_revision):
         # Check immutable assets still exist before changing the published pointer.
         if create_snapshot(root, state)['revision'] != expected_revision:
             raise ValueError('베타 데이터 또는 이미지가 변경되었습니다. 다시 저장하고 플레이해 주세요.')
-        write_json_atomic(root / 'data/published.json', state)
-        write_json_atomic(root / 'version.json', {'version': state['releaseVersion']})
+        write_json_bundle(root, {root / 'data/published.json': state,
+                                 root / 'version.json': {'version': state['releaseVersion']}})
         return state

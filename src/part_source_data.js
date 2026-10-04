@@ -4,7 +4,7 @@ import {
   GUARD_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
   isInteractionObjectPartKey,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 import { MASTER_PART_KEY } from './game_config_data.js';
 import {
   SIZE_PERCENT_MAX,

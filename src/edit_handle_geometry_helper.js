@@ -1,6 +1,6 @@
 import { ANCHOR_HANDLE_RADIUS, MOVE_HANDLE_RADIUS, handleLineStart } from './edit_handle_drawing_helper.js';
 import { isMasterPart } from './editor_label_helper.js';
-import { INTERACTION_OBJECT_TARGET_TYPE } from './interaction_object_editor_controller.js';
+import { INTERACTION_OBJECT_TARGET_TYPE } from './interaction_object_model_data.js';
 import { controlGroupPartKeys, imagePartKeys } from './part_source_data.js';
 import { clamp } from './common_helper.js';
 

@@ -4,7 +4,7 @@
 
 SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
-Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 204개와 inventory가 일치한다.
+Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 225개와 inventory가 일치한다.
 
 ## Naming Rules
 
@@ -19,7 +19,7 @@ Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 204개�
 - `_factory`: 객체 생성.
 - `_reader`: 값 읽기.
 - `_registry`: definition 등록 / 조회 / normalize 연결.
-- 예외: `main.js`는 앱 entry point라 접미사를 붙이지 않는다.
+- 예외: `main.js`와 `editor_entry.js`는 앱 entry point다. `project_save_queue.js`는 저장 queue 역할이다.
 
 ## Entry
 
@@ -301,7 +301,7 @@ Input
 
 ## 보류 파일
 
-- 없음. 현재 `main.js`를 제외한 `src/*.js`는 snake_case와 역할 접미사를 따른다. `formula_registry.js`는 `_registry` 역할을 사용한다.
+- 없음. 현재 entry와 queue 파일을 제외한 `src/*.js`는 snake_case와 역할 접미사를 따른다. `formula_registry.js`는 `_registry` 역할을 사용한다.
 
 ## 검색 힌트
 
@@ -325,3 +325,33 @@ Input
 - `tools/migrate_firebase_assets.py`: 기존 Firebase 공개 데이터·이미지의 읽기 전용 초기 이전 도구.
 - `tools/backup_firebase_storage.py`: 기존 프로젝트 Storage prefix 전체의 읽기 전용 백업 도구.
 - `release.config.json`: 기존 Pages 배포 remote, branch, URL.
+
+## 기능별 리팩토링 모듈
+
+- `action_movement_formula_helper.js`: 이동 속도·목표 이동 수식과 프레임 누적 계산.
+- `action_runtime_data_helper.js`: Action Runtime용 데이터 복사와 키 판별.
+- `actor_runtime_pose_helper.js`: 자세 보간·blend·frame 구간 계산.
+- `combat_cache_helper.js`: 현재 frame별 판정 region cache.
+- `combat_collision_helper.js`: Actor overlap과 충돌 밀어내기.
+- `combat_reaction_helper.js`: 피격·방어 반응과 reaction 상태.
+- `combat_rule_helper.js`: 데미지·가드·충돌 규칙 계산.
+- `editor_character_asset_controller.js`: 캐릭터 생성·PSD 갱신·이동·복사·삭제 처리.
+- `editor_character_asset_view.js`: 캐릭터 메뉴와 생성 폼, 이벤트 binding.
+- `editor_effect_asset_controller.js`: 이펙트 에셋 선택·업로드·갱신 처리.
+- `editor_entry.js`: 로컬 guard 이후 Editor main 시작.
+- `interaction_object_model_data.js`: Editor/Runtime 공용 Interaction 모델.
+- `panel_button_action_helper.js`: 공통 비동기 버튼 상태와 오류 표시.
+- `project_action_normalizer_helper.js`: Action과 frame schema 정규화.
+- `project_effect_normalizer_helper.js`: 이펙트 definition과 source 정규화.
+- `project_interaction_normalizer_helper.js`: Interaction region과 rule 정규화.
+- `project_keys_normalizer_helper.js`: 프로젝트 필드 key 분류.
+- `project_object_merge_helper.js`: 객체 merge/replace 공통 연산.
+- `project_rig_normalizer_helper.js`: rig와 파츠 schema 정규화.
+- `project_runtime_loader.js`: snapshot에서 actor/effect/background 실행 데이터 조립.
+- `project_save_queue.js`: 순차 저장, 동시 변경, 실패 재시도와 dirty 관리.
+
+## API / 저장 복구 도구
+
+- `tools/background_asset_api.py`, `tools/character_asset_api.py`, `tools/effect_asset_api.py`: 도메인별 로컬 에셋 API.
+- `tools/asset_source_store.py`: 업로드 원본 보관과 변환 결과 교체.
+- `tools/file_transaction.py`: 파일 묶음 rollback, Git 상태 확인과 시작 시 복구.

@@ -1,18 +1,26 @@
-import { requestRuntimeAction } from './action_trigger_engine.js';
 import {
-  interactionRegionsOverlap,
   overlappingAttackRegion,
   overlappingCollisionHurtRegion,
   overlappingGuardBlockAttackRegion,
-  previousAttackRegion,
 } from './interaction_overlap_helper.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
-import { ACTION_FPS } from './game_config_data.js';
-import { normalizeCharacterGroup } from './character_group_data.js';
-import { startDeathRagdoll } from './death_ragdoll_engine.js';
-import { cloneInteractionRegionSnapshot, regionPoints } from './interaction_swept_region_helper.js';
+import { cloneInteractionRegionSnapshot } from './interaction_swept_region_helper.js';
 import { projectileAttackRegion, removeProjectile } from './projectile_runtime_engine.js';
+import { resolveCollisionInteractions, firstCollisionRegion } from './combat_collision_helper.js';
+import { createInteractionRegionFrameCache, cachedInteractionRegions } from './combat_cache_helper.js';
+import {
+  shouldBlockMobBossDamage,
+  logMobBossDamageBlocked,
+  cancelHitByActorRule,
+  enemyActorRuleForActor,
+} from './combat_rule_helper.js';
+import {
+  applyInteractionDamage,
+  applyHitReaction,
+  triggerWorldAttackCameraShake,
+  targetHurtInvincibleTime,
+} from './combat_reaction_helper.js';
 
 export function resolveCombat({
   actors,
@@ -190,79 +198,7 @@ export function resolveProjectileCombat({
   });
 }
 
-function resolveCollisionInteractions(actors, regionCache) {
-  for (let aIndex = 0; aIndex < actors.length; aIndex += 1) {
-    for (let bIndex = aIndex + 1; bIndex < actors.length; bIndex += 1) {
-      const a = actors[aIndex];
-      const b = actors[bIndex];
-      if (a.respawning || b.respawning || a.player?.dead || b.player?.dead) continue;
-      resolveActorCollisionPair(a, b, regionCache);
-    }
-  }
-}
-
-function resolveActorCollisionPair(a, b, regionCache) {
-  const aRegion = firstCollisionRegion(cachedInteractionRegions(regionCache, a, 'collision'));
-  const bRegion = firstCollisionRegion(cachedInteractionRegions(regionCache, b, 'collision'));
-  if (!aRegion || !bRegion || !interactionRegionsOverlap(aRegion, bRegion)) return;
-  if (aRegion.reaction.noOverlap === false && bRegion.reaction.noOverlap === false) return;
-
-  const push = collisionPushVector(aRegion, bRegion);
-  if (!push) return;
-
-  const aPush = Number(aRegion.reaction.pushPower || 0) * Number(bRegion.reaction.resistance ?? 1);
-  const bPush = Number(bRegion.reaction.pushPower || 0) * Number(aRegion.reaction.resistance ?? 1);
-  const total = aPush + bPush;
-  const shares = collisionPushShares(a, b, {
-    aShare: total > 0 ? bPush / total : 0.5,
-    bShare: total > 0 ? aPush / total : 0.5,
-  });
-
-  a.player.x -= push.x * shares.aShare;
-  a.player.y -= push.y * shares.aShare;
-  b.player.x += push.x * shares.bShare;
-  b.player.y += push.y * shares.bShare;
-  invalidateCachedInteractionRegions(regionCache, a);
-  invalidateCachedInteractionRegions(regionCache, b);
-  if (isRuntimeDebugEnabled()) {
-    debugInteractionRuntimeLog('collision-overlap', {
-      a: a.id,
-      b: b.id,
-      noOverlapA: aRegion.reaction.noOverlap,
-      noOverlapB: bRegion.reaction.noOverlap,
-      pushPowerA: aRegion.reaction.pushPower,
-      pushPowerB: bRegion.reaction.pushPower,
-      resistanceA: aRegion.reaction.resistance,
-      resistanceB: bRegion.reaction.resistance,
-    });
-  }
-}
-
-function firstCollisionRegion(regions = []) {
-  return regions.find((region) => region?.active !== false) || null;
-}
-
-function collisionPushShares(a, b, shares) {
-  if (isBossActor(a) && isMobActor(b)) return { aShare: 0, bShare: 1 };
-  if (isMobActor(a) && isBossActor(b)) return { aShare: 1, bShare: 0 };
-  return shares;
-}
-
-function collisionPushVector(a, b) {
-  const aCenterX = a.x + a.w / 2;
-  const aCenterY = a.y + a.h / 2;
-  const bCenterX = b.x + b.w / 2;
-  const bCenterY = b.y + b.h / 2;
-  const overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
-  const overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
-  if (overlapX <= 0 || overlapY <= 0) return null;
-  if (overlapX <= overlapY) {
-    return { x: aCenterX <= bCenterX ? overlapX : -overlapX, y: 0 };
-  }
-  return { x: 0, y: aCenterY <= bCenterY ? overlapY : -overlapY };
-}
-
-function resolveCollisionHurtInteractions({
+export function resolveCollisionHurtInteractions({
   actors,
   playerActor,
   onPlayerDeath,
@@ -313,35 +249,7 @@ function resolveCollisionHurtInteractions({
   });
 }
 
-function createInteractionRegionFrameCache() {
-  return new WeakMap();
-}
-
-function cachedInteractionRegions(cache, actor, role) {
-  let actorCache = cache.get(actor);
-  if (!actorCache) {
-    actorCache = {};
-    cache.set(actor, actorCache);
-  }
-  if (actorCache[role]) return actorCache[role];
-  const regions = readInteractionRegions(actor, role);
-  actorCache[role] = regions;
-  return regions;
-}
-
-function invalidateCachedInteractionRegions(cache, actor) {
-  cache.delete(actor);
-}
-
-function readInteractionRegions(actor, role) {
-  if (role === 'attack') return actor.player.attackInteractionRegions || [];
-  if (role === 'hurt') return actor.player.hurtInteractionRegions || [];
-  if (role === 'collision') return actor.player.collisionInteractionRegions || [];
-  if (role === 'guard') return actor.player.guardInteractionRegions || [];
-  return [];
-}
-
-function syncPreviousAttackRegions(actor, attackRegions = []) {
+export function syncPreviousAttackRegions(actor, attackRegions = []) {
   const actionKey = actor.player.actionKey;
   actor.previousAttackRegions = attackRegions.map((region) => cloneInteractionRegionSnapshot(region, actionKey));
 }
@@ -355,7 +263,7 @@ export function updateActorCombatTimers(actors, dt) {
   });
 }
 
-function shouldSkipTarget(attacker, target) {
+export function shouldSkipTarget(attacker, target) {
   return (
     target === attacker ||
     target.player?.dead === true ||
@@ -364,248 +272,4 @@ function shouldSkipTarget(attacker, target) {
     target.invulnTime > 0 ||
     target.player.isRolling
   );
-}
-
-function shouldBlockMobBossDamage(attacker, target) {
-  return isMobActor(attacker) && isBossActor(target);
-}
-
-function isMobActor(actor) {
-  return normalizeCharacterGroup(actor?.group, '') === 'mobs';
-}
-
-function isBossActor(actor) {
-  return normalizeCharacterGroup(actor?.group, '') === 'bosses';
-}
-
-function logMobBossDamageBlocked(attacker, target, event) {
-  if (!isRuntimeDebugEnabled()) return;
-  debugInteractionRuntimeLog(event, {
-    attacker: attacker?.id,
-    target: target?.id,
-    attackerGroup: normalizeCharacterGroup(attacker?.group, ''),
-    targetGroup: normalizeCharacterGroup(target?.group, ''),
-    attackerAction: attacker?.player?.actionKey,
-    targetAction: target?.player?.actionKey,
-    reason: 'mob attacks do not affect bosses',
-  });
-}
-
-function cancelHitByActorRule(target, world) {
-  const rule = enemyActorRuleForActor(world, target);
-  const chance = Math.max(0, Math.min(100, Number(rule.hitCancelChance || 0)));
-  if (chance <= 0) return false;
-  if (chance < 100 && Math.random() * 100 >= chance) return false;
-
-  target.hitCancelFlashTime = Math.max(
-    Number(target.hitCancelFlashTime || 0),
-    Math.max(1, Number(rule.hitCancelFlashFrames || 3)) / ACTION_FPS
-  );
-  return true;
-}
-
-function enemyActorRuleForActor(world, actor) {
-  const actorId = actor?.runtimeSourceActorId || actor?.id || '';
-  const rules = world?.enemyRules?.actorRulesByActor || {};
-  return {
-    hitCancelChance: Math.max(0, Math.min(100, Number(rules[actorId]?.hitCancelChance || 0))),
-    hitCancelFlashFrames: Math.max(1, Math.min(120, Number(rules[actorId]?.hitCancelFlashFrames || 3))),
-  };
-}
-
-function applyInteractionDamage({
-  attacker,
-  target,
-  attackRegion,
-  damage: rawDamage,
-  invincibleTime = 0,
-  comboStep,
-  playerActor,
-  particleEffects,
-  world,
-  onPlayerDeath,
-  onPlayerKill,
-  onEnemyDeath,
-}) {
-  const damage = Math.max(0, Math.round(Number(rawDamage ?? 1)));
-  if (damage <= 0) return false;
-  target.hpPips = Math.max(0, target.hpPips - damage);
-  target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
-  if (isRuntimeDebugEnabled()) {
-    debugInteractionRuntimeLog('damage-applied', {
-      attacker: attacker.id,
-      target: target.id,
-      attackerAction: attacker.player.actionKey,
-      targetAction: target.player.actionKey,
-      damage,
-      targetHp: target.hpPips,
-    });
-  }
-  if (target.hpPips > 0) {
-    requestHurtAction(target, attacker);
-    return false;
-  }
-
-  if (target === playerActor) {
-    onPlayerDeath();
-    return true;
-  }
-
-  if (attacker === playerActor) onPlayerKill(target);
-  onEnemyDeath?.(target);
-  startDeathRagdoll(target.player, deathRagdollImpulse(attacker, target, attackRegion), world);
-  particleEffects?.triggerHitImpact(attacker, target, comboStep, true);
-  target.respawning = false;
-  target.enemyRespawnTimer = null;
-  target.hurtCooldown = 0;
-  target.hitStun = 0;
-  target.invulnTime = 0;
-  target.player.dead = true;
-  target.player.updateState();
-  return true;
-}
-
-function applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects, world) {
-  applyKnockback(attacker, target, attackRegion, world);
-  particleEffects.triggerHitImpact(attacker, target, comboStep);
-}
-
-function triggerWorldAttackCameraShake(world, particleEffects) {
-  const physics = world?.worldPhysics || {};
-  const power = Math.max(0, Number(physics.cameraShakePower || 0));
-  const frames = Math.max(0, Number(physics.cameraShakeFrames || 0));
-  if (power <= 0 || frames <= 0) return;
-
-  particleEffects?.shakeScreen?.({
-    magnitude: power,
-    duration: frames / ACTION_FPS,
-    direction: 'random',
-    decay: Number(physics.cameraShakeDecay ?? 1) >= 0.5,
-  });
-}
-
-function targetHurtInvincibleTime(hurtRegions) {
-  const times = (hurtRegions || []).map((region) => Number(region?.reaction?.invincibleTime || 0));
-  return Math.max(0, ...times);
-}
-
-function applyKnockback(attacker, target, attackRegion, world) {
-  const knockback = Math.max(0, Number(attackRegion?.reaction?.knockback || 0));
-  const knockbackMode = attackRegion?.reaction?.knockbackMode === 'set' ? 'set' : 'add';
-  const extraVx = Number(attackRegion?.reaction?.knockbackExtraVx || 0);
-  const extraVy = Number(attackRegion?.reaction?.knockbackExtraVy || 0);
-  const facingSign = Number(attacker?.player?.facing || 1) < 0 ? -1 : 1;
-  const facingAdjustedExtraVx = extraVx * facingSign;
-  const beforeX = Number(target.player.x || 0);
-  const beforeVx = Number(target.player.vx || 0);
-  const beforeVy = Number(target.player.vy || 0);
-  const direction =
-    knockbackMode === 'add'
-      ? knockbackDirection(attacker, target, attackRegion)
-      : { x: facingSign, y: 0, source: 'set-mode-facing' };
-  const vectorKnockbackX = knockbackMode === 'add' ? direction.x * knockback : facingSign * knockback;
-  const vectorKnockbackY = knockbackMode === 'add' ? direction.y * knockback : 0;
-  const finalVx = vectorKnockbackX + facingAdjustedExtraVx;
-  const finalVy = vectorKnockbackY + extraVy;
-  if (Math.abs(finalVx) <= 0.0001 && Math.abs(finalVy) <= 0.0001) return;
-  target.player.vx = Number(target.player.vx || 0) + finalVx;
-  target.player.vy = Number(target.player.vy || 0) + finalVy;
-  target.player.velocityControl = {
-    ...(target.player.velocityControl || {}),
-    x: Math.abs(finalVx) > 0.0001 || target.player.velocityControl?.x === true,
-    y: Math.abs(finalVy) > 0.0001 || target.player.velocityControl?.y === true,
-  };
-  if (isRuntimeDebugEnabled()) {
-    const debug = {
-      target: target.id,
-      beforeX,
-      beforeVx,
-      beforeVy,
-      afterApplyVx: Number(target.player.vx || 0),
-      afterApplyVy: Number(target.player.vy || 0),
-      velocityControlX: target.player.velocityControl.x === true,
-      velocityControlY: target.player.velocityControl.y === true,
-      knockback,
-      knockbackMode,
-      vectorKnockbackX,
-      vectorKnockbackY,
-      knockbackExtraVx: extraVx,
-      knockbackExtraVy: extraVy,
-      facingAdjustedExtraVx,
-      finalVx,
-      finalVy,
-      directionX: direction.x,
-      directionY: direction.y,
-      directionSource: direction.source,
-      inertia: Number(world?.worldPhysics?.inertia ?? 30),
-    };
-    target.player.knockbackDebug = debug;
-    debugInteractionRuntimeLog('knockback-applied', debug);
-  }
-}
-
-function knockbackDirection(attacker, target, attackRegion) {
-  const previous = previousAttackRegion(attacker, attackRegion);
-  if (previous) {
-    const previousCenter = interactionRegionCenter(previous);
-    const currentCenter = interactionRegionCenter(attackRegion);
-    const dx = currentCenter.x - previousCenter.x;
-    const dy = currentCenter.y - previousCenter.y;
-    const length = Math.hypot(dx, dy);
-    if (length > 0.0001) return { x: dx / length, y: dy / length, source: 'attack-region-motion' };
-  }
-  const deltaX = Number(target.player.x || 0) - Number(attacker.player.x || 0);
-  const x = deltaX === 0 ? Number(attacker.player.facing || 1) : Math.sign(deltaX);
-  return { x, y: 0, source: 'attacker-to-target' };
-}
-
-function deathRagdollImpulse(attacker, target, attackRegion) {
-  const previous = previousAttackRegion(attacker, attackRegion);
-  if (previous) {
-    const previousCenter = interactionRegionCenter(previous);
-    const currentCenter = interactionRegionCenter(attackRegion);
-    const dx = currentCenter.x - previousCenter.x;
-    const dy = currentCenter.y - previousCenter.y;
-    const speed = Math.hypot(dx, dy);
-    if (speed > 0.0001) {
-      return {
-        x: dx,
-        y: dy,
-        power: Math.max(0.9, speed / 34 + Number(attackRegion?.reaction?.knockback || 0) / 420),
-      };
-    }
-  }
-  const direction = knockbackDirection(attacker, target, attackRegion);
-  const power = Math.max(0.9, Number(attackRegion?.reaction?.knockback || 0) / 420);
-  return {
-    x: direction.x,
-    y: direction.y - 0.22,
-    power,
-  };
-}
-
-function interactionRegionCenter(region) {
-  const points = regionPoints(region);
-  if (points.length) {
-    const total = points.reduce(
-      (sum, point) => ({
-        x: sum.x + Number(point.x || 0),
-        y: sum.y + Number(point.y || 0),
-      }),
-      { x: 0, y: 0 }
-    );
-    return {
-      x: total.x / points.length,
-      y: total.y / points.length,
-    };
-  }
-  return {
-    x: Number(region?.x || 0) + Number(region?.w || 0) / 2,
-    y: Number(region?.y || 0) + Number(region?.h || 0) / 2,
-  };
-}
-
-function requestHurtAction(target, attacker) {
-  const facing = Number(attacker?.player?.x || 0) < Number(target.player.x || 0) ? -1 : 1;
-  requestRuntimeAction(target.player, 'hurt', facing, 'tap');
 }

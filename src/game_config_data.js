@@ -1,4 +1,4 @@
-import { INTERACTION_OBJECT_PART_KEYS } from './interaction_object_editor_controller.js';
+import { INTERACTION_OBJECT_PART_KEYS } from './interaction_object_model_data.js';
 
 export const STORAGE_KEY = 'crowKnight.actorTuning.v3';
 export const OBSOLETE_STORAGE_KEYS = ['crowKnight.actorTuning.v1', 'crowKnight.actorTuning.v2'];

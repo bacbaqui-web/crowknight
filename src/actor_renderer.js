@@ -26,7 +26,7 @@ import {
   ATTACK_INTERACTION_OBJECT_KEY,
   INTERACTION_OBJECT_TARGET_TYPE,
   interactionObjectPartKeysForParent,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 
 export function drawPuppetPlayer(player, ctx) {
   if (drawDeathRagdoll(player, ctx)) return;

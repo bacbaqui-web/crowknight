@@ -49,7 +49,12 @@ export function loadRankings() {
 }
 
 export function saveRankings(rankings) {
-  localStorage.setItem(RANKING_KEY, JSON.stringify(rankings));
+  try {
+    localStorage.setItem(RANKING_KEY, JSON.stringify(rankings));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function recordRankingEntry(rankings, score, survivalTime = 0, kills = 0, name = '주인공', message = '') {
@@ -97,14 +102,36 @@ export function bindResultScreen({ retryRunButton, rankingForm, rankingName, ran
       return;
     }
 
+    if (submit.disabled) return;
     submit.disabled = true;
-    const record = actions.recordRanking(name, message);
-    actions.renderRankingList();
-    actions.renderSettingsRankingList();
-    await record;
-    actions.renderRankingList();
-    actions.renderSettingsRankingList();
+    let saved = false;
+    try {
+      const record = actions.recordRanking(name, message);
+      actions.renderRankingList();
+      actions.renderSettingsRankingList();
+      const result = await record;
+      saved = result?.ok !== false;
+      showRankingSubmitStatus(rankingForm, result?.message || '기록을 저장했습니다.');
+    } catch {
+      showRankingSubmitStatus(rankingForm, '기록을 제출하지 못했습니다. 다시 시도해 주세요.');
+    } finally {
+      submit.disabled = saved;
+      actions.renderRankingList();
+      actions.renderSettingsRankingList();
+    }
   });
+}
+
+function showRankingSubmitStatus(form, message) {
+  if (!form.ownerDocument) return;
+  let status = form.querySelector('[data-ranking-status]');
+  if (!status) {
+    status = form.ownerDocument.createElement('p');
+    status.dataset.rankingStatus = '';
+    status.setAttribute('role', 'status');
+    form.append(status);
+  }
+  status.textContent = message;
 }
 
 function bindRankingMessageInput(rankingMessage) {

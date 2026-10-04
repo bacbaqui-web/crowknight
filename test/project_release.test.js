@@ -130,3 +130,15 @@ test('베타 기록 제출은 Firestore와 공개 랭킹 캐시에 접근하지 
   assert.equal(await controller.syncFromFirebase(), false);
   assert.equal(requests, 0);
 });
+
+test('PSD에서 제거한 파츠는 편집 미리보기에서 이전 PNG로 fallback하지 않는다', async () => {
+  const requests = [];
+  globalThis.Image = class {
+    set src(value) {
+      requests.push(value);
+      this.onload();
+    }
+  };
+  await loadCharacterAssets('mobs/test', '', { __parts: ['body'] });
+  assert.deepEqual(requests, ['./assets/characters/mobs/test/body.png']);
+});

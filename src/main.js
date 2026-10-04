@@ -1,10 +1,10 @@
+import { loadProjectRuntime } from './project_runtime_loader.js';
 import { captureActorMotionStart, updatePausedActors } from './actor_frame_state.js';
 import { drawActor, drawAttackTrail } from './actor_canvas_renderer.js';
 import {
   lineUpActors as lineUpActorPositions,
   placeEnemiesAhead as placeEnemyActorsAhead,
 } from './actor_placement_helper.js';
-import { loadEffectAssets } from './asset_loader_helper.js';
 import {
   bindBattleControls,
   bindCollapsibleSections,
@@ -20,13 +20,10 @@ import { createEncouragementBubbleController } from './encouragement_bubble_view
 import { createParticleEffects } from './particle_effects_engine.js';
 import { drawRollGhosts, updateRollGhosts } from './roll_ghost_engine.js';
 import { syncRunHud as syncRunHudView } from './run_hud_view.js';
-import { loadSavedState as loadStoredSavedState } from './project_storage_helper.js';
 import { createReleasePanel } from './release_panel_controller.js';
 import { applyWorldView, drawWorld } from './world_renderer.js';
 import { getViewTransform } from './camera_view.js';
 import { isSettingsPanelOpen } from './settings_panel_state.js';
-import { createTuningPanel } from './editor_panel_controller.js';
-import { actorDefsFromSavedState, createActors } from './actor_factory.js';
 import { drawFormulaAfterimages, updateFormulaAfterimages } from './afterimage_runtime_helper.js';
 import { updateFormulaColorChanges } from './color_change_formula_runtime_helper.js';
 import { updateFormulaShakes } from './shake_formula_runtime_helper.js';
@@ -34,14 +31,8 @@ import { formulaScreenZoom } from './zoom_formula_runtime_helper.js';
 import { syncCanvasToLayout } from './canvas_layout_helper.js';
 import { DEATH_RESULT_DELAY } from './game_config_data.js';
 import { drawSceneForeground, preloadSceneBackground } from './background_renderer.js';
-import {
-  DEFAULT_SCREEN_ZOOM,
-  MAX_SCREEN_ZOOM,
-  MIN_SCREEN_ZOOM,
-  createWorldFromSceneSession,
-} from './scene_session_data.js';
+import { DEFAULT_SCREEN_ZOOM, MAX_SCREEN_ZOOM, MIN_SCREEN_ZOOM } from './scene_session_data.js';
 import { createProjectStateController } from './project_state_controller.js';
-import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
 import { createRunActorState } from './run_actor_state.js';
 import { createRunLifecycleController } from './run_lifecycle_controller.js';
@@ -100,26 +91,25 @@ const SETUP_SELECTED_ACTOR_STORAGE_KEY = 'crowKnight.setup.selectedActorId';
 const isEditorPage = document.body.classList.contains('settings-page');
 
 const isBetaPage = document.body.classList.contains('beta-page');
-const savedState = await loadStoredSavedState({ source: isEditorPage ? 'local' : isBetaPage ? 'beta' : 'published' });
-if (!savedState) {
+const projectRuntime = await loadProjectRuntime({
+  mode: isEditorPage ? 'editor' : isBetaPage ? 'beta' : 'published',
+  canvas,
+  isFullStage,
+}).catch((error) => {
   showRuntimeLoadError();
-  throw new Error('Game snapshot could not be loaded.');
-}
-const sceneSessions = savedState.sessions;
-let sceneSession = savedState.sceneSession;
-const initialPsdBackgroundChanged = isEditorPage ? await refreshInitialPsdBackground() : false;
-await preloadSceneBackground(sceneSession.background);
-const world = createWorldFromSceneSession(sceneSession);
-syncCanvasToLayout({ canvas, world, isFullStage });
-const characterSourceState = savedState;
-const characterDefs = actorDefsFromSavedState(characterSourceState, { includeTrash: true });
-const actors = await createActors({ ...characterSourceState, characters: characterDefs }, world, {
-  includeTrash: true,
+  throw error;
 });
-const effectAssetSources = isEditorPage
-  ? localEffectAssetSourceKeys(savedState.effectAssets)
-  : savedState.effectAssets || {};
-const effectAssets = await loadEffectAssets('', effectAssetSources);
+const {
+  savedState,
+  sceneSessions,
+  world,
+  characterDefs,
+  actors,
+  effectAssetSources,
+  effectAssets,
+  initialPsdBackgroundChanged,
+} = projectRuntime;
+let sceneSession = projectRuntime.sceneSession;
 const runActorState = createRunActorState({ actors, world });
 const particleEffects = createParticleEffects({ actors, world, ctx });
 const { saveState, openBeta, refreshStagePsdAsset } = createProjectStateController({
@@ -165,26 +155,6 @@ let screenZoom = readSceneScreenZoom();
 const encouragementBubbleController = createEncouragementBubbleController({ root: encouragementBubbles });
 mobileLayoutQuery.addEventListener('change', syncEncouragementBubbleVisibility);
 bindControlGuide();
-async function refreshInitialPsdBackground() {
-  const previousSignature = backgroundAssetSignature(sceneSession.background);
-  const refreshed = await refreshPsdBackground({
-    getSceneSession: () => sceneSession,
-    onUpdate: null,
-    force: false,
-  });
-  if (!refreshed) return false;
-  sceneSessions[sceneSession.id] = sceneSession;
-  return previousSignature !== backgroundAssetSignature(sceneSession.background);
-}
-
-function backgroundAssetSignature(background = {}) {
-  const preview = background.psdPreview?.url || '';
-  const layers = Array.isArray(background.psdLayers)
-    ? background.psdLayers.map((layer) => `${layer?.id || ''}:${layer?.imageSrc || ''}`).join('|')
-    : '';
-  return `${preview}::${layers}`;
-}
-
 window.addEventListener('resize', () => {
   syncCanvasToLayout({
     canvas,
@@ -242,25 +212,33 @@ if (!settingsRankingList) {
   rankingController.syncFromFirebase();
 }
 bindScreenZoomControl();
-const tuningPanel = createTuningPanel({
-  canvas,
-  ctx,
-  actors,
-  characterDefs,
-  world,
-  effectAssets,
-  effectAssetSources,
-  playerActor: runActorState.getPlayer(),
-  getSelectedActor: () => selectedActor,
-  setSelectedActor: (actor) => {
-    selectedActor = actor;
-    writeSetupSelectedActor(actor);
-  },
-  getSceneSession: () => sceneSession,
-  saveState,
-  openBeta,
-  refreshStagePsdAsset,
-});
+const tuningPanel = isEditorPage
+  ? (await import('./editor_panel_controller.js')).createTuningPanel({
+      canvas,
+      ctx,
+      actors,
+      characterDefs,
+      world,
+      effectAssets,
+      effectAssetSources,
+      playerActor: runActorState.getPlayer(),
+      getSelectedActor: () => selectedActor,
+      setSelectedActor: (actor) => {
+        selectedActor = actor;
+        writeSetupSelectedActor(actor);
+      },
+      getSceneSession: () => sceneSession,
+      saveState,
+      openBeta,
+      refreshStagePsdAsset,
+    })
+  : {
+      activeEditPartKey: () => null,
+      activeEditPartKeys: () => [],
+      drawSettingsDebugBoxes() {},
+      handleKeyboardShortcut: () => false,
+      renderEditHandles() {},
+    };
 const runtimeDebugHud = isEditorPage ? createRuntimeDebugHud({ parent: canvas?.parentElement }) : { render: () => {} };
 bindKeyboardControls({
   keys,
@@ -588,14 +566,6 @@ function writeSetupSelectedActor(actor) {
   } catch {
     // Ignore private browsing or blocked storage.
   }
-}
-
-function localEffectAssetSourceKeys(sources = {}) {
-  return Object.fromEntries(
-    Object.keys(sources || {})
-      .filter((key) => !key.endsWith('Psd'))
-      .map((key) => [key, ''])
-  );
 }
 
 function hideStartScreen() {

@@ -179,3 +179,11 @@ drawRect(-ax, -ay, w, h)
 - 데이터 저장 위치를 볼 때: `11_DATA_MODEL.md`
 - 사용자 행동 저장 흐름을 볼 때: `12_EDITOR_FLOW.md`
 - Action 제작 모델을 볼 때: `13_ACTION_MODEL.md`
+
+## 리팩토링 구현 경계
+
+- `editor_entry.js`는 로컬 guard 통과 후 main을 로드한다. 공개·베타 main은 Editor 패널 controller를 로드하지 않는다.
+- `project_runtime_loader.js`는 제작 snapshot을 실행 actor/effect/background로 조립한다. 정규화는 action / effect / rig / interaction별 helper로 나뉘며 기존 entry API를 유지한다.
+- `project_save_queue.js`는 저장 순서·실패·재시도·dirty를 관리한다. Python `file_transaction.py`는 파일 교체 rollback과 재시작 복구를 관리한다.
+- 배경 / 캐릭터 / 이펙트 API는 독립 모듈이며 `asset_source_store.py`가 업로드 원본과 파생 출력의 교체 경계를 공유한다. 원본 PSD 경로는 변경하지 않는다.
+- Action 이동 수식, Actor 자세 계산과 Combat 충돌/반응은 별도 helper다. 런타임 상태와 처리 순서는 기존 engine이 소유한다.

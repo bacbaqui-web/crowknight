@@ -13,7 +13,7 @@ import {
   COLLISION_INTERACTION_OBJECT_KEY,
   GUARD_INTERACTION_OBJECT_KEY,
   HURT_INTERACTION_OBJECT_KEY,
-} from './interaction_object_editor_controller.js';
+} from './interaction_object_model_data.js';
 import { populateMotionSettingRows } from './motion_field_data.js';
 import { getTuningPanelWorkflowSections } from './editor_workflow_data.js';
 import {

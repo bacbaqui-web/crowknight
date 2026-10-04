@@ -1,5 +1,5 @@
 import { defaultEffectSize } from './animation_frame_data.js';
-import { interactionObjectParentPart } from './interaction_object_editor_controller.js';
+import { interactionObjectParentPart } from './interaction_object_model_data.js';
 import { isMasterPart } from './editor_label_helper.js';
 import { effectFieldLimits, isControlGroupPartKey, isParentSizedPart, actionFieldLimits } from './part_source_data.js';
 import { SIZE_PERCENT_MAX, SIZE_PERCENT_MIN, isSizeProp, sizeBaseProp } from './editable_property_helper.js';

@@ -3,8 +3,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+import release_publisher
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+from file_transaction import FileTransaction, recover_file_transactions
 from release_snapshot import save_beta
 from release_publisher import git, publish_beta
 
@@ -55,6 +58,45 @@ class ReleasePublisherTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             publish_beta(self.root, self.beta['revision'])
         self.assertEqual(git(self.root, 'diff', '--cached', '--name-only'), 'notes.md')
+
+    def test_failed_commit_restores_published_and_removes_only_our_staging(self):
+        published = self.root / 'data/published.json'
+        published.write_text('{"old":true}')
+        git(self.root, 'add', '.')
+        git(self.root, 'commit', '-m', 'Previous data')
+        previous_commit = git(self.root, 'rev-parse', 'HEAD')
+        before = published.read_bytes()
+        original = release_publisher.git
+        def fail_commit(root, *args):
+            if args[0] == 'commit':
+                raise RuntimeError('commit failed')
+            return original(root, *args)
+        with patch.object(release_publisher, 'git', fail_commit), self.assertRaises(RuntimeError):
+            publish_beta(self.root, self.beta['revision'])
+        self.assertEqual(published.read_bytes(), before)
+        self.assertEqual(git(self.root, 'diff', '--cached', '--name-only'), '')
+        self.assertEqual(git(self.root, 'rev-parse', 'HEAD'), previous_commit)
+        self.assertTrue(publish_beta(self.root, self.beta['revision'])['ok'])
+
+    def test_push_failure_retries_same_committed_snapshot(self):
+        original = release_publisher.git
+        def fail_push(root, *args):
+            if args[0] == 'push':
+                raise RuntimeError('offline')
+            return original(root, *args)
+        with patch.object(release_publisher, 'git', fail_push), self.assertRaises(RuntimeError):
+            publish_beta(self.root, self.beta['revision'])
+        commit = git(self.root, 'rev-parse', 'HEAD')
+        self.assertEqual(publish_beta(self.root, self.beta['revision'])['commit'], commit)
+
+    def test_restart_does_not_revert_files_after_git_commit_succeeded(self):
+        transaction = FileTransaction(self.root, [self.root / 'data/published.json', self.root / 'version.json'],
+                                      git_head=git(self.root, 'rev-parse', 'HEAD'))
+        transaction.__enter__()
+        result = publish_beta(self.root, self.beta['revision'])
+        recover_file_transactions(self.root)
+        self.assertEqual(json.loads((self.root / 'data/published.json').read_text())['revision'], self.beta['revision'])
+        self.assertEqual(git(self.root, 'rev-parse', 'HEAD'), result['commit'])
 
 
 if __name__ == '__main__':

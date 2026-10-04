@@ -1,5 +1,5 @@
 import { ACTION_FPS } from './game_config_data.js';
-import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_editor_controller.js';
+import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_model_data.js';
 import { interactionReactionFromValue } from './interaction_region_engine.js';
 import { actionFormula, actionFormulaFrameFromProgress } from './formula_runtime_engine.js';
 import { timelineFrameCount } from './timeline_playback_helper.js';

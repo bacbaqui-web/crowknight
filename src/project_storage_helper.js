@@ -1,3 +1,4 @@
+import { createProjectSaveQueue } from './project_save_queue.js';
 import { OBSOLETE_STORAGE_KEYS, STORAGE_KEY } from './game_config_data.js';
 import { createActorDefsSnapshot } from './actor_factory.js';
 import {
@@ -12,9 +13,22 @@ const PROJECT_URLS = {
   beta: './data/beta.json',
   published: './data/published.json',
 };
-let pendingSave = Promise.resolve({ ok: true });
-let saveTimer = 0;
-let scheduledState = null;
+let exitGuardInstalled = false;
+const saveQueue = createProjectSaveQueue({
+  setTimer: (callback, delay) => window.setTimeout(callback, delay),
+  clearTimer: (timer) => window.clearTimeout(timer),
+  onStatus: (detail) => window.dispatchEvent(new window.CustomEvent('project-save-status', { detail })),
+  async write(state) {
+    const response = await window.fetch('./api/project/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: state,
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || '베타 저장 실패');
+    return result;
+  },
+});
 
 export async function loadSavedState({ source = 'local' } = {}) {
   try {
@@ -26,34 +40,12 @@ export async function loadSavedState({ source = 'local' } = {}) {
   }
 }
 
-export async function flushProjectSave() {
-  window.clearTimeout(saveTimer);
-  if (scheduledState) queueSave();
-  const result = await pendingSave;
-  if (!result.ok) throw new Error(result.error || '베타 저장에 실패했습니다.');
-  return result;
+export function flushProjectSave() {
+  return saveQueue.flush();
 }
 
-function queueSave() {
-  const state = scheduledState;
-  scheduledState = null;
-  pendingSave = pendingSave.then(async () => {
-    try {
-      const response = await window.fetch('./api/project/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: state,
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) throw new Error(result.error || '베타 저장 실패');
-      window.dispatchEvent(new window.CustomEvent('project-save-status', { detail: result }));
-      return result;
-    } catch (error) {
-      const result = { ok: false, error: error.message };
-      window.dispatchEvent(new window.CustomEvent('project-save-status', { detail: result }));
-      return result;
-    }
-  });
+export function retryProjectSave() {
+  return saveQueue.retry();
 }
 
 export function saveActorState(actors, sceneSession = null) {
@@ -128,13 +120,19 @@ function normalizeSavedState(saved) {
 
 function saveLocalState(state) {
   // Capture at the edit boundary, so later mutations cannot alter an earlier save.
-  scheduledState = JSON.stringify(state);
-  window.clearTimeout(saveTimer);
-  window.dispatchEvent(new window.CustomEvent('project-save-status', { detail: { pending: true } }));
-  saveTimer = window.setTimeout(queueSave, 300);
+  const serialized = JSON.stringify(state);
+  saveQueue.schedule(serialized);
+  if (!exitGuardInstalled && window.addEventListener) {
+    window.addEventListener('beforeunload', (event) => {
+      if (!saveQueue.isDirty()) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
+    exitGuardInstalled = true;
+  }
   try {
     OBSOLETE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
-    localStorage.setItem(STORAGE_KEY, scheduledState);
+    localStorage.setItem(STORAGE_KEY, serialized);
   } catch {
     // Disk-backed project saves still work when browser storage is full.
   }

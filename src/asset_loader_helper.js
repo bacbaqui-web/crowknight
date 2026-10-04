@@ -27,7 +27,10 @@ export function loadCharacterAssets(folder, version = '', sources = {}) {
   return loadImages(
     Object.fromEntries(
       Object.entries(CHARACTER_ASSET_PATHS)
-        .filter(([key]) => !sources.__snapshot || sources[key])
+        .filter(
+          ([key]) =>
+            (!sources.__snapshot || sources[key]) && (!Array.isArray(sources.__parts) || sources.__parts.includes(key))
+        )
         .map(([key, filename]) => [key, versionedPath(sources?.[key] || `${base}/${filename}`, version)])
     )
   );
