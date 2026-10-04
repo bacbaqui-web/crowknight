@@ -444,7 +444,7 @@
   white-space: nowrap;
 }
 
-.ranking-empty {
+.ranking-list .ranking-empty {
   display: block;
   color: #bcbcbc;
 }
