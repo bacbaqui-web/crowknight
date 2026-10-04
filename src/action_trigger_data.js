@@ -1,4 +1,5 @@
 export const ACTION_TRIGGER_KEY_OPTIONS = [
+  { value: 'Shift', label: 'Shift' },
   { value: 'Q', label: 'Q' },
   { value: 'W', label: 'W' },
   { value: 'E', label: 'E' },
@@ -18,6 +19,8 @@ export const ACTION_TRIGGER_TYPE_OPTIONS = [
 export const ACTION_TRIGGER_MODES = ['tap', 'press', 'pressLoop'];
 
 const INPUT_CODE_TO_TRIGGER_KEY = {
+  ShiftLeft: 'Shift',
+  ShiftRight: 'Shift',
   KeyQ: 'Q',
   KeyW: 'W',
   KeyE: 'E',
@@ -118,6 +121,7 @@ function normalizeTriggerKey(value) {
   if (lower === 'q') return 'Q';
   if (lower === 'w') return 'W';
   if (lower === 'e') return 'E';
+  if (lower === 'shift' || lower === 'shiftleft' || lower === 'shiftright') return 'Shift';
   if (lower === 'space' || lower === 'spacebar') return 'Space';
   if (lower === 'arrowup' || lower === 'up' || raw === '↑') return 'ArrowUp';
   if (lower === 'arrowdown' || lower === 'down' || raw === '↓') return 'ArrowDown';

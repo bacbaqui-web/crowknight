@@ -29,6 +29,11 @@ export const RUN_SKILLS = [
 
 export function prepareSkillActions(tuning) {
   const actions = tuning.customActions;
+  const sprint = actions.find((action) => action.name === '질주');
+  if (sprint?.trigger?.type === 'sequence' && sprint.trigger.keys?.every((key) => key === 'ArrowRight')) {
+    sprint.trigger = { type: 'single', keys: ['Shift'], triggerMode: 'pressLoop', repeatWhileHeld: true };
+    tuning.actionTriggers[sprint.key] = clone(sprint.trigger);
+  }
   const find = (name) => actions.find((action) => action.name === name)?.key;
   tuning.skillActions = {
     fourthStrike: find('공격4'),

@@ -19,6 +19,7 @@ import {
   clamp01,
 } from './action_movement_formula_helper.js';
 const TRIGGER_TO_INPUT_CODE = {
+  Shift: 'ShiftLeft',
   Q: 'KeyQ',
   W: 'KeyW',
   E: 'KeyE',

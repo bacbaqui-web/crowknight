@@ -16,7 +16,7 @@ export const BOSS_KILL_SCORE = 1000;
 export const SURVIVAL_SCORE_WEIGHT = 1;
 export const KILL_SCORE_WEIGHT = 1;
 export const DEATH_RESULT_DELAY = 2;
-export const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyQ', 'KeyW', 'KeyE']);
+export const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyQ', 'KeyW', 'KeyE', 'ShiftLeft', 'ShiftRight']);
 
 export const ACTOR_DEFS = [
   {

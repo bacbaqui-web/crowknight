@@ -554,3 +554,12 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 - 전투 효과음/OST 및 개별 음소거 버튼을 main에 커밋·푸시하고 현재 beta snapshot을 공개 인덱스로 반영.
 - 직전 관련 7개 검사와 브라우저 재생/음소거 검증 결과를 사용. ESLint/Prettier 및 불필요한 전체 테스트 미실행.
 - 별도 Engine Map 문서 변경은 로컬 보존.
+
+## 2026-10-05 — 질주 Shift 입력
+
+- 주인공 질주를 방향키 두 번에서 Shift 유지/해제 방식으로 변경. 좌우 Shift 지원, 세팅 Trigger 입력/녹화 및 공개·베타 조작 안내 갱신. 현재 draft/beta 설정 반영, 기존 공개 설정은 로딩 시 구형 질주 Trigger만 호환 변환.
+- 실제 PuppetPlayer로 Shift 시작/해제 정지 확인. 관련 회귀 13개 통과. ESLint/Prettier 미실행. 공개 커밋/푸시 전.
+
+## 2026-10-05 — Shift 질주 공개 배포
+
+- Shift 유지/해제 질주와 좌우 Shift 입력 지원, 조작법과 README 설명을 공개 코드/설정에 반영하고 커밋·푸시. 직전 실제 액션 검증 및 관련 회귀 결과 사용.

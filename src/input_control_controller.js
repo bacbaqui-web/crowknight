@@ -21,6 +21,10 @@ export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
       event.stopPropagation();
       if (!keys.has(event.code)) pressed.add(event.code);
       keys.add(event.code);
+      if (event.code === 'ShiftRight') {
+        if (!keys.has('ShiftLeft')) pressed.add('ShiftLeft');
+        keys.add('ShiftLeft');
+      }
     },
     true
   );
@@ -34,6 +38,10 @@ export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
       event.preventDefault();
       event.stopPropagation();
       keys.delete(event.code);
+      if (event.code === 'ShiftRight' || event.code === 'ShiftLeft') {
+        if (event.shiftKey) keys.add('ShiftLeft');
+        else keys.delete('ShiftLeft');
+      }
     },
     true
   );
