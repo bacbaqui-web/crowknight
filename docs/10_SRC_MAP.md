@@ -4,7 +4,7 @@
 
 SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
-Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 225개와 inventory가 일치한다.
+Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 228개와 inventory가 일치한다.
 
 ## Naming Rules
 
@@ -355,3 +355,11 @@ Input
 - `tools/background_asset_api.py`, `tools/character_asset_api.py`, `tools/effect_asset_api.py`: 도메인별 로컬 에셋 API.
 - `tools/asset_source_store.py`: 업로드 원본 보관과 변환 결과 교체.
 - `tools/file_transaction.py`: 파일 묶음 rollback, Git 상태 확인과 시작 시 복구.
+
+## 강화 아이콘과 현황 UI
+
+- `upgrade_card_data.js`: 카드 10종 metadata와 누적 효과 표시.
+- `run_upgrade_state.js`: 선택/미선택 양쪽 횟수와 새 판 reset.
+- `upgrade_hud_view.js`: 내/적 아이콘, 횟수와 클릭 상세 UI.
+- `upgradeHud.css`: 현황 UI 반응형 스타일.
+- `dev/upgrade-icons.html`: 로컬 조작 가능한 미리보기. 실제 전투 연결은 후속 작업.

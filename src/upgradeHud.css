@@ -1,0 +1,105 @@
+.upgrade-hud {
+  position: absolute;
+  top: 68px;
+  left: 14px;
+  z-index: 12;
+  max-width: min(480px, calc(100% - 28px));
+  padding: 8px 10px;
+  color: #e2e8f0;
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  background: #0b111de6;
+  font-family: system-ui, sans-serif;
+}
+.upgrade-hud[hidden],
+.upgrade-hud-detail[hidden] {
+  display: none;
+}
+.upgrade-hud-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.upgrade-hud-row + .upgrade-hud-row {
+  margin-top: 6px;
+}
+.upgrade-hud h2 {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+}
+.upgrade-hud-player h2 {
+  color: #8ad7b0;
+}
+.upgrade-hud-enemy h2 {
+  color: #f39999;
+}
+.upgrade-hud-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.upgrade-hud-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 5px 6px 10px;
+  border: 1px solid #ffffff30;
+  border-radius: 7px;
+  background: #ffffff08;
+  color: inherit;
+  cursor: pointer;
+}
+.upgrade-hud-player .upgrade-hud-icon {
+  border-color: #8ad7b055;
+}
+.upgrade-hud-enemy .upgrade-hud-icon {
+  border-color: #f3999955;
+}
+.upgrade-hud-icon img {
+  width: 23px;
+  height: 23px;
+}
+.upgrade-hud-icon span {
+  position: absolute;
+  right: 3px;
+  bottom: 0;
+  font-size: 10px;
+  font-weight: 750;
+}
+.upgrade-hud-icon:focus-visible,
+.upgrade-hud-icon:hover {
+  outline: 2px solid #e2e8f0;
+  outline-offset: 1px;
+}
+.upgrade-hud-empty {
+  font-size: 11px;
+  color: #9aa4b5;
+  padding: 4px 0;
+}
+.upgrade-hud-detail {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .upgrade-hud {
+    top: 54px;
+    left: 8px;
+    padding: 6px;
+    max-width: calc(100% - 16px);
+  }
+  .upgrade-hud-icon {
+    width: 30px;
+    height: 32px;
+    padding: 3px 4px 9px;
+  }
+  .upgrade-hud-icon img {
+    width: 20px;
+    height: 20px;
+  }
+}

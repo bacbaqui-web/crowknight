@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>강화 아이콘 미리보기</title>
+    <link rel="stylesheet" href="../src/upgradeHud.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 28px;
+        background: #0b1019;
+        color: #e2e8f0;
+        font-family: system-ui, sans-serif;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 8px;
+      }
+      p {
+        color: #a9b4c4;
+      }
+      .stage-wrap {
+        position: relative;
+        min-height: 180px;
+        border: 1px solid #ffffff25;
+        border-radius: 12px;
+        margin: 24px 0;
+        background: linear-gradient(120deg, #111e23, #10131f);
+      }
+      .upgrade-hud {
+        top: 24px;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        max-width: 900px;
+      }
+      .icon-card {
+        padding: 20px 12px;
+        background: #151e2b;
+        border: 1px solid #ffffff20;
+        border-radius: 10px;
+        text-align: center;
+      }
+      .icon-card img {
+        width: 48px;
+        height: 48px;
+      }
+      .icon-card h2 {
+        font-size: 14px;
+      }
+      .icon-card p {
+        font-size: 12px;
+        margin-bottom: 0;
+      }
+      .demo-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 8px;
+        border: 1px solid #ffffff40;
+        border-radius: 6px;
+        background: #182536;
+        color: inherit;
+        cursor: pointer;
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: 16px;
+        }
+        .gallery {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .stage-wrap {
+          min-height: 230px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>강화 아이콘 · 10종</h1>
+    <p>미리보기용 예시 횟수입니다. 아이콘을 누르면 누적 효과를 확인할 수 있습니다.</p>
+    <section class="stage-wrap" aria-label="강화 현황 미리보기"></section>
+    <div class="demo-controls">
+      <button id="chooseDamage">공격력 선택 / 적 이동 속도 추가</button
+      ><button id="chooseSpeed">이동 속도 선택 / 적 공격력 추가</button><button id="reset">초기화</button>
+    </div>
+    <section class="gallery" aria-label="카드 아이콘 목록"></section>
+    <script type="module">
+      import { UPGRADE_CARDS, upgradeEffectLabel } from '../src/upgrade_card_data.js';
+      import { createUpgradeHud } from '../src/upgrade_hud_view.js';
+      import { createRunUpgradeState } from '../src/run_upgrade_state.js';
+      const base = document.createElement('base');
+      base.href = '../';
+      document.head.append(base);
+      const state = createRunUpgradeState();
+      const hud = createUpgradeHud();
+      for (let i = 0; i < UPGRADE_CARDS.length; i++) {
+        const pair = [UPGRADE_CARDS[i].id, UPGRADE_CARDS[(i + 1) % UPGRADE_CARDS.length].id];
+        state.choose(pair, pair[0]);
+        if (i % 3 === 0) state.choose(pair, pair[0]);
+      }
+      function sync() {
+        hud.render(state.getSnapshot());
+        hud.setVisible(true);
+      }
+      sync();
+      for (const [id, selected] of [
+        ['chooseDamage', 'sharp-blade'],
+        ['chooseSpeed', 'crow-footsteps'],
+      ])
+        document.getElementById(id).addEventListener('click', () => {
+          state.choose(['sharp-blade', 'crow-footsteps'], selected);
+          sync();
+        });
+      document.getElementById('reset').addEventListener('click', () => {
+        state.reset();
+        sync();
+      });
+      for (const card of UPGRADE_CARDS) {
+        const item = document.createElement('article');
+        item.className = 'icon-card';
+        const image = document.createElement('img');
+        image.src = card.icon;
+        image.alt = card.name;
+        const heading = document.createElement('h2');
+        heading.textContent = card.name;
+        const effect = document.createElement('p');
+        effect.textContent = upgradeEffectLabel(card);
+        item.append(image, heading, effect);
+        document.querySelector('.gallery').append(item);
+      }
+    </script>
+  </body>
+</html>
