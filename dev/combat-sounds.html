@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>까마귀 전투 효과음</title>
+  <style>
+    body { background: #16212c; color: #eee; font: 18px system-ui; padding: 24px; }
+    #sounds { display: flex; flex-wrap: wrap; gap: 12px; max-width: 800px; }
+    button { padding: 16px; border-radius: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>전투 효과음 들어보기</h1>
+  <p>몽둥이·칼·보스·방어 소리를 비교하실 수 있습니다.</p>
+  <p id="status" role="status">효과음 로딩 중…</p>
+  <div id="sounds"></div>
+  <p><a href="../beta.html" style="color: #aee">베타 플레이</a></p>
+  <script type="module">
+    import { createCombatAudioPlayer } from '../src/combat_audio_player.js';
+    const audio = createCombatAudioPlayer();
+    const status = document.querySelector('#status');
+    const sounds = {
+      clubSwing: '몽둥이 휘두르기', clubHit: '몽둥이 타격',
+      swordSwing: '적 칼 휘두르기', swordHit: '적 칼 타격',
+      bossSwing: '보스 휘두르기', bossHit: '보스 타격',
+      guardRaise: '방어 자세', block: '방패로 막기', parry: '패링',
+    };
+    await audio.loading;
+    status.textContent = `효과음 ${audio.loadedCount()}/6개 로드 완료`;
+    for (const [key, label] of Object.entries(sounds)) {
+      const button = document.createElement('button');
+      button.textContent = label;
+      button.addEventListener('click', async () => {
+        await audio.unlock();
+        audio.play(key);
+        status.textContent = `${label} 재생`;
+      });
+      document.querySelector('#sounds').append(button);
+    }
+  </script>
+</body>
+</html>

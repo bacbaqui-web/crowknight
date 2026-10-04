@@ -534,3 +534,23 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 - 최신 beta snapshot을 published로 승격하고 main push 후 Pages revision 확인.
 - 배포 전 Node 82개/Python 28개 검사, ESLint/Prettier, diff 공백 검사 통과.
 - 별도 Engine Map 문서 변경은 로컬 보존. main.js 730줄/actor_runtime_engine.js 625줄은 추후 기능 단위 분리 검토.
+
+## 2026-10-05 — 기본 전투 효과음
+
+- CC0 remaxim/qubodup Melee, Kenney Impact Sounds, artisticdude RPG Sound Pack 중 6개 파일(약 264 KiB)을 로컬 assets/audio/combat에 저장. 출처/원본명/해시/라이선스 기록. 몽둥이 타격은 둔탁한 타격+나무 소리를 합성.
+- 공격 판정 시작에 주인공 몽둥이/잡몹 칼/보스 낮은 휘두르기, 실제 피해에 타격, Guard 판정/기술 방어에 막기/패링. 회피에는 타격음을 내지 않고 동일 판정의 반복 재생 차단.
+- Web Audio 클릭/키 입력 해제, 음량/미세 음정 변형, 20 voice 제한/압축기, 음소거 버튼. 편집 미리보기에는 전투음 재생하지 않음. dev/combat-sounds.html에서 종류별 청음 가능.
+- 관련 7개 검사/변경 JS 문법 검사/diff 공백 검사 통과. 브라우저 WAV 6개 디코딩 및 청음 버튼 재생 경로 확인. ESLint/Prettier 미실행(사용자 요청). 실제 스피커 음색 평가는 사용자 플레이로 확인 필요.
+- main.js 738줄로 검토 기준 초과; 오디오/판정 모듈을 분리해 추가 코드를 최소화. 공개 배포 전 로컬 베타에 적용.
+
+## 2026-10-05 — 게임 OST
+
+- 사용자 제공 꿈에서 본 호랑이 MP3를 원본 그대로 복사, 원본 파일 유지/해시 일치 확인.
+- 플레이 시작부터 15% 볼륨 반복 재생, 전투 종료 시 정지. 배경 탭 일시정지/복귀 재개. 효과음과 독립적인 OST 켜기/끄기 버튼 추가.
+- 변경 JS 문법 검사, 브라우저 재생/음소거 확인. ESLint/Prettier 미실행, 이 변경에는 추가 자동 테스트 불필요. 로컬 베타 적용, 공개 배포 전.
+
+## 2026-10-05 — 효과음·OST 공개 배포
+
+- 전투 효과음/OST 및 개별 음소거 버튼을 main에 커밋·푸시하고 현재 beta snapshot을 공개 인덱스로 반영.
+- 직전 관련 7개 검사와 브라우저 재생/음소거 검증 결과를 사용. ESLint/Prettier 및 불필요한 전체 테스트 미실행.
+- 별도 Engine Map 문서 변경은 로컬 보존.

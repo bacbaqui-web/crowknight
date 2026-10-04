@@ -76,6 +76,7 @@ export function resolveCombat({
       target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
 
       if (guardBlockAttackRegion) {
+        world?.combatSounds?.contact('block', attacker, target);
         triggerWorldAttackCameraShake(world, particleEffects);
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('guard-block', {

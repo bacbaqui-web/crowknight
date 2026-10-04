@@ -1,0 +1,40 @@
+[
+  {
+    "file": "club-swing.wav",
+    "pack": "melee",
+    "original": "melee sound.wav",
+    "sourceSha256": "1dc8e8b168c2c5faa526c00e9ea8b1f9015cc57a7cb0b84c6f69e9c83e4cbfec"
+  },
+  {
+    "file": "sword-swing.wav",
+    "pack": "melee",
+    "original": "sword sound.wav",
+    "sourceSha256": "0c964284a606da1bd9591a20184c0e0aeb358bb21e41c9edd16a1410911fa042"
+  },
+  {
+    "file": "club-hit.wav",
+    "pack": "impact",
+    "original": "impactPunch_heavy_000.ogg",
+    "sourceSha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8",
+    "mixOriginal": "impactWood_medium_000.ogg",
+    "mixSourceSha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
+  },
+  {
+    "file": "sword-hit.wav",
+    "pack": "impact",
+    "original": "impactPunch_medium_001.ogg",
+    "sourceSha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349"
+  },
+  {
+    "file": "shield-block.wav",
+    "pack": "impact",
+    "original": "impactMetal_heavy_001.ogg",
+    "sourceSha256": "83554049f81f4db9209379e103c30bfa63f65c42189a03f300b045c2c82e23ae"
+  },
+  {
+    "file": "guard-raise.wav",
+    "pack": "rpg",
+    "original": "metal-small1.wav",
+    "sourceSha256": "8ebfaf55f946fd2af5086c333551dfc7c774a908759022081010c32085d600b3"
+  }
+]

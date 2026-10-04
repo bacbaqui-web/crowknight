@@ -24,6 +24,8 @@ export function applyInteractionDamage({
 }) {
   if (target.player.runEvadeTime > 0) return false;
   if (target.player.runSkills && target.player.customActionKey === target.player.runSkillActions.guard) {
+    const parried = target.player.runSkills.parry && target.player.runParryTime > 0;
+    world?.combatSounds?.contact(parried ? 'parry' : 'block', attacker, target);
     if (target.player.runSkills.parry && target.player.runParryTime > 0) {
       target.player.runParryTime = 0;
       attacker.player.hurtTime = Math.max(attacker.player.hurtTime || 0, 0.5);
@@ -39,6 +41,7 @@ export function applyInteractionDamage({
   if (!Number.isFinite(damage) || damage <= 0) return false;
   recordHealthDamage(target);
   target.hp = Math.max(0, target.hp - damage);
+  world?.combatSounds?.contact('hit', attacker, target);
   target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
   if (isRuntimeDebugEnabled()) {
     debugInteractionRuntimeLog('damage-applied', {

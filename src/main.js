@@ -1,3 +1,6 @@
+import { createCombatAudioPlayer } from './combat_audio_player.js';
+import { createGameMusicController } from './game_music_controller.js';
+import { createCombatSoundController } from './combat_sound_controller.js';
 import { updateChargeAttack, cancelChargeAttack } from './charge_attack_helper.js';
 import { createExperienceController } from './experience_controller.js';
 import { createExperienceView } from './experience_view.js';
@@ -116,6 +119,10 @@ const {
   initialPsdBackgroundChanged,
 } = projectRuntime;
 let sceneSession = projectRuntime.sceneSession;
+const combatAudio = createCombatAudioPlayer();
+const gameMusic = createGameMusicController();
+const combatSounds = createCombatSoundController(combatAudio.play);
+Object.defineProperty(world, 'combatSounds', { value: combatSounds });
 const runActorState = createRunActorState({ actors, world });
 const experience = createExperienceController({
   getPlayer: () => runActorState.getPlayer(),
@@ -344,6 +351,7 @@ function update(dt) {
     dt,
   });
   updateProjectileRuntime({ actors: gameActors, playerActor, world, dt });
+  combatSounds.update(gameActors);
 
   resolveCombat({
     actors: gameActors,
@@ -458,6 +466,7 @@ function updateResultScene(dt) {
 }
 
 function handleRunStopped({ showResult }) {
+  gameMusic.stop();
   experience.stop();
   healthDrops.reset();
   runUpgrades.stop();
@@ -594,6 +603,9 @@ function startRun() {
 }
 
 function handleRunStarted() {
+  gameMusic.start();
+  combatAudio.reset();
+  combatSounds.reset();
   healthDrops.reset();
   runUpgrades.stop();
   const playerActor = runActorState.resolvePlayer(selectedActor);

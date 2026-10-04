@@ -4,7 +4,7 @@
 
 SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
-Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 239개와 inventory가 일치한다.
+Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 242개와 inventory가 일치한다.
 
 ## Naming Rules
 
@@ -382,3 +382,8 @@ Input
 - `pickup_magnet_helper.js`: 착지 후 거리별 유인과 도착 판정.
 
 - `charge_attack_helper.js`: 기술 습득 후 Q 짧은 입력/충전/놓기와 취소.
+
+- `combat_audio_player.js`: 로컬 CC0 WAV 로딩/디코딩, 음량/동시 재생 제한, 제스처 해제/음소거.
+- `combat_sound_controller.js`: 공격 판정 시작과 실제 피해/방어/패링에 전투음 연결.
+
+- `game_music_controller.js`: 플레이 OST 반복 재생/정지, 낮은 볼륨/음소거, 배경 탭 재생 제어.
