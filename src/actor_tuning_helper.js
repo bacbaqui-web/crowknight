@@ -10,6 +10,7 @@ export function defaultTuningFor(def) {
 export function syncActorHealthCapacity(actor, refill = false) {
   const max = clamp(Math.round(Number(actor.tuning.maxHpPips ?? 5)), 1, 20);
   actor.tuning.maxHpPips = max;
-  actor.maxHpPips = max;
-  actor.hpPips = refill ? max : clamp(Math.round(Number(actor.hpPips || max)), 0, max);
+  const runtimeMax = max + (actor.player?.runUpgrades?.health || 0);
+  actor.maxHpPips = runtimeMax;
+  actor.hpPips = refill ? runtimeMax : clamp(Math.round(Number(actor.hpPips ?? runtimeMax)), 0, runtimeMax);
 }

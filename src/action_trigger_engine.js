@@ -1,3 +1,4 @@
+import { upgradeActionDelta } from './run_upgrade_timing_helper.js';
 import { normalizeActionTrigger } from './action_trigger_data.js';
 import { isActionMirrorEnabled } from './action_mirror_helper.js';
 import { normalizeActionCondition } from './action_condition_helper.js';
@@ -113,6 +114,7 @@ export function advanceCustomActionRuntime(player, dt) {
   }
   if (!player.customActionKey || player.customActionTime <= 0) return;
   applyCustomActionViewLock(player);
+  dt = upgradeActionDelta(player, dt);
   applyCustomActionVelocityModifier(player, dt);
   applyCustomActionTargetMove(player, dt);
   player.customActionElapsed = Math.max(0, Number(player.customActionElapsed || 0) + Math.max(0, Number(dt || 0)));
@@ -335,6 +337,7 @@ function startCustomAction(player, key, facing = null, triggerMode = 'tap', pres
   player.customActionDuration = duration;
   player.customActionTime = duration;
   player.customActionElapsed = 0;
+  player.runUpgradeAttackWindow = null;
   player.customActionMoveProgress = 0;
   player.customActionRepeatRelease = null;
   player.customActionTargetMove = null;

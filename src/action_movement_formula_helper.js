@@ -1,3 +1,4 @@
+import { upgradeVelocity } from './run_upgrade_effect_helper.js';
 import { timelineFrameCount, timelineFrameDelta, timelinePlaybackProgress } from './timeline_playback_helper.js';
 import { actionMoveMirrorSign } from './action_mirror_helper.js';
 import { actionFormula, actionFormulaFrameFromProgress, formulaFrameBoundary } from './formula_runtime_engine.js';
@@ -21,12 +22,13 @@ export function applyCustomActionVelocityModifier(player, dt) {
 
   const mirrorSign = actionMoveMirrorSign(settings, player.facing);
   const curveRate = Math.abs(rawFrameDelta) > 0.000001 ? frameDelta / rawFrameDelta : 0;
-  const x = Number(velocity.x || 0) * mirrorSign * curveRate;
-  const y = Number(velocity.y || 0) * curveRate;
+  const base = upgradeVelocity(player, settings, Number(velocity.x || 0), Number(velocity.y || 0));
+  const x = base.x * mirrorSign * curveRate;
+  const y = base.y * curveRate;
   const mode = velocity.mode === 'add' ? 'add' : 'set';
   if (mode === 'add') {
-    player.vx = Number(player.vx || 0) + Number(velocity.x || 0) * mirrorSign * frameDelta;
-    player.vy = Number(player.vy || 0) + Number(velocity.y || 0) * frameDelta;
+    player.vx = Number(player.vx || 0) + base.x * mirrorSign * frameDelta;
+    player.vy = Number(player.vy || 0) + base.y * frameDelta;
   } else {
     const preserveVx = player.velocityControl?.x === true;
     const preserveVy = player.velocityControl?.y === true;
@@ -101,10 +103,14 @@ function startTargetMove(player, state, targetMove, settings) {
   const shadowY = Number.isFinite(player.floorY) ? Number(player.floorY) : Number(player.y || 0);
   state.startX = Number(player.x || 0);
   state.startY = Number(player.y || 0);
-  state.targetX = shadowX + Number(targetMove.x || 0) * mirrorSign;
-  state.targetY = shadowY + Number(targetMove.y || 0);
+  const move = { x: Number(targetMove.x || 0), y: Number(targetMove.y || 0) };
+  if (settings.group === 'movement' && move.y < 0) move.y *= player.runUpgrades?.jump || 1;
+  state.targetX = shadowX + move.x * mirrorSign;
+  state.targetY = shadowY + move.y;
   state.elapsedFrames = 0;
-  state.moveFrames = normalizeTargetMoveFrames(targetMove.moveFrames);
+  state.moveFrames =
+    normalizeTargetMoveFrames(targetMove.moveFrames) /
+    (settings.group === 'movement' ? player.runUpgrades?.speed || 1 : 1);
   state.active = true;
   state.started = true;
 }
@@ -118,7 +124,7 @@ function advanceTargetMove(player, state, dt) {
   player.vx = 0;
   player.vy = 0;
   player.velocityControl = { x: true, y: true };
-  const moveFrames = normalizeTargetMoveFrames(state.moveFrames);
+  const moveFrames = Math.max(0, Number(state.moveFrames || 0));
   if (moveFrames <= 0) {
     player.x = targetX;
     player.y = targetY;

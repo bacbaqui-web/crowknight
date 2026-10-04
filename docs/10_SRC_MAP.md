@@ -4,7 +4,7 @@
 
 SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
-Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 228개와 inventory가 일치한다.
+Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 232개와 inventory가 일치한다.
 
 ## Naming Rules
 
@@ -362,4 +362,11 @@ Input
 - `run_upgrade_state.js`: 선택/미선택 양쪽 횟수와 새 판 reset.
 - `upgrade_hud_view.js`: 내/적 아이콘, 횟수와 클릭 상세 UI.
 - `upgradeHud.css`: 현황 UI 반응형 스타일.
-- `dev/upgrade-icons.html`: 로컬 조작 가능한 미리보기. 실제 전투 연결은 후속 작업.
+- `dev/upgrade-icons.html`: 로컬 조작 가능한 미리보기. 아이콘/현황 조작 미리보기. 실제 전투는 main에서 별도 연결.
+
+## 보스 강화 실행
+
+- `run_upgrade_controller.js`: 보스 선택 queue, 랜덤 쌍, pause/reset와 양쪽 적용.
+- `run_upgrade_effect_helper.js`: runtime 배율, health/판정/이동과 원본 설정 보호.
+- `run_upgrade_timing_helper.js`: 활성 판정 프레임에서 공격 단계 경계와 시간 배율 계산.
+- `upgrade_choice_view.js`: 카드 선택 dialog와 키보드 focus.

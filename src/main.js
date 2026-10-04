@@ -1,3 +1,4 @@
+import { createRunUpgradeController } from './run_upgrade_controller.js';
 import { loadProjectRuntime } from './project_runtime_loader.js';
 import { captureActorMotionStart, updatePausedActors } from './actor_frame_state.js';
 import { drawActor, drawAttackTrail } from './actor_canvas_renderer.js';
@@ -135,6 +136,15 @@ const runLifecycle = createRunLifecycleController({
   onResultReady: handleResultReady,
   onResultClosed: handleResultClosed,
 });
+const runUpgrades = createRunUpgradeController({
+  getActors: () => runActorState.getRunActors(),
+  getPlayer: () => runActorState.getPlayer(),
+  clearInput: () => {
+    keys.clear();
+    pressed.clear();
+    document.activeElement?.blur();
+  },
+});
 if (isBetaPage && gameVersionButton) gameVersionButton.textContent = `BETA ${savedState.revision.slice(0, 8)}`;
 const deploymentVersionController =
   isEditorPage || isBetaPage
@@ -243,7 +253,7 @@ const runtimeDebugHud = isEditorPage ? createRuntimeDebugHud({ parent: canvas?.p
 bindKeyboardControls({
   keys,
   pressed,
-  handleShortcut: (event) => tuningPanel.handleKeyboardShortcut(event),
+  handleShortcut: (event) => runUpgrades.isPaused() || tuningPanel.handleKeyboardShortcut(event),
 });
 markGameReady();
 requestAnimationFrame(loop);
@@ -264,6 +274,10 @@ function update(dt) {
   captureActorMotionStart(gameActors);
 
   if (controlGuideOpen) return;
+  if (runLifecycle.isRunActive()) {
+    runUpgrades.update();
+    if (runUpgrades.isPaused()) return;
+  }
 
   if (runLifecycle.isDeathPending()) {
     updatePlayerDeathSequence(dt);
@@ -312,7 +326,9 @@ function update(dt) {
     particleEffects,
     onPlayerDeath: runLifecycle.startPlayerDeath,
     onPlayerKill: runLifecycle.recordPlayerKill,
-    onEnemyDeath: runLifecycle.recordEnemyDeath,
+    onEnemyDeath: (actor) => {
+      if (runLifecycle.recordEnemyDeath(actor) && runLifecycle.isRunActive()) runUpgrades.recordBossKill();
+    },
   });
   resolveProjectileCombat({
     projectiles: activeProjectiles(),
@@ -322,7 +338,9 @@ function update(dt) {
     particleEffects,
     onPlayerDeath: runLifecycle.startPlayerDeath,
     onPlayerKill: runLifecycle.recordPlayerKill,
-    onEnemyDeath: runLifecycle.recordEnemyDeath,
+    onEnemyDeath: (actor) => {
+      if (runLifecycle.recordEnemyDeath(actor) && runLifecycle.isRunActive()) runUpgrades.recordBossKill();
+    },
   });
 
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt });
@@ -335,6 +353,7 @@ function update(dt) {
 }
 
 function handlePlayerDeathStarted() {
+  runUpgrades.stop();
   closeControlGuide();
   setControlGuideButtonVisible(false);
   setMobileControlsVisible(false);
@@ -399,6 +418,7 @@ function updateResultScene(dt) {
 }
 
 function handleRunStopped({ showResult }) {
+  runUpgrades.stop();
   closeControlGuide();
   setControlGuideButtonVisible(false);
   setMobileControlsVisible(false);
@@ -530,9 +550,11 @@ function startRun() {
 }
 
 function handleRunStarted() {
+  runUpgrades.stop();
   const playerActor = runActorState.resolvePlayer(selectedActor);
   runActorState.rebuildEnemies();
   const gameActors = runActorState.getRunActors();
+  runUpgrades.reset();
   lineUpActorPositions(gameActors, world);
   setControlGuideButtonVisible(true);
   setMobileControlsVisible(true);

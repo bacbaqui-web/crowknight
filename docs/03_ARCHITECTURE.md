@@ -187,3 +187,7 @@ drawRect(-ax, -ay, w, h)
 - `project_save_queue.js`는 저장 순서·실패·재시도·dirty를 관리한다. Python `file_transaction.py`는 파일 교체 rollback과 재시작 복구를 관리한다.
 - 배경 / 캐릭터 / 이펙트 API는 독립 모듈이며 `asset_source_store.py`가 업로드 원본과 파생 출력의 교체 경계를 공유한다. 원본 PSD 경로는 변경하지 않는다.
 - Action 이동 수식, Actor 자세 계산과 Combat 충돌/반응은 별도 helper다. 런타임 상태와 처리 순서는 기존 engine이 소유한다.
+
+## Run Upgrade
+
+보스 사망은 기존 lifecycle에서 한 번 집계하고 Upgrade controller에 한 선택을 enqueue한다. main은 선택 대기 중 runtime update를 중단한다. 선택은 분리된 state에서 두 진영에 누적하고 runtime player의 `runUpgrades`에 적용한다. 제작 tuning과 release snapshot을 변경하지 않는다. 종료/사망은 controller와 runtime 효과를 정리한다.

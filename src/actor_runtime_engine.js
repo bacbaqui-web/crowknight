@@ -1,3 +1,4 @@
+import { scaleUpgradeAttackRegions } from './run_upgrade_effect_helper.js';
 import { clamp, clone, deg, lerp } from './common_helper.js';
 import { interactionDefaultValue } from './interaction_field_data.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
@@ -188,7 +189,7 @@ export class PuppetPlayer {
   }
 
   activeAttackInteractionRegions() {
-    return createAttackInteractionRegions(this);
+    return scaleUpgradeAttackRegions(this, createAttackInteractionRegions(this));
   }
 
   weaponAnchorTransform() {

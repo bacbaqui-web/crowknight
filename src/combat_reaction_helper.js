@@ -20,7 +20,7 @@ export function applyInteractionDamage({
   onPlayerKill,
   onEnemyDeath,
 }) {
-  const damage = Math.max(0, Math.round(Number(rawDamage ?? 1)));
+  const damage = Math.max(0, Math.round(Number(rawDamage ?? 1) + (attacker.player.runUpgrades?.damage || 0)));
   if (damage <= 0) return false;
   target.hpPips = Math.max(0, target.hpPips - damage);
   target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
@@ -98,8 +98,9 @@ export function applyKnockback(attacker, target, attackRegion, world) {
       : { x: facingSign, y: 0, source: 'set-mode-facing' };
   const vectorKnockbackX = knockbackMode === 'add' ? direction.x * knockback : facingSign * knockback;
   const vectorKnockbackY = knockbackMode === 'add' ? direction.y * knockback : 0;
-  const finalVx = vectorKnockbackX + facingAdjustedExtraVx;
-  const finalVy = vectorKnockbackY + extraVy;
+  const multiplier = (attacker.player.runUpgrades?.knockback || 1) * (target.player.runUpgrades?.resistance || 1);
+  const finalVx = (vectorKnockbackX + facingAdjustedExtraVx) * multiplier;
+  const finalVy = (vectorKnockbackY + extraVy) * multiplier;
   if (Math.abs(finalVx) <= 0.0001 && Math.abs(finalVy) <= 0.0001) return;
   target.player.vx = Number(target.player.vx || 0) + finalVx;
   target.player.vy = Number(target.player.vy || 0) + finalVy;

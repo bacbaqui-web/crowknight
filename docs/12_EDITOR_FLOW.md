@@ -395,3 +395,9 @@ HTTP 200 push 완료와 실제 Pages 반영은 구분한다. UI는 공개 publis
 ```
 
 에셋 업로드는 임시 폴더에서 변환한 뒤 성공한 파생 이미지 묶음과 업로드 원본 index를 교체한다. 기존 PSD는 유지한다. 캐릭터는 `editor_character_asset_view/controller`, 이펙트는 `editor_effect_asset_controller`, 배경 버튼은 `editor_asset_controller`가 연결한다. 기존 Action / pose / combat 편집 데이터 구조는 유지한다.
+
+## 플레이 중 카드 강화
+
+보스 사망 → lifecycle 중복 집계 방지 → run_upgrade_controller queue → 선택 dialog / update 정지 → 선택 카드 player + 미선택 카드 enemy → runtime 효과/현황 갱신 → update 재개.
+
+카드 강화는 제작 saveState를 호출하지 않는다. 현재 카드 metadata/수치는 upgrade_card_data에 있으며 세팅 UI에서 카드 값을 편집하는 기능은 아직 없다.

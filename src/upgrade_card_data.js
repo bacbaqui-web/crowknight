@@ -84,6 +84,7 @@ export const UPGRADE_CARDS = Object.freeze(
 );
 
 export function upgradeEffectLabel(card, count = 1) {
-  const value = card.amount * count;
+  const raw = card.amount * count;
+  const value = card.amount < 0 ? Math.max(-80, raw) : raw;
   return `${card.stat} ${value > 0 ? '+' : ''}${value}${card.unit}`;
 }
