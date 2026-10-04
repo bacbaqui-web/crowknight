@@ -87,7 +87,7 @@ test('일반 적 처치는 mobs만 집계하고 Player, Boss와 잘못된 Actor�
 
 test('Boss 처치는 한 번만 별도 집계하고 HP나 난이도 상태를 변경하지 않는다', () => {
   const { controller } = createController();
-  const boss = { group: 'bosses', runtimeBossKillCounted: false, hpPips: 0 };
+  const boss = { group: 'bosses', runtimeBossKillCounted: false, hp: 0 };
   const mob = { group: 'mobs', runtimeBossKillCounted: false };
   controller.start();
 
@@ -96,7 +96,7 @@ test('Boss 처치는 한 번만 별도 집계하고 HP나 난이도 상태를 �
   assert.equal(controller.recordEnemyDeath(boss), false);
   assert.equal(controller.getSnapshot().bossKills, 1);
   assert.equal(controller.getSnapshot().runKills, 0);
-  assert.equal(boss.hpPips, 0);
+  assert.equal(boss.hp, 0);
   assert.equal('difficulty' in controller.getSnapshot(), false);
 });
 

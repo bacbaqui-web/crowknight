@@ -189,6 +189,7 @@ export class PuppetPlayer {
   }
 
   activeAttackInteractionRegions() {
+    if (this.runCharge?.animating) return [];
     return scaleUpgradeAttackRegions(this, createAttackInteractionRegions(this));
   }
 

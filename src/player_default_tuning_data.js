@@ -2,7 +2,7 @@ import { DEFAULT_PLAYER_RIG } from './player_default_rig_data.js';
 import { defaultTimelineModifiers } from './timeline_modifier_data.js';
 
 export const DEFAULT_PLAYER_TUNING = {
-  maxHpPips: 5,
+  maxHp: 100,
   speed: 0,
   runAcceleration: 0,
   jumpPower: 0,

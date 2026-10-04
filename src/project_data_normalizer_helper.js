@@ -27,6 +27,10 @@ import {
 import { normalizeEffectSettings, normalizeEffectOffsets } from './project_effect_normalizer_helper.js';
 
 export function mergeTuning(base, saved) {
+  if (saved) {
+    saved = { ...saved, maxHp: saved.maxHp ?? (saved.maxHpPips != null ? saved.maxHpPips * 20 : base.maxHp) };
+    delete saved.maxHpPips;
+  }
   if (!saved) {
     const fresh = clone(base);
     fresh.actionNames = normalizeActionNames(fresh.actionNames);

@@ -1,3 +1,5 @@
+import { chargeAttackScale } from './charge_attack_helper.js';
+import { drawHealthMeter } from './actor_health_helper.js';
 import { defaultEffectSize } from './animation_frame_data.js';
 import { actorHudLayout } from './character_hud_layout_helper.js';
 import { createEditableTransform, editableTransformDrawRect } from './editable_object_model_helper.js';
@@ -23,6 +25,21 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
     ctx.filter = 'brightness(1.18) saturate(0.55)';
   }
 
+  if (actor.player.runCharge?.animating) {
+    ctx.save();
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(
+      actor.player.x,
+      actor.player.y - 45,
+      32 + actor.player.runCharge.elapsed * 18,
+      0,
+      (Math.PI * 2 * actor.player.runCharge.elapsed) / 1.2
+    );
+    ctx.stroke();
+    ctx.restore();
+  }
   const previousGlowPart = actor.player.glowPart;
   const previousGlowParts = actor.player.glowParts;
   const selectedGlowPart = actor === selectedActor ? activeEditPartKey() : null;
@@ -40,10 +57,23 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   if (flicker) ctx.restore();
   if (actor.player.dead) return;
 
-  const width = Math.max(72, actor.maxHpPips * 9);
+  const width = Math.min(240, Math.max(100, actor.maxHp * 1.2));
   const hud = actorHudLayout(actor, { useCustomOffset: actor === selectedActor && isSettingsPanelOpen() });
 
   drawHealthMeter(ctx, actor, hud.hpBar.x, hud.hpBar.y, width);
+  if (actor.experience) {
+    const { level, xp, threshold } = actor.experience;
+    const left = hud.hpBar.x - width / 2,
+      top = hud.hpBar.y + 11;
+    ctx.fillStyle = 'rgba(0,0,0,.65)';
+    ctx.fillRect(left, top, width, 3);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(left, top, width * clamp(xp / threshold, 0, 1), 3);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Lv.${level}`, left - 4, top + 4);
+  }
   ctx.fillStyle = actor.hurtCooldown > 0 ? '#fff' : actor.tint;
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'center';
@@ -54,9 +84,29 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
 export function drawAttackTrail(ctx, actor, effectAssets) {
   if (actor.respawning) return;
   const player = actor.player;
+  if (player.runCharge?.animating) return;
   const active = activePlayerEffectAction(player);
   if (!active) return;
 
+  const scale = chargeAttackScale(player);
+  if (
+    player.runSkills &&
+    player.runChargedAttack &&
+    player.customActionKey === player.runSkillActions?.chargeAttack &&
+    player.getActionFrameProgress() < 0.5
+  ) {
+    ctx.save();
+    ctx.translate(player.x, player.y - 45);
+    ctx.scale(player.facing * scale, scale);
+    ctx.strokeStyle = '#fef08a';
+    ctx.shadowColor = '#fef08a';
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(15, 0, 65, -1.2, 1.2);
+    ctx.stroke();
+    ctx.restore();
+  }
   const { key: effectKey } = active;
   const progress = active.usesEffectPlayback
     ? runtimeEffectPlaybackProgress(player, effectKey, actor.tuning.effectSettings?.[effectKey])
@@ -84,7 +134,7 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
 
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.scale(flip, 1);
+  ctx.scale(flip * scale, scale);
   ctx.translate(transform.x, transform.y);
   ctx.rotate((transform.rot * Math.PI) / 180);
   recordEffectRegion(player, ctx, effectKey, config, drawRect);
@@ -223,28 +273,4 @@ function drawActorShadow(ctx, world, actor) {
   ctx.ellipse(actor.player.x, world.floorY + 3, width, height, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-}
-
-function drawHealthMeter(ctx, actor, x, y, width) {
-  if (actor.maxHpPips > 0) {
-    const gap = actor.maxHpPips > 10 ? 2 : 4;
-    const pipWidth = (width - gap * (actor.maxHpPips - 1)) / actor.maxHpPips;
-    for (let index = 0; index < actor.maxHpPips; index += 1) {
-      const px = x - width / 2 + index * (pipWidth + gap);
-      ctx.fillStyle = 'rgba(0,0,0,.44)';
-      ctx.fillRect(px, y, pipWidth, 7);
-      ctx.strokeStyle = 'rgba(255,255,255,.22)';
-      ctx.strokeRect(px, y, pipWidth, 7);
-      if (index < actor.hpPips) {
-        ctx.fillStyle = actor.tint;
-        ctx.fillRect(px + 1, y + 1, pipWidth - 2, 5);
-      }
-    }
-    return;
-  }
-
-  ctx.fillStyle = 'rgba(0,0,0,.44)';
-  ctx.fillRect(x - width / 2, y, width, 6);
-  ctx.fillStyle = actor.tint;
-  ctx.fillRect(x - width / 2, y, width * (actor.hp / 100), 6);
 }

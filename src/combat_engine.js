@@ -1,3 +1,4 @@
+import { updateHealthTrail } from './actor_health_helper.js';
 import {
   overlappingAttackRegion,
   overlappingCollisionHurtRegion,
@@ -110,7 +111,7 @@ export function resolveCombat({
           target: target.id,
           attackerAction: attacker.player.actionKey,
           targetAction: target.player.actionKey,
-          damage: 1,
+          damage: 20,
           knockback: attackRegion.reaction.knockback,
         });
       }
@@ -118,7 +119,7 @@ export function resolveCombat({
         attacker,
         target,
         attackRegion,
-        damage: 1,
+        damage: 20,
         invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
         comboStep,
         playerActor,
@@ -182,7 +183,7 @@ export function resolveProjectileCombat({
         attacker: projectile.owner,
         target,
         attackRegion,
-        damage: 1,
+        damage: 20,
         invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
         comboStep: 1,
         playerActor,
@@ -230,13 +231,13 @@ export function resolveCollisionHurtInteractions({
           sourceAction: source.player.actionKey,
           targetAction: target.player.actionKey,
           hurtByCollision: hurtRegion.reaction.hurtByCollision,
-          damage: 1,
+          damage: 20,
         });
       }
       applyInteractionDamage({
         attacker: source,
         target,
-        damage: 1,
+        damage: 20,
         invincibleTime: hurtRegion.reaction.invincibleTime,
         comboStep: 1,
         playerActor,
@@ -256,6 +257,7 @@ export function syncPreviousAttackRegions(actor, attackRegions = []) {
 
 export function updateActorCombatTimers(actors, dt) {
   actors.forEach((actor) => {
+    updateHealthTrail(actor, dt);
     actor.hurtCooldown = Math.max(0, actor.hurtCooldown - dt);
     actor.hitStun = Math.max(0, actor.hitStun - dt);
     actor.invulnTime = Math.max(0, actor.invulnTime - dt);

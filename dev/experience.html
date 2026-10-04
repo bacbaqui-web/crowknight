@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>경험치와 기술 테스트</title>
+    <link rel="stylesheet" href="../src/upgradeHud.css" />
+    <style>
+      body {
+        background: #111827;
+        color: #e5e7eb;
+        font: 16px sans-serif;
+        margin: 0;
+      }
+      .stage-wrap {
+        position: relative;
+        min-height: 100vh;
+      }
+      main {
+        max-width: 640px;
+        padding: 60px 24px;
+        margin: auto;
+      }
+      canvas {
+        width: 100%;
+        background: #1f2937;
+      }
+      button {
+        padding: 12px;
+        margin: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage-wrap">
+      <main>
+        <h1>경험치와 기술 습득 테스트</h1>
+        <p>테스트용 경험치 지급 버튼입니다. 실제 게임에서는 적 처치 후 흰 구슬을 수집합니다.</p>
+        <canvas width="640" height="220" aria-label="경험치 구슬 수집 테스트"></canvas>
+        <button id="orb">근처 적 처치 · 경험치 구슬</button>
+        <button id="level">레벨업 테스트 +40 XP</button>
+        <button id="reset">새 판</button>
+        <button id="right">오른쪽 이동 40px</button>
+      </main>
+    </div>
+    <script type="module">
+      import { createExperienceController } from '../src/experience_controller.js';
+      import { createExperienceView } from '../src/experience_view.js';
+      const player = { hp: 100, tuning: { skillActions: {} }, player: { x: 320, y: 180 } };
+      const experience = createExperienceController({
+        getPlayer: () => player,
+        clearInput() {},
+        view: createExperienceView(undefined, { showHud: true }),
+      });
+      experience.reset();
+      document.querySelector('#right').onclick = () => {
+        player.player.x += 40;
+      };
+      document.querySelector('#orb').onclick = () =>
+        experience.recordKill({ group: 'mobs', player: { x: 440, y: 180 } });
+      document.querySelector('#level').onclick = () => experience.addExperience(40);
+      document.querySelector('#reset').onclick = () => experience.reset();
+      const ctx = document.querySelector('canvas').getContext('2d');
+      let previous = performance.now();
+      function frame(now) {
+        experience.update(Math.min(0.05, (now - previous) / 1000), { floorY: 180 });
+        previous = now;
+        ctx.clearRect(0, 0, 640, 220);
+        ctx.fillStyle = '#7cc3a2';
+        ctx.fillRect(player.player.x - 12, 140, 24, 40);
+        experience.draw(ctx);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

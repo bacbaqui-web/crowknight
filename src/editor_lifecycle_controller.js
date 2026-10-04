@@ -1,4 +1,5 @@
-import { defaultTuningFor } from './actor_tuning_helper.js';
+import { prepareSkillActions } from './skill_runtime_helper.js';
+import { defaultTuningFor, syncActorHealthCapacity } from './actor_tuning_helper.js';
 import { normalizeCharacterGroup } from './character_group_data.js';
 import { replaceObject } from './project_data_normalizer_helper.js';
 import {
@@ -71,10 +72,11 @@ export function createTuningPanelLifecycleController({
     const selectedActor = getSelectedActor();
     pushUndoSnapshot();
     replaceObject(selectedActor.tuning, defaultTuningFor(selectedActor));
+    if (selectedActor.group === 'players') prepareSkillActions(selectedActor.tuning);
     selectedActor.name = selectedActor.label;
     clearPanelSelectionState({ clearCopiedEffect: true });
     selectedActor.player.applyTuning(selectedActor.tuning);
-    selectedActor.hp = 100;
+    syncActorHealthCapacity(selectedActor, true);
     saveState();
     syncPanel();
   }

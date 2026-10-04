@@ -26,8 +26,8 @@ function createEnemy({ id = 'mob', group = 'mobs', active = true, x = 0, hp = 3,
     id,
     group,
     tuning: { maxHpPips: maxHp },
-    hpPips: hp,
-    maxHpPips: maxHp,
+    hp: hp * 20,
+    maxHp: maxHp * 20,
     respawning: !active,
     enemyRespawnTimer: null,
     invulnTime: 0,
@@ -199,7 +199,7 @@ test('전투 후 Enemy Flow는 timer 완료 뒤 위치와 Runtime 상태를 초�
     assert.equal(killed.player.dead, false);
     assert.equal(killed.respawning, false);
     assert.equal(killed.enemyRespawnTimer, null);
-    assert.equal(killed.hpPips, 5);
+    assert.equal(killed.hp, 100);
     assert.equal(killed.player.x, 900);
     assert.equal(killed.player.y, 480);
     assert.equal(killed.player.vx, 0);
@@ -208,7 +208,7 @@ test('전투 후 Enemy Flow는 timer 완료 뒤 위치와 Runtime 상태를 초�
     assert.deepEqual(killed.aiActionCooldowns, {});
     assert.deepEqual(killed.lastHitSerials, {});
     assert.equal(killed.runtimeBossKillCounted, false);
-    assert.equal(survivor.hpPips, 2);
+    assert.equal(survivor.hp, 40);
     assert.deepEqual(survivor.aiActionCooldowns, { keep: 4 });
   } finally {
     Math.random = originalRandom;

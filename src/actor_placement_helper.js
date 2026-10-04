@@ -6,7 +6,7 @@ export function placeEnemiesAhead(actors, playerActor, world) {
   actors.slice(1).forEach((actor, index) => {
     syncActorHealthCapacity(actor, true);
     actor.respawning = false;
-    actor.hpPips = actor.maxHpPips;
+    actor.hp = actor.maxHp;
     actor.player.x = startX + index * 170;
     actor.respawnTargetX = actor.player.x;
     actor.player.y = world.floorY;
@@ -23,8 +23,7 @@ export function lineUpActors(actors, world) {
   const slots = [480, 610, 740, 870, 1000];
   actors.forEach((actor, index) => {
     syncActorHealthCapacity(actor, true);
-    actor.hp = 100;
-    actor.hpPips = actor.maxHpPips;
+    actor.hp = actor.maxHp;
     actor.respawning = false;
     actor.invulnTime = 0;
     actor.wasRolling = false;

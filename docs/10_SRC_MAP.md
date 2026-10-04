@@ -4,7 +4,7 @@
 
 SRC_MAP은 설계 설명서가 아니다. 현재 파일 역할과 위치만 짧게 기록한다.
 
-Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 232개와 inventory가 일치한다.
+Runtime Structure Refactor 최종 감사 기준: 실제 `src` JavaScript 239개와 inventory가 일치한다.
 
 ## Naming Rules
 
@@ -370,3 +370,15 @@ Input
 - `run_upgrade_effect_helper.js`: runtime 배율, health/판정/이동과 원본 설정 보호.
 - `run_upgrade_timing_helper.js`: 활성 판정 프레임에서 공격 단계 경계와 시간 배율 계산.
 - `upgrade_choice_view.js`: 카드 선택 dialog와 키보드 focus.
+
+- `actor_health_helper.js`: 수치 HP, 기존 칸 데이터 호환, 지연 피해 바/10 HP 눈금.
+
+- `health_drop_controller.js`: 잡몹 조각의 확률 하트 변환, 비행/착지/접근 10 HP 회복, 만료와 판 초기화.
+
+- `experience_controller.js`: 흰 구슬/경험치/레벨업 대기와 기술별 판 상태.
+- `experience_view.js`: 경험치 표시와 기술 4개 선택.
+- `skill_runtime_helper.js`: 세팅용 기술 액션 준비, 해금/공중 점프 제한/패링/회피/4타 강화.
+
+- `pickup_magnet_helper.js`: 착지 후 거리별 유인과 도착 판정.
+
+- `charge_attack_helper.js`: 기술 습득 후 Q 짧은 입력/충전/놓기와 취소.

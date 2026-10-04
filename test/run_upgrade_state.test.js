@@ -33,10 +33,10 @@ test('새 판 초기화와 snapshot 수정은 다른 판이나 내부 횟수에 
   state.reset();
   assert.deepEqual(state.getSnapshot(), { player: {}, enemy: {} });
 });
-test('누적 표시의 정수와 기본값 기준 퍼센트를 유지한다', () => {
+test('누적 횟수와 기본값 기준 퍼센트를 유지한다', () => {
   const byId = (id) => UPGRADE_CARDS.find((card) => card.id === id);
-  assert.equal(upgradeEffectLabel(byId('sharp-blade'), 3), '공격 피해 +3');
-  assert.equal(upgradeEffectLabel(byId('steel-feathers'), 2), '최대 체력 +2칸');
+  assert.equal(upgradeEffectLabel(byId('sharp-blade'), 3), '공격 피해 +30%');
+  assert.equal(upgradeEffectLabel(byId('steel-feathers'), 2), '최대 체력 +20%');
   assert.equal(upgradeEffectLabel(byId('crow-footsteps'), 3), '이동 속도 +30%');
   assert.equal(upgradeEffectLabel(byId('seamless-finish'), 2), '공격 후딜레이 -20%');
 });

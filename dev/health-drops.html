@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>회복 하트 테스트</title>
+    <style>
+      body {
+        background: #111827;
+        color: #e5e7eb;
+        font: 16px sans-serif;
+        margin: 0;
+      }
+      main {
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 20px;
+      }
+      canvas {
+        width: 100%;
+        background: #1f2937;
+        border-radius: 12px;
+      }
+      button {
+        padding: 12px;
+        margin: 8px 4px 0 0;
+        border: 0;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>튀어 나오는 회복 하트</h1>
+      <p>테스트에서는 하트가 항상 나옵니다. 실제 게임은 잡몹 처치 시 20% 확률입니다.</p>
+      <canvas width="720" height="360" aria-label="하트 비행과 접근 획득 테스트"></canvas>
+      <p id="status" aria-live="polite"></p>
+      <button id="spawn">조각 하나를 하트로</button>
+      <button id="left">왼쪽 이동</button>
+      <button id="right">오른쪽 이동</button>
+      <button id="reset">초기화</button>
+    </main>
+    <script type="module">
+      import { createHealthDrops } from '../src/health_drop_controller.js';
+      const drops = createHealthDrops({ random: () => 0 });
+      const player = { hp: 70, maxHp: 100, player: { x: 80, y: 300 } };
+      const world = { floorY: 300, gravity: 980 };
+      const ctx = document.querySelector('canvas').getContext('2d');
+      const status = document.querySelector('#status');
+      let previous = performance.now(),
+        parts = [];
+      document.querySelector('#spawn').onclick = () => {
+        const mob = {
+          group: 'mobs',
+          player: {
+            deathRagdoll: {
+              parts: [
+                { x: 300, y: 210, vx: 150 },
+                { x: 320, y: 220, vx: -100 },
+              ],
+            },
+          },
+        };
+        parts = mob.player.deathRagdoll.parts;
+        drops.recordKill(mob);
+      };
+      document.querySelector('#left').onclick = () => {
+        player.player.x = Math.max(20, player.player.x - 40);
+      };
+      document.querySelector('#right').onclick = () => {
+        player.player.x = Math.min(700, player.player.x + 40);
+      };
+      document.querySelector('#reset').onclick = () => {
+        drops.reset();
+        parts = [];
+        player.hp = 70;
+        player.player.x = 80;
+      };
+      function frame(now) {
+        drops.update(Math.min(0.05, (now - previous) / 1000), player, world);
+        previous = now;
+        ctx.clearRect(0, 0, 720, 360);
+        ctx.fillStyle = '#4b5563';
+        ctx.fillRect(0, 300, 720, 3);
+        ctx.fillStyle = '#7cc3a2';
+        ctx.fillRect(player.player.x - 12, 260, 24, 40);
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('까마귀', player.player.x - 24, 246);
+        ctx.fillStyle = '#94a3b8';
+        for (const part of parts) ctx.fillRect(part.x, part.y, 12, 12);
+        drops.draw(ctx);
+        status.textContent = `${player.hp} / 100 HP · 남은 하트 ${drops.snapshot().length}개`;
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

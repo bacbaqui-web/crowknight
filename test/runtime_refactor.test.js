@@ -37,6 +37,10 @@ for (const fixture of JSON.parse(readFileSync(new URL('./fixtures/tuning-normali
         defaultTuningFor({ id: 'player_01', group: 'players', type: 'player' }),
         fixture.saved
       );
+      // Compare all other fields with the old fixture after undoing the intentional HP migration.
+      assert.equal(result.maxHp, (fixture.saved?.maxHpPips ?? 5) * 20);
+      result.maxHpPips = result.maxHp / 20;
+      delete result.maxHp;
       const hash = createHash('sha256')
         .update(JSON.stringify(canonical(result)))
         .digest('hex');

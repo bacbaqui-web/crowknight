@@ -1,3 +1,5 @@
+import { runSkillDamageMultiplier } from './skill_runtime_helper.js';
+import { recordHealthDamage } from './actor_health_helper.js';
 import { requestRuntimeAction } from './action_trigger_engine.js';
 import { previousAttackRegion } from './interaction_overlap_helper.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
@@ -20,9 +22,23 @@ export function applyInteractionDamage({
   onPlayerKill,
   onEnemyDeath,
 }) {
-  const damage = Math.max(0, Math.round(Number(rawDamage ?? 1) + (attacker.player.runUpgrades?.damage || 0)));
-  if (damage <= 0) return false;
-  target.hpPips = Math.max(0, target.hpPips - damage);
+  if (target.player.runEvadeTime > 0) return false;
+  if (target.player.runSkills && target.player.customActionKey === target.player.runSkillActions.guard) {
+    if (target.player.runSkills.parry && target.player.runParryTime > 0) {
+      target.player.runParryTime = 0;
+      attacker.player.hurtTime = Math.max(attacker.player.hurtTime || 0, 0.5);
+      requestHurtAction(attacker, target);
+      target.hitCancelFlashTime = 0.2;
+    }
+    return false;
+  }
+  const damage = Math.max(
+    0,
+    Number(rawDamage ?? 20) * (attacker.player.runUpgrades?.damage || 1) * runSkillDamageMultiplier(attacker.player)
+  );
+  if (!Number.isFinite(damage) || damage <= 0) return false;
+  recordHealthDamage(target);
+  target.hp = Math.max(0, target.hp - damage);
   target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
   if (isRuntimeDebugEnabled()) {
     debugInteractionRuntimeLog('damage-applied', {
@@ -31,10 +47,10 @@ export function applyInteractionDamage({
       attackerAction: attacker.player.actionKey,
       targetAction: target.player.actionKey,
       damage,
-      targetHp: target.hpPips,
+      targetHp: target.hp,
     });
   }
-  if (target.hpPips > 0) {
+  if (target.hp > 0) {
     requestHurtAction(target, attacker);
     return false;
   }
@@ -59,6 +75,11 @@ export function applyInteractionDamage({
 }
 
 export function applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects, world) {
+  if (
+    target.player.runEvadeTime > 0 ||
+    (target.player.runSkills && target.player.customActionKey === target.player.runSkillActions.guard)
+  )
+    return;
   applyKnockback(attacker, target, attackRegion, world);
   particleEffects.triggerHitImpact(attacker, target, comboStep);
 }

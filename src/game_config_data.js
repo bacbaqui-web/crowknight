@@ -114,7 +114,7 @@ export const EFFECT_IMAGE_OPTIONS = [
 ];
 
 export const TUNING_FIELDS = [
-  ['maxHpPips', ['maxHpPips']],
+  ['maxHp', ['maxHp']],
   ['actorScale', ['transform', 'scale']],
   ['hudOffsetY', ['hud', 'offsetY']],
   ['anchorX', ['transform', 'anchorX']],

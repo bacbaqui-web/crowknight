@@ -173,7 +173,7 @@ export function resolveEnemyActorSpawnRule(world, actorId) {
 
 function respawnEnemyActor(actor, playerActor, world) {
   syncActorHealthCapacity(actor, true);
-  actor.hpPips = actor.maxHpPips;
+  actor.hp = actor.maxHp;
   actor.respawning = false;
   actor.enemyRespawnTimer = null;
   actor.invulnTime = 0;

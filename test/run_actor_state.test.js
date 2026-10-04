@@ -10,8 +10,8 @@ function createActor({ id, group, type = 'enemy', maxHpPips = 5, assets = null }
     name: id,
     group,
     type,
-    maxHpPips,
-    hpPips: maxHpPips,
+    maxHp: maxHpPips * 20,
+    hp: maxHpPips * 20,
     respawnTargetX: 100,
     tuning: {
       maxHpPips,
@@ -84,20 +84,20 @@ test('Runtime Enemy clone은 원본과 다른 객체이며 mutable Runtime 상�
   assert.equal(cloneA.runtimeInstanceId, 'mob-a#1');
   assert.equal(cloneB.runtimeInstanceId, 'mob-a#2');
 
-  cloneA.hpPips = 1;
+  cloneA.hp = 1;
   cloneA.tuning.maxHpPips = 2;
   cloneA.aiActionCooldowns.slash = 3;
   cloneA.lastHitSerials.player = 4;
   cloneA.player.actionSettings.idle.duration = 9;
 
-  assert.equal(enemy.hpPips, 7);
+  assert.equal(enemy.hp, 140);
   assert.equal(enemy.tuning.maxHpPips, 7);
   assert.deepEqual(enemy.player, {
     x: 100,
     assets: enemy.player.assets,
     debugInteractionObjects: false,
   });
-  assert.equal(cloneB.hpPips, 7);
+  assert.equal(cloneB.hp, 140);
   assert.equal(cloneB.tuning.maxHpPips, 7);
   assert.deepEqual(cloneB.aiActionCooldowns, {});
   assert.deepEqual(cloneB.lastHitSerials, {});

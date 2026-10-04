@@ -1,3 +1,4 @@
+import { prepareSkillActions } from './skill_runtime_helper.js';
 import { PuppetPlayer } from './actor_runtime_engine.js';
 import { defaultTuningFor } from './actor_tuning_helper.js';
 import { loadCharacterAssets } from './asset_loader_helper.js';
@@ -24,12 +25,12 @@ export async function createActorFromDef(def, savedActor = null, world) {
   const assetSources = savedActor?.assets || {};
   const assets = await loadCharacterAssets(def.folder, '', assetSources);
   const tuning = mergeTuning(defaultTuningFor(def), savedActor?.tuning);
+  if (isPlayerCharacter(def)) prepareSkillActions(tuning);
   const actor = {
     ...def,
     label: def.label || def.name,
-    hp: 100,
-    maxHpPips: tuning.maxHpPips,
-    hpPips: tuning.maxHpPips,
+    hp: tuning.maxHp,
+    maxHp: tuning.maxHp,
     respawning: false,
     respawnTargetX: def.x,
     invulnTime: 0,

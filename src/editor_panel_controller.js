@@ -404,10 +404,7 @@ export function createTuningPanel({
     }
 
     function applySelected() {
-      syncActorHealthCapacity(
-        selectedActor,
-        Number(selectedActor.maxHpPips) !== Number(selectedActor.tuning.maxHpPips)
-      );
+      syncActorHealthCapacity(selectedActor, Number(selectedActor.maxHp) !== Number(selectedActor.tuning.maxHp));
       applyActorTuning(selectedActor);
       saveState();
     }

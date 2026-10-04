@@ -1,3 +1,8 @@
+import { updateChargeAttack, cancelChargeAttack } from './charge_attack_helper.js';
+import { createExperienceController } from './experience_controller.js';
+import { createExperienceView } from './experience_view.js';
+import { updateRunSkills, prepareSkillActions } from './skill_runtime_helper.js';
+import { createHealthDrops } from './health_drop_controller.js';
 import { createRunUpgradeController } from './run_upgrade_controller.js';
 import { loadProjectRuntime } from './project_runtime_loader.js';
 import { captureActorMotionStart, updatePausedActors } from './actor_frame_state.js';
@@ -112,6 +117,19 @@ const {
 } = projectRuntime;
 let sceneSession = projectRuntime.sceneSession;
 const runActorState = createRunActorState({ actors, world });
+const experience = createExperienceController({
+  getPlayer: () => runActorState.getPlayer(),
+  clearInput: () => {
+    keys.clear();
+    pressed.clear();
+    cancelChargeAttack(runActorState.getPlayer().player);
+  },
+  view: createExperienceView(),
+});
+const healthDrops = createHealthDrops();
+addEventListener('blur', () => {
+  cancelChargeAttack(runActorState.getPlayer().player);
+});
 const particleEffects = createParticleEffects({ actors, world, ctx });
 const { saveState, openBeta, refreshStagePsdAsset } = createProjectStateController({
   actors,
@@ -142,6 +160,7 @@ const runUpgrades = createRunUpgradeController({
   clearInput: () => {
     keys.clear();
     pressed.clear();
+    cancelChargeAttack(runActorState.getPlayer().player);
     document.activeElement?.blur();
   },
 });
@@ -183,6 +202,7 @@ bindBattleControls(
     endRun: () => {
       runLifecycle.stop({ showResult: Boolean(resultScreen) });
       particleEffects.reset();
+      healthDrops.reset();
       if (!resultScreen) lineUpActorPositions(runActorState.getActiveActors(), world);
     },
   }
@@ -253,7 +273,8 @@ const runtimeDebugHud = isEditorPage ? createRuntimeDebugHud({ parent: canvas?.p
 bindKeyboardControls({
   keys,
   pressed,
-  handleShortcut: (event) => runUpgrades.isPaused() || tuningPanel.handleKeyboardShortcut(event),
+  handleShortcut: (event) =>
+    runUpgrades.isPaused() || experience.isPaused() || tuningPanel.handleKeyboardShortcut(event),
 });
 markGameReady();
 requestAnimationFrame(loop);
@@ -277,6 +298,8 @@ function update(dt) {
   if (runLifecycle.isRunActive()) {
     runUpgrades.update();
     if (runUpgrades.isPaused()) return;
+    experience.update(0, world);
+    if (experience.isPaused()) return;
   }
 
   if (runLifecycle.isDeathPending()) {
@@ -309,11 +332,14 @@ function update(dt) {
   runLifecycle.updateSurvivalTime(dt);
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt: 0 });
 
+  updateRunSkills(playerActor.player, dt);
+  playerActor.player.runGuardReady = pressed.has('KeyE');
+  const chargeInput = updateChargeAttack(playerActor.player, dt, keys, pressed, requestRuntimeAction);
   updateBattleActorMotion({
     actors: gameActors,
     playerActor,
-    keys,
-    pressed,
+    keys: chargeInput.keys,
+    pressed: chargeInput.pressed,
     world,
     dt,
   });
@@ -325,7 +351,11 @@ function update(dt) {
     world,
     particleEffects,
     onPlayerDeath: runLifecycle.startPlayerDeath,
-    onPlayerKill: runLifecycle.recordPlayerKill,
+    onPlayerKill: (actor) => {
+      runLifecycle.recordPlayerKill(actor);
+      healthDrops.recordKill(actor);
+      experience.recordKill(actor);
+    },
     onEnemyDeath: (actor) => {
       if (runLifecycle.recordEnemyDeath(actor) && runLifecycle.isRunActive()) runUpgrades.recordBossKill();
     },
@@ -337,12 +367,20 @@ function update(dt) {
     world,
     particleEffects,
     onPlayerDeath: runLifecycle.startPlayerDeath,
-    onPlayerKill: runLifecycle.recordPlayerKill,
+    onPlayerKill: (actor) => {
+      runLifecycle.recordPlayerKill(actor);
+      healthDrops.recordKill(actor);
+      experience.recordKill(actor);
+    },
     onEnemyDeath: (actor) => {
       if (runLifecycle.recordEnemyDeath(actor) && runLifecycle.isRunActive()) runUpgrades.recordBossKill();
     },
   });
 
+  if (runLifecycle.isRunActive()) {
+    healthDrops.update(dt, playerActor, world);
+    if (!runUpgrades.isPaused()) experience.update(dt, world);
+  }
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt });
   updateRollGhosts(gameActors, dt);
   updateFormulaColorChanges(gameActors);
@@ -353,6 +391,8 @@ function update(dt) {
 }
 
 function handlePlayerDeathStarted() {
+  experience.stop();
+  healthDrops.reset();
   runUpgrades.stop();
   closeControlGuide();
   setControlGuideButtonVisible(false);
@@ -418,6 +458,8 @@ function updateResultScene(dt) {
 }
 
 function handleRunStopped({ showResult }) {
+  experience.stop();
+  healthDrops.reset();
   runUpgrades.stop();
   closeControlGuide();
   setControlGuideButtonVisible(false);
@@ -464,6 +506,8 @@ function draw() {
       activeEditPartKeys: tuningPanel.activeEditPartKeys,
     })
   );
+  healthDrops.draw(ctx);
+  experience.draw(ctx);
   drawProjectiles(ctx, effectAssets);
   particleEffects.drawHitSparks();
   particleEffects.drawDeathParticles();
@@ -550,15 +594,20 @@ function startRun() {
 }
 
 function handleRunStarted() {
+  healthDrops.reset();
   runUpgrades.stop();
   const playerActor = runActorState.resolvePlayer(selectedActor);
+  prepareSkillActions(playerActor.tuning);
+  playerActor.player.applyTuning(playerActor.tuning);
   runActorState.rebuildEnemies();
   const gameActors = runActorState.getRunActors();
   runUpgrades.reset();
+  experience.reset();
   lineUpActorPositions(gameActors, world);
   setControlGuideButtonVisible(true);
   setMobileControlsVisible(true);
   particleEffects.reset();
+  healthDrops.reset();
   resetProjectileRuntime();
   keys.clear();
   pressed.clear();

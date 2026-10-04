@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>생명력 바 테스트</title>
+    <style>
+      body {
+        margin: 0;
+        background: #111827;
+        color: #e5e7eb;
+        font: 16px sans-serif;
+      }
+      main {
+        max-width: 640px;
+        margin: 64px auto;
+        padding: 24px;
+      }
+      canvas {
+        width: 100%;
+        background: #1f2937;
+        border-radius: 12px;
+      }
+      button {
+        padding: 12px;
+        margin: 8px 4px 0 0;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      p {
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>생명력 바</h1>
+      <p>기본 체력 100 · 눈금 하나당 10 HP<br />피해 부분은 빨간색으로 0.45초 유지된 뒤 줄어듭니다.</p>
+      <canvas id="health" width="640" height="180" aria-label="체력과 지연 피해 표시"></canvas>
+      <p id="status" aria-live="polite"></p>
+      <button id="damage">피해 20</button>
+      <button id="fraction">피해 2.5</button>
+      <button id="upgrade">강인한 심장 +10%</button>
+      <button id="reset">초기화</button>
+    </main>
+    <script type="module">
+      import { drawHealthMeter, recordHealthDamage, updateHealthTrail } from '../src/actor_health_helper.js';
+      import { applyRunUpgradeEffects } from '../src/run_upgrade_effect_helper.js';
+      const actor = { hp: 100, maxHp: 100, tuning: { maxHp: 100 }, player: {}, tint: '#7cc3a2' };
+      const ctx = document.querySelector('canvas').getContext('2d');
+      const status = document.querySelector('#status');
+      let stacks = 0,
+        previous = performance.now();
+      function damage(amount) {
+        if (actor.hp <= 0) return;
+        recordHealthDamage(actor);
+        actor.hp = Math.max(0, actor.hp - amount);
+      }
+      document.querySelector('#damage').onclick = () => damage(20);
+      document.querySelector('#fraction').onclick = () => damage(2.5);
+      document.querySelector('#upgrade').onclick = () => {
+        stacks += 1;
+        applyRunUpgradeEffects([actor], actor, { player: { 'steel-feathers': stacks }, enemy: {} });
+      };
+      document.querySelector('#reset').onclick = () => {
+        stacks = 0;
+        actor.hp = actor.maxHp = 100;
+        actor.healthTrail = null;
+        delete actor.player.runUpgrades;
+      };
+      function frame(now) {
+        updateHealthTrail(actor, (now - previous) / 1000);
+        previous = now;
+        ctx.clearRect(0, 0, 640, 180);
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('까마귀', 60, 62);
+        drawHealthMeter(ctx, actor, 320, 90, 520);
+        status.textContent = `${Number(actor.hp.toFixed(2))} / ${Number(actor.maxHp.toFixed(2))} HP · 강인한 심장 ${stacks}회`;
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

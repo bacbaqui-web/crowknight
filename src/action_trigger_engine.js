@@ -1,3 +1,4 @@
+import { canUseRunSkill, startRunSkill } from './skill_runtime_helper.js';
 import { upgradeActionDelta } from './run_upgrade_timing_helper.js';
 import { normalizeActionTrigger } from './action_trigger_data.js';
 import { isActionMirrorEnabled } from './action_mirror_helper.js';
@@ -199,7 +200,10 @@ function trimInputHistory(runtime) {
 }
 
 function findMatchingCustomAction(player, runtime, keys, pressed) {
-  const actions = customActionsByTriggerPriority(player, runtimeActions(player));
+  const actions = customActionsByTriggerPriority(
+    player,
+    runtimeActions(player).filter((action) => canUseRunSkill(player, action.key))
+  );
   return (
     findEventCustomActionMatch(player, actions, runtime, keys, pressed) ||
     findStateReturnCustomActionMatch(player, actions, keys)
@@ -325,6 +329,8 @@ function canStartCustomAction(player) {
 }
 
 function startCustomAction(player, key, facing = null, triggerMode = 'tap', pressCodes = []) {
+  player.runChargedAttack = false;
+  startRunSkill(player, key);
   const duration = player.getActionDuration(key, 0.6);
   const requestedFacing = normalizedFacing(facing);
   player.beginCustomActionBlend?.(key, requestedFacing || player.facing);
@@ -438,6 +444,7 @@ function normalizedFacing(facing) {
 }
 
 function canRunActionCondition(player, key) {
+  if (!canUseRunSkill(player, key)) return false;
   const condition = normalizeActionCondition(actionRuntimeSettings(player, key).condition);
   if (condition === 'ground') return player.onGround === true;
   if (condition === 'air') return player.onGround === false;

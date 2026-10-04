@@ -92,6 +92,7 @@
     <section class="gallery" aria-label="카드 아이콘 목록"></section>
     <script type="module">
       import { UPGRADE_CARDS, upgradeEffectLabel } from '../src/upgrade_card_data.js';
+      import { createUpgradeChoiceView } from '../src/upgrade_choice_view.js';
       import { createUpgradeHud } from '../src/upgrade_hud_view.js';
       import { createRunUpgradeState } from '../src/run_upgrade_state.js';
       const base = document.createElement('base');
@@ -99,6 +100,18 @@
       document.head.append(base);
       const state = createRunUpgradeState();
       const hud = createUpgradeHud();
+      const choice = createUpgradeChoiceView({
+        root: document.body,
+        onChoose: (id, pair) => {
+          state.choose(pair, id);
+          choice.hide();
+          sync();
+        },
+      });
+      const testChoice = document.createElement('button');
+      testChoice.textContent = '보스 선택 숫자키 테스트';
+      testChoice.onclick = () => choice.show(['sharp-blade', 'crow-footsteps']);
+      document.querySelector('.demo-controls').append(testChoice);
       for (let i = 0; i < UPGRADE_CARDS.length; i++) {
         const pair = [UPGRADE_CARDS[i].id, UPGRADE_CARDS[(i + 1) % UPGRADE_CARDS.length].id];
         state.choose(pair, pair[0]);

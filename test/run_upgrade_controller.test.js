@@ -14,7 +14,7 @@ import { applyInteractionDamage, applyKnockback } from '../src/combat_reaction_h
 import { upgradeEffectLabel, UPGRADE_CARDS } from '../src/upgrade_card_data.js';
 
 function actor() {
-  return { id: 'test', tuning: { maxHpPips: 5 }, hpPips: 3, player: { x: 0, y: 0, facing: 1, dead: false } };
+  return { id: 'test', tuning: { maxHpPips: 5 }, hp: 60, player: { x: 0, y: 0, facing: 1, dead: false } };
 }
 function setup() {
   const player = actor(),
@@ -62,10 +62,10 @@ test('동시에 보스 두 명 처치하면 한 번씩 순서대로 선택하고
   controller.choose('sharp-blade');
   assert.equal(controller.isPaused(), false);
   assert.equal(controller.choose('sharp-blade'), false);
-  assert.equal(player.player.runUpgrades.damage, 2);
-  assert.equal(enemy.player.runUpgrades.health, 2);
-  assert.equal(enemy.hpPips, 5);
-  assert.equal(enemy.maxHpPips, 7);
+  assert.equal(player.player.runUpgrades.damage, 1.2);
+  assert.equal(enemy.player.runUpgrades.health, 1.2);
+  assert.equal(enemy.hp, 80);
+  assert.equal(enemy.maxHp, 120);
   assert.deepEqual(controller.getSnapshot(), { player: { 'sharp-blade': 2 }, enemy: { 'steel-feathers': 2 } });
 });
 test('사망/중단은 선택 대기와 runtime 효과를 없애고 다음 판 횟수를 초기화한다', () => {
@@ -86,8 +86,8 @@ test('10개 효과는 기본값 기준 합산이며 감소는 80%에서 멈춘�
   const counts = Object.fromEntries(UPGRADE_CARDS.map((card) => [card.id, 3]));
   const effects = upgradeEffects(counts);
   assert.deepEqual(effects, {
-    damage: 3,
-    health: 3,
+    damage: 1.3,
+    health: 1.3,
     speed: 1.3,
     reach: 1.3,
     knockback: 1.6,
@@ -113,15 +113,15 @@ test('양쪽 health 강화는 기존 설정을 유지하고 재등장에도 추�
   const snapshot = { player: { 'steel-feathers': 2 }, enemy: { 'steel-feathers': 3 } };
   applyRunUpgradeEffects([player, enemy], player, snapshot);
   applyRunUpgradeEffects([player, enemy], player, snapshot);
-  assert.equal(player.hpPips, 5);
+  assert.equal(player.hp, 80);
   syncActorHealthCapacity(enemy, true);
-  assert.equal(enemy.hpPips, 8);
+  assert.equal(enemy.hp, 130);
   assert.equal(JSON.stringify([player.tuning, enemy.tuning]), before);
   clearRunUpgradeEffects([player, enemy]);
-  assert.equal(enemy.maxHpPips, 5);
-  player.hpPips = 0;
+  assert.equal(enemy.maxHp, 100);
+  player.hp = 0;
   syncActorHealthCapacity(player, false);
-  assert.equal(player.hpPips, 0);
+  assert.equal(player.hp, 0);
 });
 test('이동/점프 배율은 movement에만 적용하고 근접 범위는 원본 판정을 변경하지 않는다', () => {
   const player = actor().player;
@@ -151,20 +151,22 @@ test('실제 피해와 밀어내기는 공격자 강화와 대상 저항을 함�
     target = actor();
   attacker.player.runUpgrades = upgradeEffects({ 'sharp-blade': 2, 'forceful-strike': 1 });
   target.player.runUpgrades = upgradeEffects({ 'rooted-stance': 2 });
-  target.hpPips = 10;
+  target.hp = 200;
   // Surviving target's absent actions simply decline the hurt-action request.
   target.player.actions = [];
   target.player.customActions = [];
   applyInteractionDamage({
     attacker,
     target,
-    damage: 1,
+    damage: 20,
     playerActor: attacker,
     world: {},
     onPlayerDeath() {},
     onPlayerKill() {},
   });
-  assert.equal(target.hpPips, 7);
+  assert.equal(target.hp, 176);
+  applyInteractionDamage({ attacker, target, damage: 0.25, playerActor: attacker, world: {} });
+  assert.ok(Math.abs(target.hp - 175.7) < 1e-9);
   applyKnockback(attacker, target, { reaction: { knockback: 10 } }, {});
   assert.equal(target.player.vx, 8.4);
 });

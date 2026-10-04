@@ -54,7 +54,8 @@ export function createRunActorState({ actors = [], world = null, createRuntimePl
       lastHitSerials: {},
       aiActionCooldowns: {},
       runtimeBossKillCounted: false,
-      hpPips: source.maxHpPips,
+      healthTrail: null,
+      hp: source.maxHp,
       player,
     };
   }

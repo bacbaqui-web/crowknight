@@ -21,6 +21,14 @@ export function createUpgradeChoiceView({ root = document.querySelector('.stage-
   root.append(modal);
   let previousFocus;
   modal.addEventListener('keydown', (event) => {
+    if (modal.hidden) return;
+    const number = Number(event.key);
+    if (number === 1 || number === 2) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!event.repeat) cards.querySelectorAll('button')[number - 1]?.click();
+      return;
+    }
     if (event.key !== 'Tab') return;
     const buttons = [...cards.querySelectorAll('button')];
     const first = buttons[0],
@@ -37,10 +45,13 @@ export function createUpgradeChoiceView({ root = document.querySelector('.stage-
     show(pair) {
       previousFocus = document.activeElement;
       cards.replaceChildren();
-      pair.forEach((id) => {
+      pair.forEach((id, index) => {
         const card = UPGRADE_CARDS.find((item) => item.id === id);
         const button = document.createElement('button');
         button.type = 'button';
+        button.setAttribute('aria-keyshortcuts', String(index + 1));
+        const shortcut = document.createElement('kbd');
+        shortcut.textContent = String(index + 1);
         button.className = 'upgrade-choice-card';
         const image = document.createElement('img');
         image.src = card.icon;
@@ -51,7 +62,7 @@ export function createUpgradeChoiceView({ root = document.querySelector('.stage-
         effect.textContent = upgradeEffectLabel(card);
         const target = document.createElement('small');
         target.textContent = '내가 획득 · 다른 카드는 적이 획득';
-        button.append(image, name, effect, target);
+        button.append(shortcut, image, name, effect, target);
         button.addEventListener('click', () => onChoose(id, pair));
         cards.append(button);
       });

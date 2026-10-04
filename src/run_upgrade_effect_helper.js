@@ -1,10 +1,12 @@
+import { chargeAttackScale } from './charge_attack_helper.js';
+import { baseHealth } from './actor_health_helper.js';
 // Run modifiers live on runtime players; authored tuning and snapshots stay untouched.
 export function upgradeEffects(counts = {}) {
   const count = (id) => Math.max(0, Number(counts[id]) || 0);
   const reduction = (id, step) => Math.max(0.2, 1 - count(id) * step);
   return {
-    damage: count('sharp-blade'),
-    health: count('steel-feathers'),
+    damage: 1 + count('sharp-blade') * 0.1,
+    health: 1 + count('steel-feathers') * 0.1,
     speed: 1 + count('crow-footsteps') * 0.1,
     reach: 1 + count('long-shadow') * 0.1,
     knockback: 1 + count('forceful-strike') * 0.2,
@@ -18,14 +20,14 @@ export function upgradeEffects(counts = {}) {
 
 export function applyRunUpgradeEffects(actors, playerActor, snapshot) {
   for (const actor of actors) {
-    const previous = actor.player.runUpgrades?.health || 0;
+    const previous = actor.maxHp ?? baseHealth(actor.tuning);
     const effects = upgradeEffects(snapshot[actor === playerActor ? 'player' : 'enemy']);
     actor.player.runUpgrades = effects;
-    const base = Math.min(20, Math.max(1, Math.round(Number(actor.tuning.maxHpPips ?? 5))));
-    actor.maxHpPips = base + effects.health;
+    const base = baseHealth(actor.tuning);
+    actor.maxHp = base * effects.health;
     // Grant only the newly added capacity, equally for both sides; dead actors stay dead.
-    if (!actor.player.dead && actor.hpPips > 0)
-      actor.hpPips = Math.min(actor.maxHpPips, actor.hpPips + Math.max(0, effects.health - previous));
+    if (!actor.player.dead && actor.hp > 0)
+      actor.hp = Math.min(actor.maxHp, actor.hp + Math.max(0, actor.maxHp - previous));
   }
 }
 
@@ -33,13 +35,13 @@ export function clearRunUpgradeEffects(actors) {
   for (const actor of actors) {
     delete actor.player.runUpgrades;
     delete actor.player.runUpgradeAttackWindow;
-    actor.maxHpPips = Math.min(20, Math.max(1, Math.round(Number(actor.tuning.maxHpPips ?? 5))));
-    actor.hpPips = Math.min(actor.hpPips, actor.maxHpPips);
+    actor.maxHp = baseHealth(actor.tuning);
+    actor.hp = Math.min(actor.hp, actor.maxHp);
   }
 }
 
 export function scaleUpgradeAttackRegions(player, regions) {
-  const scale = player.runUpgrades?.reach || 1;
+  const scale = (player.runUpgrades?.reach || 1) * chargeAttackScale(player);
   if (scale === 1) return regions;
   // Expand damage geometry about the actor without scaling hurt/collision boxes or the sprite.
   return regions.map((region) => {
@@ -71,5 +73,9 @@ export function scaleUpgradeAttackRegions(player, regions) {
 export function upgradeVelocity(player, settings, x, y) {
   if (!player.runUpgrades) return { x, y };
   if (settings.group !== 'movement') return { x, y };
-  return { x: x * player.runUpgrades.speed, y: y < 0 ? y * Math.sqrt(player.runUpgrades.jump) : y };
+  const skillJump =
+    player.customActionKey === player.runSkillActions?.doubleJump
+      ? 1 + Math.max(0, (player.runSkills?.doubleJump || 1) - 1) * 0.1
+      : 1;
+  return { x: x * player.runUpgrades.speed, y: y < 0 ? y * Math.sqrt(player.runUpgrades.jump * skillJump) : y };
 }
