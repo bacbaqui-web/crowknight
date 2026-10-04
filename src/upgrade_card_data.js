@@ -2,7 +2,7 @@ export const UPGRADE_CARDS = Object.freeze(
   [
     {
       id: 'sharp-blade',
-      name: '날카로운 칼날',
+      name: '예리한 칼날',
       stat: '공격 피해',
       amount: 1,
       unit: '',
@@ -10,7 +10,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'steel-feathers',
-      name: '강철 깃털',
+      name: '강인한 심장',
       stat: '최대 체력',
       amount: 1,
       unit: '칸',
@@ -18,7 +18,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'crow-footsteps',
-      name: '까마귀의 발걸음',
+      name: '바람걸음',
       stat: '이동 속도',
       amount: 10,
       unit: '%',
@@ -26,7 +26,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'long-shadow',
-      name: '긴 그림자',
+      name: '길어진 칼끝',
       stat: '근접 공격 범위',
       amount: 10,
       unit: '%',
@@ -34,7 +34,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'forceful-strike',
-      name: '거센 일격',
+      name: '격퇴의 일격',
       stat: '공격 밀어내기',
       amount: 20,
       unit: '%',
@@ -42,7 +42,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'rooted-stance',
-      name: '뿌리내린 자세',
+      name: '굳건한 버팀',
       stat: '받는 밀어내기',
       amount: -15,
       unit: '%',
@@ -50,7 +50,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'unyielding-will',
-      name: '불굴의 의지',
+      name: '끊어진 족쇄',
       stat: '피격 경직 시간',
       amount: -10,
       unit: '%',
@@ -58,7 +58,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'swift-preparation',
-      name: '재빠른 준비',
+      name: '섬광의 선공',
       stat: '공격 준비 시간',
       amount: -10,
       unit: '%',
@@ -66,7 +66,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'seamless-finish',
-      name: '빈틈없는 마무리',
+      name: '흐르는 연격',
       stat: '공격 후딜레이',
       amount: -10,
       unit: '%',
@@ -74,7 +74,7 @@ export const UPGRADE_CARDS = Object.freeze(
     },
     {
       id: 'leaping-feather',
-      name: '도약하는 깃털',
+      name: '솟구치는 도약',
       stat: '점프 높이',
       amount: 10,
       unit: '%',

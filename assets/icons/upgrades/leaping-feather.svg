@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><title>도약하는 깃털</title><path d="M6 19c-3-7 0-13 8-15 3 8 0 14-8 15zM5 21l8-13M7 14l4 1M9 10l4 1M19 18V5M16 8l3-3 3 3"/></svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="#e2e8f0"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m18 9-6-6-6 6" />
+  <path d="M12 3v14" />
+  <path d="M5 21h14" />
+</svg>

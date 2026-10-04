@@ -1,1 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><title>날카로운 칼날</title><path d="M5 19 9 15M6 14l4 4M9 15 19 3l2 2-12 10M3 21l2-2M17 2v4M15 4h4"/></svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="#e2e8f0"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m11 19-6-6" />
+  <path d="m5 21-2-2" />
+  <path d="m8 16-4 4" />
+  <path d="M9.5 17.5 20.414 6.586A2 2 0 0021 5.172V3h-2.172a2 2 0 00-1.414.586L6.5 14.5" />
+</svg>
