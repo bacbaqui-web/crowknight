@@ -7,7 +7,7 @@
 - 상대 import 누락: 0
 - 순환 import 그룹: 0
 - 소스맵의 실제 JS 파일명 inventory: 204개
-- 원본 PSD: 7개, 기존 경로와 SHA-256 보존
+- 기존 로컬 원본 PSD 7개의 경로와 SHA-256을 보존했다. 기존 원격 Git의 PSD 2개도 원래 경로에 동일한 바이트로 복원하여 총 9개를 보존한다.
 - 기존 Storage 프로젝트 prefix의 객체 128개를 백업했다. 사용 이미지 89개와 이전 이미지들은 Git snapshot이며, 예전 PSD/metadata 복사본은 `runtime/firebase-migration-backup`에 보관한다. 원격 객체는 변경하지 않았다.
 - 대형 저장 JSON은 전체 출력하지 않고 필요한 key와 경로를 조회했다.
 
