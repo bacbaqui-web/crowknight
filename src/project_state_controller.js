@@ -1,15 +1,9 @@
 import { refreshPsdBackground } from './psd_background_helper.js';
-import { isTrashCharacter } from './character_group_data.js';
-import { uploadDeploymentAssetsToFirebase } from './firebase_asset_storage_helper.js';
-import {
-  downloadSavedStateFromFirebase,
-  saveGameState,
-  syncSceneWorldBeforeSave,
-  uploadSavedStateToFirebase,
-} from './project_storage_helper.js';
+import { flushProjectSave, saveGameState, syncSceneWorldBeforeSave } from './project_storage_helper.js';
 
 export function createProjectStateController({
   actors,
+  editable = true,
   characterDefs,
   world,
   sceneSessions,
@@ -29,6 +23,7 @@ export function createProjectStateController({
   }
 
   function saveState() {
+    if (!editable) return;
     syncCurrentSceneSession();
     saveGameState({
       actors,
@@ -39,44 +34,11 @@ export function createProjectStateController({
     });
   }
 
-  async function uploadSettingsToFirebase() {
-    const sceneSession = syncCurrentSceneSession();
+  async function openBeta() {
     saveState();
-    const releaseVersion = Date.now();
-    const deploymentSourceActors = actors.filter((actor) => !isTrashCharacter(actor));
-    const deployedAssets = await uploadDeploymentAssetsToFirebase({
-      actors: deploymentSourceActors,
-      effectAssetSources,
-      background: sceneSession.background,
-      version: releaseVersion,
-    });
-    if (!deployedAssets.ok) return false;
-
-    const deploymentActors = actors.map((actor) => ({
-      ...actor,
-      assetSources: deployedAssets.characterAssetSourcesByActor?.[actor.id] || actor.assetSources || {},
-    }));
-    const deploymentSessions = structuredCloneSafe(sceneSessions);
-    deploymentSessions[sceneSession.id] = {
-      ...structuredCloneSafe(sceneSession),
-      background: deployedAssets.background || sceneSession.background,
-    };
-
-    return uploadSavedStateToFirebase({
-      actors: deploymentActors.filter((actor) => !isTrashCharacter(actor)),
-      characterDefs: characterDefs.filter((def) => !isTrashCharacter(def)),
-      activeSessionId: activeSceneSessionId,
-      sessions: deploymentSessions,
-      effectAssetSources: deployedAssets.effectAssetSources,
-      releaseVersion,
-      saveLocal: false,
-    });
-  }
-
-  async function downloadSettingsFromFirebase() {
-    const downloaded = await downloadSavedStateFromFirebase();
-    if (downloaded) window.location.reload();
-    return downloaded;
+    await flushProjectSave();
+    window.location.assign('./beta.html');
+    return true;
   }
 
   async function refreshStagePsdAsset({ psdFile = null } = {}) {
@@ -95,14 +57,8 @@ export function createProjectStateController({
   }
 
   return {
-    downloadSettingsFromFirebase,
     refreshStagePsdAsset,
     saveState,
-    uploadSettingsToFirebase,
+    openBeta,
   };
-}
-
-function structuredCloneSafe(value) {
-  if (typeof window.structuredClone === 'function') return window.structuredClone(value);
-  return JSON.parse(JSON.stringify(value));
 }

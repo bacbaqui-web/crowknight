@@ -272,7 +272,7 @@ Input
 - `asset_loader_helper.js`: asset load helper.
 - `asset_refresh_helper.js`: local asset refresh helper.
 - `editor_asset_controller.js`: Setup / Effect / Background asset button controller.
-- `firebase_asset_storage_helper.js`: Firebase asset storage helper; 배포 업로드는 PNG/WebP만 Storage에 올리고 PSD는 제외한다.
+- `release_panel_controller.js`: 세팅 저장 상태, 베타 플레이와 검증 revision 공개 배포 UI controller.
 - `local_api_helper.js`: local API request helper.
 - `local_character_asset_storage_helper.js`: local character asset storage helper.
 - `psd_background_helper.js`: PSD background helper; 로컬 background export는 `assets/backgrounds/current`만 사용.
@@ -280,7 +280,7 @@ Input
 ## Save / Project / Data
 
 - `project_state_controller.js`: project state controller.
-- `project_storage_helper.js`: local / remote project metadata storage helper; `setting.html`은 local, `index.html`은 Firebase metadata source를 사용한다.
+- `project_storage_helper.js`: draft/beta/published 파일 로드, 로컬 저장 debounce/queue/flush helper.
 - `deployment_version_controller.js`: 배포 version 확인과 안전한 reload controller.
 - `update_history_controller.js`: `changelog.json` update history 표시 controller.
 - `firebase_ranking_storage_helper.js`: Firebase ranking storage helper.
@@ -292,7 +292,7 @@ Input
 - `project_data_normalizer_helper.js`: project data normalize helper.
 - `part_source_data.js`: part source registry data.
 - `motion_field_data.js`: motion field row definitions.
-- `firebase_config_data.js`: Firebase config data.
+- `firebase_config_data.js`: 공개 랭킹용 Firebase config data.
 - `editor_label_helper.js`: editor label helper.
 - `editor_debug_view.js`: editor debug view.
 - `editor_layer_order_helper.js`: layer order helper.
@@ -317,3 +317,11 @@ Input
 - Enemy direction / AI / active count / respawn: `enemy_runtime_engine.js`
 - Combat Resolve / damage / reaction: `combat_engine.js`
 - Deployment update: `deployment_version_controller.js`, `update_history_controller.js`
+
+## Local Release Tools
+
+- `tools/release_snapshot.py`: 이미지 hash snapshot, beta 저장과 revision 검증 promotion.
+- `tools/release_publisher.py`: 검증한 beta만 Git 커밋/push하는 Pages 배포 경계.
+- `tools/migrate_firebase_assets.py`: 기존 Firebase 공개 데이터·이미지의 읽기 전용 초기 이전 도구.
+- `tools/backup_firebase_storage.py`: 기존 프로젝트 Storage prefix 전체의 읽기 전용 백업 도구.
+- `release.config.json`: 기존 Pages 배포 remote, branch, URL.

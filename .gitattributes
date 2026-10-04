@@ -1,0 +1,2 @@
+data/*.json linguist-generated=true
+release-assets/** linguist-generated=true

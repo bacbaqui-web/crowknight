@@ -5,7 +5,8 @@
 ## Surfaces
 
 - 제작툴 화면: 캐릭터, 행동, 효과, 스테이지를 제작한다.
-- 실행 화면: 제작툴 데이터를 읽어 게임을 실행한다.
+- 베타 화면: 저장한 제작툴 snapshot을 읽어 게임을 실행한다. 공개 랭킹은 사용하지 않는다.
+- 공개 실행 화면: 배포 완료된 published snapshot을 읽어 게임을 실행한다.
 - 공통 영역: 렌더링, 저장, 에셋, Timeline, Canvas 편집 흐름을 공유한다.
 
 ## Workflow
@@ -161,12 +162,16 @@ drawRect(-ax, -ay, w, h)
 
 ## Save / Assets
 
-- Project State는 actor, scene, tuning, asset reference를 저장한다.
-- Local 저장과 remote 저장은 같은 project state를 기준으로 한다.
-- 상단 Firebase 업로드/다운로드는 Project State metadata만 Firestore에 저장/불러온다.
-- Project State metadata는 `projectSettings/crowKnight` 단일 문서에 저장하며, 크기 문제를 줄이기 위해 gzip-base64 압축 필드를 우선 사용한다.
-- PSD 원본, PNG/WebP 런타임 이미지는 Setup / Effect / Stage 내부의 asset 버튼에서 개별 처리한다.
-- PSD, effect image, background asset은 제작툴에서 교체하고 Runtime이 읽을 수 있는 형태로 로드된다.
+- `setting.html`은 `data/draft.json`을 기준으로 actor, scene, tuning, asset reference를 편집한다.
+- 저장은 로컬 Python API가 draft와 이미지까지 고정한 `data/beta.json`을 만든다.
+- `beta.html`은 beta snapshot을 읽고 공개 랭킹을 조회·등록하지 않는다.
+- 배포는 beta revision을 검증한 뒤 `data/published.json`과 `version.json`을 갱신하고 GitHub Pages source인 `origin/main`으로 push한다.
+- `index.html`은 published snapshot을 읽으며 프로젝트 설정을 Firestore에서 읽지 않는다.
+- 배포 이미지는 `release-assets/<SHA-256>.<ext>`에 저장한다. PSD 변경이나 파생 이미지 갱신으로 이전 공개 이미지가 바뀌지 않는다.
+- revision이 바뀐 베타의 이전 화면은 배포할 수 없다. 미커밋 runtime code와 다른 staged 작업이 있으면 배포를 중단한다.
+- 원본 PSD는 기존 경로에 보존한다. Firebase Storage는 새 저장·게임 로드·배포 경로에서 사용하지 않는다.
+- 공개 랭킹만 Firestore의 `rankingEntries` 컬렉션을 사용한다.
+- runtime code는 세 화면이 공유한다. beta/published 분리는 제작 데이터와 이미지의 승격 경계이며, runtime code 변경은 별도 코드 배포가 필요하다.
 
 ## Implementation Documents
 

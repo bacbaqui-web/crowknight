@@ -1,10 +1,6 @@
-export const FIREBASE_PROJECT_STATE_CONFIG = {
+export const FIREBASE_RANKING_CONFIG = {
   enabled: true,
   apiKey: 'AIzaSyB9btGUOTYhk8MEGs73YYD0DQj_yiC1aN8',
   projectId: 'crow-knight',
-  storageBucket: 'crow-knight.firebasestorage.app',
-  storagePath: 'crow-knight/assets',
-  collection: 'projectSettings',
-  documentId: 'crowKnight',
   rankingCollection: 'rankingEntries',
 };

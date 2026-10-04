@@ -7,6 +7,8 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
+from release_snapshot import RELEASE_LOCK, save_beta
+from release_publisher import publish_beta
 
 from effect_asset_exporter import effect_asset_path, effect_source_psd_path, export_effect_asset
 from export_character_psd_parts import export_character_parts, find_character_psd
@@ -37,6 +39,9 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path in {"/api/project/save", "/api/project/publish"}:
+            self.handle_project_release(parsed.path)
+            return
         if parsed.path == "/api/psd/refresh":
             self.handle_psd_upload_refresh()
             return
@@ -68,6 +73,29 @@ class CrowKnightHandler(SimpleHTTPRequestHandler):
             self.handle_character_index_save()
             return
         self.send_json(404, {"error": "Not found"})
+
+    def handle_project_release(self, route):
+        origin = self.headers.get("Origin")
+        expected_origin = "http://" + self.headers.get("Host", "")
+        host = urlparse(expected_origin).hostname
+        if host not in {"localhost", "127.0.0.1", "::1"} or self.client_address[0] not in {"127.0.0.1", "::1"} or origin and origin != expected_origin:
+            self.send_json(403, {"ok": False, "error": "로컬 제작툴에서만 사용할 수 있습니다."})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= 32 * 1024 * 1024:
+                raise ValueError("저장 데이터 크기가 올바르지 않습니다.")
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+            with RELEASE_LOCK:
+                if route == "/api/project/save":
+                    state = save_beta(self.root_dir, payload)
+                    self.send_json(200, {"ok": True, "revision": state["revision"]})
+                else:
+                    self.send_json(200, publish_beta(self.root_dir, payload.get("revision")))
+        except (ValueError, FileNotFoundError) as exc:
+            self.send_json(409, {"ok": False, "error": str(exc)})
+        except Exception as exc:
+            self.send_json(500, {"ok": False, "error": str(exc)})
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")

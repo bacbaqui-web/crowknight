@@ -36,10 +36,9 @@ export function bindTuningPanelAssetActions({
   pushUndoSnapshot,
   saveState,
   syncPanel,
-  uploadSettings,
-  downloadSettings,
+  openBeta,
 }) {
-  bindFirebaseButtons({ elements, uploadSettings, downloadSettings });
+  bindBetaButton({ elements, openBeta });
   bindCharacterPsdButtons({
     elements,
     actors,
@@ -63,14 +62,9 @@ export function bindTuningPanelAssetActions({
   });
 }
 
-function bindFirebaseButtons({ elements, uploadSettings, downloadSettings }) {
-  const { firebaseUpload, firebaseDownload } = elements;
-
-  firebaseUpload?.addEventListener('click', async () => {
-    await runPanelButtonAction(firebaseUpload, '배포 업로드', uploadSettings);
-  });
-  firebaseDownload?.addEventListener('click', async () => {
-    await runPanelButtonAction(firebaseDownload, '메타데이터 다운로드', downloadSettings);
+function bindBetaButton({ elements, openBeta }) {
+  elements.openBeta?.addEventListener('click', async () => {
+    await runPanelButtonAction(elements.openBeta, '베타 저장', openBeta);
   });
 }
 

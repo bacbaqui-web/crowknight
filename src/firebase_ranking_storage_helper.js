@@ -1,4 +1,4 @@
-import { FIREBASE_PROJECT_STATE_CONFIG } from './firebase_config_data.js';
+import { FIREBASE_RANKING_CONFIG } from './firebase_config_data.js';
 import { normalizeRankingMessage } from './ranking_message_helper.js';
 
 const FIRESTORE_BASE_URL = 'https://firestore.googleapis.com/v1';
@@ -102,20 +102,20 @@ function numberField(field) {
 
 function isFirebaseRankingEnabled() {
   return Boolean(
-    FIREBASE_PROJECT_STATE_CONFIG.enabled &&
-    FIREBASE_PROJECT_STATE_CONFIG.apiKey.trim() &&
-    FIREBASE_PROJECT_STATE_CONFIG.projectId.trim() &&
-    FIREBASE_PROJECT_STATE_CONFIG.rankingCollection?.trim()
+    FIREBASE_RANKING_CONFIG.enabled &&
+    FIREBASE_RANKING_CONFIG.apiKey.trim() &&
+    FIREBASE_RANKING_CONFIG.projectId.trim() &&
+    FIREBASE_RANKING_CONFIG.rankingCollection?.trim()
   );
 }
 
 function collectionUrl() {
-  const { projectId, rankingCollection } = FIREBASE_PROJECT_STATE_CONFIG;
+  const { projectId, rankingCollection } = FIREBASE_RANKING_CONFIG;
   return `${FIRESTORE_BASE_URL}/projects/${encodeURIComponent(
     projectId.trim()
   )}/databases/(default)/documents/${encodeURIComponent(rankingCollection.trim())}`;
 }
 
 function apiKey() {
-  return encodeURIComponent(FIREBASE_PROJECT_STATE_CONFIG.apiKey);
+  return encodeURIComponent(FIREBASE_RANKING_CONFIG.apiKey);
 }

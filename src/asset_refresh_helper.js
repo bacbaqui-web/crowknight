@@ -6,7 +6,7 @@ import {
   loadCharacterAssets,
   loadEffectAsset,
 } from './asset_loader_helper.js';
-import { characterPsdStorageFileName } from './firebase_asset_storage_helper.js';
+import { characterPsdFileNameForGroup } from './character_group_data.js';
 import { imagePartKeys } from './part_source_data.js';
 
 const CHARACTER_REFRESH_API_URL = './api/character/refresh';
@@ -31,7 +31,7 @@ export async function refreshCharacterPsdAssetResult({ actor, psdFile = null, cr
       url,
       file: psdFile,
       headerName: 'X-Character-Filename',
-      fallbackFileName: characterPsdStorageFileName(actor),
+      fallbackFileName: actor.psdFileName || characterPsdFileNameForGroup(actor.group),
     });
     if (!result.ok) return result;
 
@@ -43,7 +43,7 @@ export async function refreshCharacterPsdAssetResult({ actor, psdFile = null, cr
         url,
         file: psdFile,
         headerName: 'X-Character-Filename',
-        fallbackFileName: characterPsdStorageFileName(actor),
+        fallbackFileName: actor.psdFileName || characterPsdFileNameForGroup(actor.group),
       })
     : await fetchJsonResult(url);
   if (!result.ok) return result;
@@ -58,7 +58,7 @@ export async function createCharacterPsdAssets({ actor, psdFile }) {
     url: characterCreateUrl(actor.folder),
     file: psdFile,
     headerName: 'X-Character-Filename',
-    fallbackFileName: characterPsdStorageFileName(actor),
+    fallbackFileName: actor.psdFileName || characterPsdFileNameForGroup(actor.group),
   });
   if (!result.ok) return result;
 
@@ -137,7 +137,7 @@ function nextCharacterPsdSources(currentSources, psdUrl) {
 }
 
 function localCharacterPsdSource(actor, result) {
-  const filename = result?.psd || characterPsdStorageFileName(actor);
+  const filename = result?.psd || actor.psdFileName || characterPsdFileNameForGroup(actor.group);
   return `./assets/characters/${actor.folder}/${filename}`;
 }
 

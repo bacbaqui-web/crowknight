@@ -1,3 +1,42 @@
+# Storage 제거와 세팅 / 베타 / 공개 배포 — 2026-10-04
+
+## 상태
+
+구현 및 검증 중. 아래 이전 작업 원문은 기존 미커밋 내용을 보존한다.
+
+## 변경
+
+- 기존 공개 Firebase metadata와 Storage 이미지 참조 89개를 Git 관리 snapshot으로 이전했다.
+- Storage 프로젝트 prefix의 전체 객체 128개(31,997,942 bytes)를 백업했다. 예전 PSD/metadata 복사본은 Git 제외된 `runtime/firebase-migration-backup`에 보존했다.
+- `setting.html` → `data/draft.json`, `beta.html` → `data/beta.json`, `index.html` → `data/published.json`으로 데이터 source를 분리했다.
+- 이미지도 내용 hash snapshot으로 분리했다. 세팅·PSD 갱신은 공개 snapshot을 변경하지 않는다.
+- 로컬 세팅 저장은 debounce/queue/flush하며, 저장 오류를 표시한다.
+- 베타 플레이 후 배포 버튼은 현재 revision을 확인하고 snapshot만 Git commit/push한다. 실제 Pages 반영과 push 성공을 구분한다.
+- Firebase Storage runtime helper와 Firestore project metadata 코드를 제거했다. 공개 랭킹만 Firestore를 사용한다.
+- 베타/세팅의 기록은 공개 랭킹과 브라우저 캐시에 섞이지 않는다.
+- GPT와 VS Code Codex 사이의 수동 전달 workflow를 Codex 앱 단일 작업 흐름으로 갱신했다.
+- 전체 파일 규모와 import graph를 조사하고 `21_REFACTOR_AUDIT.md`에 단계별 분리 후보를 기록했다.
+
+## 검증
+
+- Node 테스트 31개(기존 25 + 신규 6)와 Python release 테스트 12개, 총 43개 통과.
+- immutable image, stale revision 차단, 손상된 snapshot 차단, 실패 저장 보존, temp Git remote push/retry와 다른 작업 보존을 확인했다.
+- 실제 브라우저에서 세팅 변경 → beta 저장, published 불변, 베타 플레이와 배포 버튼 활성화를 확인했다.
+- 원본 PSD 7개의 SHA-256과 경로가 작업 전과 같다.
+- ESLint / Prettier, Python syntax, JS import 경로와 `git diff --check` 통과.
+- 브라우저에서 미커밋 runtime code의 배포 차단, 로컬 호스트/Origin 제한, 베타의 외부 Firebase 호출 없음과 공개 화면 로딩을 확인했다.
+- 실제 공개 배포 확인은 push 이후 상태를 갱신한다.
+
+## 제한
+
+- 베타/공개는 runtime code를 공유한다. 데이터·이미지 승격을 구현했으며 코드 자체의 beta-only release는 별도 개선이다.
+- 기존 Storage 파일과 Firestore projectSettings 원본은 원격에서 삭제하지 않았다.
+- 배포에는 기존 `origin/main` push 권한이 필요하다. 다른 staged 변경, 미커밋 game code가 있으면 배포를 막는다.
+
+---
+
+## 이전 작업 보고 — 원문 보존
+
 # Runtime Structure Refactor — Final Report
 
 ## 최종 진행률

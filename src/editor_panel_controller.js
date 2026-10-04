@@ -43,8 +43,7 @@ export function createTuningPanel({
   setSelectedActor,
   getSceneSession,
   saveState,
-  uploadSettings,
-  downloadSettings,
+  openBeta,
   refreshStagePsdAsset,
 }) {
   let selectedActor = getSelectedActor();
@@ -332,8 +331,7 @@ export function createTuningPanel({
       pushUndoSnapshot,
       saveState,
       syncPanel,
-      uploadSettings,
-      downloadSettings,
+      openBeta,
     });
     panelSync = createTuningPanelSync({
       elements: panelElements,

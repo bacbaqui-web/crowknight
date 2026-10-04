@@ -10,11 +10,19 @@
 - 이유: 제작 흐름이 안정되어야 게임 기능도 반복 개발할 수 있다.
 - 대체안: 게임 기능을 먼저 늘리는 방식은 채택하지 않는다.
 
-## GPT / Codex 협업 Workflow
+## Codex 앱 개발 Workflow
 
-- 결정: GPT는 설계와 리뷰를 맡고, Codex는 구현과 검증과 Sprint 보고를 맡는다.
-- 이유: 방향 결정과 구현 책임을 분리해야 구조 변경, 기능 추가, 저장 구조 변경이 한 Sprint에 섞이는 위험을 줄일 수 있다.
-- 대체안: Codex가 계획 없이 바로 구현하거나 GPT가 직접 구현까지 담당하는 방식은 기본 흐름으로 채택하지 않는다.
+- 결정: 한 Codex 대화에서 설계, 구현, 검증과 보고를 진행한다.
+- 이유: 별도 GPT 대화와 VS Code 플러그인 사이의 수동 전달은 현재 개발 환경에서 필요하지 않다.
+- 구현 전 공통 시스템과 영향 범위 검토, 작업 후 검증·문서 갱신 원칙은 유지한다.
+
+## 제작 / 베타 / 공개 데이터 분리
+
+- 결정: `setting.html`은 로컬 draft, `beta.html`은 저장된 beta, `index.html`은 published snapshot을 읽는다.
+- 베타 플레이 후 로컬 배포 버튼이 해당 revision을 Git에 커밋하고 기존 GitHub Pages 브랜치로 push한다.
+- 이미지도 SHA-256 이름의 `release-assets` snapshot으로 고정한다. 설정만 분리하고 이미지는 공유하는 방식은 사용하지 않는다.
+- Firestore는 공개 랭킹만 사용한다. 게임 데이터와 이미지 로드에는 Firebase Storage와 Firestore가 필요하지 않다.
+- 원본 PSD와 작업 중 assets는 로컬 제작 원본이며 배포 snapshot에 포함하지 않는다.
 
 ## AI 문서 원칙
 

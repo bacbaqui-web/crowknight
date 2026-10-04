@@ -24,6 +24,6 @@
 
 12. 사용자가 같은 개념으로 인식하는 기능은 내부 구조도 가능한 한 하나의 공통 시스템으로 구현한다.
 
-13. `runtime/project-default-state.json`은 프로젝트 저장 데이터다. 파일이 매우 크므로 특별한 요청이 없는 한 전체를 읽지 않는다. 항상 필요한 key만 부분 조회한다. 설계 문서 대신 `10_SRC_MAP`, `11_DATA_MODEL`, `13_ACTION_MODEL`을 우선 참고한다. `project-default-state.json`은 실행 데이터 확인이 필요한 경우에만 사용한다.
+13. `data/draft.json`, `data/beta.json`, `data/published.json`은 프로젝트 저장 데이터다. `runtime/project-default-state.json`은 이전 로컬 저장본이다. 파일이 매우 크므로 특별한 요청이 없는 한 전체를 읽지 않는다. 항상 필요한 key만 부분 조회한다. 설계 문서 대신 `10_SRC_MAP`, `11_DATA_MODEL`, `13_ACTION_MODEL`을 우선 참고한다. 대형 JSON은 실행 데이터 확인이 필요한 경우에만 key를 부분 조회한다.
 
-14. 작업이 완료되면 끝에 `20번을 기억하고 있습니다.`라고 말하기
+14. 세팅 저장은 베타만 변경한다. 공개 버전은 검증한 베타 revision을 배포할 때만 변경한다.

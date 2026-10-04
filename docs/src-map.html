@@ -760,7 +760,7 @@ src/effect_property_controller.js
 src/encouragement_bubble_view.js
 src/enemy_ai_settings_helper.js
 src/enemy_runtime_engine.js
-src/firebase_asset_storage_helper.js
+src/release_panel_controller.js
 src/firebase_config_data.js
 src/firebase_ranking_storage_helper.js
 src/formula_editor_engine.js
@@ -1350,7 +1350,7 @@ src/zoom_formula_runtime_helper.js
           js: [
             'project_state_controller.js',
             'project_storage_helper.js',
-            'firebase_asset_storage_helper.js',
+            'release_panel_controller.js',
             'firebase_ranking_storage_helper.js',
             'editor_asset_controller.js',
           ],
@@ -1562,7 +1562,7 @@ src/zoom_formula_runtime_helper.js
           dependsOn: ['Data', 'Assets', 'Project State'],
           responsibility: ['⚠ Project 저장', '⚠ Firebase asset 저장', '⚠ ranking 저장'],
           risk: 'danger',
-          riskReason: 'firebase_asset_storage_helper.js가 매우 크고 asset 저장 책임이 넓다.',
+          riskReason: 'release_panel_controller.js가 매우 크고 asset 저장 책임이 넓다.',
         },
         Runtime: {
           dependsOn: ['Action Trigger', 'Timeline', 'Data', 'World'],
@@ -1614,7 +1614,7 @@ src/zoom_formula_runtime_helper.js
         'action_authoring_controller.js': ['Action UI', 'Trigger UI'],
         'action_trigger_controller.js': ['Trigger UI', 'Trigger Recording', 'Trigger Mode Icon'],
         'editor_asset_controller.js': ['Setup Asset', 'Effect Asset', 'Background Asset'],
-        'firebase_asset_storage_helper.js': ['Asset Storage', 'Metadata Upload', 'Local Asset Bridge'],
+        'release_panel_controller.js': ['Asset Storage', 'Metadata Upload', 'Local Asset Bridge'],
         'actor_runtime_engine.js': ['World Physics', 'Action Runtime', 'Actor State'],
         'action_trigger_engine.js': ['Trigger Matching', 'Action Start', 'Formula Runtime'],
         'formula_editor_engine.js': ['Formula Library', 'Formula Card UI', 'Mini Timeline'],
@@ -1628,12 +1628,7 @@ src/zoom_formula_runtime_helper.js
       const LARGE_FILES = [
         ['action_trigger_engine.js', '812', 'Trigger / Action / Formula Runtime', '800줄 초과, Formula 실행 경계 감시'],
         ['editor_asset_controller.js', '777', 'Setup / Effect / Background asset actions', '에셋 UI 흐름 3개 포함'],
-        [
-          'firebase_asset_storage_helper.js',
-          '762',
-          'Asset Storage / Metadata / Local bridge',
-          '저장과 에셋 책임이 넓다',
-        ],
+        ['release_panel_controller.js', '762', 'Asset Storage / Metadata / Local bridge', '저장과 에셋 책임이 넓다'],
         ['actor_runtime_engine.js', '760', 'Actor state / physics / Action update', 'Runtime 핵심 책임 포함'],
         ['main.js', '704', 'Bootstrap / Runtime update·draw / Screen wiring', '500줄 초과, 조립 순서 변경 주의'],
         ['project_data_normalizer_helper.js', '649', 'Normalize / schema migration', '저장 구조 변경 시 위험'],
@@ -1878,7 +1873,7 @@ src/zoom_formula_runtime_helper.js
         if (
           file === 'action_trigger_engine.js' ||
           file === 'actor_runtime_engine.js' ||
-          file === 'firebase_asset_storage_helper.js' ||
+          file === 'release_panel_controller.js' ||
           file === 'editor_asset_controller.js'
         )
           return 'danger';

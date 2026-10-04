@@ -366,3 +366,22 @@ Target data:
 ```
 
 모든 Editor 작업은 이 흐름을 기준으로 확인한다.
+
+## 세팅 → 베타 → 공개 배포
+
+```text
+Editor saveState
+→ project_storage_helper queue/flush
+→ POST /api/project/save
+→ release_snapshot.save_beta
+→ data/draft.json + data/beta.json + release-assets
+→ beta.html 플레이
+→ 공개 배포 (현재 플레이한 revision 전달)
+→ POST /api/project/publish
+→ revision / 코드 / Git staged 작업 검증
+→ published snapshot 승격 + Git commit/push
+→ GitHub Pages 반영 확인
+→ index.html
+```
+
+HTTP 200 push 완료와 실제 Pages 반영은 구분한다. UI는 공개 published revision을 확인한 뒤 반영 완료를 표시한다.

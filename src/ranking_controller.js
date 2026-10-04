@@ -18,6 +18,7 @@ import {
 
 export function createRankingController({
   elements,
+  remoteEnabled = true,
   startRun,
   getRunResult,
   getPlayerName,
@@ -40,7 +41,7 @@ export function createRankingController({
     resultBossKills,
     retryRunButton,
   } = elements;
-  let rankings = loadStoredRankings();
+  let rankings = remoteEnabled ? loadStoredRankings() : [];
   notifyRankingsChange();
 
   bindResultScreenControls(
@@ -96,6 +97,7 @@ export function createRankingController({
     notifyRankingsChange();
     if (!removed?.remotePath) return;
 
+    if (!remoteEnabled) return;
     const deleted = await deleteRemoteRankingEntry(removed);
     if (!deleted) return;
 
@@ -103,10 +105,11 @@ export function createRankingController({
   }
 
   function saveRankings() {
-    saveStoredRankings(rankings);
+    if (remoteEnabled) saveStoredRankings(rankings);
   }
 
   async function syncFromFirebase() {
+    if (!remoteEnabled) return false;
     const remoteRankings = await loadRemoteRankings();
     if (!remoteRankings) return false;
 
@@ -127,6 +130,7 @@ export function createRankingController({
     saveRankings();
     notifyRankingsChange();
 
+    if (!remoteEnabled) return;
     const remoteEntry = await addRemoteRankingEntry(entry);
     if (!remoteEntry) return;
 

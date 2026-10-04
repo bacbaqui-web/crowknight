@@ -26,17 +26,16 @@ export function loadCharacterAssets(folder, version = '', sources = {}) {
   const base = `./assets/characters/${folder}`;
   return loadImages(
     Object.fromEntries(
-      Object.entries(CHARACTER_ASSET_PATHS).map(([key, filename]) => [
-        key,
-        versionedPath(sources?.[key] || `${base}/${filename}`, version),
-      ])
+      Object.entries(CHARACTER_ASSET_PATHS)
+        .filter(([key]) => !sources.__snapshot || sources[key])
+        .map(([key, filename]) => [key, versionedPath(sources?.[key] || `${base}/${filename}`, version)])
     )
   );
 }
 
 export function loadEffectAssets(version = '', sources = {}) {
   const entries = {
-    ...EFFECT_ASSET_PATHS,
+    ...(sources.__snapshot ? {} : EFFECT_ASSET_PATHS),
     ...Object.fromEntries(
       Object.keys(sources || {})
         .filter((key) => !key.endsWith('Psd'))

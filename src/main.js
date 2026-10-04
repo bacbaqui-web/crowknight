@@ -21,6 +21,7 @@ import { createParticleEffects } from './particle_effects_engine.js';
 import { drawRollGhosts, updateRollGhosts } from './roll_ghost_engine.js';
 import { syncRunHud as syncRunHudView } from './run_hud_view.js';
 import { loadSavedState as loadStoredSavedState } from './project_storage_helper.js';
+import { createReleasePanel } from './release_panel_controller.js';
 import { applyWorldView, drawWorld } from './world_renderer.js';
 import { getViewTransform } from './camera_view.js';
 import { isSettingsPanelOpen } from './settings_panel_state.js';
@@ -44,7 +45,6 @@ import { refreshPsdBackground } from './psd_background_helper.js';
 import { getMainDomElements } from './main_dom_helper.js';
 import { createRunActorState } from './run_actor_state.js';
 import { createRunLifecycleController } from './run_lifecycle_controller.js';
-import { loadCharacterStateFromLocalAssets } from './local_character_asset_storage_helper.js';
 import { createRuntimeDebugHud } from './runtime_debug_hud_view.js';
 import { beginRuntimeDebugFrame, captureRuntimeDebugActorSnapshot } from './runtime_debug_state.js';
 import { layoutMobileActionControls } from './mobile_control_layout_helper.js';
@@ -99,10 +99,11 @@ const MOBILE_SCREEN_ZOOM_OFFSET = 0.2;
 const SETUP_SELECTED_ACTOR_STORAGE_KEY = 'crowKnight.setup.selectedActorId';
 const isEditorPage = document.body.classList.contains('settings-page');
 
-const savedState = await loadStoredSavedState({ source: isEditorPage ? 'local' : 'firebase' });
+const isBetaPage = document.body.classList.contains('beta-page');
+const savedState = await loadStoredSavedState({ source: isEditorPage ? 'local' : isBetaPage ? 'beta' : 'published' });
 if (!savedState) {
   showRuntimeLoadError();
-  throw new Error('Firebase project metadata is required for index.html.');
+  throw new Error('Game snapshot could not be loaded.');
 }
 const sceneSessions = savedState.sessions;
 let sceneSession = savedState.sceneSession;
@@ -110,14 +111,7 @@ const initialPsdBackgroundChanged = isEditorPage ? await refreshInitialPsdBackgr
 await preloadSceneBackground(sceneSession.background);
 const world = createWorldFromSceneSession(sceneSession);
 syncCanvasToLayout({ canvas, world, isFullStage });
-const localCharacterState = isEditorPage ? await loadCharacterStateFromLocalAssets() : null;
-const characterSourceState = localCharacterState
-  ? {
-      ...savedState,
-      characters: localCharacterState.characters,
-      actors: localCharacterActors(savedState, localCharacterState.characters),
-    }
-  : savedState;
+const characterSourceState = savedState;
 const characterDefs = actorDefsFromSavedState(characterSourceState, { includeTrash: true });
 const actors = await createActors({ ...characterSourceState, characters: characterDefs }, world, {
   includeTrash: true,
@@ -128,17 +122,17 @@ const effectAssetSources = isEditorPage
 const effectAssets = await loadEffectAssets('', effectAssetSources);
 const runActorState = createRunActorState({ actors, world });
 const particleEffects = createParticleEffects({ actors, world, ctx });
-const { saveState, uploadSettingsToFirebase, downloadSettingsFromFirebase, refreshStagePsdAsset } =
-  createProjectStateController({
-    actors,
-    characterDefs,
-    world,
-    sceneSessions,
-    effectAssetSources,
-    activeSessionId: savedState.activeSessionId,
-    getSceneSession: () => sceneSession,
-    onSceneBackgroundUpdate: preloadSceneBackground,
-  });
+const { saveState, openBeta, refreshStagePsdAsset } = createProjectStateController({
+  actors,
+  characterDefs,
+  world,
+  sceneSessions,
+  effectAssetSources,
+  activeSessionId: savedState.activeSessionId,
+  editable: isEditorPage,
+  getSceneSession: () => sceneSession,
+  onSceneBackgroundUpdate: preloadSceneBackground,
+});
 if (initialPsdBackgroundChanged) saveState();
 let selectedActor = readSetupSelectedActor() || runActorState.getPlayer();
 let last = performance.now();
@@ -151,14 +145,16 @@ const runLifecycle = createRunLifecycleController({
   onResultReady: handleResultReady,
   onResultClosed: handleResultClosed,
 });
-const deploymentVersionController = isEditorPage
-  ? { applyPendingUpdate: () => false }
-  : createDeploymentVersionController({
-      canReload: () => !runLifecycle.hasActiveRunActors(),
-      onVersion: (version) => {
-        if (gameVersionButton) gameVersionButton.textContent = version;
-      },
-    });
+if (isBetaPage && gameVersionButton) gameVersionButton.textContent = `BETA ${savedState.revision.slice(0, 8)}`;
+const deploymentVersionController =
+  isEditorPage || isBetaPage
+    ? { applyPendingUpdate: () => false }
+    : createDeploymentVersionController({
+        canReload: () => !runLifecycle.hasActiveRunActors(),
+        onVersion: (version) => {
+          if (gameVersionButton) gameVersionButton.textContent = version;
+        },
+      });
 createUpdateHistoryController({
   modal: updateHistoryModal,
   openButton: gameVersionButton,
@@ -213,7 +209,12 @@ bindBattleControls(
 );
 bindTouchControls(keys, pressed);
 bindCollapsibleSections();
+const releasePanel = createReleasePanel({
+  mode: isEditorPage ? 'editor' : isBetaPage ? 'beta' : 'published',
+  revision: savedState.revision,
+});
 const rankingController = createRankingController({
+  remoteEnabled: !isEditorPage && !isBetaPage,
   elements: {
     rankingList,
     settingsRankingList,
@@ -257,8 +258,7 @@ const tuningPanel = createTuningPanel({
   },
   getSceneSession: () => sceneSession,
   saveState,
-  uploadSettings: uploadSettingsToFirebase,
-  downloadSettings: downloadSettingsFromFirebase,
+  openBeta,
   refreshStagePsdAsset,
 });
 const runtimeDebugHud = isEditorPage ? createRuntimeDebugHud({ parent: canvas?.parentElement }) : { render: () => {} };
@@ -546,6 +546,7 @@ function runtimeScreenZoom(gameActors) {
 }
 
 function startRun() {
+  releasePanel?.markPlayed();
   if (deploymentVersionController.applyPendingUpdate()) return;
   runLifecycle.start();
 }
@@ -587,22 +588,6 @@ function writeSetupSelectedActor(actor) {
   } catch {
     // Ignore private browsing or blocked storage.
   }
-}
-
-function localCharacterActors(savedStateSource, characterDefinitions) {
-  return Object.fromEntries(
-    characterDefinitions.map((def) => {
-      const savedActor = { ...(savedStateSource.actors?.[def.id] || {}) };
-      delete savedActor.assets;
-      return [
-        def.id,
-        {
-          ...savedActor,
-          name: def.name,
-        },
-      ];
-    })
-  );
 }
 
 function localEffectAssetSourceKeys(sources = {}) {
@@ -692,7 +677,7 @@ function showRuntimeLoadError() {
   const parent = canvas?.parentElement || document.body;
   const message = document.createElement('div');
   message.className = 'runtime-load-error';
-  message.textContent = '게임 데이터를 불러오지 못했습니다. Firebase 배포 업로드를 먼저 완료해 주세요.';
+  message.textContent = '게임 데이터를 불러오지 못했습니다. 세팅 저장과 배포 파일을 확인해 주세요.';
   parent.append(message);
 }
 

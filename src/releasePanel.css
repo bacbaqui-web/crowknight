@@ -1,0 +1,56 @@
+.release-panel {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 24px);
+  padding: 8px 12px;
+  color: #f5f7fb;
+  background: #101621ee;
+  border: 1px solid #53617a;
+  border-radius: 8px;
+  transform: translateX(-50%);
+  font:
+    13px system-ui,
+    sans-serif;
+}
+
+.release-panel a {
+  color: #b9d8ff;
+  white-space: nowrap;
+}
+
+.release-panel button {
+  padding: 6px 10px;
+  color: #101621;
+  background: #b9d8ff;
+  border: 0;
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.release-panel button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.release-status.is-error {
+  color: #ffb4b4;
+}
+
+@media (max-width: 640px) {
+  .release-panel {
+    width: calc(100vw - 24px);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .release-status {
+    width: 100%;
+    text-align: center;
+  }
+}

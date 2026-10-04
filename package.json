@@ -9,7 +9,8 @@
     "dev:5500": ".venv/bin/python tools/dev_server.py --port 5500",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "check": "npm run lint && prettier --check ."
+    "check": "npm run lint && prettier --check .",
+    "test": "node --test test/*.test.js && .venv/bin/python -m unittest discover -s test -p \"*_test.py\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
