@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Crow Knight · 기술의 서</title><link rel="stylesheet" href="./skill-tree-preview.css"></head>
+<body>
+<header><div><span class="eyebrow">CROW KNIGHT / TALENT TREE</span><h1>기술의 서</h1><p>하나의 포인트가, 다음 길을 엽니다.</p></div><a href="./skill-tree.html">효과·모션 설계 메모 ↗</a></header>
+<main>
+  <section class="toolbar"><div><span class="eyebrow">CHARACTER LEVEL</span><strong id="level"></strong></div><div class="points"><span>남은 스킬 포인트</span><strong id="points"></strong></div><div class="tools"><button id="level-up">레벨업 · +1 포인트</button><button id="reset">투자 초기화</button></div></section>
+  <div class="tabs" role="tablist" aria-label="스킬 계열"></div>
+  <div class="layout">
+    <section class="board" aria-label="스킬트리"><div class="board-heading"><div><h2 id="path-title"></h2><p id="path-description"></p></div><span id="spent"></span></div><div id="tree"></div><div class="start">성장의 시작 <span>아래 기술부터 투자하세요 ↑</span></div></section>
+    <aside class="detail" aria-label="선택 기술 상세"><div id="detail"></div></aside>
+  </div>
+  <p class="notice" role="status" id="notice">포인트 투자 방식의 시안입니다. 수치·기술은 제안이며, 게임에는 아직 적용되지 않습니다. 세 계열에 자유롭게 분배할 수 있습니다.</p>
+</main>
+<script type="module" src="./skill-tree-preview.js"></script>
+</body></html>
