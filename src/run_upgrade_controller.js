@@ -22,11 +22,13 @@ export function createRunUpgradeController({
   const state = createRunUpgradeState();
   let queue = 0,
     pair = null,
-    active = false;
+    active = false,
+    offerDelay = 0;
   const view = createChoiceView({ onChoose: choose });
   function reset() {
     active = true;
     queue = 0;
+    offerDelay = 0;
     pair = null;
     view.hide();
     state.reset();
@@ -37,6 +39,7 @@ export function createRunUpgradeController({
   function stop() {
     active = false;
     queue = 0;
+    offerDelay = 0;
     pair = null;
     view.hide();
     hud.setVisible(false);
@@ -44,7 +47,7 @@ export function createRunUpgradeController({
     clearInput();
   }
   function offerNext() {
-    if (!active || pair || !queue) return;
+    if (!active || pair || !queue || offerDelay > 0) return;
     queue -= 1;
     pair = randomUpgradePair(random);
     clearInput();
@@ -65,12 +68,17 @@ export function createRunUpgradeController({
     stop,
     choose,
     recordBossKill() {
-      if (active) queue += 1;
+      if (active) {
+        if (!queue && !pair) offerDelay = 0.65;
+        queue += 1;
+      }
     },
-    update() {
+    update(dt = 0) {
+      offerDelay = Math.max(0, offerDelay - dt);
       offerNext();
     },
-    isPaused: () => Boolean(pair || queue),
+    isPaused: () => Boolean(pair),
+    isPending: () => Boolean(pair || queue),
     getSnapshot: state.getSnapshot,
     getPair: () => (pair ? [...pair] : null),
   };

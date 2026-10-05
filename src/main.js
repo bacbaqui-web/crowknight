@@ -303,9 +303,9 @@ function update(dt) {
 
   if (controlGuideOpen) return;
   if (runLifecycle.isRunActive()) {
-    runUpgrades.update();
+    runUpgrades.update(dt);
     if (runUpgrades.isPaused()) return;
-    experience.update(0, world);
+    if (!runUpgrades.isPending()) experience.update(0, world);
     if (experience.isPaused()) return;
   }
 
@@ -387,7 +387,7 @@ function update(dt) {
 
   if (runLifecycle.isRunActive()) {
     healthDrops.update(dt, playerActor, world);
-    if (!runUpgrades.isPaused()) experience.update(dt, world);
+    if (!runUpgrades.isPending()) experience.update(dt, world);
   }
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt });
   updateRollGhosts(gameActors, dt);

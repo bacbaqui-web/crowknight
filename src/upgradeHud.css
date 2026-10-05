@@ -250,3 +250,31 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+.boss-upgrade-choice:not([hidden]) {
+  animation: boss-choice-backdrop 280ms ease-out both;
+}
+.boss-upgrade-choice:not([hidden]) .upgrade-choice-panel {
+  animation: boss-choice-appear 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.boss-upgrade-choice:not([hidden]) .upgrade-choice-card {
+  animation: boss-choice-appear 360ms ease-out 100ms both;
+}
+.boss-upgrade-choice:not([hidden]) .upgrade-choice-card:nth-child(2) {
+  animation-delay: 170ms;
+}
+@keyframes boss-choice-backdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes boss-choice-appear {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boss-upgrade-choice:not([hidden]),
+  .boss-upgrade-choice:not([hidden]) .upgrade-choice-panel,
+  .boss-upgrade-choice:not([hidden]) .upgrade-choice-card {
+    animation: none;
+  }
+}

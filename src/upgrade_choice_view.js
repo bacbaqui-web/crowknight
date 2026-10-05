@@ -2,7 +2,7 @@ import { UPGRADE_CARDS, upgradeEffectLabel } from './upgrade_card_data.js';
 
 export function createUpgradeChoiceView({ root = document.querySelector('.stage-wrap'), onChoose }) {
   const modal = document.createElement('div');
-  modal.className = 'upgrade-choice';
+  modal.className = 'upgrade-choice boss-upgrade-choice';
   modal.hidden = true;
   modal.setAttribute('role', 'dialog');
   modal.setAttribute('aria-modal', 'true');

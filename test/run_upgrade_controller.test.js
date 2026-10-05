@@ -52,8 +52,9 @@ test('동시에 보스 두 명 처치하면 한 번씩 순서대로 선택하고
   const { controller, player, enemy, shows } = setup();
   controller.recordBossKill();
   controller.recordBossKill();
-  assert.equal(controller.isPaused(), true);
-  controller.update();
+  assert.equal(controller.isPaused(), false);
+  assert.equal(controller.isPending(), true);
+  controller.update(0.65);
   assert.equal(shows.length, 1);
   assert.equal(controller.choose('missing'), false);
   assert.equal(controller.choose('sharp-blade'), true);
@@ -71,10 +72,10 @@ test('동시에 보스 두 명 처치하면 한 번씩 순서대로 선택하고
 test('사망/중단은 선택 대기와 runtime 효과를 없애고 다음 판 횟수를 초기화한다', () => {
   const { controller, player } = setup();
   controller.recordBossKill();
-  controller.update();
+  controller.update(0.65);
   controller.choose('sharp-blade');
   controller.recordBossKill();
-  controller.update();
+  controller.update(0.65);
   controller.stop();
   assert.equal(controller.isPaused(), false);
   assert.equal(controller.choose('sharp-blade'), false);
@@ -214,4 +215,27 @@ test('공격 판정의 실제 활성 프레임에서 준비와 후딜레이 경�
     },
   };
   assert.deepEqual(attackWindow(player, { duration: 1 }), { start: 0.3, end: 0.6 });
+});
+
+test('보스 처치 후 0.65초 동안 대기하며 중단/새 판은 대기를 취소한다', () => {
+  const { controller, shows } = setup();
+  controller.recordBossKill();
+  controller.update(0.4);
+  assert.equal(shows.length, 0);
+  assert.equal(controller.isPaused(), false);
+  assert.equal(controller.isPending(), true);
+  assert.equal(controller.choose('sharp-blade'), false);
+  controller.update(0.26);
+  assert.equal(shows.length, 1);
+  assert.equal(controller.isPaused(), true);
+  controller.stop();
+  controller.update(1);
+  assert.equal(shows.length, 1);
+  controller.reset();
+  controller.recordBossKill();
+  controller.update(0.4);
+  controller.reset();
+  controller.update(1);
+  assert.equal(shows.length, 1);
+  assert.equal(controller.isPending(), false);
 });
