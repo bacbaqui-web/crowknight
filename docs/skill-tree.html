@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Crow Knight · 스킬트리 설계</title>
+  <link rel="stylesheet" href="./skill-tree.css">
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">CROW KNIGHT / SKILL DESIGN</span><h1>한 번의 선택, 하나의 성장</h1>
+    <p>첫 레벨업에서 계열을 선택합니다. 이후에는 그 계열 안에서 새 기술을 배우거나 습득한 기술을 강화합니다.</p></div>
+    <nav><a href="../index.html">게임</a><a href="../setting.html">모션 세팅</a><button id="export">설계 내보내기</button><label class="import">설계 불러오기<input id="import" type="file" accept="application/json,.json"></label></nav>
+  </header>
+  <main>
+    <section class="flow" aria-label="성장 규칙"><span>적 처치 → 경험치 수집</span><b>→</b><span>첫 레벨업 · 4계열 중 1개</span><b>→</b><span>선택 계열의 기술 습득 / 강화 반복</span></section>
+    <div class="legend"><span><i class="live"></i> 현재 구현</span><span><i class="plan"></i> 추가 계획</span><p>카드를 눌러 효과·강화·모션을 정하세요. 계획은 게임에 자동 적용되지 않습니다.</p></div>
+    <section id="trees" class="trees" aria-label="네 계열 스킬트리"></section>
+    <p id="status" role="status">설계 메모는 이 브라우저에 저장됩니다. 다른 기기로 옮기거나 백업하려면 내보내기를 사용하세요.</p>
+  </main>
+  <dialog id="editor">
+    <form id="skill-form">
+      <div class="dialog-heading"><div><span id="editor-path" class="eyebrow"></span><h2>스킬 설계</h2></div><button type="button" id="close" aria-label="닫기">✕</button></div>
+      <p id="current-effect" class="current-effect"></p>
+      <label>기술 이름<input name="name" maxlength="80" required></label>
+      <label>선행 기술<select name="parent"></select></label>
+      <div class="fields"><label>조작 / 발동 조건<textarea name="trigger" rows="2" placeholder="예: Q 길게 누른 뒤 놓기"></textarea></label><label>습득 시 효과<textarea name="effect" rows="2" placeholder="예: 지면 충격파 생성"></textarea></label></div>
+      <label>강화할 때 달라지는 것<textarea name="upgrade" rows="2" placeholder="예: 범위 +10%, 충격파 수 +1"></textarea></label>
+      <label>사용할 모션 / 연출<textarea name="motion" rows="3" placeholder="동작 이름, 준비 자세, 타격 순간, 이펙트 등을 적어 주세요"></textarea></label>
+      <label>기획 메모<textarea name="notes" rows="2" placeholder="수치, 구현 우선순위, 밸런스 고민"></textarea></label>
+      <footer><button type="button" id="delete" class="danger">계획 삭제</button><button class="save" type="submit">설계 저장</button></footer>
+    </form>
+  </dialog>
+  <script type="module" src="./skill-tree.js"></script>
+</body>
+</html>

@@ -11,7 +11,13 @@ export function bindSkillMotionEditor({ actionSelect, actionGroupSelect }, callb
   const hint = document.createElement('p');
   hint.textContent = '계열과 동작을 고르면 아래 타임라인에서 게임에 쓰이는 모션을 제작할 수 있습니다.';
   hint.style.cssText = 'font-size:11px;line-height:1.5';
-  root.append(heading, hint);
+  const treeLink = document.createElement('a');
+  treeLink.href = './docs/skill-tree.html';
+  treeLink.target = '_blank';
+  treeLink.rel = 'noopener';
+  treeLink.textContent = '스킬트리 설계 열기 ↗';
+  treeLink.style.cssText = 'display:inline-block;color:#b9dfcc;font-size:12px;margin:4px 0';
+  root.append(heading, hint, treeLink);
   for (const path of SKILL_PATHS) {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:6px;margin:6px 0;align-items:center';
