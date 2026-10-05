@@ -598,3 +598,8 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 
 - 스킬/보스 선택창 내부의 keydown만 받던 처리를 공통 window capture 리스너로 변경. 창 밖 포커스에서도 Digit1~4/Numpad1~4 선택, 반복 입력/수정키/숨긴 창 차단.
 - 관련 검사 8개 및 변경 JS 문법/공백 검사 통과. ESLint/Prettier 미실행. 공개 배포 진행.
+
+## 2026-10-05 — 적 피해 잔상 노란색
+
+- 잡몹/보스 체력바의 지연 피해 잔상을 노랑(#facc15)으로 변경해 현재 체력과 구분. 주인공 피해 잔상 유지.
+- 실제 그리기 함수의 세 그룹 색상/잔상 너비 확인, 문법 검사 통과. ESLint/Prettier 및 불필요한 자동 테스트 추가 없음. 공개 배포 진행.

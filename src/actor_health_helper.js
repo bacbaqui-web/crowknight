@@ -31,7 +31,7 @@ export function drawHealthMeter(ctx, actor, x, y, width) {
   const ratio = (hp) => clamp(hp / max, 0, 1);
   ctx.fillStyle = 'rgba(0,0,0,.65)';
   ctx.fillRect(left, y, width, height);
-  ctx.fillStyle = '#ef4444';
+  ctx.fillStyle = actor.group === 'mobs' || actor.group === 'bosses' ? '#facc15' : '#ef4444';
   ctx.fillRect(left, y, width * ratio(actor.healthTrail?.hp ?? actor.hp), height);
   ctx.fillStyle = actor.tint;
   ctx.fillRect(left, y, width * ratio(actor.hp), height);
