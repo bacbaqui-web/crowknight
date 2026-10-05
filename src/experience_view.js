@@ -1,4 +1,5 @@
 import { RUN_SKILLS } from './skill_runtime_helper.js';
+import { SKILL_PATHS } from './skill_progression_data.js';
 export function createExperienceView(root = document.querySelector('.stage-wrap'), { showHud = false } = {}) {
   const hud = document.createElement('div');
   hud.className = 'experience-hud';
@@ -50,11 +51,15 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
     setVisible(value) {
       hud.hidden = !value || !showHud;
     },
-    show(offered, ranks, choose) {
+    show(offered, ranks, choose, pathId) {
+      title.textContent = pathId
+        ? `레벨업 · ${SKILL_PATHS.find((path) => path.id === pathId)?.name} 계열 기술 습득과 강화`
+        : '첫 레벨업 · 이번 판의 기술 계열을 선택하세요';
       cards.replaceChildren();
       for (const [index, skill] of offered.entries()) {
         const button = document.createElement('button');
         button.className = 'upgrade-choice-card';
+        button.style.setProperty('--skill-color', skill.color || '#ffffff');
         button.type = 'button';
         const shortcut = document.createElement('kbd');
         shortcut.textContent = String(index + 1);

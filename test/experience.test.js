@@ -10,7 +10,6 @@ function setup() {
   const c = createExperienceController({
     getPlayer: () => player,
     clearInput() {},
-    random: () => 0,
     view: { render() {}, show: (offered) => offers.push(offered), hide() {}, setVisible() {} },
   });
   c.reset();
@@ -18,14 +17,16 @@ function setup() {
 }
 test('경험치 여러 레벨 이월과 중복 선택 방지', () => {
   const { c, offers, player } = setup();
-  c.addExperience(110);
+  c.addExperience(1100);
   c.update(0, { floorY: 0 });
-  assert.deepEqual(c.snapshot(), { level: 3, xp: 10, pending: 2, ranks: {} });
+  assert.deepEqual(c.snapshot(), { level: 3, xp: 100, pending: 2, pathId: null, ranks: {} });
   assert.equal(offers[0].length, 4);
   assert.equal(new Set(offers[0].map((s) => s.id)).size, 4);
   assert.equal(c.choose('missing'), false);
   assert.equal(c.choose('fourthStrike', offers[0]), true);
   assert.equal(c.choose('fourthStrike', offers[0]), false);
+  assert.deepEqual(offers[1].map((skill) => skill.id), ['chargeAttack', 'fourthStrike']);
+  assert.equal(c.choose('parry'), false);
   c.choose('fourthStrike', offers[1]);
   assert.equal(player.player.runSkills.fourthStrike, 2);
   assert.equal(c.isPaused(), false);
@@ -34,6 +35,26 @@ test('경험치 여러 레벨 이월과 중복 선택 방지', () => {
   assert.equal(c.choose('fourthStrike'), false);
   c.reset();
   assert.equal(c.snapshot().level, 1);
+  assert.equal(c.snapshot().pathId, null);
+});
+test('경험치 기준이 열 배이며 방어/점프/구르기 선택 후 다른 계열이 나오지 않는다', () => {
+  for (const id of ['parry', 'doubleJump', 'backflip']) {
+    const { c, offers } = setup();
+    c.addExperience(399);
+    c.update(0, { floorY: 0 });
+    assert.equal(c.snapshot().level, 1);
+    assert.equal(offers.length, 0);
+    c.addExperience(1);
+    c.update(0, { floorY: 0 });
+    assert.equal(c.snapshot().level, 2);
+    assert.deepEqual(offers[0].map((skill) => skill.id), ['fourthStrike', 'parry', 'doubleJump', 'backflip']);
+    c.choose(id);
+    c.addExperience(600);
+    c.update(0, { floorY: 0 });
+    assert.deepEqual(offers[1].map((skill) => skill.id), [id]);
+    c.choose(id);
+    assert.equal(c.snapshot().ranks[id], 2);
+  }
 });
 test('흰 구슬은 비행/착지 후 가까이 가야 수집되며 원거리 흡수하지 않는다', () => {
   const { c, player } = setup();

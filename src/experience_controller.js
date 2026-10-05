@@ -1,29 +1,28 @@
 import { attractPickup } from './pickup_magnet_helper.js';
-import { RUN_SKILLS } from './skill_runtime_helper.js';
-export function createExperienceController({ getPlayer, clearInput, view, random = Math.random }) {
+import { progressionChoices } from './skill_progression_data.js';
+export function createExperienceController({ getPlayer, clearInput, view }) {
   let active = false,
     level = 1,
     xp = 0,
     pending = 0,
     offered = null,
     orbs = [];
+  let pathId = null;
   const ranks = {};
-  const threshold = () => 40 + (level - 1) * 20;
+  const threshold = () => (40 + (level - 1) * 20) * 10;
   function render() {
     getPlayer().experience = { level, xp, threshold: threshold() };
     view.render({ level, xp, threshold: threshold(), ranks: { ...ranks } });
   }
   function offer() {
     if (!active || !pending || offered) return;
-    const pool = [...RUN_SKILLS];
-    offered = [];
-    const choiceCount = Math.min(4, pool.length);
-    while (offered.length < choiceCount) offered.push(pool.splice(Math.floor(random() * pool.length), 1)[0]);
+    offered = progressionChoices(pathId);
     clearInput();
-    view.show(offered, ranks, choose);
+    view.show(offered, ranks, choose, pathId);
   }
   function choose(id, offerToken = offered) {
     if (!active || !offered || offerToken !== offered || !offered.some((skill) => skill.id === id)) return false;
+    if (!pathId) pathId = offered.find((skill) => skill.id === id).pathId;
     ranks[id] = (ranks[id] || 0) + 1;
     getPlayer().player.runSkills = { ...ranks };
     pending--;
@@ -48,6 +47,7 @@ export function createExperienceController({ getPlayer, clearInput, view, random
     reset() {
       active = true;
       level = 1;
+      pathId = null;
       xp = pending = 0;
       offered = null;
       orbs = [];
@@ -132,6 +132,6 @@ export function createExperienceController({ getPlayer, clearInput, view, random
     choose,
     isPaused: () => Boolean(pending || offered),
     orbSnapshot: () => orbs.map((orb) => ({ ...orb })),
-    snapshot: () => ({ level, xp, pending, ranks: { ...ranks } }),
+    snapshot: () => ({ level, xp, pending, pathId, ranks: { ...ranks } }),
   };
 }

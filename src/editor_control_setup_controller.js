@@ -27,6 +27,7 @@ import {
 } from './property_numeric_input_helper.js';
 import { getPath, setPath } from './common_helper.js';
 import { bindActionAuthoringControls } from './action_authoring_controller.js';
+import { bindSkillMotionEditor } from './skill_motion_editor_controller.js';
 
 export function initializeTuningPanelControls({
   panel,
@@ -174,6 +175,7 @@ export function initializeTuningPanelControls({
     }
   );
 
+  bindSkillMotionEditor({ actionSelect, actionGroupSelect }, callbacks);
   bindPartPickerButtons(partPicker, (partKey, append) => callbacks.selectPickerPart('part', partKey, append));
   bindPartPickerButtons(actionPartPicker, (partKey, append) => callbacks.selectPickerPart('action', partKey, append));
   bindSectionToggle(elements.collisionSection, callbacks.openPartSection, callbacks.closePartSection);

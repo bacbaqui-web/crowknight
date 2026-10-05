@@ -224,8 +224,15 @@
   padding: 4px;
 }
 .skill-choice .upgrade-choice-card {
+  border: 2px solid var(--skill-color);
+  background: color-mix(in srgb, var(--skill-color) 18%, #15202f);
+  box-shadow: inset 0 5px var(--skill-color);
   flex: 1 0 160px;
   min-width: 0;
+}
+.skill-choice .upgrade-choice-card strong,
+.skill-choice .upgrade-choice-card kbd {
+  color: var(--skill-color);
 }
 .upgrade-choice-card kbd {
   display: grid;

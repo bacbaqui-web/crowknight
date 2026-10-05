@@ -387,3 +387,7 @@ Input
 - `combat_sound_controller.js`: 공격 판정 시작과 실제 피해/방어/패링에 전투음 연결.
 
 - `game_music_controller.js`: 플레이 OST 반복 재생/정지, 낮은 볼륨/음소거, 배경 탭 재생 제어.
+
+- `skill_progression_data.js`: 첫 레벨업 4계열 및 선택 계열의 후속 기술 선택 목록.
+
+- `skill_motion_editor_controller.js`: 네 기술 계열의 runtime 모션 편집 진입, 기존 Action 타임라인 연결.
