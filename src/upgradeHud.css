@@ -245,3 +245,8 @@
   color: #fff;
   font: bold 16px sans-serif;
 }
+.upgrade-choice,
+.upgrade-choice * {
+  -webkit-user-select: none;
+  user-select: none;
+}

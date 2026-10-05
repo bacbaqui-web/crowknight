@@ -580,3 +580,9 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 ## 2026-10-05 — 기술 계열 성장/모션 제작 공개 배포
 
 - 필요 경험치 10배, 첫 4계열 선택/후속 계열 기술, 카드 색상과 세팅 스킬 모션 제작을 현재 beta snapshot과 함께 공개 반영. 직전 관련 6개 검사와 브라우저 검증 결과 사용, 추가 전체 검사 및 ESLint/Prettier 미실행.
+
+## 2026-10-05 — 게임 화면 글자 선택 차단
+
+- 공개/베타 게임 화면과 스킬·보스 강화 선택창에 user-select 및 WebKit 선택 차단 적용. 랭킹 이름 입력 및 세팅 편집은 유지.
+- 브라우저 스킬 카드 제목/선택창의 computed user-select none 확인, 변경 CSS 공백 검사 통과. ESLint/Prettier 및 추가 자동 테스트 미실행. 공개 배포 진행.
+- style.css는 672줄로 검토 기준 초과; 기존 모바일 조작 스타일을 추후 분리하면 탐색 비용을 줄일 수 있음. 이번 변경은 CSS 규칙만 추가.
