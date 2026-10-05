@@ -593,3 +593,8 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 - 배경 페이드/패널 이동·확대/카드 순차 등장, 동작 줄이기 설정 지원. 새 판/중단은 대기 취소.
 - 관련 검사 11개 및 변경 JS 문법/공백 검사 통과. 로컬 브라우저 접속 실패로 시각 검증 제한, 공개 파일 확인 예정. ESLint/Prettier 미실행.
 - main.js 기존 검토 기준 초과 상태로 1줄 추가에 제한; 런 진행 조정은 추후 별도 모듈 분리 권장.
+
+## 2026-10-05 — 강화 선택 숫자키 포커스 의존 수정
+
+- 스킬/보스 선택창 내부의 keydown만 받던 처리를 공통 window capture 리스너로 변경. 창 밖 포커스에서도 Digit1~4/Numpad1~4 선택, 반복 입력/수정키/숨긴 창 차단.
+- 관련 검사 8개 및 변경 JS 문법/공백 검사 통과. ESLint/Prettier 미실행. 공개 배포 진행.

@@ -1,3 +1,4 @@
+import { bindChoiceNumberKeys } from './input_control_controller.js';
 import { UPGRADE_CARDS, upgradeEffectLabel } from './upgrade_card_data.js';
 
 export function createUpgradeChoiceView({ root = document.querySelector('.stage-wrap'), onChoose }) {
@@ -20,15 +21,9 @@ export function createUpgradeChoiceView({ root = document.querySelector('.stage-
   modal.append(panel);
   root.append(modal);
   let previousFocus;
+  bindChoiceNumberKeys({ modal, cards });
   modal.addEventListener('keydown', (event) => {
     if (modal.hidden) return;
-    const number = Number(event.key);
-    if (number === 1 || number === 2) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!event.repeat) cards.querySelectorAll('button')[number - 1]?.click();
-      return;
-    }
     if (event.key !== 'Tab') return;
     const buttons = [...cards.querySelectorAll('button')];
     const first = buttons[0],

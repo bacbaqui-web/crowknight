@@ -1,3 +1,4 @@
+import { bindChoiceNumberKeys } from './input_control_controller.js';
 import { RUN_SKILLS } from './skill_runtime_helper.js';
 import { SKILL_PATHS } from './skill_progression_data.js';
 export function createExperienceView(root = document.querySelector('.stage-wrap'), { showHud = false } = {}) {
@@ -24,15 +25,9 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
   panel.append(title, cards);
   modal.append(panel);
   root.append(modal);
+  bindChoiceNumberKeys({ modal, cards });
   modal.addEventListener('keydown', (event) => {
     if (modal.hidden) return;
-    const number = Number(event.key);
-    if (Number.isInteger(number) && number >= 1 && number <= 4) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!event.repeat) cards.querySelectorAll('button')[number - 1]?.click();
-      return;
-    }
     if (event.key !== 'Tab') return;
     const buttons = [...cards.querySelectorAll('button')];
     const index = buttons.indexOf(document.activeElement);

@@ -104,3 +104,16 @@ export function bindCollapsibleSections() {
     });
   });
 }
+
+export function bindChoiceNumberKeys({ modal, cards, target = window }) {
+  target.addEventListener('keydown', (event) => {
+    if (modal.hidden || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+    const match = /^(?:Digit|Numpad)([1-4])$/.exec(event.code);
+    const number = match ? Number(match[1]) : Number(event.key);
+    if (!Number.isInteger(number) || number < 1 || number > 4) return;
+    const button = cards.querySelectorAll('button')[number - 1];
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (!event.repeat) button?.click();
+  }, true);
+}
