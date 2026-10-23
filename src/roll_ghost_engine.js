@@ -19,7 +19,6 @@ export function updateRollGhosts(actors, dt) {
       x: actor.player.x,
       y: actor.player.y,
       facing: actor.player.facing,
-      quarterAim: actor.player.quarterAim,
       dashTime: actor.player.dashTime,
       rollDuration: actor.player.rollDuration,
       life: settings.life,
@@ -39,7 +38,6 @@ export function drawRollGhosts(ctx, actor, project = null) {
     x: player.x,
     y: player.y,
     facing: player.facing,
-    quarterAim: player.quarterAim,
     dashTime: player.dashTime,
     rollDuration: player.rollDuration,
     state: player.state,
@@ -59,7 +57,6 @@ export function drawRollGhosts(ctx, actor, project = null) {
       player.x = ghost.x;
       player.y = ghost.y;
       player.facing = ghost.facing;
-      player.quarterAim = ghost.quarterAim;
       player.dashTime = ghost.dashTime;
       player.rollDuration = ghost.rollDuration;
       player.state = 'roll';
@@ -71,7 +68,6 @@ export function drawRollGhosts(ctx, actor, project = null) {
   player.x = snapshot.x;
   player.y = snapshot.y;
   player.facing = snapshot.facing;
-  player.quarterAim = snapshot.quarterAim;
   player.dashTime = snapshot.dashTime;
   player.rollDuration = snapshot.rollDuration;
   player.state = snapshot.state;

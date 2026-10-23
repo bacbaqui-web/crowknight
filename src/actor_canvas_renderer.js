@@ -98,7 +98,6 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
     ctx.save();
     ctx.translate(player.x, player.y - 45);
     ctx.scale(player.facing * scale, scale);
-    player.viewProjection?.effect(ctx, null, null);
     ctx.strokeStyle = '#fef08a';
     ctx.shadowColor = '#fef08a';
     ctx.shadowBlur = 12;
@@ -114,7 +113,7 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
     : active.progress;
   const config = effectFrameAt(actor.tuning, effectKey, progress);
   if (!config || config.image === 'none' || Number(config.opacity ?? 1) <= 0) return;
-  let asset = resolveEffectAsset(effectAssets, config.image, actor.id);
+  const asset = resolveEffectAsset(effectAssets, config.image, actor.id);
   if (!asset) return;
 
   const cx = player.x;
@@ -136,7 +135,6 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(flip * scale, scale);
-  asset = player.viewProjection?.effect(ctx, drawRect, asset) || asset;
   ctx.translate(transform.x, transform.y);
   ctx.rotate((transform.rot * Math.PI) / 180);
   recordEffectRegion(player, ctx, effectKey, config, drawRect);

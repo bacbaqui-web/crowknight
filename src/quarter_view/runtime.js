@@ -32,7 +32,6 @@ export function createQuarterRuntime({ ctx, world }) {
       actor.quarterDepth = Math.max(-430, Math.min(430, depthOf(target) + (Math.random() - 0.5) * 500));
       actor.player.quarterDepth = actor.quarterDepth;
       actor.quarterAim = { x: -1, z: 0 };
-      actor.player.quarterAim = { ...actor.quarterAim };
       actor.quarterImpulse = null;
     },
     projectEntity: renderer.projectEntity,
@@ -51,7 +50,6 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterDepth = index === 0 ? 0 : ((index % 5) - 2) * 85;
         actor.player.quarterDepth = actor.quarterDepth;
         actor.quarterAim = { x: actor.player.facing || 1, z: 0 };
-        actor.player.quarterAim = { ...actor.quarterAim };
         actor.quarterImpulse = null;
         actor.quarterSynthetic = null;
       });

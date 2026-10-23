@@ -51,9 +51,7 @@ export function drawPuppetPlayer(player, ctx) {
   recordPuppetEditHandle(player, ctx, 'master', masterPlacementMatrix);
   ctx.translate(-(master.anchorX || 0), -(master.anchorY || 0));
   ctx.globalAlpha *= clamp(master.opacity ?? 1, 0, 1);
-  player.viewProjection?.begin(ctx);
-  const layers = player.viewProjection?.layers(player.layerOrder) || player.layerOrder;
-  layers.forEach((layer) => drawPuppetLayer(player, ctx, layer, p, r));
+  player.layerOrder.forEach((layer) => drawPuppetLayer(player, ctx, layer, p, r));
   drawDetachedAttackInteractionObject(player, ctx);
   ctx.restore();
 
@@ -332,7 +330,6 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   ctx.translate(transform.x, transform.y);
   const placementMatrix = ctx.getTransform();
   ctx.rotate(rotation + deg(transform.rot));
-  image = player.viewProjection?.part(ctx, key, drawRect, image) || image;
   recordPuppetImageRegion(player, ctx, key, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
   drawPuppetImageLessChildParts(player, ctx, key, drawRect.x, drawRect.y);
