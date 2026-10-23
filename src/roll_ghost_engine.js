@@ -15,6 +15,7 @@ export function updateRollGhosts(actors, dt) {
 
     actor.rollGhostTimer = settings.interval;
     actor.rollGhosts.unshift({
+      ...(actor.quarterDepth != null ? { quarterDepth: actor.quarterDepth } : {}),
       x: actor.player.x,
       y: actor.player.y,
       facing: actor.player.facing,
@@ -28,7 +29,7 @@ export function updateRollGhosts(actors, dt) {
   });
 }
 
-export function drawRollGhosts(ctx, actor) {
+export function drawRollGhosts(ctx, actor, project = null) {
   if (!actor.rollGhosts.length) return;
 
   const player = actor.player;
@@ -49,6 +50,7 @@ export function drawRollGhosts(ctx, actor) {
     .reverse()
     .forEach((ghost, index) => {
       const alpha = Math.max(0, ghost.life / ghost.maxLife) * (0.16 + index * 0.025) * ghostSettings.opacity;
+      const restoreProjection = project?.(ghost);
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.filter = 'brightness(1.55) saturate(0.35)';
@@ -60,6 +62,7 @@ export function drawRollGhosts(ctx, actor) {
       player.state = 'roll';
       player.draw(ctx);
       ctx.restore();
+      restoreProjection?.();
     });
 
   player.x = snapshot.x;

@@ -78,6 +78,7 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       if (!active) return;
       const fragment = actor.player.deathRagdoll?.parts?.[0];
       orbs.push({
+        ...(actor.quarterDepth != null ? { quarterDepth: actor.quarterDepth } : {}),
         x: fragment?.x ?? actor.player.x,
         y: fragment?.y ?? actor.player.y - 30,
         vx: (fragment?.vx < 0 ? -1 : 1) * 240,
@@ -116,15 +117,19 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       orbs = orbs.filter((orb) => orb.age < 60);
       offer();
     },
-    draw(ctx) {
+    draw(ctx, project = null) {
       ctx.save();
       ctx.fillStyle = '#fff';
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 8;
       for (const orb of orbs) {
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, 4, 0, Math.PI * 2);
-        ctx.fill();
+        const drawOrb = () => {
+          ctx.beginPath();
+          ctx.arc(orb.x, orb.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        };
+        if (project) project(orb, drawOrb);
+        else drawOrb();
       }
       ctx.restore();
     },

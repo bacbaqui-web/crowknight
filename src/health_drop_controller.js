@@ -12,6 +12,7 @@ export function createHealthDrops({ random = Math.random } = {}) {
       const [part] = parts.splice(Math.min(parts.length - 1, Math.floor(random() * parts.length)), 1);
       const direction = part.vx < 0 ? -1 : 1;
       drops.push({
+        ...(actor.quarterDepth != null ? { quarterDepth: actor.quarterDepth } : {}),
         x: part.x,
         y: part.y,
         vx: direction * (250 + random() * 130),
@@ -62,24 +63,28 @@ export function createHealthDrops({ random = Math.random } = {}) {
     }
     drops = drops.filter((drop) => drop.age < 10);
   }
-  function draw(ctx) {
+  function draw(ctx, project = null) {
     for (const drop of drops) {
-      ctx.save();
-      ctx.globalAlpha *= Math.min(1, (10 - drop.age) / 2);
-      ctx.translate(drop.x, drop.y);
-      ctx.rotate(drop.rot);
-      ctx.shadowColor = '#fb7185';
-      ctx.shadowBlur = 12;
-      ctx.fillStyle = '#fb7185';
-      ctx.strokeStyle = '#fff1f2';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(0, 10);
-      ctx.bezierCurveTo(-22, -4, -10, -18, 0, -7);
-      ctx.bezierCurveTo(10, -18, 22, -4, 0, 10);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
+      const drawDrop = () => {
+        ctx.save();
+        ctx.globalAlpha *= Math.min(1, (10 - drop.age) / 2);
+        ctx.translate(drop.x, drop.y);
+        ctx.rotate(drop.rot);
+        ctx.shadowColor = '#fb7185';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#fb7185';
+        ctx.strokeStyle = '#fff1f2';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.bezierCurveTo(-22, -4, -10, -18, 0, -7);
+        ctx.bezierCurveTo(10, -18, 22, -4, 0, 10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      };
+      if (project) project(drop, drawDrop);
+      else drawDrop();
     }
   }
   return {

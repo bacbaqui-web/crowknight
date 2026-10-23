@@ -1,70 +1,170 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  project,
-  unproject,
-  unit,
-  inStrike,
-  createState,
-  tick,
-  attack,
-  spawnWave,
-  move,
-  LIMIT,
-} from '../src/quarter_view/simulation.js';
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+import { groundPoint, groundFromScreen } from '../src/quarter_view/camera.js';
+import { preparePlaneMotion, finishPlaneMotion, enemyPlaneDirection } from '../src/quarter_view/motion.js';
+import { combatTargetRegions } from '../src/quarter_view/spatial.js';
+import { PuppetPlayer } from '../src/actor_runtime_engine.js';
+import { defaultTuningFor } from '../src/actor_tuning_helper.js';
+import { mergeTuning } from '../src/project_data_normalizer_helper.js';
+import { prepareSkillActions, updateRunSkills } from '../src/skill_runtime_helper.js';
+import { requestRuntimeAction } from '../src/action_trigger_engine.js';
+import { updateChargeAttack } from '../src/charge_attack_helper.js';
+import { timelineFrameCount } from '../src/timeline_playback_helper.js';
+import { attractPickup } from '../src/pickup_magnet_helper.js';
 
-test('projection round trips and screen controls retain direction', () => {
-  for (const [x, z] of [
-    [80, -40],
-    [-300, 100],
-    [0, 0],
-  ]) {
-    const screen = project(x, z),
-      world = unproject(screen.x, screen.y);
-    assert.ok(Math.abs(world.x - x) < 0.0001);
-    assert.ok(Math.abs(world.z - z) < 0.0001);
+const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
+const world = { floorY: 430, minX: -100000, maxX: 100000, worldPhysics: { gravity: 1, inertia: 30 } };
+function fixture(id = 'player_01') {
+  const def = saved.characters.find((actor) => actor.id === id);
+  const tuning = mergeTuning(defaultTuningFor(def), saved.actors[id].tuning);
+  if (id === 'player_01') prepareSkillActions(tuning);
+  const player = new PuppetPlayer(480, world.floorY, {});
+  player.applyTuning(tuning);
+  if (id === 'player_01') {
+    player.runSkills = { chargeAttack: 2, fourthStrike: 1, doubleJump: 1, backflip: 1, parry: 1 };
+    player.runSkillActions = tuning.skillActions;
   }
-  const diagonal = unit(1, 1);
-  assert.ok(Math.abs(Math.hypot(diagonal.x, diagonal.z) - 1) < 0.0001);
+  return { ...def, tuning, player, quarterDepth: 0, quarterAim: { x: 1, z: 0 } };
+}
+function close(a, b, label) {
+  assert.ok(Math.abs(a - b) < 1e-7, `${label}: ${a} != ${b}`);
+}
+
+test('lower camera perspective is mild and projection is invertible', () => {
+  const view = { width: 1280, height: 760, x: 480, depth: 0, zoom: 1 };
+  for (const depth of [-480, -100, 0, 150, 480]) {
+    const p = groundPoint(830, depth, view),
+      back = groundFromScreen(p.x, p.y, view);
+    close(back.x, 830, 'x');
+    close(back.depth, depth, 'depth');
+    assert.ok(p.scale > 0.9 && p.scale < 1.13);
+  }
+  assert.ok(groundPoint(480, 100, view).y - groundPoint(480, 0, view).y < 40);
 });
-test('strike respects depth, direction, cooldown and one kill per enemy', () => {
-  const state = createState();
-  state.hero.aim = unit(1, 0);
-  const enemy = { x: 70, z: 0, hp: 1 };
-  state.enemies = [enemy];
-  assert.equal(inStrike(state.hero, { x: -70, z: 0 }), false);
-  assert.equal(inStrike(state.hero, { x: 50, z: 150 }), false);
-  assert.equal(attack(state), true);
-  assert.equal(state.kills, 1);
-  assert.equal(attack(state), false);
-  state.hero.cooldown = 0;
-  attack(state);
-  assert.equal(state.kills, 1);
+
+for (const def of saved.characters) {
+  test(`${def.id}: every authored action retains timing, pose and motion under a horizontal ground projection`, () => {
+    const baseline = fixture(def.id),
+      quarter = fixture(def.id);
+    for (const action of baseline.player.actions) {
+      const a = fixture(def.id),
+        b = fixture(def.id);
+      for (const actor of [a, b]) {
+        const player = actor.player,
+          settings = player.actionSettings[action.key] || {};
+        const link = settings.formulas?.find((formula) => formula.type === 'link' && formula.enabled);
+        const source = link?.fromActions[0];
+        if (settings.condition === 'air' || source === 'fall') {
+          player.onGround = false;
+          player.y -= 50;
+          player.fallbackActionKey = 'fall';
+        }
+        if (source && source !== 'fall') {
+          player.customActionKey = source;
+          player.customActionDuration = player.getActionDuration(source, 0.6);
+          const frames = timelineFrameCount(player.actionSettings[source]);
+          player.customActionElapsed = player.customActionDuration * ((link.startFrame - 1) / Math.max(1, frames - 1));
+          player.customActionTime = Math.max(0.001, player.customActionDuration - player.customActionElapsed);
+        }
+      }
+      assert.equal(requestRuntimeAction(a.player, action.key, 1, 'tap'), true, action.key);
+      assert.equal(requestRuntimeAction(b.player, action.key, 1, 'tap'), true, action.key);
+      for (let frame = 0; frame < 90; frame++) {
+        a.player.updateNpc(1 / 60, null, world);
+        preparePlaneMotion(b, null);
+        b.player.updateNpc(1 / 60, null, world);
+        finishPlaneMotion(b);
+        for (const key of ['x', 'y', 'vx', 'vy', 'customActionElapsed', 'customActionTime'])
+          close(a.player[key] || 0, b.player[key] || 0, `${action.key}.${key}@${frame}`);
+        assert.equal(a.player.actionKey, b.player.actionKey);
+        assert.deepEqual(a.player.getPartOffset('weapon'), b.player.getPartOffset('weapon'));
+      }
+    }
+    assert.ok(quarter.player.actions.length > 0);
+  });
+}
+
+test('600-frame real input sequence preserves charge, movement, jump, roll, guard and combo state', () => {
+  const a = fixture(),
+    b = fixture();
+  const segments = [
+    [60, ['ArrowRight']],
+    [20, ['Space']],
+    [40, ['KeyQ']],
+    [20, []],
+    [25, ['KeyW']],
+    [20, ['KeyE']],
+    [80, ['KeyQ']],
+    [45, []],
+    [40, ['ArrowLeft', 'ShiftLeft']],
+    [15, ['ArrowUp', 'KeyW']],
+    [235, []],
+  ];
+  let previous = new Set();
+  for (const [frames, codes] of segments)
+    for (let frame = 0; frame < frames; frame++) {
+      const keys = new Set(codes),
+        pressed = new Set(codes.filter((code) => !previous.has(code)));
+      previous = keys;
+      for (const actor of [a, b]) {
+        updateRunSkills(actor.player, 1 / 60);
+        const charge = updateChargeAttack(actor.player, 1 / 60, keys, pressed, requestRuntimeAction);
+        const input = actor === b ? preparePlaneMotion(actor, null, charge.keys, charge.pressed) : charge;
+        actor.player.update(1 / 60, input.keys, input.pressed, world);
+        if (actor === b) finishPlaneMotion(actor);
+      }
+      for (const key of ['x', 'y', 'vx', 'vy', 'customActionTime', 'runChargedPower', 'runEvadeTime', 'runParryTime'])
+        close(a.player[key] || 0, b.player[key] || 0, key);
+      assert.equal(a.player.actionKey, b.player.actionKey);
+    }
 });
-test('pause, dodge immunity, death and boundaries', () => {
-  const state = createState();
-  spawnWave(state);
-  state.paused = true;
-  const before = JSON.stringify(state);
-  tick(state, 0.1, unit(1, 0), true, true);
-  assert.equal(JSON.stringify(state), before);
-  state.paused = false;
-  state.enemies = [{ x: 45, z: 0, hp: 3, warning: 0.01, cooldown: 0, flash: 0, swing: 0, aim: unit(1, 0) }];
-  tick(state, 0.02, unit(0, 0), false, true);
-  assert.equal(state.hero.hp, 100);
-  assert.ok(state.hero.dashCooldown > 0);
-  move(state.hero, unit(1, 0), 99999);
-  assert.equal(state.hero.x, LIMIT);
-  state.hero.hp = 0;
-  const dead = JSON.stringify(state);
-  tick(state, 0.1, unit(1, 0), true, true);
-  assert.equal(JSON.stringify(state), dead);
+
+test('depth movement uses native action displacement without diagonal speed inflation', () => {
+  const a = fixture(),
+    b = fixture();
+  for (let i = 0; i < 60; i++) {
+    a.player.update(1 / 60, new Set(['ArrowRight']), new Set(i ? [] : ['ArrowRight']), world);
+    const input = preparePlaneMotion(b, { x: 0, z: 1 }, new Set(['QuarterDown']), new Set(i ? [] : ['QuarterDown']));
+    b.player.update(1 / 60, input.keys, input.pressed, world);
+    finishPlaneMotion(b);
+  }
+  close(a.player.x - 480, b.quarterDepth, 'native travel');
+  close(b.player.x, 480, 'no sideways travel');
 });
-test('cleared wave heals and spawns bounded enemies', () => {
-  const state = createState();
-  state.hero.hp = 50;
-  tick(state, 1.6, unit(0, 0), false, false);
-  assert.equal(state.wave, 1);
-  assert.equal(state.hero.hp, 65);
-  assert.equal(state.enemies.length, 4);
+
+test('authored hurt polygons project along the attack direction and reject separated lanes', () => {
+  const a = fixture(),
+    b = fixture('swordman');
+  a.quarterAim = { x: 0, z: 1 };
+  b.player.x = a.player.x;
+  b.quarterDepth = 80;
+  const regions = b.player.hurtInteractionRegions;
+  const projected = combatTargetRegions(a, b, regions);
+  close(projected[0].x - regions[0].x, 80, 'forward attack distance');
+  b.player.x += 200;
+  assert.deepEqual(combatTargetRegions(a, b, regions), []);
+});
+
+test('pickup magnet respects depth and converges at native collection speed', () => {
+  const actor = fixture();
+  actor.hp = 100;
+  const pickup = { x: 480, y: 415, quarterDepth: 300, landed: true };
+  assert.equal(attractPickup(pickup, actor, 1 / 60, 140, 420), false);
+  pickup.quarterDepth = 100;
+  for (let i = 0; i < 30; i++) attractPickup(pickup, actor, 1 / 60, 140, 420);
+  assert.ok(pickup.quarterDepth < 16);
+});
+
+test('enemy ground direction preserves native face-away evasion', () => {
+  const enemy = fixture('archer'),
+    hero = fixture();
+  enemy.player.x = 600;
+  enemy.player.facing = 1;
+  hero.player.x = 480;
+  const direction = enemyPlaneDirection(enemy, hero);
+  assert.ok(direction.x > 0);
+  enemy.player.facing = -1;
+  assert.ok(enemyPlaneDirection(enemy, hero).x < 0);
 });

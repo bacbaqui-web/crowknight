@@ -12,15 +12,20 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
   updateActorCombatTimers(actors, dt);
   actors.forEach((actor) => updateEnemyAiCooldowns(actor, dt));
 
-  playerActor.player.update(dt, keys, pressed, world);
+  const plane = world?.quarterView;
+  const input = plane?.beforePlayer(playerActor, keys, pressed) || { keys, pressed };
+  playerActor.player.update(dt, input.keys, input.pressed, world);
+  plane?.afterMotion(playerActor);
 
   actors
     .filter((actor) => actor !== playerActor)
     .forEach((actor) => {
       if (actor.respawning) return;
       faceNpcActorTowardPlayer(actor, playerActor);
-      runEnemyRangeAi(actor, playerActor);
+      plane?.beforeEnemy(actor, playerActor);
+      runEnemyRangeAi(actor, playerActor, world);
       actor.player.updateNpc(dt, playerActor.player, world);
+      plane?.afterMotion(actor);
     });
 }
 
@@ -70,11 +75,13 @@ function shouldNpcFacePlayer(actor, playerActor) {
   return group === 'mobs' || group === 'bosses';
 }
 
-function runEnemyRangeAi(actor, playerActor) {
+function runEnemyRangeAi(actor, playerActor, world) {
   if (!shouldNpcFacePlayer(actor, playerActor)) return;
   if (actor.player.isCustomActionActive) return;
 
-  const distance = Math.abs(Number(playerActor.player.x || 0) - Number(actor.player.x || 0));
+  const distance =
+    world?.quarterView?.distance(actor, playerActor) ??
+    Math.abs(Number(playerActor.player.x || 0) - Number(actor.player.x || 0));
   const candidate = enemyRangeActionCandidate(actor, distance);
   if (!candidate) return;
 
@@ -186,6 +193,7 @@ function respawnEnemyActor(actor, playerActor, world) {
   actor.player.dead = false;
   actor.player.deathRagdoll = null;
   actor.player.x = enemyRespawnX(actor, playerActor, world);
+  world?.quarterView?.respawn(actor, playerActor);
   actor.respawnTargetX = actor.player.x;
   actor.player.y = Number(world?.floorY ?? actor.player.y);
   actor.player.vx = 0;

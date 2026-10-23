@@ -99,6 +99,7 @@ const MOBILE_SCREEN_ZOOM_OFFSET = 0.2;
 const SETUP_SELECTED_ACTOR_STORAGE_KEY = 'crowKnight.setup.selectedActorId';
 const isEditorPage = document.body.classList.contains('settings-page');
 
+const isQuarterPage = document.body.classList.contains('quarter-view');
 const isBetaPage = document.body.classList.contains('beta-page');
 const projectRuntime = await loadProjectRuntime({
   mode: isEditorPage ? 'editor' : isBetaPage ? 'beta' : 'published',
@@ -119,6 +120,7 @@ const {
   initialPsdBackgroundChanged,
 } = projectRuntime;
 let sceneSession = projectRuntime.sceneSession;
+const quarter = isQuarterPage ? (await import('./quarter_view/runtime.js')).createQuarterRuntime({ ctx, world }) : null;
 const combatAudio = createCombatAudioPlayer();
 const gameMusic = createGameMusicController();
 const combatSounds = createCombatSoundController(combatAudio.play);
@@ -221,7 +223,7 @@ const releasePanel = createReleasePanel({
   revision: savedState.revision,
 });
 const rankingController = createRankingController({
-  remoteEnabled: !isEditorPage && !isBetaPage,
+  remoteEnabled: !isEditorPage && !isBetaPage && !isQuarterPage,
   elements: {
     rankingList,
     settingsRankingList,
@@ -278,10 +280,19 @@ const tuningPanel = isEditorPage
     };
 const runtimeDebugHud = isEditorPage ? createRuntimeDebugHud({ parent: canvas?.parentElement }) : { render: () => {} };
 bindKeyboardControls({
+  ...(quarter ? { mapCode: quarter.mapCode, gameKeys: quarter.gameKeys } : {}),
   keys,
   pressed,
   handleShortcut: (event) =>
     runUpgrades.isPaused() || experience.isPaused() || tuningPanel.handleKeyboardShortcut(event),
+});
+quarter?.bindPause({
+  isActive: runLifecycle.isRunActive,
+  clearInput: () => {
+    keys.clear();
+    pressed.clear();
+    cancelChargeAttack(runActorState.getPlayer().player);
+  },
 });
 markGameReady();
 requestAnimationFrame(loop);
@@ -301,7 +312,7 @@ function update(dt) {
   const playerActor = runActorState.getPlayer();
   captureActorMotionStart(gameActors);
 
-  if (controlGuideOpen) return;
+  if (controlGuideOpen || quarter?.isPaused()) return;
   if (runLifecycle.isRunActive()) {
     runUpgrades.update(dt);
     if (runUpgrades.isPaused()) return;
@@ -488,6 +499,19 @@ function handleRunStopped({ showResult }) {
 function draw() {
   const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const playerActor = runActorState.getPlayer();
+  if (quarter) {
+    quarter.draw({
+      actors: gameActors,
+      playerActor,
+      particleEffects,
+      experience,
+      healthDrops,
+      effectAssets,
+      screenZoom,
+    });
+    syncRunHud();
+    return;
+  }
   const renderActors = runActorState.getRenderActors(gameActors);
   const lifecycle = runLifecycle.getSnapshot();
   const view = getViewTransform({
@@ -624,6 +648,7 @@ function handleRunStarted() {
   keys.clear();
   pressed.clear();
   placeEnemyActorsAhead(gameActors, playerActor, world);
+  quarter?.reset(gameActors);
   gameActors.forEach((actor) => {
     actor.runtimeBossKillCounted = false;
   });

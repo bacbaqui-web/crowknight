@@ -4,13 +4,14 @@ import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
 import { cachedInteractionRegions, invalidateCachedInteractionRegions } from './combat_cache_helper.js';
 import { isMobActor, isBossActor } from './combat_rule_helper.js';
 
-export function resolveCollisionInteractions(actors, regionCache) {
+export function resolveCollisionInteractions(actors, regionCache, world = null) {
   for (let aIndex = 0; aIndex < actors.length; aIndex += 1) {
     for (let bIndex = aIndex + 1; bIndex < actors.length; bIndex += 1) {
       const a = actors[aIndex];
       const b = actors[bIndex];
       if (a.respawning || b.respawning || a.player?.dead || b.player?.dead) continue;
-      resolveActorCollisionPair(a, b, regionCache);
+      if (world?.quarterView) world.quarterView.resolveCollision(a, b);
+      else resolveActorCollisionPair(a, b, regionCache);
     }
   }
 }

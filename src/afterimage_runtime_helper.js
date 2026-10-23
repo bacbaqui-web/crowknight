@@ -4,6 +4,7 @@ import { timelineFrameCount, timelineFrameDelta } from './timeline_playback_help
 
 const PLAYER_SNAPSHOT_KEYS = [
   'x',
+  'quarterDepth',
   'y',
   'facing',
   'state',
@@ -26,7 +27,7 @@ export function updateFormulaAfterimages(actors = [], dt = 0) {
   actors.forEach((actor) => updateActorAfterimages(actor, dt));
 }
 
-export function drawFormulaAfterimages(ctx, actor) {
+export function drawFormulaAfterimages(ctx, actor, project = null) {
   if (!actor?.afterimages?.length || !actor?.player) return;
 
   const player = actor.player;
@@ -40,6 +41,7 @@ export function drawFormulaAfterimages(ctx, actor) {
       const alpha = ghostAlpha(ghost);
       if (alpha <= 0) return;
 
+      const restoreProjection = project?.(ghost.snapshot);
       ctx.save();
       ctx.globalAlpha *= alpha;
       applyPlayerSnapshot(player, ghost.snapshot);
@@ -51,6 +53,7 @@ export function drawFormulaAfterimages(ctx, actor) {
       player.glowParts = [];
       player.draw(ctx);
       ctx.restore();
+      restoreProjection?.();
     });
 
   applyPlayerSnapshot(player, liveState);

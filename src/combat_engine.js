@@ -33,8 +33,16 @@ export function resolveCombat({
   onEnemyDeath,
 }) {
   const regionCache = createInteractionRegionFrameCache();
-  resolveCollisionInteractions(actors, regionCache);
-  resolveCollisionHurtInteractions({ actors, playerActor, onPlayerDeath, onPlayerKill, onEnemyDeath, regionCache });
+  resolveCollisionInteractions(actors, regionCache, world);
+  resolveCollisionHurtInteractions({
+    actors,
+    playerActor,
+    onPlayerDeath,
+    onPlayerKill,
+    onEnemyDeath,
+    regionCache,
+    world,
+  });
 
   actors.forEach((attacker) => {
     if (attacker.player?.dead) return;
@@ -49,11 +57,13 @@ export function resolveCombat({
         return;
       }
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
-      const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
+      const rawHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
+      const targetHurtRegions = world?.quarterView?.targetRegions(attacker, target, rawHurtRegions) ?? rawHurtRegions;
       const guardBlockAttackRegion = overlappingGuardBlockAttackRegion(
         attacker,
         attackRegions,
-        cachedInteractionRegions(regionCache, target, 'guard')
+        world?.quarterView?.targetRegions(attacker, target, cachedInteractionRegions(regionCache, target, 'guard')) ??
+          cachedInteractionRegions(regionCache, target, 'guard')
       );
       const attackRegion = overlappingAttackRegion(attacker, attackRegions, targetHurtRegions);
       if (!attackRegion && !guardBlockAttackRegion) {
@@ -89,6 +99,7 @@ export function resolveCombat({
           });
         }
         applyHitReaction(attacker, target, guardBlockAttackRegion, comboStep, particleEffects, world);
+        world?.quarterView?.afterHit(attacker, target);
         return;
       }
 
@@ -133,6 +144,7 @@ export function resolveCombat({
       if (removed) return;
 
       applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects, world);
+      world?.quarterView?.afterHit(attacker, target);
     });
   });
 
@@ -161,6 +173,8 @@ export function resolveProjectileCombat({
         return;
       }
       if (projectile.hitTargets?.has(target)) return;
+      if (world?.quarterView && Math.abs(Number(projectile.quarterDepth || 0) - Number(target.quarterDepth || 0)) > 35)
+        return;
       const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
       const hurtRegion = overlappingAttackRegion(projectile.owner, [attackRegion], targetHurtRegions);
       if (!hurtRegion) return;
@@ -195,7 +209,10 @@ export function resolveProjectileCombat({
         onEnemyDeath,
       });
       removeProjectile(projectile);
-      if (!removed) applyHitReaction(projectile.owner, target, attackRegion, 1, particleEffects, world);
+      if (!removed) {
+        applyHitReaction(projectile.owner, target, attackRegion, 1, particleEffects, world);
+        world?.quarterView?.afterHit(projectile.owner, target);
+      }
     });
   });
 }
@@ -207,6 +224,7 @@ export function resolveCollisionHurtInteractions({
   onPlayerKill,
   onEnemyDeath,
   regionCache,
+  world = null,
 }) {
   actors.forEach((source) => {
     if (source.player?.dead) return;
@@ -216,6 +234,7 @@ export function resolveCollisionHurtInteractions({
 
     actors.forEach((target) => {
       if (shouldSkipTarget(source, target)) return;
+      if (world?.quarterView && !world.quarterView.sameGroundContact(source, target)) return;
       if (shouldBlockMobBossDamage(source, target)) {
         logMobBossDamageBlocked(source, target, 'collision-hurt-mob-boss-blocked');
         return;

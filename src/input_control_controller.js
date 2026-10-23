@@ -1,7 +1,13 @@
 import { GAME_KEYS } from './game_config_data.js';
 import { isTextInput } from './editor_shortcut_helper.js';
 
-export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
+export function bindKeyboardControls({
+  keys,
+  pressed,
+  handleShortcut,
+  mapCode = (code) => code,
+  gameKeys = GAME_KEYS,
+}) {
   const releaseKeys = () => {
     keys.clear();
     pressed.clear();
@@ -15,12 +21,13 @@ export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
     (event) => {
       if (handleShortcut(event)) return;
       if (event.metaKey || event.ctrlKey) return;
-      if (!GAME_KEYS.has(event.code)) return;
+      const code = mapCode(event.code);
+      if (!gameKeys.has(code)) return;
       if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
-      if (!keys.has(event.code)) pressed.add(event.code);
-      keys.add(event.code);
+      if (!keys.has(code)) pressed.add(code);
+      keys.add(code);
       if (event.code === 'ShiftRight') {
         if (!keys.has('ShiftLeft')) pressed.add('ShiftLeft');
         keys.add('ShiftLeft');
@@ -33,11 +40,12 @@ export function bindKeyboardControls({ keys, pressed, handleShortcut }) {
     'keyup',
     (event) => {
       if (event.metaKey || event.ctrlKey) return;
-      if (!GAME_KEYS.has(event.code)) return;
+      const code = mapCode(event.code);
+      if (!gameKeys.has(code)) return;
       if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
-      keys.delete(event.code);
+      keys.delete(code);
       if (event.code === 'ShiftRight' || event.code === 'ShiftLeft') {
         if (event.shiftKey) keys.add('ShiftLeft');
         else keys.delete('ShiftLeft');
@@ -106,14 +114,18 @@ export function bindCollapsibleSections() {
 }
 
 export function bindChoiceNumberKeys({ modal, cards, target = window }) {
-  target.addEventListener('keydown', (event) => {
-    if (modal.hidden || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
-    const match = /^(?:Digit|Numpad)([1-4])$/.exec(event.code);
-    const number = match ? Number(match[1]) : Number(event.key);
-    if (!Number.isInteger(number) || number < 1 || number > 4) return;
-    const button = cards.querySelectorAll('button')[number - 1];
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    if (!event.repeat) button?.click();
-  }, true);
+  target.addEventListener(
+    'keydown',
+    (event) => {
+      if (modal.hidden || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+      const match = /^(?:Digit|Numpad)([1-4])$/.exec(event.code);
+      const number = match ? Number(match[1]) : Number(event.key);
+      if (!Number.isInteger(number) || number < 1 || number > 4) return;
+      const button = cards.querySelectorAll('button')[number - 1];
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!event.repeat) button?.click();
+    },
+    true
+  );
 }

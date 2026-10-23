@@ -31,6 +31,7 @@ export function createParticleEffects({ actors, world, ctx }) {
 
       const direction = player.vx > 0 ? -1 : 1;
       dustParticles.push({
+        ...(player.quarterDepth != null ? { quarterDepth: player.quarterDepth } : {}),
         x: player.x + direction * (22 + Math.random() * 12),
         y: world.floorY - 7 + Math.random() * 6,
         vx: direction * (28 + Math.random() * 38),
@@ -48,6 +49,7 @@ export function createParticleEffects({ actors, world, ctx }) {
     for (let index = 0; index < count; index += 1) {
       const side = index % 2 === 0 ? -1 : 1;
       dustParticles.push({
+        ...(player.quarterDepth != null ? { quarterDepth: player.quarterDepth } : {}),
         x: player.x + side * (7 + Math.random() * 12),
         y: world.floorY - 5 + Math.random() * 5,
         vx: side * (42 + Math.random() * 48) + player.vx * 0.06,
@@ -66,6 +68,7 @@ export function createParticleEffects({ actors, world, ctx }) {
     for (let index = 0; index < count; index += 1) {
       const side = index % 2 === 0 ? -1 : 1;
       dustParticles.push({
+        ...(player.quarterDepth != null ? { quarterDepth: player.quarterDepth } : {}),
         x: player.x + side * (8 + Math.random() * 18),
         y: world.floorY - 4 + Math.random() * 6,
         vx: side * (64 + Math.random() * 130) * impact + player.vx * 0.06,
@@ -91,6 +94,7 @@ export function createParticleEffects({ actors, world, ctx }) {
 
   function drawDust() {
     dustParticles.forEach((particle) => {
+      const restoreProjection = world?.quarterView?.projectEntity(particle);
       const alpha = Math.max(0, particle.life / particle.maxLife) * 0.42;
       const stretchX = particle.stretchX || 1;
       ctx.fillStyle = `rgba(245, 248, 255, ${alpha})`;
@@ -101,6 +105,7 @@ export function createParticleEffects({ actors, world, ctx }) {
       ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+      restoreProjection?.();
     });
   }
 
@@ -111,23 +116,24 @@ export function createParticleEffects({ actors, world, ctx }) {
     const effects = attacker.tuning.effects || {};
     const spark = Number(effects.hitSpark ?? 1);
     const power = defeated ? 1.45 : comboStep === 3 ? 1.25 : 1;
-    spawnHitSparks(hitX, hitY, attacker.player.facing, power * spark);
+    spawnHitSparks(hitX, hitY, attacker.player.facing, power * spark, attacker.quarterDepth);
   }
 
   function triggerGuardImpact(attacker, target, broken = false) {
     const box = attacker.player.attackInteractionRegion;
     const hitX = box ? box.x + box.w * 0.5 : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 72;
-    spawnHitSparks(hitX, hitY, -attacker.player.facing, broken ? 1.45 : 1.05);
+    spawnHitSparks(hitX, hitY, -attacker.player.facing, broken ? 1.45 : 1.05, target.quarterDepth);
     attacker.player.vx = -attacker.player.facing * (broken ? 105 : 68);
   }
 
-  function spawnHitSparks(x, y, direction, power = 1) {
+  function spawnHitSparks(x, y, direction, power = 1, quarterDepth = null) {
     const count = Math.round(7 + power * 5);
     for (let index = 0; index < count; index += 1) {
       const angle = (Math.random() - 0.5) * Math.PI * 0.9 + (direction === 1 ? 0 : Math.PI);
       const speed = (145 + Math.random() * 185) * power;
       hitSparks.push({
+        ...(quarterDepth != null ? { quarterDepth } : {}),
         x,
         y: y + (Math.random() - 0.5) * 24,
         vx: Math.cos(angle) * speed,
@@ -153,6 +159,7 @@ export function createParticleEffects({ actors, world, ctx }) {
 
   function drawHitSparks() {
     hitSparks.forEach((spark) => {
+      const restoreProjection = world?.quarterView?.projectEntity(spark);
       const alpha = clamp(spark.life / spark.maxLife, 0, 1);
       const angle = Math.atan2(spark.vy, spark.vx);
       ctx.save();
@@ -173,6 +180,7 @@ export function createParticleEffects({ actors, world, ctx }) {
       ctx.lineTo(spark.length * 0.42, 0);
       ctx.stroke();
       ctx.restore();
+      restoreProjection?.();
     });
   }
 
@@ -249,6 +257,7 @@ export function createParticleEffects({ actors, world, ctx }) {
       const speed = ((210 + Math.random() * 230) * burstPower * knockbackScale) / piece.weight;
       const sideSpeed = speed * spread;
       deathParticles.push({
+        ...(actor.quarterDepth != null ? { quarterDepth: actor.quarterDepth } : {}),
         image: piece.image,
         x: player.x + piece.x * player.facing * scale,
         y: player.y + piece.y * scale,
@@ -293,6 +302,7 @@ export function createParticleEffects({ actors, world, ctx }) {
 
   function drawDeathParticles() {
     deathParticles.forEach((particle) => {
+      const restoreProjection = world?.quarterView?.projectEntity(particle);
       const alpha = clamp(particle.life / particle.maxLife, 0, 1);
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -300,6 +310,7 @@ export function createParticleEffects({ actors, world, ctx }) {
       ctx.rotate(particle.rotation);
       ctx.drawImage(particle.image, -particle.width / 2, -particle.height / 2, particle.width, particle.height);
       ctx.restore();
+      restoreProjection?.();
     });
   }
 

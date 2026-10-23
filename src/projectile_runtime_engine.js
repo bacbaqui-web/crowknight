@@ -29,9 +29,19 @@ export function removeProjectile(projectile) {
   if (projectile) projectile.active = false;
 }
 
-export function drawProjectiles(ctx, effectAssets) {
-  projectilePool.forEach((projectile) => drawProjectileLandingMarker(ctx, projectile));
-  projectilePool.forEach((projectile) => drawProjectile(ctx, projectile, effectAssets));
+export function drawProjectiles(ctx, effectAssets, project = null) {
+  projectilePool.forEach((projectile) =>
+    project
+      ? project({ ...projectile, x: projectile.targetX, quarterDepth: projectile.targetDepth }, () =>
+          drawProjectileLandingMarker(ctx, projectile)
+        )
+      : drawProjectileLandingMarker(ctx, projectile)
+  );
+  projectilePool.forEach((projectile) =>
+    project
+      ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
+      : drawProjectile(ctx, projectile, effectAssets)
+  );
 }
 
 function spawnActorProjectileIfNeeded(actor, playerActor) {
@@ -91,6 +101,13 @@ function spawnProjectile(actor, playerActor, formula, settings) {
     ownerId: actor.id,
     actionKey: actor.player.actionKey,
     imageKey: formula.imageKey,
+    ...(actor.quarterDepth != null
+      ? {
+          quarterDepth: actor.quarterDepth,
+          startDepth: actor.quarterDepth,
+          targetDepth: playerActor?.quarterDepth || 0,
+        }
+      : {}),
     startX,
     startY,
     targetX,
@@ -134,6 +151,7 @@ function advanceProjectile(projectile, dt) {
 
 function syncProjectilePosition(projectile) {
   const t = Math.max(0, Math.min(1, projectile.elapsedFrames / Math.max(1, projectile.flightFrames)));
+  if (projectile.startDepth != null) projectile.quarterDepth = lerp(projectile.startDepth, projectile.targetDepth, t);
   projectile.x = lerp(projectile.startX, projectile.targetX, t);
   projectile.y = lerp(projectile.startY, projectile.targetY, t) - Number(projectile.arcHeight || 0) * 4 * t * (1 - t);
   const dx = projectile.targetX - projectile.startX;
