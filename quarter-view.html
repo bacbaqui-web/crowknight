@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crow Knight · 쿼터뷰 시험장</title>
+    <link rel="stylesheet" href="./src/quarter_view/style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <span class="eyebrow">CROW KNIGHT / VIEW LAB 01</span>
+        <h1>쿼터뷰 시험장 <small>PLAYABLE PROTOTYPE</small></h1>
+      </div>
+      <a href="./index.html">횡스크롤 본편 ↗</a>
+    </header>
+    <main>
+      <section class="arena" aria-label="쿼터뷰 게임">
+        <canvas
+          id="arena"
+          width="1280"
+          height="760"
+          tabindex="0"
+          aria-label="방향키 또는 WASD 이동, Q 공격, Space 회피"
+        ></canvas>
+        <div class="hud">
+          <div>
+            <span>체력</span><strong id="health">100 / 100</strong
+            ><meter id="health-meter" min="0" max="100" value="100"></meter>
+          </div>
+          <div><span>WAVE</span><strong id="wave">01</strong></div>
+          <div><span>처치</span><strong id="kills">0</strong></div>
+        </div>
+        <div id="message" role="status">기존 캐릭터를 불러오는 중입니다…</div>
+        <div class="bottom"><span id="dash">회피 준비</span><span>붉은 원을 피하고, 적을 향해 공격하세요</span></div>
+      </section>
+      <aside>
+        <div>
+          <h2>평면 위에서 싸워보세요</h2>
+          <p>방향키 / WASD 이동 · 마우스로 조준 · 클릭 / Q 공격<br />Space / Shift 회피 · P 일시정지 · R 다시 시작</p>
+          <p class="muted">마우스를 사용하지 않으면 이동 방향으로 공격합니다. 웨이브를 마치면 체력 +15.</p>
+        </div>
+        <div class="actions"><button id="pause">일시정지</button><button id="restart">다시 시작</button></div>
+      </aside>
+      <div class="touch">
+        <div>
+          <button data-key="ArrowUp">↑</button><button data-key="ArrowLeft">←</button
+          ><button data-key="ArrowDown">↓</button><button data-key="ArrowRight">→</button>
+        </div>
+        <div><button data-key="KeyQ">공격</button><button data-key="Space">회피</button></div>
+      </div>
+      <footer>
+        시점·이동·거리 판정 실험용입니다. 기존 캐릭터와 애니메이션을 재사용하며, 측면 에셋이라 위·아래 전용 외형은
+        없습니다. 본편 스킬·성장·랭킹은 연결하지 않습니다.
+      </footer>
+    </main>
+    <script type="module" src="./src/quarter_view/main.js"></script>
+  </body>
+</html>
