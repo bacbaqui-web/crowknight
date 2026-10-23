@@ -1,3 +1,4 @@
+import { createFacingProjection } from './facing.js';
 import { groundPoint, depthOf } from './camera.js';
 import { drawActor, drawAttackTrail } from '../actor_canvas_renderer.js';
 import { drawFormulaAfterimages } from '../afterimage_runtime_helper.js';
@@ -79,6 +80,7 @@ export function createQuarterRenderer({ ctx, world }) {
       .filter((actor) => !actor.respawning)
       .sort((a, b) => depthOf(a) - depthOf(b))
       .forEach((actor) => {
+        actor.player.viewProjection ||= createFacingProjection(actor);
         drawFormulaAfterimages(ctx, actor, projectEntity);
         drawRollGhosts(ctx, actor, projectEntity);
         projectEntity(actor);

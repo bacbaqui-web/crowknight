@@ -11,6 +11,7 @@ export function preparePlaneMotion(actor, direction, keys = null, pressed = null
   const group = player.actionSettings?.[player.actionKey]?.group;
   if (direction && (!player.isCustomActionActive || group === 'movement')) actor.quarterAim = direction;
   actor.quarterAim ||= { x: player.facing || 1, z: 0 };
+  player.quarterAim = { ...actor.quarterAim };
   // Preserve the original action's scalar velocity; only map its displacement onto the ground.
   actor.quarterMotionStart = { x: player.x, z: depthOf(actor) };
   const input = { keys: new Set(keys || []), pressed: new Set(pressed || []) };

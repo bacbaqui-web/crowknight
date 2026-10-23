@@ -111,17 +111,28 @@ export function createParticleEffects({ actors, world, ctx }) {
 
   function triggerHitImpact(attacker, target, comboStep, defeated = false) {
     const box = attacker.player.attackInteractionRegion;
-    const hitX = box ? box.x + box.w * (attacker.player.facing === 1 ? 0.68 : 0.32) : target.player.x;
+    const hitX =
+      attacker.quarterDepth != null
+        ? target.player.x
+        : box
+          ? box.x + box.w * (attacker.player.facing === 1 ? 0.68 : 0.32)
+          : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 70;
     const effects = attacker.tuning.effects || {};
     const spark = Number(effects.hitSpark ?? 1);
     const power = defeated ? 1.45 : comboStep === 3 ? 1.25 : 1;
-    spawnHitSparks(hitX, hitY, attacker.player.facing, power * spark, attacker.quarterDepth);
+    spawnHitSparks(
+      hitX,
+      hitY,
+      attacker.player.facing,
+      power * spark,
+      attacker.quarterDepth != null ? target.quarterDepth : undefined
+    );
   }
 
   function triggerGuardImpact(attacker, target, broken = false) {
     const box = attacker.player.attackInteractionRegion;
-    const hitX = box ? box.x + box.w * 0.5 : target.player.x;
+    const hitX = attacker.quarterDepth != null ? target.player.x : box ? box.x + box.w * 0.5 : target.player.x;
     const hitY = box ? box.y + box.h * 0.5 : target.player.y - 72;
     spawnHitSparks(hitX, hitY, -attacker.player.facing, broken ? 1.45 : 1.05, target.quarterDepth);
     attacker.player.vx = -attacker.player.facing * (broken ? 105 : 68);

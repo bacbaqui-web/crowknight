@@ -5,6 +5,7 @@ import { timelineFrameCount, timelineFrameDelta } from './timeline_playback_help
 const PLAYER_SNAPSHOT_KEYS = [
   'x',
   'quarterDepth',
+  'quarterAim',
   'y',
   'facing',
   'state',
@@ -121,7 +122,10 @@ function capturePlayerSnapshot(player) {
   return Object.fromEntries(
     PLAYER_SNAPSHOT_KEYS.map((key) => [
       key,
-      key === 'customActionRepeatRelease' || key === 'customActionBlend' || key === 'actionPreview'
+      key === 'quarterAim' ||
+      key === 'customActionRepeatRelease' ||
+      key === 'customActionBlend' ||
+      key === 'actionPreview'
         ? clone(player[key] || null)
         : player[key],
     ])
@@ -131,7 +135,10 @@ function capturePlayerSnapshot(player) {
 function applyPlayerSnapshot(player, snapshot = {}) {
   PLAYER_SNAPSHOT_KEYS.forEach((key) => {
     player[key] =
-      key === 'customActionRepeatRelease' || key === 'customActionBlend' || key === 'actionPreview'
+      key === 'quarterAim' ||
+      key === 'customActionRepeatRelease' ||
+      key === 'customActionBlend' ||
+      key === 'actionPreview'
         ? clone(snapshot[key] || null)
         : snapshot[key];
   });
