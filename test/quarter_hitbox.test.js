@@ -57,7 +57,7 @@ for (const side of [-1, 1])
         layers = [...hero.player.layerOrder];
       const targets = [
         makeActor('swordman', hero.player.x, hero.quarterDepth + z * 80),
-        makeActor('swordman', hero.player.x, hero.quarterDepth - z * 180),
+        makeActor('swordman', hero.player.x, hero.quarterDepth - z * 80),
         makeActor('swordman', hero.player.x + 180, hero.quarterDepth),
       ];
       targets.forEach((target, index) => {
