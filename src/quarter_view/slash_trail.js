@@ -45,7 +45,7 @@ export function createSlashTrails(ctx, world) {
       if (plane === 'ground') rootPoint.y = tipPoint.y = world.floorY;
       entry.samples.push({
         time: now,
-        key: `${actor.player.attackSerial}:${plane}:${region.key}`,
+        key: `${actor.player.attackSerial}:${plane}:${region.key}:${actor.player.facing}`,
         root: rootPoint,
         tip: tipPoint,
         screenRoot: {},

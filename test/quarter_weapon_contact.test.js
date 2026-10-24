@@ -5,7 +5,7 @@ import { URL } from 'node:url';
 import { PuppetPlayer } from '../src/actor_runtime_engine.js';
 import { defaultTuningFor } from '../src/actor_tuning_helper.js';
 import { mergeTuning } from '../src/project_data_normalizer_helper.js';
-import { alignEnemyWeaponRegions } from '../src/quarter_view/weapon_contact.js';
+import { alignEnemyWeaponRegions, syncEnemyWeaponFacing } from '../src/quarter_view/weapon_contact.js';
 
 const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
 for (const id of ['enemy_01', 'swordman'])
@@ -66,4 +66,18 @@ test('arrows retain projectile handling and melee reach upgrades still expand th
   player.runUpgrades.reach = 1.5;
   const b = alignEnemyWeaponRegions(actor, raw)[0];
   assert.ok(Math.abs(b.w / a.w - 1.5) < 1e-6);
+});
+
+test('an attacking enemy turning its sprite also mirrors the attack aim without sweeping through its body', () => {
+  const actor = {
+    quarterAim: { x: 0.8, z: 0.6 },
+    previousAttackRegions: [{ key: 'old' }],
+    player: { facing: -1, actionKey: 'slash', actionSettings: { slash: { group: 'attack' } } },
+  };
+  syncEnemyWeaponFacing(actor);
+  assert.deepEqual(actor.quarterAim, { x: -0.8, z: 0.6 });
+  assert.deepEqual(actor.previousAttackRegions, []);
+  actor.quarterAim = { x: 0, z: 1 };
+  syncEnemyWeaponFacing(actor);
+  assert.deepEqual(actor.quarterAim, { x: 0, z: 1 });
 });

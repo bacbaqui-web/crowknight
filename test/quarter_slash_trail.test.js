@@ -101,3 +101,14 @@ test('projectile hitboxes rotate with the arrow sprite and keep the authored rea
   assert.equal(r.reaction, arrow.reaction);
   assert.ok(r.points.every((p) => Math.abs(p.x - 100) <= 4.00001 && Math.abs(p.y - 200) <= 40.00001));
 });
+
+test('an instantaneous facing flip cannot connect two opposite sword trails even in the same action', () => {
+  const { trail, actor, calls, region } = fixture();
+  trail.capture(actor, [region()]);
+  actor.player.facing = -1;
+  actor.quarterAim = { x: -1, z: 0 };
+  actor.player.animTime += 1 / 60;
+  trail.capture(actor, [region(100)]);
+  trail.draw(actor, view);
+  assert.equal(calls.fills, 0);
+});

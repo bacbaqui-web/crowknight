@@ -51,3 +51,12 @@ export function alignEnemyWeaponRegions(actor, regions) {
       : region
   );
 }
+
+export function syncEnemyWeaponFacing(actor) {
+  const aim = actor.quarterAim;
+  if (actor.player.actionSettings?.[actor.player.actionKey]?.group !== 'attack' || !aim?.x) return;
+  if (aim.x * (actor.player.facing || 1) >= 0) return;
+  actor.quarterAim = { x: -aim.x, z: aim.z };
+  // A mirrored pose is a discontinuity, not a sword sweep across the entire actor.
+  actor.previousAttackRegions = [];
+}
