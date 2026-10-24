@@ -38,7 +38,9 @@ export function drawHealthMeter(ctx, actor, x, y, width) {
   ctx.strokeStyle = 'rgba(0,0,0,.65)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let hp = 10; hp < max; hp += 10) {
+  // Retain ten-HP ticks while readable; dense upgrades must not create unbounded paths.
+  const tickStep = 10 * Math.max(1, Math.ceil(max / 10 / Math.max(1, Math.floor(width / 3))));
+  for (let hp = tickStep; hp < max; hp += tickStep) {
     const tickX = left + (width * hp) / max;
     ctx.moveTo(tickX, y);
     ctx.lineTo(tickX, y + height);

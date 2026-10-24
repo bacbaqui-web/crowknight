@@ -1,7 +1,7 @@
 import { attackPlane } from '../attack_plane_helper.js';
 import { attackOrigin } from './attack_geometry.js';
 import { depthOf, normalizeDirection } from './camera.js';
-import { readInteractionRegions } from '../combat_cache_helper.js';
+import { readInteractionRegions, cachedInteractionRegions } from '../combat_cache_helper.js';
 import { collisionPushShares } from '../combat_collision_helper.js';
 
 export function combatTargetRegions(attacker, target, regions, source = null) {
@@ -44,15 +44,21 @@ export function groundProjectileRegion(projectile, region) {
   return { ...region, quarterPlane: 'ground', y: depthOf(projectile) - 16, h: 32, points: null };
 }
 
-export function resolveGroundCollision(a, b) {
-  const ar = readInteractionRegions(a, 'collision')[0],
-    br = readInteractionRegions(b, 'collision')[0];
-  if (!ar || !br || (ar.reaction.noOverlap === false && br.reaction.noOverlap === false)) return;
-  if (Math.abs(a.player.y - b.player.y) > (ar.h + br.h) / 2) return;
+export function resolveGroundCollision(a, b, dimensions = null) {
   const dx = b.player.x - a.player.x,
     dz = depthOf(b) - depthOf(a);
-  const distance = Math.hypot(dx, dz),
-    radius = Math.min(80, (ar.w + br.w) / 2);
+  const distance = Math.hypot(dx, dz);
+  // The exact collision radius below is capped at 80, regardless of authored scale.
+  if (distance >= 80) return;
+  const ar = (
+      dimensions ? cachedInteractionRegions(dimensions, a, 'collision') : readInteractionRegions(a, 'collision')
+    )[0],
+    br = (
+      dimensions ? cachedInteractionRegions(dimensions, b, 'collision') : readInteractionRegions(b, 'collision')
+    )[0];
+  if (!ar || !br || (ar.reaction.noOverlap === false && br.reaction.noOverlap === false)) return;
+  if (Math.abs(a.player.y - b.player.y) > (ar.h + br.h) / 2) return;
+  const radius = Math.min(80, (ar.w + br.w) / 2);
   if (distance >= radius) return;
   const normal = normalizeDirection(dx, dz) || { x: 1, z: 0 };
   const aPush = Number(ar.reaction.pushPower || 0) * Number(br.reaction.resistance ?? 1);

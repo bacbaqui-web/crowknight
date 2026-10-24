@@ -60,3 +60,23 @@ test('100 HP 바는 10마다 9개 눈금을 그리며 빨간 부분은 실제 HP
   assert.equal(fills[1][2], 120);
   assert.equal(fills[2][2], 96);
 });
+
+test('HP 눈금은 작은 체력에서 기존 10 HP 간격을 유지하고 큰 체력에서는 표시 폭으로 제한한다', () => {
+  const ticks = [];
+  const ctx = {
+    fillRect() {},
+    strokeRect() {},
+    beginPath() {},
+    moveTo(x) {
+      ticks.push(x);
+    },
+    lineTo() {},
+    stroke() {},
+  };
+  drawHealthMeter(ctx, { hp: 100, maxHp: 100 }, 50, 0, 100);
+  assert.equal(ticks.length, 9);
+  ticks.length = 0;
+  drawHealthMeter(ctx, { hp: 1000000, maxHp: 1000000 }, 60, 0, 120);
+  assert.ok(ticks.length <= 40);
+  assert.ok(ticks.every((x, i) => i === 0 || x - ticks[i - 1] >= 3));
+});

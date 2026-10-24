@@ -1,16 +1,22 @@
 import { interactionRegionsOverlap } from './interaction_overlap_helper.js';
 import { debugInteractionRuntimeLog } from './interaction_region_engine.js';
 import { isRuntimeDebugEnabled } from './runtime_debug_state.js';
-import { cachedInteractionRegions, invalidateCachedInteractionRegions } from './combat_cache_helper.js';
+import {
+  cachedInteractionRegions,
+  invalidateCachedInteractionRegions,
+  createInteractionRegionFrameCache,
+} from './combat_cache_helper.js';
 import { isMobActor, isBossActor } from './combat_rule_helper.js';
 
 export function resolveCollisionInteractions(actors, regionCache, world = null) {
+  // Ground pushes change positions, while this separate cache is used only for pose dimensions.
+  const groundDimensions = world?.quarterView ? createInteractionRegionFrameCache() : null;
   for (let aIndex = 0; aIndex < actors.length; aIndex += 1) {
     for (let bIndex = aIndex + 1; bIndex < actors.length; bIndex += 1) {
       const a = actors[aIndex];
       const b = actors[bIndex];
       if (a.respawning || b.respawning || a.player?.dead || b.player?.dead) continue;
-      if (world?.quarterView) world.quarterView.resolveCollision(a, b);
+      if (world?.quarterView) world.quarterView.resolveCollision(a, b, groundDimensions);
       else resolveActorCollisionPair(a, b, regionCache);
     }
   }

@@ -1,9 +1,11 @@
+import { runtimeRead } from './runtime_read_cache.js';
 import { ACTION_MAX_FRAMES } from './game_config_data.js';
 import { clamp } from './common_helper.js';
 import { normalizeActionFormulas } from './formula_registry.js';
 
 export function actionFormula(settings = {}, type) {
-  return normalizeActionFormulas(settings.formulas, settings).find((formula) => formula.type === type) || null;
+  const formulas = runtimeRead(settings, 'formulas', () => normalizeActionFormulas(settings.formulas, settings));
+  return formulas.find((formula) => formula.type === type) || null;
 }
 
 export function actionFormulaActiveAtProgress(settings = {}, type, progress = 0, frameCount = ACTION_MAX_FRAMES) {

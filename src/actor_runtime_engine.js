@@ -1,5 +1,6 @@
+import { evaluateActionOffset } from './action_offset_evaluator.js';
 import { scaleUpgradeAttackRegions } from './run_upgrade_effect_helper.js';
-import { clamp, clone, deg, lerp } from './common_helper.js';
+import { clamp, clone, deg } from './common_helper.js';
 import { interactionDefaultValue } from './interaction_field_data.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
 import {
@@ -29,9 +30,7 @@ import {
   updatePuppetPlayerState,
 } from './actor_action_helper.js';
 import {
-  applyActionAnchor,
   identityMatrix,
-  interpolateFrameValues,
   multiplyMatrix,
   rotationMatrix,
   scaleMatrix,
@@ -40,7 +39,6 @@ import {
 import { createPuppetPose } from './actor_pose_helper.js';
 import { actionDescriptors } from './action_authoring_data.js';
 import { timelineFrameCount, timelinePlaybackProgress } from './timeline_playback_helper.js';
-import { actionTimelineMirrorSign, mirrorActionFrameValue } from './action_mirror_helper.js';
 import { ACTION_FPS, ACTION_PART_KEYS } from './game_config_data.js';
 import { normalizeActionBlendFrames } from './action_blend_helper.js';
 import { actionFormula } from './formula_runtime_engine.js';
@@ -57,8 +55,6 @@ import {
   interactionActionFrameWindowActive,
   repeatCastTimelineProgress,
   repeatCastReleaseProgress,
-  emptyInteractionValues,
-  interpolateInteractionValues,
   INTERACTION_MERGE_PROPS,
 } from './actor_runtime_pose_helper.js';
 export class PuppetPlayer {
@@ -439,52 +435,7 @@ export class PuppetPlayer {
   }
 
   resolveActionOffsetAt(value, progress, settings = {}, facing = this.facing) {
-    const empty = {
-      x: 0,
-      y: 0,
-      ax: 0,
-      ay: 0,
-      w: 0,
-      h: 0,
-      rot: 0,
-      opacity: 1,
-      anchorX: 0,
-      anchorY: 0,
-      active: 0,
-      attack: 0,
-      hurt: 0,
-      collision: 0,
-      guard: 0,
-      ...emptyInteractionValues(),
-    };
-    if (!value) return empty;
-    const mirror = (frame) => mirrorActionFrameValue(frame, actionTimelineMirrorSign(settings, facing));
-    if (Array.isArray(value.keyframes) && value.keyframes.length) {
-      return mirror(applyActionAnchor(interpolateFrameValues(value.keyframes, progress, empty), value));
-    }
-    if (!value.start && !value.end) return mirror({ ...empty, ...value });
-
-    const start = { ...empty, ...(value.start || {}) };
-    const end = { ...empty, ...(value.end || start) };
-    const t = progress;
-    return mirror({
-      x: lerp(start.x, end.x, t),
-      y: lerp(start.y, end.y, t),
-      ax: lerp(start.ax, end.ax, t),
-      ay: lerp(start.ay, end.ay, t),
-      w: lerp(start.w, end.w, t),
-      h: lerp(start.h, end.h, t),
-      rot: lerp(start.rot, end.rot, t),
-      opacity: lerp(start.opacity, end.opacity, t),
-      anchorX: Number(value.anchorX || 0),
-      anchorY: Number(value.anchorY || 0),
-      active: Number(start.active || 0) >= 0.5 ? 1 : 0,
-      attack: Number(start.attack || 0) >= 0.5 ? 1 : 0,
-      hurt: Number(start.hurt || 0) >= 0.5 ? 1 : 0,
-      collision: Number(start.collision || 0) >= 0.5 ? 1 : 0,
-      guard: Number(start.guard || 0) >= 0.5 ? 1 : 0,
-      ...interpolateInteractionValues(start, end, t),
-    });
+    return evaluateActionOffset(value, progress, settings, facing);
   }
 
   beginCustomActionBlend(nextActionKey, nextFacing = this.facing, source = null) {

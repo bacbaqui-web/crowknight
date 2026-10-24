@@ -1,3 +1,4 @@
+import { withRuntimeReadCache } from './runtime_read_cache.js';
 import { createCombatAudioPlayer } from './combat_audio_player.js';
 import { createGameMusicController } from './game_music_controller.js';
 import { createCombatSoundController } from './combat_sound_controller.js';
@@ -300,8 +301,10 @@ requestAnimationFrame(loop);
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.033);
   last = now;
-  update(dt);
-  draw();
+  withRuntimeReadCache(() => {
+    update(dt);
+    draw();
+  });
   pressed.clear();
   requestAnimationFrame(loop);
 }

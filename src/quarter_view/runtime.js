@@ -11,11 +11,20 @@ const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', K
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
   let paused = false,
+    dirty = true,
+    viewportWidth,
+    viewportHeight,
     pauseForSettings = () => {};
   const attackSettings = createAttackSettingsView({
     panel: document.querySelector('#quarterAttackSettings'),
     onOpen: () => pauseForSettings(),
-    onChange: renderer.resetDebugHistory,
+    onChange: () => {
+      renderer.resetDebugHistory();
+      dirty = true;
+    },
+  });
+  document.querySelector('#quarterHitboxes').addEventListener('click', () => {
+    dirty = true;
   });
   world.quarterView = {
     captureAttackRegions,
@@ -45,11 +54,18 @@ export function createQuarterRuntime({ ctx, world }) {
     projectEntity: renderer.projectEntity,
   };
   function syncPause() {
+    dirty = true;
     document.querySelector('#quarterPause').textContent = paused ? '계속하기 · P' : '일시정지 · P';
     document.querySelector('#quarterPaused').hidden = !paused;
   }
   return {
-    draw: renderer.draw,
+    draw(frame) {
+      if (paused && !dirty && viewportWidth === world.viewW && viewportHeight === world.viewH) return;
+      renderer.draw(frame);
+      dirty = false;
+      viewportWidth = world.viewW;
+      viewportHeight = world.viewH;
+    },
     mapCode: (code) => MAP[code] || code,
     gameKeys: new Set([...GAME_KEYS, 'QuarterUp', 'QuarterDown']),
     reset(actors) {

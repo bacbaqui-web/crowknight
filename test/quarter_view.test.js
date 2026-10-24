@@ -1,3 +1,4 @@
+import { withRuntimeReadCache } from '../src/runtime_read_cache.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -73,13 +74,18 @@ for (const def of saved.characters) {
       assert.equal(requestRuntimeAction(b.player, action.key, 1, 'tap'), true, action.key);
       for (let frame = 0; frame < 90; frame++) {
         a.player.updateNpc(1 / 60, null, world);
-        preparePlaneMotion(b, null);
-        b.player.updateNpc(1 / 60, null, world);
-        finishPlaneMotion(b);
+        let cachedWeapon;
+        withRuntimeReadCache(() => {
+          preparePlaneMotion(b, null);
+          b.player.updateNpc(1 / 60, null, world);
+          finishPlaneMotion(b);
+          cachedWeapon = b.player.getPartOffset('weapon');
+          assert.deepEqual(b.player.getPartOffset('weapon'), cachedWeapon);
+        });
         for (const key of ['x', 'y', 'vx', 'vy', 'customActionElapsed', 'customActionTime'])
           close(a.player[key] || 0, b.player[key] || 0, `${action.key}.${key}@${frame}`);
         assert.equal(a.player.actionKey, b.player.actionKey);
-        assert.deepEqual(a.player.getPartOffset('weapon'), b.player.getPartOffset('weapon'));
+        assert.deepEqual(a.player.getPartOffset('weapon'), cachedWeapon);
       }
     }
     assert.ok(quarter.player.actions.length > 0);

@@ -26,7 +26,7 @@ export function visibleGroundTiles(view, center) {
   }
   return tiles;
 }
-export function createGroundRenderer(ctx, world) {
+function createGroundPainter(ctx, world) {
   let shade, shadeHeight;
   function path(tile) {
     tile.points.forEach((p, index) => (index ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
@@ -67,5 +67,22 @@ export function createGroundRenderer(ctx, world) {
     }
     ctx.fillStyle = shade;
     ctx.fillRect(0, 0, world.viewW, world.viewH);
+  };
+}
+
+// Camera shake is applied by the caller, so a stationary camera can reuse this exact image.
+export function createGroundRenderer(ctx, world, createSurface = () => document.createElement('canvas')) {
+  const surface = createSurface();
+  const paint = createGroundPainter(surface.getContext('2d', { alpha: false }), world);
+  let previous = null;
+  return (hero, view) => {
+    const key = [world.viewW, world.viewH, view.x, view.depth, view.zoom, Math.floor(hero.player.x / 100)];
+    if (!previous || key.some((value, index) => value !== previous[index])) {
+      if (surface.width !== world.viewW) surface.width = world.viewW;
+      if (surface.height !== world.viewH) surface.height = world.viewH;
+      paint(hero, view);
+      previous = key;
+    }
+    ctx.drawImage(surface, 0, 0);
   };
 }

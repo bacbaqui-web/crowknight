@@ -15,7 +15,11 @@ export function getRunScore(survivalTime, kills, bossKills = 0) {
 }
 
 export function syncRunHud({ survivalTime, kills, bossKills, hudSurvivalTime, hudKills, hudBossKills }) {
-  if (hudSurvivalTime) hudSurvivalTime.textContent = formatSurvivalTime(survivalTime);
-  if (hudKills) hudKills.textContent = `${kills}`;
-  if (hudBossKills) hudBossKills.textContent = `${bossKills}`;
+  syncText(hudSurvivalTime, formatSurvivalTime(survivalTime));
+  syncText(hudKills, `${kills}`);
+  syncText(hudBossKills, `${bossKills}`);
+}
+
+function syncText(element, text) {
+  if (element && element.textContent !== text) element.textContent = text;
 }
