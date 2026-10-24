@@ -26,12 +26,12 @@ function actor() {
     },
   };
 }
-test('eight directional boxes start at torso, hit ahead, reject behind/side and retain damage metadata', () => {
+test('eight directional sectors start at torso, hit ahead, reject behind/side and retain damage metadata', () => {
   for (const aim of EFFECT_DIRECTIONS) {
     const a = actor();
     a.quarterAim = aim;
     const box = directionalAttackRegions(a, raw)[0];
-    const base = { x: (box.points[0].x + box.points[3].x) / 2, y: (box.points[0].y + box.points[3].y) / 2 };
+    const base = box.points[0];
     assert.ok(Math.hypot(base.x, base.y) < 1e-8);
     assert.equal(box.quarterElevation, -70);
     assert.equal(box.reaction.damage, 17);
@@ -44,10 +44,10 @@ test('eight directional boxes start at torso, hit ahead, reject behind/side and 
     });
     assert.ok(interactionRegionsOverlap(box, target(box.quarterBoxLength / 2, 0)));
     assert.equal(interactionRegionsOverlap(box, target(-40, 0)), false);
-    assert.equal(interactionRegionsOverlap(box, target(box.quarterBoxLength / 2, 65)), false);
+    assert.equal(interactionRegionsOverlap(box, target(10, 50)), false);
   }
 });
-test('reach upgrades and skill reach lengthen only the box, input direction overrides retained aim', () => {
+test('reach upgrades and skill reach scale the sector radius, input direction overrides retained aim', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   a.quarterInputDirection = { x: 0, z: -1 };
@@ -56,7 +56,7 @@ test('reach upgrades and skill reach lengthen only the box, input direction over
   a.player.runSkills = { reach: 2 };
   const boosted = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
   assert.ok(Math.abs(boosted.quarterBoxLength / initial.quarterBoxLength - 1.8) < 1e-8);
-  assert.equal(boosted.w, initial.w);
+  assert.ok(Math.abs(boosted.w / initial.w - 1.8) < 1e-8);
   assert.equal(boosted.quarterBoxAim.z, -1);
   assert.deepEqual(directionalAttackRegions(a, []), []);
 });
@@ -91,13 +91,13 @@ test('visual trail follows native weapon coordinates regardless of aim and has a
   assert.equal(trail.samples(a).length, 0);
 });
 
-test('box is thicker and depth directions have extra reach', () => {
+test('sector has a 70 degree opening and depth directions have extra reach', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   const right = directionalAttackRegions(a, raw)[0];
   a.quarterAim = { x: 0, z: 1 };
   const down = directionalAttackRegions(a, raw)[0];
-  assert.equal(right.h, 50);
+  assert.ok(Math.abs(right.h - 2 * right.quarterBoxLength * Math.sin((35 * Math.PI) / 180)) < 1e-8);
   assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 1.35) < 1e-8);
 });
 
@@ -166,4 +166,14 @@ test('crescent follows sparse rotation smoothly, tapers at both tips and leads t
   assert.ok(width(0) < 1e-6);
   assert.ok(width(ribbon.outer.length - 1) < 1e-6);
   assert.ok(width(Math.floor(ribbon.outer.length / 2)) > 20);
+});
+
+test('sector rejects bounding-box corners and reaches its curved front', () => {
+  const a = actor();
+  a.quarterAim = { x: 1, z: 0 };
+  const sector = directionalAttackRegions(a, raw)[0];
+  const target = (radius, angle) => ({ x: radius * Math.cos(angle) - 1, y: radius * Math.sin(angle) - 1, w: 2, h: 2 });
+  assert.ok(interactionRegionsOverlap(sector, target(sector.quarterBoxLength * 0.9, Math.PI / 6)));
+  assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength * 0.6, Math.PI / 3)), false);
+  assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength + 4, 0)), false);
 });

@@ -15,7 +15,7 @@ export function directionalAttackRegions(actor, regions) {
   const aim = actor.quarterInputDirection || actor.quarterAim || { x: player.facing || 1, z: 0 };
   const direction = normalizeDirection(aim.x, aim.z) || { x: player.facing || 1, z: 0 };
   const reach = (player.runUpgrades?.reach || 1) * progressionEffects(player).reach * chargeAttackScale(player);
-  const halfWidth = Math.max(12, Math.min(25, (body?.w || 36) / 2)) * 1.25;
+  const halfAngle = (35 * Math.PI) / 180;
   const depthReach = 1 + 0.35 * Math.abs(direction.z);
   return regions.map((region) => {
     if (![ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)) return region;
@@ -32,15 +32,17 @@ export function directionalAttackRegions(actor, regions) {
       ) *
       reach *
       depthReach;
-    const points = [
-      [0, -halfWidth],
-      [length, -halfWidth],
-      [length, halfWidth],
-      [0, halfWidth],
-    ].map(([forward, side]) => ({
-      x: originX + direction.x * forward - direction.z * side,
-      y: depthOf(actor) + direction.z * forward + direction.x * side,
-    }));
+    // A convex 70-degree sector uses the same polygon for display and collision.
+    const points = [{ x: originX, y: depthOf(actor) }];
+    for (let step = 0; step <= 16; step++) {
+      const angle = -halfAngle + (2 * halfAngle * step) / 16;
+      const forward = Math.cos(angle) * length,
+        side = Math.sin(angle) * length;
+      points.push({
+        x: originX + direction.x * forward - direction.z * side,
+        y: depthOf(actor) + direction.z * forward + direction.x * side,
+      });
+    }
     const xs = points.map((p) => p.x),
       ys = points.map((p) => p.y);
     return {
