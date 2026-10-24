@@ -1,11 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { EFFECT_DIRECTIONS } from '../src/quarter_view/effect_directions.js';
+import { EFFECT_DIRECTIONS, EFFECT_EDIT_DIRECTIONS } from '../src/quarter_view/effect_directions.js';
 import {
   DEFAULT_EFFECT_LAYOUT,
   createEffectProfile,
   updateEffectProfile,
-  linkEffectProfile,
   readEffectLayoutState,
   saveEffectLayoutState,
   normalizeEffectLayoutState,
@@ -14,23 +13,23 @@ import {
 import { effectPoint } from '../src/quarter_view/attack_geometry.js';
 import { drawActorEffectLayers } from '../src/quarter_view/attack_effects.js';
 
-test('one linked direction calibrates all eight; unlinked edits remain local and relinking uses the selected direction', () => {
-  const profile = createEffectProfile();
-  updateEffectProfile(profile, 'up', { ...DEFAULT_EFFECT_LAYOUT, distance: 70, side: -25, width: 1.6, height: 0.8 });
-  for (const direction of EFFECT_DIRECTIONS)
-    assert.deepEqual(profile.directions[direction.key], {
-      ...DEFAULT_EFFECT_LAYOUT,
-      distance: 70,
-      side: -25,
-      width: 1.6,
-      height: 0.8,
-    });
-  linkEffectProfile(profile, 'up', false);
-  updateEffectProfile(profile, 'up', { width: 2 });
+test('five independent directions ignore legacy linking and left attacks reuse their right counterpart', () => {
+  const profile = createEffectProfile({ linked: true });
+  assert.deepEqual(Object.keys(profile.directions), ['up', 'up-right', 'right', 'down-right', 'down']);
+  updateEffectProfile(profile, 'up', { width: 2, rotation: 41 });
+  for (const direction of EFFECT_EDIT_DIRECTIONS)
+    assert.equal(profile.directions[direction.key].width, direction.key === 'up' ? 2 : 1);
+  updateEffectProfile(profile, 'right', { width: 1.7 });
+  const actor = { player: { actionKey: 'slash' }, quarterEffectLayouts: { slash: profile } };
+  assert.equal(effectLayoutFor(actor, 'left'), profile.directions.right);
+  assert.equal(effectLayoutFor(actor, 'up-left'), profile.directions['up-right']);
+  assert.equal(effectLayoutFor(actor, 'down-left'), profile.directions['down-right']);
   assert.equal(profile.directions.up.width, 2);
-  assert.equal(profile.directions.down.width, 1.6);
-  linkEffectProfile(profile, 'down', true);
-  for (const direction of EFFECT_DIRECTIONS) assert.equal(profile.directions[direction.key].width, 1.6);
+  assert.equal(profile.directions.down.width, 1);
+  const restored = createEffectProfile({ ...profile, linked: true });
+  updateEffectProfile(restored, 'down', { width: 2.5 });
+  assert.equal(restored.directions.right.width, 1.7);
+  assert.equal(restored.directions.up.width, 2);
 });
 test('profile persistence clamps invalid values and preserves independent actors and attacks', () => {
   const state = normalizeEffectLayoutState({
@@ -79,7 +78,7 @@ test('profile persistence clamps invalid values and preserves independent actors
   actor.player.actionKey = 'unconfigured';
   assert.equal(effectLayoutFor(actor, 'up'), DEFAULT_EFFECT_LAYOUT);
 });
-test('linked offsets rotate with all eight arrows and sizes share the same direction-local axes', () => {
+test('independent offsets rotate with all eight arrows and sizes share the same direction-local axes', () => {
   const profile = createEffectProfile();
   const actor = {
     player: { x: 480, y: 430, facing: 1, actionKey: 'slash' },
@@ -88,7 +87,8 @@ test('linked offsets rotate with all eight arrows and sizes share the same direc
     quarterEffectLayouts: { slash: profile },
   };
   const center = { x: 500, y: 350 };
-  updateEffectProfile(profile, 'right', { distance: 50, side: 20, width: 2, height: 0.5 });
+  for (const { key } of EFFECT_EDIT_DIRECTIONS)
+    updateEffectProfile(profile, key, { distance: 50, side: 20, width: 2, height: 0.5 });
   for (const aim of EFFECT_DIRECTIONS) {
     actor.quarterAim = aim;
     const mirror = aim.x < 0 ? -1 : 1;
@@ -115,7 +115,7 @@ test('only the three upper directions are covered by the unchanged character spr
 test('rotation and anchor preserve mirrored pairs and place the source pivot at the arrow tip', () => {
   const profile = createEffectProfile({ linked: false });
   updateEffectProfile(profile, 'left', { rotation: 37, anchorX: 23, anchorY: -14, side: 17, width: 1.4 });
-  assert.deepEqual(profile.directions.left, profile.directions.right);
+  assert.equal(profile.directions.right.rotation, 37);
   const actor = {
     player: { x: 480, y: 430, facing: 1, actionKey: 'slash' },
     quarterDepth: 0,

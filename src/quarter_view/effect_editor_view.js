@@ -4,7 +4,6 @@ import { createEffectEditorPreview } from './effect_editor_preview.js';
 import {
   createEffectProfile,
   updateEffectProfile,
-  linkEffectProfile,
   readEffectLayoutState,
   saveEffectLayoutState,
   normalizeEffectLayoutState,
@@ -14,8 +13,8 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
   panel.innerHTML = EFFECT_EDITOR_MARKUP;
   const actorSelect = panel.querySelector('[data-effect-actor]'),
     actionSelect = panel.querySelector('[data-effect-action]');
-  const link = panel.querySelector('[data-effect-linked]'),
-    guides = panel.querySelector('[data-effect-guides]');
+  const guides = panel.querySelector('[data-effect-guides]'),
+    play = panel.querySelector('[data-effect-play]');
   const all = panel.querySelector('[data-effect-all]'),
     status = panel.querySelector('[data-effect-status]');
   const fields = [...panel.querySelectorAll('[data-effect-field]')];
@@ -24,7 +23,8 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     choices = [],
     state = readEffectLayoutState(storage),
     direction = 'right',
-    scheduled = false;
+    scheduled = false,
+    playing = false;
   const selectedActor = () => choices.find((actor) => actor.id === actorSelect.value);
   const sourceId = (actor) => actor.runtimeSourceActorId || actor.id;
   const selectedProfile = () => {
@@ -35,13 +35,27 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     return (state.profiles[id][actionSelect.value] ||= createEffectProfile());
   };
   function schedulePreview() {
-    if (scheduled) return;
+    if (scheduled || !panel.open || document.hidden) return;
     scheduled = true;
-    requestAnimationFrame(() => {
+    requestAnimationFrame((now) => {
       scheduled = false;
-      if (panel.open) preview.draw(selectedActor(), actionSelect.value, direction, all.checked, getAssets());
+      if (!panel.open || document.hidden) return;
+      preview.draw(selectedActor(), actionSelect.value, direction, all.checked, getAssets(), playing, now);
+      if (playing && actionSelect.value) schedulePreview();
     });
   }
+  function setPlaying(value) {
+    playing = value;
+    play.textContent = playing ? '❚❚ 일시정지' : '▶ 반복 재생';
+    play.setAttribute('aria-pressed', String(playing));
+    preview.resetClock();
+    schedulePreview();
+  }
+  play.addEventListener('click', () => setPlaying(!playing));
+  document.addEventListener('visibilitychange', () => {
+    preview.resetClock();
+    schedulePreview();
+  });
   function attachActor(actor) {
     const id = sourceId(actor);
     state.profiles[id] ||= {};
@@ -70,8 +84,8 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
         field.value = key === 'width' || key === 'height' ? Math.round(value * 100) : Math.round(value * 10) / 10;
     }
     panel.querySelector('[data-effect-reset]').disabled = !profile;
-    link.disabled = !profile;
-    link.checked = profile?.linked !== false;
+    play.disabled = !profile;
+    if (!profile) setPlaying(false);
     guides.checked = state.guides;
     for (const button of panel.querySelectorAll('[data-effect-direction]')) {
       button.disabled = !profile;
@@ -129,14 +143,6 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
       apply();
     });
   for (const field of fields) field.addEventListener('change', () => sync());
-  link.addEventListener('change', () => {
-    const profile = selectedProfile();
-    if (profile) {
-      linkEffectProfile(profile, direction, link.checked);
-      sync();
-      apply();
-    }
-  });
   guides.addEventListener('change', () => {
     state.guides = guides.checked;
     apply();
@@ -180,7 +186,7 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     if (panel.open) {
       onOpen();
       schedulePreview();
-    }
+    } else setPlaying(false);
   });
   return {
     attachActor,

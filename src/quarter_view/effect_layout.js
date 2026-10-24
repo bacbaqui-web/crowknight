@@ -1,4 +1,4 @@
-import { EFFECT_DIRECTIONS, effectDirection } from './effect_directions.js';
+import { EFFECT_EDIT_DIRECTIONS, effectDirection, effectLayoutKey } from './effect_directions.js';
 
 export const EFFECT_LAYOUT_STORAGE = 'crowKnight.quarterEffectLayouts.v1';
 export const DEFAULT_EFFECT_LAYOUT = Object.freeze({
@@ -30,39 +30,21 @@ export function normalizeEffectLayout(value = {}) {
   );
 }
 export function createEffectProfile(value = {}) {
-  const profile = {
-    linked: value?.linked !== false,
+  return {
     directions: Object.fromEntries(
-      EFFECT_DIRECTIONS.map(({ key }) => [key, normalizeEffectLayout(value?.directions?.[key])])
+      EFFECT_EDIT_DIRECTIONS.map(({ key }) => [key, normalizeEffectLayout(value?.directions?.[key])])
     ),
   };
-  for (const [right, left] of [
-    ['right', 'left'],
-    ['up-right', 'up-left'],
-    ['down-right', 'down-left'],
-  ])
-    profile.directions[left] = { ...profile.directions[right] };
-  return profile;
 }
-const mirrorPairs = {
-  right: 'left',
-  left: 'right',
-  'up-right': 'up-left',
-  'up-left': 'up-right',
-  'down-right': 'down-left',
-  'down-left': 'down-right',
-};
 export function updateEffectProfile(profile, direction, patch) {
-  const next = normalizeEffectLayout({ ...profile.directions[direction], ...patch });
-  for (const { key } of EFFECT_DIRECTIONS)
-    if (profile.linked || key === direction || key === mirrorPairs[direction]) profile.directions[key] = { ...next };
-}
-export function linkEffectProfile(profile, direction, linked) {
-  profile.linked = linked;
-  if (linked) updateEffectProfile(profile, direction, profile.directions[direction]);
+  const key = effectLayoutKey(direction);
+  profile.directions[key] = normalizeEffectLayout({ ...profile.directions[key], ...patch });
 }
 export function effectLayoutFor(actor, direction = effectDirection(actor).key) {
-  return actor.quarterEffectLayouts?.[actor.player.actionKey]?.directions?.[direction] || DEFAULT_EFFECT_LAYOUT;
+  return (
+    actor.quarterEffectLayouts?.[actor.player.actionKey]?.directions?.[effectLayoutKey(direction)] ||
+    DEFAULT_EFFECT_LAYOUT
+  );
 }
 export function normalizeEffectLayoutState(value) {
   const profiles = Object.create(null);

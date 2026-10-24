@@ -3,7 +3,7 @@ import { PuppetPlayer } from '../actor_runtime_engine.js';
 import { drawActor } from '../actor_canvas_renderer.js';
 import { effectFrameGeometry, alignEffectRegions } from './effect_geometry.js';
 import { drawQuarterAttackEffect } from './attack_effects.js';
-import { EFFECT_DIRECTIONS } from './effect_directions.js';
+import { EFFECT_EDIT_DIRECTIONS } from './effect_directions.js';
 import { drawEffectGuides } from './effect_guides.js';
 import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
 import { groundPoint } from './camera.js';
@@ -14,11 +14,14 @@ export function createEffectEditorPreview(canvas) {
     world = { floorY: 430 };
   const read = createRuntimeEffectReader();
   let source, action, actor, frame, frozenView;
-  let dragging = false;
+  let dragging = false,
+    lastTime;
   function prepare(next, key) {
     if (source === next && action === key) return;
     source = next;
     action = key;
+    frozenView = null;
+    lastTime = null;
     if (!next || !key) {
       actor = null;
       return;
@@ -42,7 +45,7 @@ export function createEffectEditorPreview(canvas) {
       if (player.attackInteractionRegions.length && effectFrameGeometry(actor, read)) break;
     }
   }
-  function draw(next, key, directionKey, all = false, effectAssets) {
+  function draw(next, key, directionKey, all = false, effectAssets, playing = false, now = 0) {
     prepare(next, key);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#0e1b17';
@@ -54,18 +57,24 @@ export function createEffectEditorPreview(canvas) {
       ctx.fillText(next ? '조절할 근접 공격이 없습니다.' : 'PLAY 후 조절할 공격을 선택하세요.', 40, 180);
       return;
     }
-    actor.player.facing = next.player.facing || 1;
+    const elapsed = lastTime == null ? 0 : Math.max(0, Math.min(0.1, (now - lastTime) / 1000));
+    lastTime = now;
+    if (playing && !dragging)
+      actor.player.actionPreview.t =
+        (actor.player.actionPreview.t + elapsed / actor.player.getActionDuration(key, 0.6)) % 1;
+    canvas.dataset.previewProgress = actor.player.actionPreview.t.toFixed(4);
+    actor.player.facing = 1;
     actor.quarterEffectLayouts = next.quarterEffectLayouts;
     actor.quarterAttackPlanes = next.quarterAttackPlanes;
     const view = { width: canvas.width, height: canvas.height, x: 0, depth: 0, zoom: 0.9 };
-    const selected = EFFECT_DIRECTIONS.find((d) => d.key === directionKey) || EFFECT_DIRECTIONS[0];
+    const selected = EFFECT_EDIT_DIRECTIONS.find((d) => d.key === directionKey) || EFFECT_EDIT_DIRECTIONS[0];
     actor.quarterAim = selected;
     const geometry = effectFrameGeometry(actor, read, effectAssets);
     if (geometry) {
       let horizontal = 80,
         above = 160,
         below = 40;
-      for (const aim of all ? EFFECT_DIRECTIONS : [selected])
+      for (const aim of all ? EFFECT_EDIT_DIRECTIONS : [selected])
         for (const point of geometry.points) {
           const worldPoint = effectPoint(
             { ...actor, quarterAim: aim },
@@ -91,9 +100,12 @@ export function createEffectEditorPreview(canvas) {
       );
     }
     if (dragging && frozenView) Object.assign(view, frozenView);
-    else frozenView = { ...view };
-    drawEffectGuides(ctx, actor, geometry, world, view, selected.key);
-    const directions = all ? EFFECT_DIRECTIONS : [selected];
+    else {
+      if (playing && frozenView) view.zoom = Math.min(view.zoom, frozenView.zoom);
+      frozenView = { ...view };
+    }
+    drawEffectGuides(ctx, actor, geometry, world, view, selected.key, EFFECT_EDIT_DIRECTIONS);
+    const directions = all ? EFFECT_EDIT_DIRECTIONS : [selected];
     const paintEffects = (back) => {
       if (!effectAssets) return;
       for (const direction of directions)
@@ -135,6 +147,9 @@ export function createEffectEditorPreview(canvas) {
   return {
     draw,
     getFrame: () => frame,
+    resetClock() {
+      lastTime = null;
+    },
     setDragging(value) {
       dragging = value;
     },

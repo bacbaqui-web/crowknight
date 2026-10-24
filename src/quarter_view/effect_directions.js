@@ -16,3 +16,12 @@ export function effectDirection(actor) {
   const index = Math.round(Math.atan2(aim.z, aim.x) / (Math.PI / 4));
   return EFFECT_DIRECTIONS[(index + 8) % 8];
 }
+
+export const EFFECT_EDIT_DIRECTIONS = Object.freeze(
+  ['up', 'up-right', 'right', 'down-right', 'down'].map((key) =>
+    EFFECT_DIRECTIONS.find((direction) => direction.key === key)
+  )
+);
+export function effectLayoutKey(direction) {
+  return { left: 'right', 'up-left': 'up-right', 'down-left': 'down-right' }[direction] || direction;
+}

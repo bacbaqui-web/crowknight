@@ -1,5 +1,5 @@
 export const EFFECT_EDITOR_MARKUP = `
-<summary>8방향 이펙트 조절</summary>
+<summary>5방향 이펙트 조절</summary>
 <div class="effect-editor-content">
   <div class="effect-editor-selects">
     <label
@@ -20,87 +20,23 @@ export const EFFECT_EDITOR_MARKUP = `
         height="400"
         aria-label="화살표와 이펙트 히트박스 미리보기"
       ></canvas>
+      <button type="button" data-effect-play aria-pressed="false" disabled>▶ 반복 재생</button>
       <label class="effect-check"
-        ><input type="checkbox" data-effect-all />8방향 동시 미리보기</label
+        ><input type="checkbox" data-effect-all />5방향 동시 미리보기</label
       >
       <small
-        >분홍 앵커를 끌어 기준점을 바꾸고, 이펙트를 끌어 이동하고, 파란 회전 손잡이를 돌리세요. 화살표 끝에 초승달이 놓입니다. 주황 테두리는 실제 히트박스입니다. 위쪽
-        3방향은 캐릭터 뒤에 그립니다.</small
+        >분홍 앵커를 끌어 기준점을 바꾸고, 이펙트를 끌어 이동하고, 파란 회전 손잡이를 돌리세요. 화살표 끝에 초승달이 놓입니다. 주황 테두리는 실제 히트박스입니다. 위쪽 이펙트는 캐릭터 뒤에 그립니다.</small
       >
     </div>
     <div class="effect-editor-controls">
       <div class="effect-compass" aria-label="조절할 이펙트 방향">
-        <button
-          type="button"
-          data-effect-direction="up-left"
-          aria-label="왼쪽 위 이펙트"
-          aria-pressed="false"
-        >
-          ↖
-        </button>
-        <button
-          type="button"
-          data-effect-direction="up"
-          aria-label="위쪽 이펙트"
-          aria-pressed="false"
-        >
-          ↑
-        </button>
-        <button
-          type="button"
-          data-effect-direction="up-right"
-          aria-label="오른쪽 위 이펙트"
-          aria-pressed="false"
-        >
-          ↗
-        </button>
-        <button
-          type="button"
-          data-effect-direction="left"
-          aria-label="왼쪽 이펙트"
-          aria-pressed="false"
-        >
-          ←
-        </button>
-        <span>캐릭터</span>
-        <button
-          type="button"
-          data-effect-direction="right"
-          aria-label="오른쪽 이펙트"
-          aria-pressed="true"
-        >
-          →
-        </button>
-        <button
-          type="button"
-          data-effect-direction="down-left"
-          aria-label="왼쪽 아래 이펙트"
-          aria-pressed="false"
-        >
-          ↙
-        </button>
-        <button
-          type="button"
-          data-effect-direction="down"
-          aria-label="아래쪽 이펙트"
-          aria-pressed="false"
-        >
-          ↓
-        </button>
-        <button
-          type="button"
-          data-effect-direction="down-right"
-          aria-label="오른쪽 아래 이펙트"
-          aria-pressed="false"
-        >
-          ↘
-        </button>
+        <button type="button" data-effect-direction="up" aria-label="위쪽 이펙트" aria-pressed="false">↑</button>
+        <button type="button" data-effect-direction="up-right" aria-label="오른쪽 위 이펙트" aria-pressed="false">↗</button>
+        <button type="button" data-effect-direction="right" aria-label="오른쪽 이펙트" aria-pressed="true">→</button>
+        <button type="button" data-effect-direction="down-right" aria-label="오른쪽 아래 이펙트" aria-pressed="false">↘</button>
+        <button type="button" data-effect-direction="down" aria-label="아래쪽 이펙트" aria-pressed="false">↓</button>
       </div>
-      <label class="effect-check"
-        ><input type="checkbox" data-effect-linked checked />8방향 함께
-        맞추기</label
-      >
-      <small>좌우 및 대각선 좌우는 항상 거울상으로 함께 조절됩니다.</small>
+      <small>각 방향은 독립적으로 저장됩니다. 왼쪽 공격에는 오른쪽 설정을 거울상으로 적용합니다.</small>
       <label class="effect-slider"
         >앞뒤 위치 (px)<input
           type="number"

@@ -8,7 +8,7 @@ for (const plane of ['ground', 'height'])
   test(`${plane}: pointer moves position, pivot and rotation in all eight mirrored directions`, () => {
     for (const aim of EFFECT_DIRECTIONS) {
       const profile = createEffectProfile();
-      updateEffectProfile(profile, 'right', { rotation: 23, anchorX: 8, anchorY: -12 });
+      updateEffectProfile(profile, aim.key, { rotation: 23, anchorX: 8, anchorY: -12 });
       const actor = {
         player: { x: 0, y: 430, facing: 1, actionKey: 'slash' },
         quarterFloorY: 430,

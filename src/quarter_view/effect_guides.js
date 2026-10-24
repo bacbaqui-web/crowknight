@@ -3,13 +3,21 @@ import { effectPoint, screenPoint } from './attack_geometry.js';
 import { effectLayoutFor } from './effect_layout.js';
 import { depthOf } from './camera.js';
 
-export function drawEffectGuides(ctx, actor, geometry, world, view, selected = effectDirection(actor).key) {
+export function drawEffectGuides(
+  ctx,
+  actor,
+  geometry,
+  world,
+  view,
+  selected = effectDirection(actor).key,
+  directions = EFFECT_DIRECTIONS
+) {
   const center = geometry?.center || { x: actor.player.x, y: actor.player.y - 70 };
   const radius = geometry?.radius || 100;
   const start = screenPoint({ x: actor.player.x, depth: depthOf(actor), y: actor.player.y }, world, view);
   ctx.save();
   ctx.lineWidth = 1.5;
-  for (const direction of EFFECT_DIRECTIONS) {
+  for (const direction of directions) {
     const layout = effectLayoutFor(actor, direction.key);
     const anchor = {
       x: center.x + (layout.anchorX || 0) * (actor.player.facing || 1),

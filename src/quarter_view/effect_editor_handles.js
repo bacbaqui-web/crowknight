@@ -1,4 +1,5 @@
 import { effectPoint, screenPoint } from './attack_geometry.js';
+import { effectLayoutKey } from './effect_directions.js';
 import { effectLayoutFor } from './effect_layout.js';
 import { attackPlane } from '../attack_plane_helper.js';
 
@@ -14,7 +15,7 @@ export function effectHandleFrame(actor, geometry, world, view) {
   const layout = { ...effectLayoutFor(actor) },
     facing = actor.player.facing || 1;
   const key = actor.player.actionKey,
-    direction = actor.quarterAim.key;
+    direction = effectLayoutKey(actor.quarterAim.key);
   const project = (u, v, patch = {}) => {
     const copy = {
       ...actor,

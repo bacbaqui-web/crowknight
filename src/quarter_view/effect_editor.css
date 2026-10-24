@@ -75,7 +75,7 @@
 }
 .effect-compass {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   margin-bottom: 8px;
 }
@@ -170,4 +170,9 @@ body:has(#quarterEffectEditor[open]) #quarterTrajectoryPanel {
 .effect-preview-pane canvas {
   touch-action: none;
   user-select: none;
+}
+
+[data-effect-play] {
+  margin-top: 8px;
+  padding: 7px 12px;
 }
