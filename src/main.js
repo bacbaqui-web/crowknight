@@ -372,6 +372,7 @@ function update(dt) {
   combatSounds.update(gameActors);
 
   resolveCombat({
+    parryRelease: pressed.has('KeyR'),
     actors: gameActors,
     playerActor,
     world,

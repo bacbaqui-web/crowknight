@@ -35,7 +35,7 @@ test('첫 레벨업에서 계열과 시작 기술을 함께 습득한다', () =>
 test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 않는다', () => {
   for (const [path, root, left, right] of [
     ['attack', 'fourthStrike', 'fifthStrike', 'chargeAttack'],
-    ['guard', 'parry', 'armor', 'vitality'],
+    ['guard', 'parry', 'parryHeal', 'parryBurst'],
     ['move', 'doubleJump', 'backflip', 'swiftness'],
   ]) {
     const { c, offers } = setup();

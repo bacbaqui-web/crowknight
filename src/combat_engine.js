@@ -1,3 +1,5 @@
+import { trySkillParry } from './parry_skill_helper.js';
+import { resolveParryRelease } from './parry_release_controller.js';
 import { updateHealthTrail } from './actor_health_helper.js';
 import {
   overlappingAttackRegion,
@@ -24,6 +26,7 @@ import {
 } from './combat_reaction_helper.js';
 
 export function resolveCombat({
+  parryRelease = false,
   actors,
   playerActor,
   world,
@@ -32,6 +35,7 @@ export function resolveCombat({
   onPlayerKill,
   onEnemyDeath,
 }) {
+  if (parryRelease) resolveParryRelease({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath });
   const regionCache = createInteractionRegionFrameCache();
   resolveCollisionInteractions(actors, regionCache, world);
   resolveCollisionHurtInteractions({
@@ -55,7 +59,7 @@ export function resolveCombat({
       attacks.set(actor, regions);
     });
   actors.forEach((attacker) => {
-    if (attacker.player?.dead) return;
+    if (attacker.player?.dead || attacker.player.runParryStun > 0) return;
     if (attacker.respawning) return;
     const attackRegions = attacks.get(attacker) ?? cachedInteractionRegions(regionCache, attacker, 'attack');
     if (!attackRegions.length) return;
@@ -101,7 +105,7 @@ export function resolveCombat({
       target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
 
       if (guardBlockAttackRegion) {
-        world?.combatSounds?.contact('block', attacker, target);
+        if (!trySkillParry(attacker, target, world)) world?.combatSounds?.contact('block', attacker, target);
         triggerWorldAttackCameraShake(world, particleEffects);
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('guard-block', {
@@ -242,7 +246,7 @@ export function resolveCollisionHurtInteractions({
   world = null,
 }) {
   actors.forEach((source) => {
-    if (source.player?.dead) return;
+    if (source.player?.dead || source.player.runParryStun > 0) return;
     if (source.respawning) return;
     const collisionRegion = firstCollisionRegion(cachedInteractionRegions(regionCache, source, 'collision'));
     if (!collisionRegion) return;
@@ -271,6 +275,7 @@ export function resolveCollisionHurtInteractions({
       }
       applyInteractionDamage({
         attacker: source,
+        allowParry: false,
         target,
         damage: 20,
         invincibleTime: hurtRegion.reaction.invincibleTime,
@@ -293,6 +298,8 @@ export function syncPreviousAttackRegions(actor, attackRegions = []) {
 export function updateActorCombatTimers(actors, dt) {
   actors.forEach((actor) => {
     updateHealthTrail(actor, dt);
+    actor.player.runParryStun = Math.max(0, (actor.player.runParryStun || 0) - dt);
+    if (actor.player.runParryPulse) actor.player.runParryPulse.time = Math.max(0, actor.player.runParryPulse.time - dt);
     actor.hurtCooldown = Math.max(0, actor.hurtCooldown - dt);
     actor.hitStun = Math.max(0, actor.hitStun - dt);
     actor.invulnTime = Math.max(0, actor.invulnTime - dt);

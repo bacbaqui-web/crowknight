@@ -172,6 +172,7 @@ function lockFormulaFacing(lock, settings, actionFacing) {
 }
 
 export function requestRuntimeAction(player, key, facing = null, triggerMode = 'tap') {
+  if (player.runParryStun > 0 && key !== 'hurt') return false;
   if (!runtimeActions(player).some((action) => action?.key === key)) return false;
   if (!canRunActionCondition(player, key)) return false;
   if (!actionLinkResult(player, key).allowed) return false;
@@ -331,7 +332,7 @@ function findSingleMatch(player, actions, pressed, { state = null } = {}) {
 }
 
 function canStartCustomAction(player) {
-  return !player.dead && player.hurtTime <= 0 && player.guardBreakTime <= 0;
+  return !player.dead && !(player.runParryStun > 0) && player.hurtTime <= 0 && player.guardBreakTime <= 0;
 }
 
 function startCustomAction(player, key, facing = null, triggerMode = 'tap', pressCodes = []) {

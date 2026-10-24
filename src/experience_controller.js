@@ -67,6 +67,8 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       for (const key of Object.keys(ranks)) delete ranks[key];
       const p = getPlayer().player;
       p.runSkills = {};
+      p.runParryPoints = 0;
+      p.runParryPulse = null;
       syncProgressionHealth(getPlayer());
       p.runSkillActions = getPlayer().tuning.skillActions;
       p.runAirJumpUsed = false;
@@ -83,6 +85,8 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       pending = 0;
       offered = null;
       delete getPlayer().player.runSkills;
+      getPlayer().player.runParryPoints = 0;
+      getPlayer().player.runParryPulse = null;
       delete getPlayer().player.runSkillPathColor;
       syncProgressionHealth(getPlayer());
       getPlayer().player.runCharge = null;

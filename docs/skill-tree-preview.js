@@ -1,10 +1,10 @@
-import { SKILL_PATHS, progressionGraph } from '../src/skill_progression_data.js';
+import { SKILL_PATHS, progressionGraph, progressionNodeColor } from '../src/skill_progression_data.js';
 
 const graphs = new Map(SKILL_PATHS.map(path => [path.id, progressionGraph(path.id)]));
 const maps = document.querySelector('#maps');
 const detail = document.querySelector('#detail');
-let filter = 'attack';
-let selection = { pathId: 'attack', nodeId: SKILL_PATHS[0].root };
+let filter = 'guard';
+let selection = { pathId: 'guard', nodeId: SKILL_PATHS[1].root };
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const NODE_WIDTH = 196;
@@ -79,7 +79,8 @@ function drawMap(path) {
   for (const node of nodes) {
     const { x, y } = positions.get(node.id);
     const group = svg('g', { transform: `translate(${x} ${y})`, class: 'node', tabindex: 0, role: 'button', 'aria-label': `${node.name}${node.root ? ' 시작 기술' : ''}`, 'data-path': path.id, 'data-node': node.id });
-    group.append(svg('rect', { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 9 }));
+    group.style.setProperty('--accent', progressionNodeColor(path.id, node.id));
+    group.append(svg('rect', { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 9, style: `stroke:${progressionNodeColor(path.id, node.id)}` }));
     group.append(svg('image', { href: `../assets/icons/upgrades/${node.icon}.svg`, x: 12, y: 14, width: 25, height: 25, 'aria-hidden': 'true' }));
     group.append(svg('text', { x: 47, y: 20, class: 'node-label' }, node.root ? 'Lv.2 · 시작 기술' : `${node.depth + 1}단계 · 선행 기술 필요`));
     group.append(svg('text', { x: 47, y: 39, class: 'node-title' }, node.name));
@@ -101,7 +102,7 @@ function renderDetail() {
   const path = SKILL_PATHS.find(item => item.id === selection.pathId);
   const nodes = graphs.get(path.id);
   const node = nodes.find(item => item.id === selection.nodeId);
-  detail.style.setProperty('--accent', path.color);
+  detail.style.setProperty('--accent', progressionNodeColor(path.id, node.id));
   const description = html('div', '');
   description.append(html('h2', `${path.name} · ${node.name}`), html('p', node.detail));
   const next = html('div', '', 'next');

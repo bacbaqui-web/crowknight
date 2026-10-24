@@ -24,7 +24,7 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
       if (actor.respawning) return;
       faceNpcActorTowardPlayer(actor, playerActor);
       plane?.beforeEnemy(actor, playerActor);
-      runEnemyRangeAi(actor, playerActor, world);
+      if (!(actor.player.runParryStun > 0)) runEnemyRangeAi(actor, playerActor, world);
       actor.player.updateNpc(dt, playerActor.player, motionWorld);
       plane?.afterMotion(actor);
     });

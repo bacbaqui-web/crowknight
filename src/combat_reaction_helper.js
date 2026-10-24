@@ -1,3 +1,4 @@
+import { trySkillParry } from './parry_skill_helper.js';
 import { progressionEffects } from './skill_progression_effects.js';
 import { runSkillDamageMultiplier } from './skill_runtime_helper.js';
 import { recordHealthDamage } from './actor_health_helper.js';
@@ -14,6 +15,7 @@ export function applyInteractionDamage({
   target,
   attackRegion,
   damage: rawDamage,
+  allowParry = true,
   invincibleTime = 0,
   comboStep,
   playerActor,
@@ -25,14 +27,7 @@ export function applyInteractionDamage({
 }) {
   if (target.player.runEvadeTime > 0) return false;
   if (target.player.runSkills && target.player.customActionKey === target.player.runSkillActions.guard) {
-    const parried = target.player.runSkills.parry && target.player.runParryTime > 0;
-    world?.combatSounds?.contact(parried ? 'parry' : 'block', attacker, target);
-    if (target.player.runSkills.parry && target.player.runParryTime > 0) {
-      target.player.runParryTime = 0;
-      attacker.player.hurtTime = Math.max(attacker.player.hurtTime || 0, 0.5);
-      requestHurtAction(attacker, target);
-      target.hitCancelFlashTime = 0.2;
-    }
+    if (!allowParry || !trySkillParry(attacker, target, world)) world?.combatSounds?.contact('block', attacker, target);
     return false;
   }
   const damage = Math.max(

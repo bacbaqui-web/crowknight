@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>패링 포인트 전투 확인</title>
+<style>body{background:#101923;color:#eaf2ff;font:16px system-ui;margin:32px auto;max-width:800px;padding:16px}canvas{width:100%;background:#1b2a3b;border-radius:12px}button{padding:10px;margin:5px;background:#263c52;color:white;border:1px solid #7794aa;border-radius:6px}p{line-height:1.7}</style>
+<h1>패링 포인트 전투 확인</h1><p>실제 게임의 패링·회복·광역 피해·체력바 함수를 사용하는 확인 화면입니다.<br>패링 성공을 눌러 포인트를 모으고 R키로 사용하세요. 적 피격으로 포인트 소멸도 확인할 수 있습니다.</p>
+<canvas width="800" height="300" aria-label="플레이어와 적 체력 및 패링 포인트"></canvas>
+<div><button id="heal">초록 · 회복 계열</button><button id="burst">빨강 · 광역 계열</button><button id="parry">패링 성공</button><button id="hit">적에게 피격</button><button id="release">R · 전부 사용</button><button id="rank">패링 강화</button></div><p id="status" aria-live="polite"></p>
+<script type="module">
+import {drawHealthMeter} from '../src/actor_health_helper.js';
+import {trySkillParry,parryStats} from '../src/parry_skill_helper.js';
+import {resolveParryRelease} from '../src/parry_release_controller.js';
+import {applyInteractionDamage} from '../src/combat_reaction_helper.js';
+import {updateActorCombatTimers} from '../src/combat_engine.js';
+const actor=(group,x,tint)=>({group,hp:100,maxHp:200,tint,player:{x,y:240,runSkills:{},runSkillActions:{guard:'guard'},customActionKey:'idle',actions:[],customActions:[],updateState(){}}});
+const hero=actor('players',280,'#81c9ee'),enemy=actor('mobs',430,'#f26e69');enemy.hp=200;
+const actors=[hero,enemy],ctx=document.querySelector('canvas').getContext('2d'),status=document.querySelector('#status');
+function reset(kind){hero.hp=100;enemy.hp=200;enemy.player.dead=false;hero.player.runSkills={parry:1,[kind]:1};hero.player.runParryPoints=0;hero.player.runParryPulse=null;}
+reset('parryHeal');
+function release(){resolveParryRelease({actors,playerActor:hero,world:{},onPlayerKill(){},onEnemyDeath(){}});}
+document.querySelector('#heal').onclick=()=>reset('parryHeal');document.querySelector('#burst').onclick=()=>reset('parryBurst');
+document.querySelector('#parry').onclick=()=>{hero.player.customActionKey='guard';hero.player.runParryTime=.15;trySkillParry(enemy,hero);hero.player.customActionKey='idle';};
+document.querySelector('#hit').onclick=()=>applyInteractionDamage({attacker:enemy,target:hero,damage:10,playerActor:hero,onPlayerDeath(){hero.player.dead=true;}});
+document.querySelector('#release').onclick=release;document.querySelector('#rank').onclick=()=>hero.player.runSkills.parry++;
+addEventListener('keydown',event=>{if(event.code==='KeyR'&&!event.repeat){event.preventDefault();release();}});
+let last=performance.now();function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;updateActorCombatTimers(actors,dt);ctx.clearRect(0,0,800,300);
+for(const a of actors){ctx.fillStyle=a.tint;ctx.fillRect(a.player.x-12,180,24,60);drawHealthMeter(ctx,a,a.player.x,150,120);}
+const stats=parryStats(hero.player);status.textContent=`포인트 ${hero.player.runParryPoints||0}/5 · HP ${hero.hp} · 적 HP ${enemy.hp} · 패링 ${stats.window.toFixed(2)}초 / 스턴 ${stats.stun.toFixed(2)}초`;requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></html>

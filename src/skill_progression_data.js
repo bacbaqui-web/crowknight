@@ -2,11 +2,16 @@ import { RUN_SKILLS } from './skill_runtime_helper.js';
 
 export const SKILL_PATHS = [
   { id: 'attack', name: '공격', color: '#ff8a78', icon: 'sharp-blade', root: 'attackRoot', first: 'fourthStrike', skills: ['fourthStrike', 'fifthStrike', 'sixthStrike', 'chargeAttack'], motions: [['fourthStrike', '공격 4타'], ['fifthStrike', '공격 5타'], ['sixthStrike', '공격 6타'], ['chargePose', '응격 - 기모으기'], ['chargeAttack', '응격 - 공격']] },
-  { id: 'guard', name: '방어', color: '#78bbff', icon: 'rooted-stance', root: 'guardRoot', first: 'parry', skills: ['parry'], motions: [['guard', '방어 · 패링']] },
+  { id: 'guard', name: '방어', color: '#78bbff', icon: 'rooted-stance', root: 'guardRoot', first: 'parry', skills: ['parry', 'parryHeal', 'parryBurst', 'deepHealing', 'wideBurst', 'stunningBurst'], motions: [['guard', '방어 · 패링']] },
   { id: 'move', name: '이동', color: '#7ee7ac', icon: 'crow-footsteps', root: 'moveRoot', first: 'doubleJump', skills: ['doubleJump', 'backflip'], motions: [['doubleJump', '이단점프'], ['backflip', '백플립']] },
 ];
 
 const PASSIVES = [
+  { id: 'parryHeal', name: '생명의 반향', detail: 'R: 포인트 전부 소모 · 포인트² × 2 HP 회복(5개=50 HP) · 강화마다 회복량 +25%', icon: 'steel-feathers' },
+  { id: 'parryBurst', name: '분노의 파동', detail: 'R: 포인트 전부 소모 · 주변 200 범위에 포인트² × 5 피해(5개=125) · 강화마다 피해 +25%', icon: 'forceful-strike' },
+  { id: 'deepHealing', name: '깊은 생명', detail: '생명의 반향 회복량 +50% · 강화마다 +50%', icon: 'unyielding-will' },
+  { id: 'wideBurst', name: '퍼지는 파동', detail: '분노의 파동 반경 +40 · 강화마다 +40', icon: 'long-shadow' },
+  { id: 'stunningBurst', name: '진압의 파동', detail: '분노의 파동 적중 시 0.5초 스턴 · 강화마다 +0.5초', icon: 'rooted-stance' },
   { id: 'comboForce', name: '몰아치는 연타', detail: '4·5·6타 피해 +15% · 강화마다 +15%', icon: 'forceful-strike' },
   { id: 'vitality', name: '강인한 생명', detail: '최대 HP +20 · 증가분만큼 회복', icon: 'steel-feathers' },
   { id: 'armor', name: '철의 깃털', detail: '받는 피해 5% 감소 · 최대 60%', icon: 'rooted-stance' },
@@ -22,18 +27,25 @@ const effectsByNode = { attackRoot: 'fourthStrike', guardRoot: 'parry', moveRoot
 const branches = {
   attackRoot: ['fifthStrike', 'chargeAttack'],
   fifthStrike: ['sixthStrike', 'comboForce'], chargeAttack: ['reach', 'power'],
-  guardRoot: ['armor', 'vitality'],
-  armor: ['parryMaster', 'lifeSteal'], vitality: ['parryMaster', 'lifeSteal'],
+  guardRoot: ['parryHeal', 'parryBurst'],
+  parryHeal: ['deepHealing', 'vitality'], parryBurst: ['wideBurst', 'stunningBurst'],
   moveRoot: ['backflip', 'swiftness'],
   backflip: ['jumpMaster', 'leap'], swiftness: ['jumpMaster', 'leap'],
 };
-effectsByNode.parryMaster = 'parry';
 effectsByNode.jumpMaster = 'doubleJump';
-const nodeNames = { parryMaster: '숙련된 패링', jumpMaster: '상승의 날갯짓' };
+const nodeNames = { jumpMaster: '상승의 날갯짓' };
 function nodeSkill(id) {
   const effectId = effectsByNode[id] || id;
   const skill = PROGRESSION_SKILLS.find(item => item.id === effectId);
   return { ...skill, name: nodeNames[id] || skill.name, effectId };
+}
+
+export function progressionNodeColor(pathId, nodeId) {
+  if (pathId === 'guard') {
+    if (['parryHeal', 'deepHealing', 'vitality'].includes(nodeId)) return '#70e69b';
+    if (['parryBurst', 'wideBurst', 'stunningBurst'].includes(nodeId)) return '#ff716d';
+  }
+  return SKILL_PATHS.find(path => path.id === pathId)?.color;
 }
 
 export function progressionChoices(pathId, route = []) {
@@ -58,14 +70,14 @@ export function progressionChoices(pathId, route = []) {
     return ({
     ...nodeSkill(node),
     id: `${path.id}:${route.join('') || 'root'}:${index}`,
-    effectId, direction: index, color: path.color, pathId,
+    effectId, direction: index, color: progressionNodeColor(pathId, node), pathId,
     nodeId: node, mastery,
     branchLabel: mastery ? '최상위 기술 숙련 · 이전 분기로 돌아가지 않습니다' : route.length ? `${index ? '오른쪽' : '왼쪽'} 가지` : '트리 시작 기술',
   });
   });
-  if (pathId === 'attack' && route.length && !mastery) choices.push({
-    ...nodeSkill(current), id: `attack:${route.join('')}:train`, nodeId: current,
-    pathId, color: path.color, reinforce: true, branchLabel: '현재 기술 강화 · 다음 분기 유지',
+  if (['attack', 'guard'].includes(pathId) && route.length && !mastery) choices.push({
+    ...nodeSkill(current), id: `${pathId}:${route.join('')}:train`, nodeId: current,
+    pathId, color: progressionNodeColor(pathId, current), reinforce: true, branchLabel: '현재 기술 강화 · 다음 분기 유지',
   });
   return choices;
 }

@@ -1,3 +1,4 @@
+import { parryStats } from './parry_skill_helper.js';
 import { clone } from './common_helper.js';
 export const RUN_SKILLS = [
   {
@@ -12,7 +13,7 @@ export const RUN_SKILLS = [
   {
     id: 'parry',
     name: '찰나의 반격',
-    detail: 'E 방어 시작 순간 패링 · 강화마다 판정 시간 +0.03초',
+    detail: 'E 타이밍 방어 · 적 0.6초 스턴 · 강화마다 판정 +0.03초(최대 0.6초), 스턴 +0.25초',
     icon: 'rooted-stance',
   },
   {
@@ -228,7 +229,7 @@ export function startRunSkill(player, key) {
     player.velocityControl = null;
   }
   if (key === bindings.guard && player.runGuardReady)
-    player.runParryTime = 0.15 + Math.max(0, (player.runSkills.parry || 1) - 1) * 0.03;
+    player.runParryTime = parryStats(player).window;
   if (key === bindings.backflip) player.runEvadeTime = 0.25 + Math.max(0, player.runSkills.backflip - 1) * 0.05;
 }
 export function updateRunSkills(player, dt) {

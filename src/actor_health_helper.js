@@ -1,3 +1,4 @@
+import { drawParryStatus } from './parry_skill_helper.js';
 import { healthTickPath, healthTickSpacing } from './health_meter_path_cache.js';
 import { clamp } from './common_helper.js';
 
@@ -8,6 +9,7 @@ export function baseHealth(tuning = {}) {
 }
 
 export function recordHealthDamage(actor) {
+  if (actor.player) actor.player.runParryPoints = 0;
   actor.healthTrail = { hp: Math.max(actor.hp, actor.healthTrail?.hp || 0), delay: 0.45 };
 }
 
@@ -27,6 +29,7 @@ export function updateHealthTrail(actor, dt) {
 export function drawHealthMeter(ctx, actor, x, y, width) {
   const max = actor.maxHp;
   if (!(max > 0)) return;
+  drawParryStatus(ctx, actor, x, y);
   const left = x - width / 2;
   const height = 8;
   const ratio = (hp) => clamp(hp / max, 0, 1);

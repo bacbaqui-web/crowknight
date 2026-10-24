@@ -1,5 +1,8 @@
 export function resetPlayerActionState(player) {
   player.dead = false;
+  player.runParryStun = 0;
+  player.runParryPoints = 0;
+  player.runParryPulse = null;
   player.deathRagdoll = null;
   player.attackTime = 0;
   player.jumpAttackTime = 0;
