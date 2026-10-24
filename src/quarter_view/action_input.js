@@ -1,5 +1,5 @@
 const BUFFER_SECONDS = 0.15;
-const ACTION_KEYS = new Set(['KeyQ', 'KeyW', 'KeyE', 'Space']);
+const ACTION_KEYS = new Set(['KeyQ', 'KeyW', 'KeyE', 'KeyF', 'Space']);
 const MODIFIERS = ['ArrowUp', 'ArrowDown'];
 
 export function prepareActionInput(actor, input, direction) {

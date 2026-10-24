@@ -1,6 +1,9 @@
+import { MOVEMENT_SKILLS, canUseMovementSkill, startMovementSkill, updateMovementSkills } from './movement_skill_helper.js';
+import { prepareMovementActions } from './movement_skill_authoring.js';
 import { parryStats } from './parry_skill_helper.js';
 import { clone } from './common_helper.js';
 export const RUN_SKILLS = [
+  ...MOVEMENT_SKILLS,
   {
     id: 'chargeAttack',
     name: '응축된 일격',
@@ -202,11 +205,13 @@ export function prepareSkillActions(tuning) {
     tuning.effectSettings[key] = clone(tuning.effectSettings[source] || {});
   }
   tuning.skillPrototypeReady = true;
+  prepareMovementActions(tuning);
 
 }
 
 export function canUseRunSkill(player, key) {
   if (!player.runSkills) return true;
+  if (!canUseMovementSkill(player, key)) return false;
   const bindings = player.runSkillActions || {};
   if (
     (bindings.chargePose === key || (bindings.chargeAttack === key && key !== bindings.firstStrike)) &&
@@ -222,6 +227,7 @@ export function canUseRunSkill(player, key) {
 }
 export function startRunSkill(player, key) {
   if (!player.runSkills) return;
+  startMovementSkill(player, key);
   const bindings = player.runSkillActions;
   if (key === bindings.doubleJump) {
     player.runAirJumpUsed = true;
@@ -233,6 +239,7 @@ export function startRunSkill(player, key) {
   if (key === bindings.backflip) player.runEvadeTime = 0.25 + Math.max(0, player.runSkills.backflip - 1) * 0.05;
 }
 export function updateRunSkills(player, dt) {
+  updateMovementSkills(player, dt);
   if (player.onGround) player.runAirJumpUsed = false;
   player.runParryTime = Math.max(0, (player.runParryTime || 0) - dt);
   player.runEvadeTime = Math.max(0, (player.runEvadeTime || 0) - dt);

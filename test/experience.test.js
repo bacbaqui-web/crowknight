@@ -36,7 +36,7 @@ test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 
   for (const [path, root, left, right] of [
     ['attack', 'fourthStrike', 'fifthStrike', 'chargeAttack'],
     ['guard', 'parry', 'parryHeal', 'parryBurst'],
-    ['move', 'doubleJump', 'backflip', 'swiftness'],
+    ['move', 'sprint', 'doubleJump', 'rollChain'],
   ]) {
     const { c, offers } = setup();
     c.addExperience(399);c.update(0, { floorY: 0 });

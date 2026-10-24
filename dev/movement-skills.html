@@ -1,0 +1,28 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>이동 기술 확인</title>
+<style>body{background:#111c28;color:#eaf3ff;font:15px system-ui;max-width:900px;margin:30px auto;padding:16px}canvas{background:#203247;width:100%;border-radius:10px}button{padding:10px;margin:4px;background:#304b5e;color:white;border:1px solid #91cbb4;border-radius:5px}p{line-height:1.7}</style>
+<h1>이동 기술 확인</h1><p>실제 저장 모션·키 입력·물리·피해 함수를 사용하는 확인 화면입니다.<br>← → 이동 · Shift 달리기 · Space 점프/활강 · W 구르기/순보 · 공중 F 내려찍기</p>
+<div><button data-mode="sprint">달리기</button><button data-mode="plunge">이단점프 + 강하</button><button data-mode="glide">이단점프 + 활강</button><button data-mode="rollStrike">연속 + 공격 구르기</button><button data-mode="blink">연속 + 순보</button><button id="rank">연속 횟수 강화</button><button id="height">높이 200에서 시작</button></div>
+<canvas width="900" height="360" aria-label="이동 기술 테스트 장면"></canvas><p id="status" aria-live="polite">로딩 중</p>
+<script type="module">
+import {PuppetPlayer} from '../src/actor_runtime_engine.js';
+import {DEFAULT_PLAYER_TUNING} from '../src/player_default_tuning_data.js';
+import {mergeTuning} from '../src/project_data_normalizer_helper.js';
+import {prepareSkillActions,updateRunSkills} from '../src/skill_runtime_helper.js';
+import {prepareMovementPose,rollRemaining,rollCapacity} from '../src/movement_skill_helper.js';
+import {resolveMovementSkills} from '../src/movement_skill_combat.js';
+import {requestRuntimeAction} from '../src/action_trigger_engine.js';
+import {resetPlayerActionState} from '../src/actor_state.js';
+import {bindKeyboardControls} from '../src/input_control_controller.js';
+import {drawHealthMeter} from '../src/actor_health_helper.js';
+const saved=await (await fetch('../data/beta.json')).json();
+const tuning=mergeTuning(DEFAULT_PLAYER_TUNING,saved.actors.player_01.tuning);prepareSkillActions(tuning);
+const p=new PuppetPlayer(250,280,{});p.applyTuning(tuning);p.runSkillActions=tuning.skillActions;
+const hero={player:p,tuning,hp:100,maxHp:100,tint:'#91dfc2'},enemy={group:'mobs',hp:500,maxHp:500,tint:'#ed8078',player:{x:420,y:280,actions:[],customActionKey:'idle',updateState(){}}};
+const world={floorY:280,minX:20,maxX:880,worldPhysics:{gravity:1,inertia:30}},keys=new Set(),pressed=new Set();
+bindKeyboardControls({keys,pressed,handleShortcut:()=>false});
+function mode(id){resetPlayerActionState(p);p.x=250;p.y=280;p.vx=p.vy=0;p.onGround=true;p.runSkills={sprint:1};if(['glide','plunge'].includes(id)){p.runSkills.doubleJump=1;p.runSkills[id]=1;}if(['blink','rollStrike'].includes(id)){p.runSkills.rollChain=1;p.runSkills[id]=1;}enemy.hp=500;enemy.player.dead=false;enemy.player.deathRagdoll=null;keys.clear();pressed.clear();}
+for(const button of document.querySelectorAll('[data-mode]'))button.onclick=()=>mode(button.dataset.mode);
+document.querySelector('#rank').onclick=()=>p.runSkills.rollChain=(p.runSkills.rollChain||0)+1;
+document.querySelector('#height').onclick=()=>{p.x=420;p.y=80;p.onGround=false;p.vy=0;p.customActionKey=null;p.customActionTime=0;};mode('sprint');
+const ctx=document.querySelector('canvas').getContext('2d');let previous=performance.now();function frame(now){const dt=Math.min(.05,(now-previous)/1000);previous=now;updateRunSkills(p,dt);prepareMovementPose(p,keys,requestRuntimeAction);p.update(dt,keys,pressed,world);pressed.clear();resolveMovementSkills({actors:[hero,enemy],playerActor:hero,world,onPlayerKill(){},onEnemyDeath(){}});ctx.clearRect(0,0,900,360);ctx.strokeStyle='#587063';ctx.beginPath();ctx.moveTo(0,280);ctx.lineTo(900,280);ctx.stroke();for(const a of [hero,enemy]){ctx.fillStyle=a.tint;ctx.fillRect(a.player.x-12,a.player.y-45,24,45);drawHealthMeter(ctx,a,a.player.x,a.player.y-65,120);}document.querySelector('#status').textContent=`남은 횟수 ${rollRemaining(p)}/${rollCapacity(p)} · 높이 ${Math.round(280-p.y)} · 적 HP ${Math.round(enemy.hp*10)/10} · 현재 동작 ${tuning.customActions.find(a=>a.key===p.customActionKey)?.name||'대기'}`;requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></html>

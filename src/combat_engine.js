@@ -1,3 +1,4 @@
+import { resolveMovementSkills } from './movement_skill_combat.js';
 import { trySkillParry } from './parry_skill_helper.js';
 import { resolveParryRelease } from './parry_release_controller.js';
 import { updateHealthTrail } from './actor_health_helper.js';
@@ -35,6 +36,7 @@ export function resolveCombat({
   onPlayerKill,
   onEnemyDeath,
 }) {
+  resolveMovementSkills({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath });
   if (parryRelease) resolveParryRelease({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath });
   const regionCache = createInteractionRegionFrameCache();
   resolveCollisionInteractions(actors, regionCache, world);

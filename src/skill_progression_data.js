@@ -3,7 +3,7 @@ import { RUN_SKILLS } from './skill_runtime_helper.js';
 export const SKILL_PATHS = [
   { id: 'attack', name: '공격', color: '#ff8a78', icon: 'sharp-blade', root: 'attackRoot', first: 'fourthStrike', skills: ['fourthStrike', 'fifthStrike', 'sixthStrike', 'chargeAttack'], motions: [['fourthStrike', '공격 4타'], ['fifthStrike', '공격 5타'], ['sixthStrike', '공격 6타'], ['chargePose', '응격 - 기모으기'], ['chargeAttack', '응격 - 공격']] },
   { id: 'guard', name: '방어', color: '#78bbff', icon: 'rooted-stance', root: 'guardRoot', first: 'parry', skills: ['parry', 'parryHeal', 'parryBurst', 'deepHealing', 'wideBurst', 'stunningBurst'], motions: [['guard', '방어 · 패링']] },
-  { id: 'move', name: '이동', color: '#7ee7ac', icon: 'crow-footsteps', root: 'moveRoot', first: 'doubleJump', skills: ['doubleJump', 'backflip'], motions: [['doubleJump', '이단점프'], ['backflip', '백플립']] },
+  { id: 'move', name: '이동', color: '#7ee7ac', icon: 'crow-footsteps', root: 'moveRoot', first: 'sprint', skills: ['sprint', 'doubleJump', 'rollChain', 'plunge', 'glide', 'rollStrike', 'blink'], motions: [['sprint', '달리기'], ['doubleJump', '이단점프'], ['roll', '구르기 · 가시 깃털'], ['plunge', '까마귀 강하'], ['glide', '활강'], ['blink', '순보']] },
 ];
 
 const PASSIVES = [
@@ -22,22 +22,20 @@ const PASSIVES = [
   { id: 'leap', name: '가벼운 깃털', detail: '도약 높이 +10% · 최대 +100%', icon: 'leaping-feather' },
 ];
 export const PROGRESSION_SKILLS = [...RUN_SKILLS, ...PASSIVES];
-const effectsByNode = { attackRoot: 'fourthStrike', guardRoot: 'parry', moveRoot: 'doubleJump' };
+const effectsByNode = { attackRoot: 'fourthStrike', guardRoot: 'parry', moveRoot: 'sprint' };
 // Every edge advances one tier. A leaf can be trained without reopening earlier branches.
 const branches = {
   attackRoot: ['fifthStrike', 'chargeAttack'],
   fifthStrike: ['sixthStrike', 'comboForce'], chargeAttack: ['reach', 'power'],
   guardRoot: ['parryHeal', 'parryBurst'],
   parryHeal: ['deepHealing', 'vitality'], parryBurst: ['wideBurst', 'stunningBurst'],
-  moveRoot: ['backflip', 'swiftness'],
-  backflip: ['jumpMaster', 'leap'], swiftness: ['jumpMaster', 'leap'],
+  moveRoot: ['doubleJump', 'rollChain'],
+  doubleJump: ['plunge', 'glide'], rollChain: ['rollStrike', 'blink'],
 };
-effectsByNode.jumpMaster = 'doubleJump';
-const nodeNames = { jumpMaster: '상승의 날갯짓' };
 function nodeSkill(id) {
   const effectId = effectsByNode[id] || id;
   const skill = PROGRESSION_SKILLS.find(item => item.id === effectId);
-  return { ...skill, name: nodeNames[id] || skill.name, effectId };
+  return { ...skill, effectId };
 }
 
 export function progressionNodeColor(pathId, nodeId) {
@@ -75,7 +73,7 @@ export function progressionChoices(pathId, route = []) {
     branchLabel: mastery ? '최상위 기술 숙련 · 이전 분기로 돌아가지 않습니다' : route.length ? `${index ? '오른쪽' : '왼쪽'} 가지` : '트리 시작 기술',
   });
   });
-  if (['attack', 'guard'].includes(pathId) && route.length && !mastery) choices.push({
+  if (['attack', 'guard', 'move'].includes(pathId) && route.length && !mastery) choices.push({
     ...nodeSkill(current), id: `${pathId}:${route.join('')}:train`, nodeId: current,
     pathId, color: progressionNodeColor(pathId, current), reinforce: true, branchLabel: '현재 기술 강화 · 다음 분기 유지',
   });

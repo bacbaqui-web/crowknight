@@ -77,5 +77,5 @@ export function upgradeVelocity(player, settings, x, y) {
     player.customActionKey === player.runSkillActions?.doubleJump
       ? 1 + Math.max(0, (player.runSkills?.doubleJump || 1) - 1) * 0.1
       : 1;
-  return { x: x * (player.runUpgrades?.speed || 1) * effects.speed, y: y < 0 ? y * Math.sqrt((player.runUpgrades?.jump || 1) * skillJump * effects.jump) : y };
+  return { x: x * (player.runUpgrades?.speed || 1) * effects.speed * (player.customActionKey === player.runSkillActions?.sprint ? 1 + Math.max(0, (player.runSkills?.sprint || 1) - 1) * 0.1 : 1), y: y < 0 ? y * Math.sqrt((player.runUpgrades?.jump || 1) * skillJump * effects.jump) : y };
 }

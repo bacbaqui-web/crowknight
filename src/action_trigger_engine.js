@@ -23,6 +23,7 @@ const TRIGGER_TO_INPUT_CODE = {
   Q: 'KeyQ',
   W: 'KeyW',
   E: 'KeyE',
+  F: 'KeyF',
   Space: 'Space',
   ArrowUp: 'ArrowUp',
   ArrowDown: 'ArrowDown',
@@ -452,6 +453,7 @@ function normalizedFacing(facing) {
 
 function canRunActionCondition(player, key) {
   if (!canUseRunSkill(player, key)) return false;
+  if (player.runSkills && key === player.runSkillActions?.roll && player.customActionKey === key && player.isCustomActionActive) return true;
   const condition = normalizeActionCondition(actionRuntimeSettings(player, key).condition);
   if (condition === 'ground') return player.onGround === true;
   if (condition === 'air') return player.onGround === false;
@@ -459,6 +461,7 @@ function canRunActionCondition(player, key) {
 }
 
 function actionLinkResult(player, key) {
+  if (player.runSkills?.doubleJump && key === player.runSkillActions?.doubleJump) return { allowed: true, linked: false };
   const settings = actionRuntimeSettings(player, key);
   const linkRule = actionFormula(settings, 'link');
   if (!linkRule?.enabled) return { allowed: true, linked: false };
@@ -488,6 +491,7 @@ function actionLinkResult(player, key) {
 }
 
 function actionCooldownResult(player, key, nowMs) {
+  if (player.runSkills && key && [player.runSkillActions?.roll, player.runSkillActions?.blink].includes(key)) return { allowed: true };
   const cooldown = actionFormula(actionRuntimeSettings(player, key), 'cooldown');
   const seconds = Number(cooldown?.seconds || 0);
   if (!cooldown?.enabled || seconds <= 0) return { allowed: true };

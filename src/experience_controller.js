@@ -1,3 +1,4 @@
+import { resetMovementSkills } from './movement_skill_helper.js';
 import { syncProgressionHealth } from './skill_progression_effects.js';
 import { attractPickup } from './pickup_magnet_helper.js';
 import { progressionChoices } from './skill_progression_data.js';
@@ -67,6 +68,7 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       for (const key of Object.keys(ranks)) delete ranks[key];
       const p = getPlayer().player;
       p.runSkills = {};
+      resetMovementSkills(p);
       p.runParryPoints = 0;
       p.runParryPulse = null;
       syncProgressionHealth(getPlayer());
@@ -84,6 +86,7 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       orbs = [];
       pending = 0;
       offered = null;
+      resetMovementSkills(getPlayer().player);
       delete getPlayer().player.runSkills;
       getPlayer().player.runParryPoints = 0;
       getPlayer().player.runParryPulse = null;

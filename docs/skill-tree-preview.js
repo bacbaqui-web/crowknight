@@ -3,8 +3,8 @@ import { SKILL_PATHS, progressionGraph, progressionNodeColor } from '../src/skil
 const graphs = new Map(SKILL_PATHS.map(path => [path.id, progressionGraph(path.id)]));
 const maps = document.querySelector('#maps');
 const detail = document.querySelector('#detail');
-let filter = 'guard';
-let selection = { pathId: 'guard', nodeId: SKILL_PATHS[1].root };
+let filter = 'move';
+let selection = { pathId: 'move', nodeId: SKILL_PATHS[2].root };
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const NODE_WIDTH = 196;

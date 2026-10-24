@@ -1,3 +1,4 @@
+import { prepareMovementPose } from './movement_skill_helper.js';
 import { withRuntimeReadCache } from './runtime_read_cache.js';
 import { createCombatAudioPlayer } from './combat_audio_player.js';
 import { createGameMusicController } from './game_music_controller.js';
@@ -358,6 +359,7 @@ function update(dt) {
 
   quarter?.prepareInput(playerActor, keys);
   updateRunSkills(playerActor.player, dt);
+  prepareMovementPose(playerActor.player, keys, requestRuntimeAction);
   playerActor.player.runGuardReady = pressed.has('KeyE');
   const chargeInput = updateChargeAttack(playerActor.player, dt, keys, pressed, requestRuntimeAction);
   updateBattleActorMotion({

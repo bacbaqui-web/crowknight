@@ -1,3 +1,4 @@
+import { applyMovementSkillPhysics } from './movement_skill_helper.js';
 import { advanceCustomActionRuntime, updateActionTriggerRuntime } from './action_trigger_engine.js';
 import { updateDeathRagdoll } from './death_ragdoll_engine.js';
 import { activeActionFormulaAtProgress } from './formula_runtime_engine.js';
@@ -122,6 +123,7 @@ function applyWorldPhysics(player, dt, world, keys = null) {
   if (!player.onGround) player.vy += physics.gravity * frameDelta;
   applyAirControl(player, physics, keys, frameDelta);
 
+  applyMovementSkillPhysics(player, keys);
   player.x += player.vx * frameDelta;
   player.y += player.vy * frameDelta;
 
