@@ -2,7 +2,10 @@ import { drawAttackTrail } from '../actor_canvas_renderer.js';
 import { attackPoint, screenPoint } from './attack_geometry.js';
 
 export function effectAnchor(actor) {
-  const regions = actor.player.attackInteractionRegions || [];
+  const regions =
+    actor.quarterAttackSerial === actor.player.attackSerial
+      ? actor.quarterAttackRawRegions || []
+      : actor.player.attackInteractionRegions || [];
   if (regions.length) {
     const left = Math.min(...regions.map((r) => r.x)),
       right = Math.max(...regions.map((r) => r.x + r.w));
@@ -14,13 +17,13 @@ export function effectAnchor(actor) {
   return { x: actor.player.x + (actor.player.facing || 1) * 65 * scale, y: actor.player.y - 70 };
 }
 export function attackEffectMatrix(actor, world, view) {
-  const anchor = effectAnchor(actor),
-    facing = actor.player.facing || 1;
-  const center = screenPoint(attackPoint(actor, anchor), world, view);
-  const forward = screenPoint(attackPoint(actor, { x: anchor.x + facing, y: anchor.y }), world, view);
-  const lateral = screenPoint(attackPoint(actor, anchor, facing), world, view);
-  const a = (forward.x - center.x) * facing,
-    b = (forward.y - center.y) * facing;
+  const anchor = effectAnchor(actor);
+  const project = (point) => screenPoint({ ...attackPoint(actor, point), y: world.floorY }, world, view);
+  const center = project(anchor);
+  const forward = project({ x: anchor.x + 1, y: anchor.y });
+  const lateral = project({ x: anchor.x, y: anchor.y + 1 });
+  const a = forward.x - center.x,
+    b = forward.y - center.y;
   const c = lateral.x - center.x,
     d = lateral.y - center.y;
   return { a, b, c, d, e: center.x - a * anchor.x - c * anchor.y, f: center.y - b * anchor.x - d * anchor.y };

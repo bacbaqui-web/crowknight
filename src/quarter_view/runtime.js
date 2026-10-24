@@ -1,9 +1,10 @@
-import { captureAttackRegions } from './attack_geometry.js';
+import { captureAttackRegions, groundAttackRegions } from './attack_geometry.js';
+import { applyGroundKnockback } from './knockback.js';
 import { GAME_KEYS } from '../game_config_data.js';
 import { createQuarterRenderer } from './renderer.js';
 import { depthOf } from './camera.js';
 import { movementInput, preparePlaneMotion, finishPlaneMotion, enemyPlaneDirection } from './motion.js';
-import { combatTargetRegions, resolveGroundCollision, sameGroundContact } from './spatial.js';
+import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundProjectileRegion } from './spatial.js';
 
 const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', KeyX: 'ArrowDown' };
 export function createQuarterRuntime({ ctx, world }) {
@@ -18,18 +19,16 @@ export function createQuarterRuntime({ ctx, world }) {
     },
     afterMotion(actor) {
       finishPlaneMotion(actor);
+      actor.quarterFloorY = world.floorY;
       actor.player.quarterDepth = depthOf(actor);
     },
     distance: (a, b) => Math.hypot(a.player.x - b.player.x, depthOf(a) - depthOf(b)),
     targetRegions: combatTargetRegions,
     resolveCollision: resolveGroundCollision,
     sameGroundContact,
-    afterHit(attacker, target) {
-      const axis = attacker.quarterAim || { x: attacker.player.facing, z: 0 };
-      // Reaction velocity is signed in the original side-view coordinate system.
-      const sign = (attacker.player.facing || 1) * (target.player.facing || 1);
-      target.quarterImpulse = { x: axis.x * sign, z: axis.z * sign };
-    },
+    attackRegions: groundAttackRegions,
+    projectileRegion: groundProjectileRegion,
+    applyKnockback: applyGroundKnockback,
     respawn(actor, target) {
       actor.quarterDepth = Math.max(-430, Math.min(430, depthOf(target) + (Math.random() - 0.5) * 500));
       actor.player.quarterDepth = actor.quarterDepth;
@@ -50,6 +49,7 @@ export function createQuarterRuntime({ ctx, world }) {
       paused = false;
       renderer.resetDebugHistory();
       actors.forEach((actor, index) => {
+        actor.quarterFloorY = world.floorY;
         actor.quarterDepth = index === 0 ? 0 : ((index % 5) - 2) * 85;
         actor.player.quarterDepth = actor.quarterDepth;
         actor.quarterAim = { x: actor.player.facing || 1, z: 0 };

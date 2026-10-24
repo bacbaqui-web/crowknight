@@ -1,24 +1,18 @@
-import { ATTACK_HALF_WIDTH, targetLaneRadius } from './attack_geometry.js';
 import { depthOf, normalizeDirection } from './camera.js';
 import { readInteractionRegions } from '../combat_cache_helper.js';
 import { collisionPushShares } from '../combat_collision_helper.js';
 
 export function combatTargetRegions(attacker, target, regions) {
   if (attacker.quarterDepth == null && target.quarterDepth == null) return regions;
-  const aim = attacker.quarterAim || { x: attacker.player.facing, z: 0 };
-  const dx = target.player.x - attacker.player.x;
-  const dz = depthOf(target) - depthOf(attacker);
-  // A separate ground lane prevents hitting distant feet through tall sprites.
-  const width = ATTACK_HALF_WIDTH + targetLaneRadius(target);
-  if (Math.abs(-dx * aim.z + dz * aim.x) > width) return [];
-  const projectedX = (dx * aim.x + dz * aim.z) * attacker.player.facing;
-  const shift = projectedX - dx;
-  return regions.map((region) => ({
-    ...region,
-    x: region.x + shift,
-    ...(region.points ? { points: region.points.map((point) => ({ x: point.x + shift, y: point.y })) } : {}),
-  }));
+  return regions.map((region) => {
+    const radius = Math.max(8, Math.min(70, region.w / 2));
+    return { ...region, y: depthOf(target) - radius, h: radius * 2, points: null };
+  });
 }
+export function groundProjectileRegion(projectile, region) {
+  return { ...region, y: depthOf(projectile) - 16, h: 32, points: null };
+}
+
 export function resolveGroundCollision(a, b) {
   const ar = readInteractionRegions(a, 'collision')[0],
     br = readInteractionRegions(b, 'collision')[0];

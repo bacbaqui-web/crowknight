@@ -145,31 +145,32 @@ export function pingPongProgress(raw) {
 }
 
 export function interpolateFrameValues(keyframes = [], t = 0, fallback = {}) {
-  const frames = keyframes
-    .map((frame) => ({
-      x: Number(frame.x || 0),
-      y: Number(frame.y || 0),
-      ax: Number(frame.ax || 0),
-      ay: Number(frame.ay || 0),
-      w: Number(frame.w || 0),
-      h: Number(frame.h || 0),
-      rot: Number(frame.rot || 0),
-      opacity: Number(frame.opacity ?? 1),
-      anchorX: Number(frame.anchorX || 0),
-      anchorY: Number(frame.anchorY || 0),
-      ...normalizeInteractionValues(frame),
-      t: clamp(Number(frame.t), 0, 1),
-    }))
-    .sort((a, b) => a.t - b.t);
+  // Choose the neighboring keys before normalizing their many interaction fields.
+  // Editors may mutate keyframes in place, so keep this uncached and mutation-safe.
+  const frames = keyframes.map((frame) => ({ frame, t: clamp(Number(frame.t), 0, 1) })).sort((a, b) => a.t - b.t);
+  const normalize = ({ frame }) => ({
+    x: Number(frame.x || 0),
+    y: Number(frame.y || 0),
+    ax: Number(frame.ax || 0),
+    ay: Number(frame.ay || 0),
+    w: Number(frame.w || 0),
+    h: Number(frame.h || 0),
+    rot: Number(frame.rot || 0),
+    opacity: Number(frame.opacity ?? 1),
+    anchorX: Number(frame.anchorX || 0),
+    anchorY: Number(frame.anchorY || 0),
+    ...normalizeInteractionValues(frame),
+    t: clamp(Number(frame.t), 0, 1),
+  });
 
   if (!frames.length) return fallback;
-  if (t <= frames[0].t) return { ...fallback, ...frames[0] };
-  if (t >= frames.at(-1).t) return { ...fallback, ...frames.at(-1) };
+  if (t <= frames[0].t) return { ...fallback, ...normalize(frames[0]) };
+  if (t >= frames.at(-1).t) return { ...fallback, ...normalize(frames.at(-1)) };
 
   for (let index = 0; index < frames.length - 1; index += 1) {
-    const a = frames[index];
-    const b = frames[index + 1];
-    if (t < a.t || t > b.t) continue;
+    if (t < frames[index].t || t > frames[index + 1].t) continue;
+    const a = normalize(frames[index]);
+    const b = normalize(frames[index + 1]);
     const localT = (t - a.t) / Math.max(0.0001, b.t - a.t);
     return {
       x: lerp(a.x, b.x, localT),

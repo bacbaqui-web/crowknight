@@ -3,7 +3,16 @@ export function createTrajectoryView(canvas, status) {
   const width = canvas.width,
     height = canvas.height,
     pad = 24;
+  let previousEntry, previousCount, previousTime, previousActive;
   function draw(entry) {
+    const count = entry?.samples.length || 0,
+      time = entry?.samples.at(-1)?.time;
+    if (previousEntry === entry && previousCount === count && previousTime === time && previousActive === entry?.active)
+      return;
+    previousEntry = entry;
+    previousCount = count;
+    previousTime = time;
+    previousActive = entry?.active;
     ctx.clearRect(0, 0, width, height);
     if (!entry?.samples.length) {
       status.textContent = '공격하면 실제 판정의 궤적이 표시됩니다.';
@@ -34,7 +43,7 @@ export function createTrajectoryView(canvas, status) {
     ctx.font = '10px sans-serif';
     ctx.fillStyle = '#b4c4ac';
     ctx.fillText('앞(공격 방향) →', width - 90, zero.y - 5);
-    ctx.fillText('높이 ↑', zero.x + 4, 12);
+    ctx.fillText('옆 방향 ↑', zero.x + 4, 12);
     const last = samples.at(-1);
     samples.forEach((sample, index) => {
       ctx.strokeStyle = '#ffad45';

@@ -1,7 +1,8 @@
 import { activeProjectiles, projectileAttackRegion } from '../projectile_runtime_engine.js';
+import { regionPoints } from '../interaction_swept_region_helper.js';
 import { depthOf } from './camera.js';
 import { currentAttackRegions, screenPoint } from './attack_geometry.js';
-import { attackFootprint, createAttackHistory } from './attack_history.js';
+import { createAttackHistory } from './attack_history.js';
 import { createTrajectoryView } from './trajectory_view.js';
 
 export function createHitboxView({
@@ -118,24 +119,30 @@ export function createHitboxView({
         });
         if (actor === playerActor) drawTrail(entry, view);
       }
-      regions.forEach((region) => drawPolygon(attackFootprint(actor, region, world.floorY), view, color));
+      regions.forEach((region) =>
+        drawPolygon(
+          regionPoints(region).map((p) => ({ x: p.x, depth: p.y, y: world.floorY })),
+          view,
+          color
+        )
+      );
     }
     for (const p of activeProjectiles()) {
       if (!p.active) continue;
       const r = projectileAttackRegion(p),
         z = depthOf(p);
       const points = [
-        [r.x, z - 35],
-        [r.x + r.w, z - 35],
-        [r.x + r.w, z + 35],
-        [r.x, z + 35],
+        [r.x, z - 16],
+        [r.x + r.w, z - 16],
+        [r.x + r.w, z + 16],
+        [r.x, z + 16],
       ].map(([x, depth]) => ({ x, depth, y: world.floorY }));
       drawPolygon(points, view, '#c5a0ff');
       active++;
     }
     if (!playerActor.player.dead) drawDirection(playerActor, view);
     trajectory?.draw(heroEntry);
-    legend.textContent = `주황: 내 공격 · 빨강: 적 · 보라: 투사체 (바닥 범위)\n현재 공격 ${active}개 · 점선: 최근 1초\n하늘색: 궤적 · 옆면도식 번호 순서 · P: 정지/재개`;
+    legend.textContent = `주황: 내 공격 · 빨강: 적 · 보라: 투사체 (바닥 범위)\n현재 공격 ${active}개 · 점선: 최근 1초\n하늘색: 궤적 · 지면도식 번호 순서 · P: 정지/재개`;
   }
   return { draw, reset: history.reset };
 }

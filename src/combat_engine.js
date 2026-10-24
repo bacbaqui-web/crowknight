@@ -44,11 +44,19 @@ export function resolveCombat({
     world,
   });
 
+  // Snapshot ground polygons before reactions can change another actor's facing/action.
+  const attacks = new Map();
+  if (world?.quarterView)
+    actors.forEach((actor) => {
+      const raw = cachedInteractionRegions(regionCache, actor, 'attack');
+      const regions = world.quarterView.attackRegions?.(actor, raw) ?? raw;
+      world.quarterView.captureAttackRegions?.(actor, raw, regions);
+      attacks.set(actor, regions);
+    });
   actors.forEach((attacker) => {
     if (attacker.player?.dead) return;
     if (attacker.respawning) return;
-    const attackRegions = cachedInteractionRegions(regionCache, attacker, 'attack');
-    world?.quarterView?.captureAttackRegions?.(attacker, attackRegions);
+    const attackRegions = attacks.get(attacker) ?? cachedInteractionRegions(regionCache, attacker, 'attack');
     if (!attackRegions.length) return;
 
     actors.forEach((target) => {
@@ -100,7 +108,6 @@ export function resolveCombat({
           });
         }
         applyHitReaction(attacker, target, guardBlockAttackRegion, comboStep, particleEffects, world);
-        world?.quarterView?.afterHit(attacker, target);
         return;
       }
 
@@ -145,11 +152,12 @@ export function resolveCombat({
       if (removed) return;
 
       applyHitReaction(attacker, target, attackRegion, comboStep, particleEffects, world);
-      world?.quarterView?.afterHit(attacker, target);
     });
   });
 
-  actors.forEach((actor) => syncPreviousAttackRegions(actor, cachedInteractionRegions(regionCache, actor, 'attack')));
+  actors.forEach((actor) =>
+    syncPreviousAttackRegions(actor, attacks.get(actor) ?? cachedInteractionRegions(regionCache, actor, 'attack'))
+  );
 }
 
 export function resolveProjectileCombat({
@@ -165,7 +173,8 @@ export function resolveProjectileCombat({
   const regionCache = createInteractionRegionFrameCache();
   projectiles.forEach((projectile) => {
     if (!projectile?.active || !projectile.owner) return;
-    const attackRegion = projectileAttackRegion(projectile);
+    const rawAttackRegion = projectileAttackRegion(projectile);
+    const attackRegion = world?.quarterView?.projectileRegion?.(projectile, rawAttackRegion) ?? rawAttackRegion;
     actors.forEach((target) => {
       if (!projectile.active) return;
       if (shouldSkipTarget(projectile.owner, target)) return;
@@ -174,9 +183,9 @@ export function resolveProjectileCombat({
         return;
       }
       if (projectile.hitTargets?.has(target)) return;
-      if (world?.quarterView && Math.abs(Number(projectile.quarterDepth || 0) - Number(target.quarterDepth || 0)) > 35)
-        return;
-      const targetHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
+      const rawHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
+      const targetHurtRegions =
+        world?.quarterView?.targetRegions(projectile.owner, target, rawHurtRegions) ?? rawHurtRegions;
       const hurtRegion = overlappingAttackRegion(projectile.owner, [attackRegion], targetHurtRegions);
       if (!hurtRegion) return;
 
@@ -212,7 +221,6 @@ export function resolveProjectileCombat({
       removeProjectile(projectile);
       if (!removed) {
         applyHitReaction(projectile.owner, target, attackRegion, 1, particleEffects, world);
-        world?.quarterView?.afterHit(projectile.owner, target);
       }
     });
   });

@@ -134,7 +134,7 @@ test('depth movement uses native action displacement without diagonal speed infl
   close(b.player.x, 480, 'no sideways travel');
 });
 
-test('authored hurt polygons project along the attack direction and reject separated lanes', () => {
+test('hurt footprints use world ground coordinates and ignore sprite altitude', () => {
   const a = fixture(),
     b = fixture('swordman');
   a.quarterAim = { x: 0, z: 1 };
@@ -142,9 +142,12 @@ test('authored hurt polygons project along the attack direction and reject separ
   b.quarterDepth = 80;
   const regions = b.player.hurtInteractionRegions;
   const projected = combatTargetRegions(a, b, regions);
-  close(projected[0].x - regions[0].x, 80, 'forward attack distance');
+  close(projected[0].x, regions[0].x, 'world x');
+  close(projected[0].y + projected[0].h / 2, 80, 'ground depth');
+  b.player.y -= 200;
+  assert.deepEqual(combatTargetRegions(a, b, b.player.hurtInteractionRegions), projected);
   b.player.x += 200;
-  assert.deepEqual(combatTargetRegions(a, b, regions), []);
+  close(combatTargetRegions(a, b, b.player.hurtInteractionRegions)[0].x, projected[0].x + 200, 'world separation');
 });
 
 test('pickup magnet respects depth and converges at native collection speed', () => {
@@ -167,4 +170,24 @@ test('enemy ground direction preserves native face-away evasion', () => {
   assert.ok(direction.x > 0);
   enemy.player.facing = -1;
   assert.ok(enemyPlaneDirection(enemy, hero).x < 0);
+});
+
+test('render offset cache reuses one stable pose and recomputes after the render scope ends', () => {
+  const a = fixture(),
+    player = a.player;
+  const resolve = player.resolveActionOffset;
+  let calls = 0;
+  player.resolveActionOffset = function (...args) {
+    calls++;
+    return resolve.apply(this, args);
+  };
+  const expected = player.getPartOffset('weapon');
+  player.renderPartOffsets = new Map();
+  const cached = player.getPartOffset('weapon');
+  assert.deepEqual(cached, expected);
+  assert.equal(player.getPartOffset('weapon'), cached);
+  assert.equal(calls, 2);
+  player.renderPartOffsets = null;
+  player.getPartOffset('weapon');
+  assert.equal(calls, 3);
 });

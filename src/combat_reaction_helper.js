@@ -107,6 +107,7 @@ export function targetHurtInvincibleTime(hurtRegions) {
 }
 
 export function applyKnockback(attacker, target, attackRegion, world) {
+  if (world?.quarterView?.applyKnockback) return world.quarterView.applyKnockback(attacker, target, attackRegion);
   const knockback = Math.max(0, Number(attackRegion?.reaction?.knockback || 0));
   const knockbackMode = attackRegion?.reaction?.knockbackMode === 'set' ? 'set' : 'add';
   const extraVx = Number(attackRegion?.reaction?.knockbackExtraVx || 0);

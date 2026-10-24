@@ -1,17 +1,10 @@
-import { attackPoint, ATTACK_HALF_WIDTH } from './attack_geometry.js';
+import { attackPoint } from './attack_geometry.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 
 export function attackFootprint(actor, region, floorY) {
-  const points = regionPoints(region);
-  const left = Math.min(...points.map((p) => p.x)),
-    right = Math.max(...points.map((p) => p.x));
-  return [
-    [left, -ATTACK_HALF_WIDTH],
-    [right, -ATTACK_HALF_WIDTH],
-    [right, ATTACK_HALF_WIDTH],
-    [left, ATTACK_HALF_WIDTH],
-  ].map(([x, lateral]) => attackPoint(actor, { x, y: floorY }, lateral));
+  return regionPoints(region).map((point) => ({ ...attackPoint(actor, point), y: floorY }));
 }
+
 export function createAttackHistory() {
   const entries = new Map();
   function update(actor, floorY) {
@@ -40,13 +33,13 @@ export function createAttackHistory() {
       bottom = Math.max(...points.map((p) => p.y));
     const facing = actor.player.facing || 1;
     const localPolygons = raw.map((region) =>
-      regionPoints(region).map((p) => ({ x: (p.x - actor.player.x) * facing, y: floorY - p.y }))
+      regionPoints(region).map((p) => ({ x: (p.x - actor.player.x) * facing, y: actor.player.y - p.y }))
     );
     entry.samples.push({
       time,
       polygons: localPolygons,
-      center: { x: ((left + right) / 2 - actor.player.x) * facing, y: floorY - (top + bottom) / 2 },
-      ground: attackPoint(actor, { x: (left + right) / 2, y: floorY }),
+      center: { x: ((left + right) / 2 - actor.player.x) * facing, y: actor.player.y - (top + bottom) / 2 },
+      ground: attackPoint(actor, { x: (left + right) / 2, y: (top + bottom) / 2 }),
       footprints: raw.map((region) => attackFootprint(actor, region, floorY)),
     });
     // One bounded sequence per actor; keep its start when a long action produces many samples.

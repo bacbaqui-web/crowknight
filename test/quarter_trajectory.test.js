@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { attackFootprint, createAttackHistory } from '../src/quarter_view/attack_history.js';
-import { captureAttackRegions } from '../src/quarter_view/attack_geometry.js';
+import { captureAttackRegions, groundAttackRegions } from '../src/quarter_view/attack_geometry.js';
 import { cloneInteractionRegionSnapshot } from '../src/interaction_swept_region_helper.js';
 import { createTrajectoryView } from '../src/quarter_view/trajectory_view.js';
 
@@ -11,6 +11,7 @@ function actor() {
     quarterAim: { x: 0, z: 1 },
     player: {
       x: 100,
+      y: 430,
       facing: 1,
       animTime: 0,
       attackSerial: 1,
@@ -29,19 +30,21 @@ test('flat range removes all height edges while preserving actual forward and la
     points.map((p) => p.depth),
     [50, 90, 90, 50]
   );
-  assert.equal(Math.max(...points.map((p) => p.x)) - Math.min(...points.map((p) => p.x)), 32);
+  assert.equal(Math.max(...points.map((p) => p.x)) - Math.min(...points.map((p) => p.x)), 50);
 });
 test('numbered history records raw hitboxes rather than trace sweep envelopes and never duplicates paused frames', () => {
   const a = actor(),
     history = createAttackHistory(),
     region = a.player.attackInteractionRegions[0];
   region.reaction.hitMode = 'trace';
-  a.previousAttackRegions = [cloneInteractionRegionSnapshot({ ...region, x: 20 }, 'slash')];
+  a.previousAttackRegions = [
+    cloneInteractionRegionSnapshot(groundAttackRegions(a, [{ ...region, x: 20 }])[0], 'slash'),
+  ];
   captureAttackRegions(a, [region]);
   const entry = history.update(a, 430);
   assert.equal(entry.samples[0].center.x, 50);
   assert.equal(entry.samples[0].center.y, 105);
-  assert.ok(a.quarterAttackRegions[0].x < region.x);
+  assert.ok(a.quarterAttackRegions[0].y < groundAttackRegions(a, [region])[0].y);
   history.update(a, 430);
   assert.equal(entry.samples.length, 1);
   a.player.animTime = 1 / 60;

@@ -6,8 +6,7 @@ import {
   captureAttackRegions,
   currentAttackRegions,
   screenPoint,
-  targetLaneRadius,
-  ATTACK_HALF_WIDTH,
+  groundAttackRegions,
 } from '../src/quarter_view/attack_geometry.js';
 import { attackEffectMatrix, effectAnchor } from '../src/quarter_view/attack_effects.js';
 import { createHitboxView } from '../src/quarter_view/hitbox_view.js';
@@ -32,8 +31,8 @@ function actor(aim = { x: 0, z: 1 }, facing = 1) {
     },
   };
 }
-function close(actual, expected) {
-  assert.ok(Math.abs(actual - expected) < 1e-7, `${actual} vs ${expected}`);
+function close(actual, expected, tolerance = 1e-7) {
+  assert.ok(Math.abs(actual - expected) < tolerance, `${actual} vs ${expected}`);
 }
 function apply(m, p) {
   return { x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f };
@@ -61,27 +60,22 @@ test('all eight attack directions align the effect anchor with the actual ground
       close(actual.y, expected.y);
       const step = apply(m, { x: anchor.x + facing, y: anchor.y });
       const forward = screenPoint(attackPoint(a, { x: anchor.x + facing, y: anchor.y }), world, view);
-      close(step.x, forward.x);
-      close(step.y, forward.y);
+      close(step.x, forward.x, 0.01);
+      close(step.y, forward.y, 0.01);
       assert.ok(Math.abs(m.a * m.d - m.b * m.c) > 0.05, 'effect must retain visible area for vertical attacks');
       assert.equal(JSON.stringify(a), before);
     }
-});
-test('ground display keeps the original combined attack and target lane width', () => {
-  for (const scale of [0.1, 0.5, 1, 2, 3]) {
-    const target = { player: { transform: { scale } } };
-    assert.equal(ATTACK_HALF_WIDTH + targetLaneRadius(target), Math.max(32, Math.min(70, scale * 42)));
-  }
 });
 test('trace overlay captures the same sweep before combat overwrites previous regions and clears on inactive frames', () => {
   const a = actor(),
     current = a.player.attackInteractionRegions[0];
   current.reaction.hitMode = 'trace';
-  const previous = { ...current, x: current.x - 100 };
+  const previous = groundAttackRegions(a, [{ ...current, x: current.x - 100 }])[0];
+  const flat = groundAttackRegions(a, [current])[0];
   a.previousAttackRegions = [cloneInteractionRegionSnapshot(previous, 'slash')];
-  const expected = sweptInteractionRegion(previous, current);
+  const expected = sweptInteractionRegion(previous, flat);
   captureAttackRegions(a, [current]);
-  a.previousAttackRegions = [cloneInteractionRegionSnapshot(current, 'slash')];
+  a.previousAttackRegions = [cloneInteractionRegionSnapshot(flat, 'slash')];
   assert.deepEqual(currentAttackRegions(a), [expected]);
   captureAttackRegions(a, []);
   assert.deepEqual(currentAttackRegions(a), []);

@@ -375,9 +375,12 @@ export class PuppetPlayer {
   }
 
   getPartOffset(key) {
+    if (this.renderPartOffsets?.has(key)) return this.renderPartOffsets.get(key);
     const value = this.actionOffsets?.[this.actionKey]?.[key];
     const resolved = this.resolveInteractionActionLevelOffset(key, this.resolveActionOffset(value), value);
-    return this.resolveActionBlendOffset(key, resolved);
+    const offset = this.resolveActionBlendOffset(key, resolved);
+    this.renderPartOffsets?.set(key, offset);
+    return offset;
   }
 
   get actionMirrorSettings() {
