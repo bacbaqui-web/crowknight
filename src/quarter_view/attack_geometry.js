@@ -56,7 +56,7 @@ export function screenPoint(point, world, view) {
 export function groundAttackRegions(actor, regions) {
   const plane = attackPlane(actor);
   const flat = regions.map((region) => {
-    if (region.quarterDirectionalBox) return region;
+    if (region.quarterDirectionalBox || region.quarterNativeWeapon) return region;
     if (region.quarterEffectContact && plane === 'height') {
       const points = regionPoints(region).map((point) => {
         const p = effectPoint(actor, point, region.quarterEffectCenter, plane, region.quarterEffectRadius);

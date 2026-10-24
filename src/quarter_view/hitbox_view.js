@@ -132,13 +132,15 @@ export function createHitboxView({
       if (!p.active) continue;
       const r = groundProjectileRegion(p, projectileAttackRegion(p));
       const points =
-        r.quarterPlane === 'height'
-          ? regionPoints(r).map((point) => ({
-              x: p.x + r.quarterOrigin.aim.x * (point.x - p.x),
-              depth: depthOf(p) + r.quarterOrigin.aim.z * (point.x - p.x),
-              y: point.y,
-            }))
-          : regionPoints(r).map((point) => ({ x: point.x, depth: point.y, y: world.floorY }));
+        r.quarterPlane === 'effect-height'
+          ? regionPoints(r).map((point) => ({ x: point.x, depth: 0, y: point.y }))
+          : r.quarterPlane === 'height'
+            ? regionPoints(r).map((point) => ({
+                x: p.x + r.quarterOrigin.aim.x * (point.x - p.x),
+                depth: depthOf(p) + r.quarterOrigin.aim.z * (point.x - p.x),
+                y: point.y,
+              }))
+            : regionPoints(r).map((point) => ({ x: point.x, depth: point.y, y: world.floorY }));
       drawPolygon(points, view, '#c5a0ff');
       active++;
     }

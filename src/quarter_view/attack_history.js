@@ -3,6 +3,7 @@ import { attackPoint, effectPoint } from './attack_geometry.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 
 export function attackFootprint(actor, region, floorY) {
+  if (region.quarterNativeWeapon) return regionPoints(region).map((p) => ({ x: p.x, depth: 0, y: p.y }));
   if (region.quarterDirectionalBox)
     return regionPoints(region).map((p) => ({ x: p.x, depth: p.y, y: region.quarterElevation }));
   return regionPoints(region).map((point) => ({

@@ -21,7 +21,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 26);
+  assert.equal(Object.keys(imports).length, 27);
   for (const name of [
     'camera',
     'ground_shaders',
@@ -47,6 +47,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
     'spatial',
     'attack_settings_view',
     '../actor_renderer',
+    '../spearman_throw_renderer',
   ]) {
     const key = new URL(`./src/quarter_view/${name}.js`, context.location.href).href;
     assert.equal(imports[key], `${key}?projection=3f`);

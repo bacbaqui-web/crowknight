@@ -3,11 +3,12 @@ import { regionPoints } from '../interaction_swept_region_helper.js';
 import { progressionEffects } from '../skill_progression_effects.js';
 import { chargeAttackScale } from '../charge_attack_helper.js';
 import { ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY } from '../interaction_object_model_data.js';
-import { depthOf, normalizeDirection } from './camera.js';
-import { isProjectileAttack } from './weapon_contact.js';
+import { depthOf, normalizeDirection, QUARTER_PROJECTION } from './camera.js';
+import { isProjectileAttack, weaponContactRegion } from './weapon_contact.js';
 
 export function directionalAttackRegions(actor, regions) {
   if (isProjectileAttack(actor)) return regions;
+  if (['mobs', 'bosses'].includes(actor.group)) return nativeEnemyAttackRegions(actor, regions);
   const player = actor.player;
   const body = player.hurtInteractionRegions?.[0];
   const originX = body ? body.x + body.w / 2 : player.x;
@@ -60,6 +61,27 @@ export function directionalAttackRegions(actor, regions) {
       quarterBoxLength: length,
       quarterBoxOrigin: { x: originX, depth: depthOf(actor), y: elevation },
       quarterBoxAim: direction,
+    };
+  });
+}
+
+export function nativeEnemyAttackRegions(actor, regions) {
+  return regions.map((region) => {
+    const native = actor.id === 'spearman' ? weaponContactRegion(actor, region, true) : region;
+    const shift = depthOf(actor) * QUARTER_PROJECTION.slope;
+    return {
+      ...native,
+      points: regionPoints(native).map((p) => ({ x: p.x, y: p.y + shift })),
+      y: native.y + shift,
+      reaction: { ...native.reaction, hitMode: 'box' },
+      quarterNativeWeapon: true,
+      quarterPlane: 'effect-height',
+      quarterOrigin: {
+        x: actor.player.x,
+        depth: depthOf(actor),
+        facing: actor.player.facing || 1,
+        aim: { x: actor.player.facing || 1, z: 0 },
+      },
     };
   });
 }

@@ -1,3 +1,4 @@
+import { linearSpearCorners } from '../spearman_throw_renderer.js';
 import { attackPlane } from '../attack_plane_helper.js';
 import { constrainGroundPosition } from './bounds.js';
 import { attackOrigin } from './attack_geometry.js';
@@ -51,17 +52,9 @@ export function combatTargetRegions(attacker, target, regions, source = null) {
 }
 export function groundProjectileRegion(projectile, region) {
   if (projectile.linearSpear) {
-    const aim = projectile.quarterAim;
-    const halfWidth = projectile.hitboxWidth / 2;
-    const halfHeight = projectile.hitboxHeight / 2;
-    const points = [
-      [-1, -1],
-      [1, -1],
-      [1, 1],
-      [-1, 1],
-    ].map(([along, across]) => ({
-      x: projectile.x + aim.x * halfWidth * along - aim.z * halfHeight * across,
-      y: depthOf(projectile) + aim.z * halfWidth * along + aim.x * halfHeight * across,
+    const points = linearSpearCorners(projectile).map((p) => ({
+      x: p.x,
+      y: p.y + depthOf(projectile) * QUARTER_PROJECTION.slope,
     }));
     const xs = points.map((p) => p.x),
       ys = points.map((p) => p.y);
@@ -72,21 +65,29 @@ export function groundProjectileRegion(projectile, region) {
       y: Math.min(...ys),
       w: Math.max(...xs) - Math.min(...xs),
       h: Math.max(...ys) - Math.min(...ys),
-      quarterPlane: 'ground',
-      quarterHeightRange: [projectile.y - halfHeight, projectile.y + halfHeight],
+      quarterHeightRange: [
+        projectile.y - (Math.abs(projectile.direction.y) * projectile.hitboxWidth + projectile.hitboxHeight) / 2,
+        projectile.y + (Math.abs(projectile.direction.y) * projectile.hitboxWidth + projectile.hitboxHeight) / 2,
+      ],
+      quarterPlane: 'effect-height',
+      quarterOrigin: { x: projectile.x, depth: depthOf(projectile), facing: 1, aim: { x: 1, z: 0 } },
     };
   }
-  if (projectile.quarterPlane === 'height')
+  if (projectile.quarterPlane === 'height') {
+    const shift = depthOf(projectile) * QUARTER_PROJECTION.slope;
     return {
       ...region,
-      quarterPlane: 'height',
+      y: region.y + shift,
+      ...(region.points ? { points: region.points.map((p) => ({ x: p.x, y: p.y + shift })) } : {}),
+      quarterPlane: 'effect-height',
       quarterOrigin: {
         x: projectile.x,
         depth: depthOf(projectile),
         facing: 1,
-        aim: projectile.quarterAim || { x: 1, z: 0 },
+        aim: { x: 1, z: 0 },
       },
     };
+  }
   return { ...region, quarterPlane: 'ground', y: depthOf(projectile) - 16, h: 32, points: null };
 }
 

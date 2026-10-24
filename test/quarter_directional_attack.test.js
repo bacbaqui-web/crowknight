@@ -177,3 +177,55 @@ test('sector rejects bounding-box corners and reaches its curved front', () => {
   assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength * 0.6, Math.PI / 3)), false);
   assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength + 4, 0)), false);
 });
+
+test('enemy melee stays in the native vertical plane; spear matches the full rendered weapon', async () => {
+  const { groundAttackRegions, screenPoint, attackRegionPoint } =
+    await import('../src/quarter_view/attack_geometry.js');
+  const { weaponContactRegion } = await import('../src/quarter_view/weapon_contact.js');
+  const a = actor();
+  a.group = 'mobs';
+  a.quarterDepth = 70;
+  a.quarterAim = { x: 0, z: 1 };
+  const view = { x: 0, depth: 0, width: 800, height: 600, zoom: 1.3 };
+  const world = { floorY: 0 };
+  let region = directionalAttackRegions(a, raw)[0];
+  assert.equal(region.quarterPlane, 'effect-height');
+  assert.equal(groundAttackRegions(a, [region])[0], region);
+  a.id = 'spearman';
+  a.player.rig = { weapon: { w: 180, h: 12, ax: 60, ay: 6 } };
+  a.player.getPartOffset = () => ({});
+  a.player.weaponAnchorTransform = () => ({ a: 0.8, b: 0.6, c: -0.6, d: 0.8, e: 20, f: -60 });
+  region = directionalAttackRegions(a, raw)[0];
+  const native = weaponContactRegion(a, raw[0], true);
+  for (let i = 0; i < 4; i++) {
+    const shown = screenPoint({ ...native.points[i], depth: a.quarterDepth }, world, view);
+    const hit = screenPoint(attackRegionPoint(a, region.points[i], region, 0), world, view);
+    assert.ok(Math.hypot(shown.x - hit.x, shown.y - hit.y) < 1e-8);
+  }
+});
+
+test('arrow collision and overlay match its rendered rotated rectangle for every aim', async () => {
+  const { projectileAttackRegion } = await import('../src/projectile_runtime_engine.js');
+  const { groundProjectileRegion } = await import('../src/quarter_view/spatial.js');
+  const { screenPoint, attackRegionPoint } = await import('../src/quarter_view/attack_geometry.js');
+  const view = { x: 50, depth: -30, width: 800, height: 600, zoom: 1.7 };
+  for (const aim of EFFECT_DIRECTIONS) {
+    const p = {
+      x: 120,
+      y: -90,
+      quarterDepth: 80,
+      quarterAim: aim,
+      quarterPlane: 'height',
+      angle: 1.2,
+      hitboxWidth: 80,
+      hitboxHeight: 8,
+    };
+    const native = projectileAttackRegion(p),
+      hit = groundProjectileRegion(p, native);
+    for (let i = 0; i < 4; i++) {
+      const a = screenPoint({ ...native.points[i], depth: p.quarterDepth }, { floorY: 0 }, view);
+      const b = screenPoint(attackRegionPoint(p, hit.points[i], hit, 0), { floorY: 0 }, view);
+      assert.ok(Math.hypot(a.x - b.x, a.y - b.y) < 1e-8);
+    }
+  }
+});

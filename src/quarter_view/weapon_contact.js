@@ -9,7 +9,7 @@ export function isProjectileAttack(actor) {
   );
 }
 
-export function weaponContactRegion(actor, original) {
+export function weaponContactRegion(actor, original, fullWeapon = false) {
   const player = actor.player;
   const name = player.customActions?.find((action) => action.key === player.actionKey)?.name || '';
   const partKey = original.key === GUARD_INTERACTION_OBJECT_KEY || /방패|shield/i.test(name) ? 'shield' : 'weapon';
@@ -23,7 +23,7 @@ export function weaponContactRegion(actor, original) {
   const ax = (((part.ax ?? part.ox ?? 0) + (offset.ax || 0)) * width) / (part.baseW || part.w || 1);
   const ay = (((part.ay ?? part.oy ?? 0) + (offset.ay || 0)) * height) / (part.baseH || part.h || 1);
   // Melee blades start beyond the grip; shield bashes use the complete shield face.
-  const grip = partKey === 'weapon' ? Math.min(width * 0.45, Math.max(0, ax)) : 0;
+  const grip = partKey === 'weapon' && !fullWeapon ? Math.min(width * 0.45, Math.max(0, ax)) : 0;
   const points = [
     [grip - ax, -ay],
     [width - ax, -ay],

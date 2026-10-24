@@ -1,3 +1,4 @@
+import { QUARTER_PROJECTION } from './quarter_view/camera.js';
 import { SPEARMAN_THROW } from './spearman_throw_runtime.js';
 
 export function projectedSpearPoint(ctx, point, project) {
@@ -11,27 +12,34 @@ export function projectedSpearPoint(ctx, point, project) {
   return result;
 }
 
+export function linearSpearCorners(spear) {
+  const slope = spear.quarterDepth == null ? 0 : QUARTER_PROJECTION.slope;
+  const dx = spear.direction.x * spear.hitboxWidth;
+  const dy = (spear.direction.y + spear.direction.z * slope) * spear.hitboxWidth;
+  const length = Math.hypot(dx, dy);
+  const thickness = Math.max(2, length / 26);
+  const nx = length ? ((-dy / length) * thickness) / 2 : 0;
+  const ny = length ? ((dx / length) * thickness) / 2 : thickness / 2;
+  return [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ].map(([along, side]) => ({
+    x: spear.x + (along * dx) / 2 + side * nx,
+    y: spear.y + (along * dy) / 2 + side * ny,
+    quarterDepth: spear.quarterDepth,
+  }));
+}
+
 export function drawLinearSpear(ctx, spear, project) {
-  const half = spear.hitboxWidth / 2;
-  const ends = [-half, half].map((distance) =>
-    projectedSpearPoint(
-      ctx,
-      {
-        x: spear.x + spear.direction.x * distance,
-        y: spear.y + spear.direction.y * distance,
-        quarterDepth: Number(spear.quarterDepth || 0) + spear.direction.z * distance,
-      },
-      project
-    )
-  );
-  const dx = ends[1].x - ends[0].x,
-    dy = ends[1].y - ends[0].y;
-  const width = Math.hypot(dx, dy);
+  const corners = linearSpearCorners(spear).map((p) => projectedSpearPoint(ctx, p, project));
+  const a = corners[0],
+    b = corners[1],
+    d = corners[3];
   ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.translate((ends[0].x + ends[1].x) / 2, (ends[0].y + ends[1].y) / 2);
-  ctx.rotate(Math.atan2(dy, dx));
-  if (spear.asset) ctx.drawImage(spear.asset, -width / 2, -Math.max(2, width / 26) / 2, width, Math.max(2, width / 26));
+  ctx.setTransform(b.x - a.x, b.y - a.y, d.x - a.x, d.y - a.y, a.x, a.y);
+  if (spear.asset) ctx.drawImage(spear.asset, 0, 0, 1, 1);
   ctx.restore();
 }
 
