@@ -16,9 +16,15 @@ import { drawActorEffectLayers } from '../src/quarter_view/attack_effects.js';
 
 test('one linked direction calibrates all eight; unlinked edits remain local and relinking uses the selected direction', () => {
   const profile = createEffectProfile();
-  updateEffectProfile(profile, 'up', { distance: 70, side: -25, width: 1.6, height: 0.8 });
+  updateEffectProfile(profile, 'up', { ...DEFAULT_EFFECT_LAYOUT, distance: 70, side: -25, width: 1.6, height: 0.8 });
   for (const direction of EFFECT_DIRECTIONS)
-    assert.deepEqual(profile.directions[direction.key], { distance: 70, side: -25, width: 1.6, height: 0.8 });
+    assert.deepEqual(profile.directions[direction.key], {
+      ...DEFAULT_EFFECT_LAYOUT,
+      distance: 70,
+      side: -25,
+      width: 1.6,
+      height: 0.8,
+    });
   linkEffectProfile(profile, 'up', false);
   updateEffectProfile(profile, 'up', { width: 2 });
   assert.equal(profile.directions.up.width, 2);
@@ -37,7 +43,13 @@ test('profile persistence clamps invalid values and preserves independent actors
       enemy: { slash: createEffectProfile() },
     },
   });
-  assert.deepEqual(state.profiles.hero.slash.directions.up, { distance: 400, side: -250, width: 0.25, height: 1 });
+  assert.deepEqual(state.profiles.hero.slash.directions.up, {
+    ...DEFAULT_EFFECT_LAYOUT,
+    distance: 400,
+    side: -250,
+    width: 0.25,
+    height: 1,
+  });
   let data;
   const storage = {
     setItem(_key, value) {
@@ -79,12 +91,13 @@ test('linked offsets rotate with all eight arrows and sizes share the same direc
   updateEffectProfile(profile, 'right', { distance: 50, side: 20, width: 2, height: 0.5 });
   for (const aim of EFFECT_DIRECTIONS) {
     actor.quarterAim = aim;
+    const mirror = aim.x < 0 ? -1 : 1;
     const point = effectPoint(actor, center, center, 'ground', 100);
-    assert.ok(Math.abs(point.x - (480 + aim.x * 150 - aim.z * 20)) < 1e-6);
-    assert.ok(Math.abs(point.depth - (aim.z * 150 + aim.x * 20)) < 1e-6);
+    assert.ok(Math.abs(point.x - (480 + aim.x * 150 - aim.z * 20 * mirror)) < 1e-6);
+    assert.ok(Math.abs(point.depth - (aim.z * 150 + aim.x * 20 * mirror)) < 1e-6);
     const tip = effectPoint(actor, { x: center.x + 10, y: center.y - 10 }, center, 'ground', 100);
     assert.ok(Math.abs((tip.x - point.x) * aim.x + (tip.depth - point.depth) * aim.z - 20) < 1e-6);
-    assert.ok(Math.abs(-(tip.x - point.x) * aim.z + (tip.depth - point.depth) * aim.x - 5) < 1e-6);
+    assert.ok(Math.abs(-(tip.x - point.x) * aim.z + (tip.depth - point.depth) * aim.x - 5 * mirror) < 1e-6);
   }
 });
 test('only the three upper directions are covered by the unchanged character sprite', () => {
@@ -97,4 +110,36 @@ test('only the three upper directions are covered by the unchanged character spr
     );
     assert.deepEqual(order, aim.z < 0 ? ['effect', 'actor'] : ['actor', 'effect']);
   }
+});
+
+test('rotation and anchor preserve mirrored pairs and place the source pivot at the arrow tip', () => {
+  const profile = createEffectProfile({ linked: false });
+  updateEffectProfile(profile, 'left', { rotation: 37, anchorX: 23, anchorY: -14, side: 17, width: 1.4 });
+  assert.deepEqual(profile.directions.left, profile.directions.right);
+  const actor = {
+    player: { x: 480, y: 430, facing: 1, actionKey: 'slash' },
+    quarterDepth: 0,
+    quarterFloorY: 430,
+    quarterEffectLayouts: { slash: profile },
+  };
+  const center = { x: 500, y: 350 };
+  for (const plane of ['ground', 'height']) {
+    for (const pair of [
+      ['right', 'left'],
+      ['up-right', 'up-left'],
+      ['down-right', 'down-left'],
+    ]) {
+      updateEffectProfile(profile, pair[0], profile.directions.right);
+      const points = pair.map((key) => {
+        actor.quarterAim = EFFECT_DIRECTIONS.find((d) => d.key === key);
+        return effectPoint(actor, { x: 539, y: 321 }, center, plane, 100);
+      });
+      assert.ok(Math.abs(points[0].x + points[1].x - 960) < 1e-6);
+      assert.ok(Math.abs(points[0].depth - points[1].depth) < 1e-6);
+      assert.equal(points[0].y, points[1].y);
+    }
+  }
+  actor.quarterAim = EFFECT_DIRECTIONS[0];
+  const pivot = effectPoint(actor, { x: 523, y: 364 }, center, 'ground', 100);
+  assert.deepEqual(pivot, { x: 580, depth: 17, y: 430 });
 });

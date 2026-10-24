@@ -222,7 +222,15 @@ test('manual per-direction position and size changes move the rendered image and
       directions: Object.fromEntries(
         EFFECT_DIRECTIONS.map((direction, index) => [
           direction.key,
-          { distance: 20 + index * 5, side: -15 + index * 4, width: 1.6, height: 0.7 },
+          {
+            distance: 20 + index * 5,
+            side: -15 + index * 4,
+            width: 1.6,
+            height: 0.7,
+            rotation: 33,
+            anchorX: 18,
+            anchorY: -12,
+          },
         ])
       ),
     },

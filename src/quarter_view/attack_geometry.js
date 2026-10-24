@@ -23,8 +23,15 @@ export function effectPoint(actor, point, center, plane = attackPlane(actor), ra
     facing = actor.player.facing || 1;
   if (radius != null) {
     const layout = effectLayoutFor(actor, aim.key);
-    const forward = (point.x - center.x) * facing * layout.width;
-    const lateral = (plane === 'ground' ? (center.y - point.y) * layout.height : 0) + layout.side;
+    // Work in authored right-facing coordinates, then reflect the left half.
+    // The chosen source anchor stays at the arrow tip through rotation and scaling.
+    const u = ((point.x - center.x) * facing - (layout.anchorX || 0)) * layout.width;
+    const v = (center.y - point.y - (layout.anchorY || 0)) * layout.height;
+    const angle = ((layout.rotation || 0) * Math.PI) / 180;
+    const forward = u * Math.cos(angle) - v * Math.sin(angle);
+    const cross = u * Math.sin(angle) + v * Math.cos(angle);
+    const mirror = aim.x < 0 ? -1 : 1;
+    const lateral = ((plane === 'ground' ? cross : 0) + layout.side) * mirror;
     radius = Math.max(0, radius + layout.distance);
     return {
       x:
@@ -33,7 +40,7 @@ export function effectPoint(actor, point, center, plane = attackPlane(actor), ra
         aim.z * lateral +
         (plane === 'height' && Math.abs(aim.x) < 0.1 ? -aim.z * 0.2 * forward : 0),
       depth: depthOf(actor) + aim.z * (radius + forward) + aim.x * lateral,
-      y: plane === 'height' ? center.y + (point.y - center.y) * layout.height : (actor.quarterFloorY ?? actor.player.y),
+      y: plane === 'height' ? center.y - cross : (actor.quarterFloorY ?? actor.player.y),
     };
   }
   const directed = { ...actor, quarterAim: aim };

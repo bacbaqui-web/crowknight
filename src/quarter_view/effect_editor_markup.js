@@ -100,7 +100,7 @@ export const EFFECT_EDITOR_MARKUP = `
         ><input type="checkbox" data-effect-linked checked />8방향 함께
         맞추기</label
       >
-      <small>한 방향의 조정값을 8방향에 회전해 적용합니다.</small>
+      <small>좌우 및 대각선 좌우는 항상 거울상으로 함께 조절됩니다.</small>
       <label class="effect-slider"
         >앞뒤 위치 (px)<input
           type="number"
@@ -169,9 +169,12 @@ export const EFFECT_EDITOR_MARKUP = `
           step="1"
           value="100"
       /></label>
+      <label class="effect-slider">회전각 (°)<input type="number" data-effect-field="rotation" aria-label="이펙트 회전각 (°)" min="-180" max="180" step="1" value="0" /><input type="range" data-effect-field="rotation" aria-label="이펙트 회전각 (°) 슬라이더" min="-180" max="180" step="1" value="0" /></label>
+      <label class="effect-slider">앵커 앞뒤 (px)<input type="number" data-effect-field="anchorX" aria-label="이펙트 앵커 앞뒤 (px)" min="-300" max="300" step="1" value="0" /><input type="range" data-effect-field="anchorX" aria-label="이펙트 앵커 앞뒤 (px) 슬라이더" min="-300" max="300" step="1" value="0" /></label>
+      <label class="effect-slider">앵커 위아래 (px)<input type="number" data-effect-field="anchorY" aria-label="이펙트 앵커 위아래 (px)" min="-300" max="300" step="1" value="0" /><input type="range" data-effect-field="anchorY" aria-label="이펙트 앵커 위아래 (px) 슬라이더" min="-300" max="300" step="1" value="0" /></label>
       <small
         >위치 0은 원본 간격입니다. 좌우 위치는 선택한 화살표의 옆
-        방향입니다.</small
+        방향입니다. 앵커 0은 이미지 중심이며, 앵커가 화살표 끝에 놓입니다. 앵커 앞뒤 +는 이미지 앞쪽, 위아래 +는 위쪽입니다. 회전·크기는 이 점을 기준으로 적용됩니다.</small
       >
       <label class="effect-check"
         ><input type="checkbox" data-effect-guides checked />플레이 중 8방향

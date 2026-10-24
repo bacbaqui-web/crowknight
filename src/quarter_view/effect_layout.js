@@ -1,8 +1,24 @@
 import { EFFECT_DIRECTIONS, effectDirection } from './effect_directions.js';
 
 export const EFFECT_LAYOUT_STORAGE = 'crowKnight.quarterEffectLayouts.v1';
-export const DEFAULT_EFFECT_LAYOUT = Object.freeze({ distance: 0, side: 0, width: 1, height: 1 });
-const fields = { distance: [-250, 400], side: [-250, 250], width: [0.25, 3], height: [0.25, 3] };
+export const DEFAULT_EFFECT_LAYOUT = Object.freeze({
+  distance: 0,
+  side: 0,
+  width: 1,
+  height: 1,
+  rotation: 0,
+  anchorX: 0,
+  anchorY: 0,
+});
+const fields = {
+  distance: [-250, 400],
+  side: [-250, 250],
+  width: [0.25, 3],
+  height: [0.25, 3],
+  rotation: [-180, 180],
+  anchorX: [-300, 300],
+  anchorY: [-300, 300],
+};
 export function normalizeEffectLayout(value = {}) {
   return Object.fromEntries(
     Object.entries(fields).map(([key, [min, max]]) => {
@@ -12,17 +28,32 @@ export function normalizeEffectLayout(value = {}) {
   );
 }
 export function createEffectProfile(value = {}) {
-  return {
+  const profile = {
     linked: value?.linked !== false,
     directions: Object.fromEntries(
       EFFECT_DIRECTIONS.map(({ key }) => [key, normalizeEffectLayout(value?.directions?.[key])])
     ),
   };
+  for (const [right, left] of [
+    ['right', 'left'],
+    ['up-right', 'up-left'],
+    ['down-right', 'down-left'],
+  ])
+    profile.directions[left] = { ...profile.directions[right] };
+  return profile;
 }
+const mirrorPairs = {
+  right: 'left',
+  left: 'right',
+  'up-right': 'up-left',
+  'up-left': 'up-right',
+  'down-right': 'down-left',
+  'down-left': 'down-right',
+};
 export function updateEffectProfile(profile, direction, patch) {
   const next = normalizeEffectLayout({ ...profile.directions[direction], ...patch });
   for (const { key } of EFFECT_DIRECTIONS)
-    if (profile.linked || key === direction) profile.directions[key] = { ...next };
+    if (profile.linked || key === direction || key === mirrorPairs[direction]) profile.directions[key] = { ...next };
 }
 export function linkEffectProfile(profile, direction, linked) {
   profile.linked = linked;

@@ -1,5 +1,6 @@
 import { EFFECT_DIRECTIONS, effectDirection } from './effect_directions.js';
 import { effectPoint, screenPoint } from './attack_geometry.js';
+import { effectLayoutFor } from './effect_layout.js';
 import { depthOf } from './camera.js';
 
 export function drawEffectGuides(ctx, actor, geometry, world, view, selected = effectDirection(actor).key) {
@@ -9,7 +10,12 @@ export function drawEffectGuides(ctx, actor, geometry, world, view, selected = e
   ctx.save();
   ctx.lineWidth = 1.5;
   for (const direction of EFFECT_DIRECTIONS) {
-    const point = effectPoint({ ...actor, quarterAim: direction }, center, center, undefined, radius);
+    const layout = effectLayoutFor(actor, direction.key);
+    const anchor = {
+      x: center.x + (layout.anchorX || 0) * (actor.player.facing || 1),
+      y: center.y - (layout.anchorY || 0),
+    };
+    const point = effectPoint({ ...actor, quarterAim: direction }, anchor, center, undefined, radius);
     const end = screenPoint(point, world, view),
       angle = Math.atan2(end.y - start.y, end.x - start.x);
     ctx.globalAlpha = direction.key === selected ? 0.9 : 0.25;
