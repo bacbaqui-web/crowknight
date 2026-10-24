@@ -197,3 +197,61 @@ test('render offset cache reuses one stable pose and recomputes after the render
   player.getPartOffset('weapon');
   assert.equal(calls, 3);
 });
+
+test('reversing native walk blends never sends quarter movement opposite the newly pressed direction', () => {
+  const actor = fixture();
+  let previous = new Set();
+  for (const direction of [1, -1, 1, -1, 1]) {
+    const code = direction < 0 ? 'ArrowLeft' : 'ArrowRight';
+    for (let i = 0; i < 20; i++) {
+      const keys = new Set([code]),
+        pressed = new Set(previous.has(code) ? [] : [code]);
+      const before = actor.player.x;
+      const input = preparePlaneMotion(actor, { x: direction, z: 0 }, keys, pressed);
+      actor.player.update(1 / 60, input.keys, input.pressed, world);
+      finishPlaneMotion(actor);
+      assert.ok((actor.player.x - before) * direction >= -1e-7, `reverse ${direction}, frame ${i}`);
+      previous = keys;
+    }
+  }
+});
+
+test('opposite horizontal keys cancel before native action matching and permit depth-only movement', () => {
+  const actor = fixture();
+  const keys = new Set(['ArrowLeft', 'ArrowRight']);
+  let input = preparePlaneMotion(actor, null, keys, keys);
+  assert.equal(input.keys.size, 0);
+  assert.equal(input.pressed.size, 0);
+  input = preparePlaneMotion(actor, { x: 0, z: 1 }, new Set([...keys, 'QuarterDown']), keys);
+  assert.equal(input.keys.has('ArrowLeft') && input.keys.has('ArrowRight'), false);
+  assert.ok(input.keys.has(actor.player.facing < 0 ? 'ArrowLeft' : 'ArrowRight'));
+});
+
+test('world x bounds apply after projection so depth movement remains possible against either side wall', () => {
+  for (const [x, facing] of [
+    [0, -1],
+    [1000, 1],
+  ]) {
+    const actor = fixture();
+    actor.player.x = x;
+    actor.player.facing = facing;
+    const bounded = { ...world, minX: 0, maxX: 1000 };
+    const motionWorld = Object.assign(Object.create(bounded), { minX: -Infinity, maxX: Infinity });
+    for (let i = 0; i < 30; i++) {
+      const input = preparePlaneMotion(
+        actor,
+        { x: 0, z: 1 },
+        new Set(['QuarterDown']),
+        new Set(i ? [] : ['QuarterDown'])
+      );
+      actor.player.update(1 / 60, input.keys, input.pressed, motionWorld);
+      finishPlaneMotion(actor, bounded);
+    }
+    close(actor.player.x, x, 'remain at wall');
+    assert.ok(actor.quarterDepth > 20, 'move along wall');
+    const input = preparePlaneMotion(actor, { x: facing, z: 0 }, new Set([facing < 0 ? 'ArrowLeft' : 'ArrowRight']));
+    actor.player.update(1 / 60, input.keys, input.pressed, motionWorld);
+    finishPlaneMotion(actor, bounded);
+    close(actor.player.x, x, 'cannot cross wall');
+  }
+});

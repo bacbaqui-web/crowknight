@@ -13,8 +13,9 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
   actors.forEach((actor) => updateEnemyAiCooldowns(actor, dt));
 
   const plane = world?.quarterView;
+  const motionWorld = plane?.motionWorld || world;
   const input = plane?.beforePlayer(playerActor, keys, pressed) || { keys, pressed };
-  playerActor.player.update(dt, input.keys, input.pressed, world);
+  playerActor.player.update(dt, input.keys, input.pressed, motionWorld);
   plane?.afterMotion(playerActor);
 
   actors
@@ -24,7 +25,7 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
       faceNpcActorTowardPlayer(actor, playerActor);
       plane?.beforeEnemy(actor, playerActor);
       runEnemyRangeAi(actor, playerActor, world);
-      actor.player.updateNpc(dt, playerActor.player, world);
+      actor.player.updateNpc(dt, playerActor.player, motionWorld);
       plane?.afterMotion(actor);
     });
 }

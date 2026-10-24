@@ -19,8 +19,12 @@ export function bindKeyboardControls({
   addEventListener(
     'keydown',
     (event) => {
-      if (handleShortcut(event)) return;
-      if (event.metaKey || event.ctrlKey) return;
+      const shortcutHandled = handleShortcut(event);
+      if (event.metaKey || event.ctrlKey) {
+        releaseKeys();
+        return;
+      }
+      if (shortcutHandled) return;
       const code = mapCode(event.code);
       if (!gameKeys.has(code)) return;
       if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
@@ -39,17 +43,18 @@ export function bindKeyboardControls({
   addEventListener(
     'keyup',
     (event) => {
-      if (event.metaKey || event.ctrlKey) return;
       const code = mapCode(event.code);
       if (!gameKeys.has(code)) return;
-      if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
-      event.preventDefault();
-      event.stopPropagation();
+      // Release the held state even if focus or modifier keys changed since keydown.
       keys.delete(code);
       if (event.code === 'ShiftRight' || event.code === 'ShiftLeft') {
         if (event.shiftKey) keys.add('ShiftLeft');
         else keys.delete('ShiftLeft');
       }
+      if (event.metaKey || event.ctrlKey) return;
+      if (isTextInput(event.target) && !isSettingsPanelTarget(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
     },
     true
   );

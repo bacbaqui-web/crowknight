@@ -11,6 +11,8 @@ import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundP
 const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', KeyX: 'ArrowDown' };
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
+  // Native x is a temporary movement scalar; apply world bounds only after ground projection.
+  const motionWorld = Object.assign(Object.create(world), { minX: -Infinity, maxX: Infinity });
   let paused = false,
     externalPaused = false,
     previousFrozen = false,
@@ -38,6 +40,7 @@ export function createQuarterRuntime({ ctx, world }) {
     dirty = true;
   });
   world.quarterView = {
+    motionWorld,
     captureAttackRegions,
     beforePlayer: (actor, keys, pressed) => preparePlaneMotion(actor, movementInput(keys), keys, pressed),
     beforeEnemy(actor, target) {
@@ -45,7 +48,7 @@ export function createQuarterRuntime({ ctx, world }) {
       preparePlaneMotion(actor, direction);
     },
     afterMotion(actor) {
-      finishPlaneMotion(actor);
+      finishPlaneMotion(actor, world);
       actor.quarterFloorY = world.floorY;
       actor.player.quarterDepth = depthOf(actor);
     },

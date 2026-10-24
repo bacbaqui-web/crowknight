@@ -9,11 +9,26 @@ export function movementInput(keys) {
 export function preparePlaneMotion(actor, direction, keys = null, pressed = null) {
   const player = actor.player;
   const group = player.actionSettings?.[player.actionKey]?.group;
-  if (direction && (!player.isCustomActionActive || group === 'movement')) actor.quarterAim = direction;
+  if (direction && (!player.isCustomActionActive || group === 'movement')) {
+    actor.quarterAim = direction;
+    if (keys && direction.x) {
+      const facing = direction.x < 0 ? -1 : 1;
+      // vx encodes forward speed in the native side-facing coordinate system.
+      // Rotate retained velocity together with the visual facing before native action blending.
+      player.vx *= facing * (player.facing || 1);
+      player.facing = facing;
+    }
+  }
   actor.quarterAim ||= { x: player.facing || 1, z: 0 };
   // Preserve the original action's scalar velocity; only map its displacement onto the ground.
   actor.quarterMotionStart = { x: player.x, z: depthOf(actor) };
   const input = { keys: new Set(keys || []), pressed: new Set(pressed || []) };
+  if (input.keys.has('ArrowLeft') && input.keys.has('ArrowRight')) {
+    input.keys.delete('ArrowLeft');
+    input.keys.delete('ArrowRight');
+    input.pressed.delete('ArrowLeft');
+    input.pressed.delete('ArrowRight');
+  }
   if (keys && direction && !input.keys.has('ArrowLeft') && !input.keys.has('ArrowRight')) {
     const code = player.facing < 0 ? 'ArrowLeft' : 'ArrowRight';
     input.keys.add(code);
@@ -22,14 +37,15 @@ export function preparePlaneMotion(actor, direction, keys = null, pressed = null
   } else actor.quarterSynthetic = null;
   return input;
 }
-export function finishPlaneMotion(actor) {
+export function finishPlaneMotion(actor, world = null) {
   const start = actor.quarterMotionStart;
   if (!start) return;
   const player = actor.player;
   const axis = actor.quarterImpulse || actor.quarterAim || { x: player.facing || 1, z: 0 };
   const travel = (player.x - start.x) * (player.facing || 1);
   const rawX = player.x;
-  player.x = start.x + travel * axis.x;
+  const projectedX = start.x + travel * axis.x;
+  player.x = Math.max(world?.minX ?? -Infinity, Math.min(world?.maxX ?? Infinity, projectedX));
   actor.quarterDepth = Math.max(-480, Math.min(480, start.z + travel * axis.z));
   const shift = player.x - rawX;
   const targetMove = player.customActionTargetMove;
