@@ -1,3 +1,4 @@
+import { effectDirection } from './effect_directions.js';
 import { effectFrameGeometry, effectFrameReader } from './effect_geometry.js';
 import { drawAttackTrail } from '../actor_canvas_renderer.js';
 import { effectPoint, screenPoint } from './attack_geometry.js';
@@ -40,4 +41,13 @@ export function drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, r
   ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
   drawAttackTrail(ctx, actor, effectAssets, read);
   ctx.restore();
+}
+
+export function effectBehindActor(actor) {
+  return effectDirection(actor).z < 0;
+}
+export function drawActorEffectLayers(actor, drawActor, drawEffect) {
+  if (effectBehindActor(actor)) drawEffect();
+  drawActor();
+  if (!effectBehindActor(actor)) drawEffect();
 }

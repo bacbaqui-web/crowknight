@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="./src/style.css" />
     <link rel="stylesheet" href="./src/upgradeHud.css" />
     <link rel="stylesheet" href="./src/quarter_view/style.css" />
+    <link rel="stylesheet" href="./src/quarter_view/effect_editor.css" />
   </head>
   <body class="game-home full-stage quarter-view">
     <main class="app-shell">
@@ -52,6 +53,7 @@
           <button type="button" data-attack-reset>시험 설정 초기화</button>
           <small>선택 후 P 또는 계속하기로 재개합니다. 제작 저장: 설정 화면 → 액션 → 공격 면.</small>
         </details>
+        <details id="quarterEffectEditor"><summary>8방향 이펙트 조절</summary></details>
         <div id="quarterHitboxLegend" role="status" hidden></div>
         <aside id="quarterTrajectoryPanel" aria-label="공격 판정 지면 궤적" hidden>
           <strong>공격 궤적 · 지면</strong>
@@ -309,6 +311,11 @@
           'attack_effects',
           'effect_geometry',
           'effect_directions',
+          'effect_layout',
+          'effect_guides',
+          'effect_editor_view',
+          'effect_editor_preview',
+          'effect_editor_markup',
           '../actor_canvas_renderer',
           'slash_trail',
           'weapon_contact',

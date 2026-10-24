@@ -1,0 +1,168 @@
+#quarterEffectEditor {
+  position: fixed;
+  right: 18px;
+  top: 145px;
+  z-index: 45;
+  width: 210px;
+  box-sizing: border-box;
+  color: #e0edda;
+  background: #102119f5;
+  border: 1px solid #769572;
+  border-radius: 8px;
+  font: 12px/1.5 sans-serif;
+}
+#quarterEffectEditor > summary {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #102119;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#quarterEffectEditor[open] {
+  width: min(760px, calc(100vw - 28px));
+  max-height: calc(100dvh - 160px);
+  overflow-y: auto;
+}
+.effect-editor-content {
+  padding: 0 12px 12px;
+}
+.effect-editor-selects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.effect-editor-selects label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+#quarterEffectEditor select,
+#quarterEffectEditor input[type='number'] {
+  min-width: 0;
+  background: #20382a;
+  color: #e6f1df;
+  border: 1px solid #688363;
+  border-radius: 4px;
+  padding: 5px;
+}
+.effect-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.effect-preview-pane {
+  position: sticky;
+  top: 36px;
+  background: #102119;
+  z-index: 1;
+}
+.effect-preview-pane canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #486952;
+  border-radius: 6px;
+}
+#quarterEffectEditor small {
+  display: block;
+  color: #b8cdb0;
+  font-size: 11px;
+  margin: 4px 0;
+}
+.effect-compass {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.effect-compass button {
+  height: 30px;
+  font-size: 19px;
+}
+.effect-compass span {
+  text-align: center;
+  align-self: center;
+  font-size: 10px;
+  color: #bbd3b7;
+}
+#quarterEffectEditor button {
+  border: 1px solid #628360;
+  border-radius: 5px;
+  background: #223b2d;
+  color: #e6f1df;
+  cursor: pointer;
+}
+#quarterEffectEditor button[aria-pressed='true'] {
+  color: #ffe1a9;
+  border-color: #ffbd65;
+  background: #51402a;
+}
+.effect-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+}
+.effect-check input {
+  margin: 0;
+  accent-color: #a6dfb2;
+}
+.effect-slider {
+  display: grid;
+  grid-template-columns: 1fr 74px;
+  align-items: center;
+  gap: 3px 8px;
+  margin: 9px 0;
+}
+.effect-slider input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: #a9d7aa;
+}
+.effect-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.effect-editor-actions button {
+  padding: 6px 8px;
+}
+#quarterEffectEditor p {
+  margin: 8px 0 0;
+  color: #c9e5bf;
+  font-size: 11px;
+}
+body:has(#quarterEffectEditor[open]) #quarterHitboxLegend,
+body:has(#quarterEffectEditor[open]) #quarterTrajectoryPanel {
+  display: none;
+}
+@media (max-width: 820px) {
+  #quarterEffectEditor {
+    top: 120px;
+    right: 10px;
+  }
+  #quarterEffectEditor[open] {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 132px);
+  }
+}
+@media (max-width: 560px) {
+  .effect-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .effect-preview-pane canvas {
+    max-height: 190px;
+    object-fit: contain;
+  }
+}
+
+#quarterHitboxLegend,
+#quarterTrajectoryPanel {
+  margin-top: 50px;
+}

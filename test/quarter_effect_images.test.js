@@ -207,3 +207,43 @@ test('each of the eight effect placements is independent of the unchanged sprite
     });
   }
 });
+
+test('manual per-direction position and size changes move the rendered image and actual hitbox together on ground and in air', () => {
+  const actor = fixture('player_01'),
+    player = actor.player,
+    read = createRuntimeEffectReader();
+  const action = player.customActions.find((a) => player.actionSettings[a.key]?.group === 'attack');
+  for (let i = 0; i <= 100; i++) {
+    player.actionPreview = { action: action.key, t: i / 100 };
+    if (player.attackInteractionRegions.length) break;
+  }
+  actor.quarterEffectLayouts = {
+    [action.key]: {
+      directions: Object.fromEntries(
+        EFFECT_DIRECTIONS.map((direction, index) => [
+          direction.key,
+          { distance: 20 + index * 5, side: -15 + index * 4, width: 1.6, height: 0.7 },
+        ])
+      ),
+    },
+  };
+  for (const plane of ['ground', 'height'])
+    for (const direction of EFFECT_DIRECTIONS) {
+      actor.quarterAttackPlanes = { [action.key]: plane };
+      actor.quarterAim = direction;
+      const native = JSON.stringify(player.weaponAnchorTransform());
+      const flat = groundAttackRegions(
+        actor,
+        alignEffectRegions(actor, player.attackInteractionRegions, read, assets)
+      )[0];
+      const { ctx, images } = recordingContext();
+      drawQuarterAttackEffect(ctx, actor, assets, world, view, read);
+      assert.equal(images.length, 1);
+      flat.points.forEach((point, index) => {
+        const expected = screenPoint(attackRegionPoint(actor, point, flat, world.floorY), world, view);
+        close(images[0].points[index].x, expected.x);
+        close(images[0].points[index].y, expected.y);
+      });
+      assert.equal(JSON.stringify(player.weaponAnchorTransform()), native);
+    }
+});

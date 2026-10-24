@@ -1,6 +1,8 @@
 import { alignEffectRegions, effectImageBounds } from './effect_geometry.js';
 import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
-import { drawQuarterAttackEffect } from './attack_effects.js';
+import { drawQuarterAttackEffect, drawActorEffectLayers } from './attack_effects.js';
+import { drawEffectGuides } from './effect_guides.js';
+import { effectFrameGeometry } from './effect_geometry.js';
 import { createHitboxView } from './hitbox_view.js';
 import { createGroundRenderer } from './ground_renderer.js';
 import { groundPoint, depthOf } from './camera.js';
@@ -63,17 +65,24 @@ export function createQuarterRenderer({ ctx, world }) {
           // Afterimages render different poses; cache only the normal, stable draw below.
           actor.player.renderPartOffsets = new Map();
           try {
-            const restore = projectEntity(actor);
-            try {
-              drawActor(ctx, world, actor, {
-                selectedActor: null,
-                activeEditPartKey: () => null,
-                activeEditPartKeys: () => [],
-              });
-            } finally {
-              restore();
-            }
-            drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame);
+            if (actor === playerActor && actor.quarterEffectGuides)
+              drawEffectGuides(ctx, actor, effectFrameGeometry(actor, readEffectFrame, loadedEffects), world, view);
+            drawActorEffectLayers(
+              actor,
+              () => {
+                const restore = projectEntity(actor);
+                try {
+                  drawActor(ctx, world, actor, {
+                    selectedActor: null,
+                    activeEditPartKey: () => null,
+                    activeEditPartKeys: () => [],
+                  });
+                } finally {
+                  restore();
+                }
+              },
+              () => drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame)
+            );
           } finally {
             actor.player.renderPartOffsets = null;
           }
@@ -98,6 +107,7 @@ export function createQuarterRenderer({ ctx, world }) {
     draw,
     projectEntity,
     prepareAttackRegions: (actor, raw) => alignEffectRegions(actor, raw, readEffectFrame, loadedEffects),
+    getEffectAssets: () => loadedEffects,
     resetDebugHistory: hitboxes.reset,
     getRenderStats: () => drawGround.stats,
     resetEffectCache: readEffectFrame.reset,

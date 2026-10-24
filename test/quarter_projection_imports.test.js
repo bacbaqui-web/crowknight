@@ -21,7 +21,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 18);
+  assert.equal(Object.keys(imports).length, 23);
   for (const name of [
     'camera',
     'ground_shaders',
@@ -30,6 +30,11 @@ test('all browser projection consumers resolve to the same fresh modules before 
     'attack_effects',
     'effect_geometry',
     'effect_directions',
+    'effect_layout',
+    'effect_guides',
+    'effect_editor_view',
+    'effect_editor_preview',
+    'effect_editor_markup',
     '../actor_canvas_renderer',
     'slash_trail',
     'weapon_contact',

@@ -1,4 +1,5 @@
 import { attackPlane } from '../attack_plane_helper.js';
+import { effectLayoutFor } from './effect_layout.js';
 import { effectDirection } from './effect_directions.js';
 import { groundPoint, depthOf, QUARTER_PROJECTION } from './camera.js';
 import { regionPoints, sweptInteractionRegion } from '../interaction_swept_region_helper.js';
@@ -21,8 +22,10 @@ export function effectPoint(actor, point, center, plane = attackPlane(actor), ra
   const aim = effectDirection(actor),
     facing = actor.player.facing || 1;
   if (radius != null) {
-    const forward = (point.x - center.x) * facing;
-    const lateral = plane === 'ground' ? center.y - point.y : 0;
+    const layout = effectLayoutFor(actor, aim.key);
+    const forward = (point.x - center.x) * facing * layout.width;
+    const lateral = (plane === 'ground' ? (center.y - point.y) * layout.height : 0) + layout.side;
+    radius = Math.max(0, radius + layout.distance);
     return {
       x:
         actor.player.x +
@@ -30,7 +33,7 @@ export function effectPoint(actor, point, center, plane = attackPlane(actor), ra
         aim.z * lateral +
         (plane === 'height' && Math.abs(aim.x) < 0.1 ? -aim.z * 0.2 * forward : 0),
       depth: depthOf(actor) + aim.z * (radius + forward) + aim.x * lateral,
-      y: plane === 'height' ? point.y : (actor.quarterFloorY ?? actor.player.y),
+      y: plane === 'height' ? center.y + (point.y - center.y) * layout.height : (actor.quarterFloorY ?? actor.player.y),
     };
   }
   const directed = { ...actor, quarterAim: aim };

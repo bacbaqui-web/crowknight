@@ -1,4 +1,5 @@
 import { createPerformanceView } from './performance_view.js';
+import { createEffectEditorView } from './effect_editor_view.js';
 import { createAttackSettingsView } from './attack_settings_view.js';
 import { captureAttackRegions, groundAttackRegions } from './attack_geometry.js';
 import { applyQuarterKnockback } from './knockback.js';
@@ -39,6 +40,20 @@ export function createQuarterRuntime({ ctx, world }) {
       dirty = true;
     },
   });
+  const effectEditor = createEffectEditorView({
+    panel: document.querySelector('#quarterEffectEditor'),
+    onOpen: () => pauseForSettings(),
+    getAssets: renderer.getEffectAssets,
+    onChange(actors) {
+      for (const actor of actors) {
+        actor.previousAttackRegions = [];
+        const raw = renderer.prepareAttackRegions(actor, actor.player.attackInteractionRegions || []);
+        captureAttackRegions(actor, raw);
+      }
+      renderer.resetDebugHistory();
+      dirty = true;
+    },
+  });
   document.querySelector('#quarterHitboxes').addEventListener('click', () => {
     dirty = true;
   });
@@ -49,10 +64,12 @@ export function createQuarterRuntime({ ctx, world }) {
       captureAttackRegions(actor, raw, flat);
     },
     beforePlayer(actor, keys, pressed) {
+      effectEditor.attachActor(actor);
       controlledActor = actor;
       return preparePlaneMotion(actor, movementInput(keys), keys, pressed);
     },
     beforeEnemy(actor, target) {
+      effectEditor.attachActor(actor);
       const direction = enemyPlaneDirection(actor, target);
       preparePlaneMotion(actor, direction);
     },
@@ -125,7 +142,9 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterAttackSerial = null;
       });
       attackSettings.reset(actors);
-      paused = document.querySelector('#quarterAttackSettings').open;
+      effectEditor.reset(actors);
+      paused =
+        document.querySelector('#quarterAttackSettings').open || document.querySelector('#quarterEffectEditor').open;
       syncPause();
     },
     bindPause({ isActive, clearInput }) {
