@@ -7,7 +7,7 @@ import { drawEffectGuides } from './effect_guides.js';
 import { effectFrameGeometry } from './effect_geometry.js';
 import { createHitboxView } from './hitbox_view.js';
 import { createGroundRenderer } from './ground_renderer.js';
-import { groundPoint, depthOf } from './camera.js';
+import { groundPoint, depthOf, QUARTER_PROJECTION, createJumpCameraFollow } from './camera.js';
 import { drawActor } from '../actor_canvas_renderer.js';
 import { drawFormulaAfterimages } from '../afterimage_runtime_helper.js';
 import { drawRollGhosts } from '../roll_ghost_engine.js';
@@ -16,6 +16,7 @@ import { formulaScreenZoom } from '../zoom_formula_runtime_helper.js';
 
 export function createQuarterRenderer({ ctx, world }) {
   let view;
+  const followJump = createJumpCameraFollow();
   const nativeTrail = createNativeWeaponTrail(ctx, world);
   const readEffectFrame = createRuntimeEffectReader();
   const hitboxes = createHitboxView({
@@ -48,7 +49,7 @@ export function createQuarterRenderer({ ctx, world }) {
       width: world.viewW,
       height: world.viewH,
       x: playerActor.player.x + 110,
-      depth: depthOf(playerActor),
+      depth: depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
       zoom: formulaScreenZoom(actors, screenZoom),
     };
     ctx.save();

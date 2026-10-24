@@ -20,3 +20,24 @@ export function normalizeDirection(x, z) {
   return length > 0.00001 ? { x: x / length, z: z / length } : null;
 }
 export const depthOf = (entity) => Number(entity?.quarterDepth || 0);
+
+export function createJumpCameraFollow() {
+  let subject,
+    lastTime,
+    height = 0;
+  return (actor, floorY) => {
+    const time = actor.player.animTime;
+    const target = Math.max(0, floorY - actor.player.y);
+    if (subject !== actor || time < lastTime) {
+      subject = actor;
+      lastTime = time;
+      height = target;
+      return height;
+    }
+    const dt = Math.max(0, Math.min(0.1, time - lastTime));
+    lastTime = time;
+    height += (target - height) * (1 - Math.exp(-dt / 0.08));
+    if (Math.abs(target - height) < 0.05) height = target;
+    return height;
+  };
+}
