@@ -1,3 +1,4 @@
+import { createSurroundingSpawner } from './bounds.js';
 import { createPerformanceView } from './performance_view.js';
 import { createEffectEditorView } from './effect_editor_view.js';
 import { createAttackSettingsView } from './attack_settings_view.js';
@@ -14,6 +15,7 @@ import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundP
 const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', KeyX: 'ArrowDown' };
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
+  const spawnAround = createSurroundingSpawner(world);
   // Native x is a temporary movement scalar; apply world bounds only after ground projection.
   const motionWorld = Object.assign(Object.create(world), { minX: -Infinity, maxX: Infinity });
   let paused = false,
@@ -115,12 +117,7 @@ export function createQuarterRuntime({ ctx, world }) {
     attackRegions: groundAttackRegions,
     projectileRegion: groundProjectileRegion,
     applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
-    respawn(actor, target) {
-      actor.quarterDepth = depthOf(target) + (Math.random() - 0.5) * 500;
-      actor.player.quarterDepth = actor.quarterDepth;
-      actor.quarterAim = { x: -1, z: 0 };
-      actor.quarterImpulse = null;
-    },
+    respawn: spawnAround,
     projectEntity: renderer.projectEntity,
   };
   function syncPause() {
@@ -172,6 +169,11 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterAttackRawRegions = [];
         actor.quarterAttackSerial = null;
       });
+      const hero = actors.find((actor) => actor.group === 'players') || actors[0];
+      if (hero)
+        actors.forEach((actor) => {
+          if (actor !== hero) spawnAround(actor, hero);
+        });
       if (testMode && document.querySelector('#quarterHitboxes').getAttribute('aria-pressed') !== 'true')
         document.querySelector('#quarterHitboxes').click();
       attackSettings.reset(actors);
