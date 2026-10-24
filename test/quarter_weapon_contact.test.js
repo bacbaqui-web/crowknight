@@ -8,7 +8,7 @@ import { mergeTuning } from '../src/project_data_normalizer_helper.js';
 import { alignEnemyWeaponRegions, syncEnemyWeaponFacing } from '../src/quarter_view/weapon_contact.js';
 
 const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
-for (const id of ['enemy_01', 'swordman'])
+for (const id of ['player_01', 'enemy_01', 'swordman'])
   test(`${id}: every active authored melee attack follows its weapon or shield at both visual facings`, () => {
     const def = saved.characters.find((a) => a.id === id),
       tuning = mergeTuning(defaultTuningFor(def), saved.actors[id].tuning);
@@ -43,7 +43,7 @@ for (const id of ['enemy_01', 'swordman'])
               assert.ok(x >= -1e-6 && x <= width + 1e-6);
               assert.ok(y >= -1e-6 && y <= height + 1e-6);
             }
-            assert.equal(aligned[i].reaction, raw[i].reaction);
+            assert.deepEqual(aligned[i].reaction, { ...raw[i].reaction, hitMode: 'trace' });
             checked++;
           }
         }

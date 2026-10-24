@@ -125,7 +125,7 @@ export function createHitboxView({
           regionPoints(region).map((p) =>
             region.quarterPlane === 'height'
               ? attackPoint(actor, p, 0, 'height')
-              : { x: p.x, depth: p.y, y: world.floorY }
+              : { x: p.x, depth: p.y, y: region.quarterElevation ?? world.floorY }
           ),
           view,
           color

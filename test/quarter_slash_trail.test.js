@@ -80,7 +80,11 @@ test('a new attack never connects to the previous attack, dead/reset actors disc
   actor.player.animTime += 1 / 60;
   trail.capture(actor, [region(100)]);
   trail.draw(actor, view);
-  assert.equal(calls.fills, 0);
+  assert.deepEqual(
+    trail.samples(actor).at(-1).sweep,
+    trail.samples(actor).at(-1).polygon,
+    'no sweep across an attack/facing discontinuity'
+  );
   const before = calls.paths;
   trail.draw(actor, { ...view, x: 100000 });
   assert.equal(calls.paths, before);
@@ -103,14 +107,18 @@ test('projectile hitboxes rotate with the arrow sprite and keep the authored rea
 });
 
 test('an instantaneous facing flip cannot connect two opposite sword trails even in the same action', () => {
-  const { trail, actor, calls, region } = fixture();
+  const { trail, actor, region } = fixture();
   trail.capture(actor, [region()]);
   actor.player.facing = -1;
   actor.quarterAim = { x: -1, z: 0 };
   actor.player.animTime += 1 / 60;
   trail.capture(actor, [region(100)]);
   trail.draw(actor, view);
-  assert.equal(calls.fills, 0);
+  assert.deepEqual(
+    trail.samples(actor).at(-1).sweep,
+    trail.samples(actor).at(-1).polygon,
+    'no sweep across an attack/facing discontinuity'
+  );
 });
 
 test('respawn and animation-clock resets cannot retain a previous-life glow or produce negative fade buckets', () => {

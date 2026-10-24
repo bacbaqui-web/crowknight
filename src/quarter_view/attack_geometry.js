@@ -3,15 +3,16 @@ import { groundPoint, depthOf } from './camera.js';
 import { regionPoints, sweptInteractionRegion } from '../interaction_swept_region_helper.js';
 import { previousAttackRegion } from '../interaction_overlap_helper.js';
 
-export function attackPoint(actor, point, lateral = 0, plane = attackPlane(actor)) {
+export function attackPoint(actor, point, lateral = 0, plane = attackPlane(actor), anchor = null) {
   const aim = actor.quarterAim || { x: actor.player.facing || 1, z: 0 };
-  const forward = (point.x - actor.player.x) * (actor.player.facing || 1);
+  const origin = plane === 'ground' && anchor ? anchor : actor.player;
+  const forward = (point.x - origin.x) * (actor.player.facing || 1);
   // Preserve the weapon's handedness when rotating its mirrored side pose onto the floor.
-  if (plane === 'ground') lateral += (actor.player.y - point.y) * (actor.player.facing || 1);
+  if (plane === 'ground') lateral += (origin.y - point.y) * (actor.player.facing || 1);
   return {
-    x: actor.player.x + aim.x * forward - aim.z * lateral,
+    x: origin.x + aim.x * forward - aim.z * lateral,
     depth: depthOf(actor) + aim.z * forward + aim.x * lateral,
-    y: plane === 'height' ? point.y : (actor.quarterFloorY ?? actor.player.y),
+    y: plane === 'height' ? point.y : (anchor?.y ?? actor.quarterFloorY ?? actor.player.y),
   };
 }
 export function screenPoint(point, world, view) {
@@ -24,14 +25,23 @@ export function groundAttackRegions(actor, regions) {
   const flat = regions.map((region) => {
     if (plane === 'height') return { ...region, quarterPlane: plane, quarterOrigin: attackOrigin(actor) };
     const points = regionPoints(region).map((point) => {
-      const p = attackPoint(actor, point);
+      const p = attackPoint(actor, point, 0, plane, region.quarterWeaponAnchor);
       return { x: p.x, y: p.depth };
     });
     const xs = points.map((p) => p.x),
       ys = points.map((p) => p.y);
     const x = Math.min(...xs),
       y = Math.min(...ys);
-    return { ...region, quarterPlane: plane, points, x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+    return {
+      ...region,
+      quarterPlane: plane,
+      quarterElevation: region.quarterWeaponAnchor?.y,
+      points,
+      x,
+      y,
+      w: Math.max(...xs) - x,
+      h: Math.max(...ys) - y,
+    };
   });
   return flat;
 }

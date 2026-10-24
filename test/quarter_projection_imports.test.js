@@ -21,7 +21,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 7);
+  assert.equal(Object.keys(imports).length, 13);
   for (const name of [
     'camera',
     'ground_shaders',
@@ -30,8 +30,14 @@ test('all browser projection consumers resolve to the same fresh modules before 
     'slash_trail',
     'weapon_contact',
     'knockback',
+    'renderer',
+    'runtime',
+    'weapon_projection',
+    'attack_history',
+    'hitbox_view',
+    '../actor_renderer',
   ]) {
-    const key = `https://example.test/crowknight/src/quarter_view/${name}.js`;
+    const key = new URL(`./src/quarter_view/${name}.js`, context.location.href).href;
     assert.equal(imports[key], `${key}?projection=3f`);
   }
 });

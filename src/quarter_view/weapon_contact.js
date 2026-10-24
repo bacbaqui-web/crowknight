@@ -36,6 +36,9 @@ export function weaponContactRegion(actor, original) {
   return {
     ...original,
     quarterWeaponContact: true,
+    quarterWeaponAnchor: { x: matrix.e, y: matrix.f },
+    quarterWeaponPart: partKey,
+    reaction: { ...original.reaction, hitMode: 'trace' },
     points,
     x: Math.min(...xs),
     y: Math.min(...ys),
@@ -44,11 +47,14 @@ export function weaponContactRegion(actor, original) {
   };
 }
 
-export function alignEnemyWeaponRegions(actor, regions) {
-  if (!regions.length || actor.id === 'player_01' || isProjectileAttack(actor)) return regions;
+export function alignWeaponRegions(actor, regions) {
+  const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${actor.player.facing}`;
+  if (actor.quarterWeaponContactKey !== key) actor.previousAttackRegions = [];
+  actor.quarterWeaponContactKey = key;
+  if (!regions.length || isProjectileAttack(actor)) return regions;
   return regions.map((region) =>
     [ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)
-      ? scaleUpgradeAttackRegions(actor.player, [weaponContactRegion(actor, region)])[0]
+      ? scaleWeaponContact(actor, weaponContactRegion(actor, region))
       : region
   );
 }
@@ -65,5 +71,17 @@ export function syncEnemyWeaponFacing(actor) {
 export function weaponTrailRegion(actor, region) {
   if (region.quarterWeaponContact) return region;
   const contact = weaponContactRegion(actor, region);
-  return contact === region ? region : scaleUpgradeAttackRegions(actor.player, [contact])[0];
+  return contact === region ? region : scaleWeaponContact(actor, contact);
+}
+
+// Retained for existing editor and diagnostic consumers.
+export const alignEnemyWeaponRegions = alignWeaponRegions;
+
+export function scaleWeaponContact(actor, contact) {
+  if (!contact.quarterWeaponAnchor) return contact;
+  // Reach grows the visible blade about the grip, keeping it attached to the hand.
+  const origin = Object.create(actor.player);
+  origin.x = contact.quarterWeaponAnchor.x;
+  origin.y = contact.quarterWeaponAnchor.y;
+  return scaleUpgradeAttackRegions(origin, [contact])[0];
 }

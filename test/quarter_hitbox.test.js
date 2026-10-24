@@ -186,10 +186,10 @@ test('real projectile combat misses a different height and hits a matching heigh
   assert.equal(projectile.active, false);
 });
 
-test('real enemy combat consumes the weapon-aligned region that is also captured for effects and the debug overlay', () => {
-  for (const id of ['enemy_01', 'swordman']) {
+test('real player and enemy combat consume the weapon-aligned region captured for effects and the debug overlay', () => {
+  for (const id of ['player_01', 'enemy_01', 'swordman']) {
     const enemy = makeActor(id, 480, 0),
-      hero = makeActor('player_01', 480, 0);
+      hero = makeActor(id === 'player_01' ? 'enemy_01' : 'player_01', 480, 0);
     enemy.player.attackSerial = 7;
     const attack = enemy.player.customActions.find((a) => enemy.player.actionSettings[a.key]?.group === 'attack');
     let raw;
@@ -203,6 +203,10 @@ test('real enemy combat consumes the weapon-aligned region that is also captured
     const flat = groundAttackRegions(enemy, aligned)[0];
     hero.player.x = flat.x + flat.w / 2;
     hero.quarterDepth = flat.y + flat.h / 2;
+    Object.defineProperty(hero.player, 'hurtInteractionRegions', {
+      value: [{ key: 'body', x: hero.player.x - 5, y: 350, w: 10, h: 80, reaction: { hurtByAttack: true } }],
+    });
+    Object.defineProperty(hero.player, 'guardInteractionRegions', { value: [] });
     for (const actor of [hero, enemy])
       Object.defineProperty(actor.player, 'collisionInteractionRegions', { value: [] });
     let captured;
@@ -229,6 +233,6 @@ test('real enemy combat consumes the weapon-aligned region that is also captured
     });
     assert.ok(hero.hp < hp, `${id} fitted hitbox must deal actual damage`);
     assert.deepEqual(captured[0].points, aligned[0].points);
-    assert.deepEqual(captured[0].reaction, raw[0].reaction);
+    assert.deepEqual(captured[0].reaction, { ...raw[0].reaction, hitMode: 'trace' });
   }
 });

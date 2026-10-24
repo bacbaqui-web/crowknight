@@ -4,8 +4,8 @@ import { regionPoints } from '../interaction_swept_region_helper.js';
 
 export function attackFootprint(actor, region, floorY) {
   return regionPoints(region).map((point) => ({
-    ...attackPoint(actor, point),
-    ...(attackPlane(actor) === 'ground' ? { y: floorY } : {}),
+    ...attackPoint(actor, point, 0, attackPlane(actor), region.quarterWeaponAnchor),
+    ...(attackPlane(actor) === 'ground' && !region.quarterWeaponAnchor ? { y: floorY } : {}),
   }));
 }
 
