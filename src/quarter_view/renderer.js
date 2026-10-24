@@ -98,6 +98,7 @@ export function createQuarterRenderer({ ctx, world }) {
     projectEntity,
     captureTrails: trails.capture,
     resetTrails: trails.reset,
+    forgetTrail: trails.forget,
     trailStats: trails.stats,
     resetDebugHistory: hitboxes.reset,
     getRenderStats: () => drawGround.stats,

@@ -14,7 +14,8 @@ export function createSlashTrails(ctx, world) {
   let projectionView,
     projectionRevision = 0;
   function prune(entry, now) {
-    while (entry.samples.length && now - entry.samples[0].time > TRAIL_LIFETIME) entry.samples.shift();
+    while (entry.samples.length && (now < entry.samples[0].time || now - entry.samples[0].time > TRAIL_LIFETIME))
+      entry.samples.shift();
   }
   function capture(actor, raw) {
     if (actor.respawning || actor.player.dead) {
@@ -158,6 +159,7 @@ export function createSlashTrails(ctx, world) {
       entries = new WeakMap();
     },
     stats,
+    forget: (actor) => entries.delete(actor),
     samples: (actor) => entries.get(actor)?.samples || [],
   };
 }

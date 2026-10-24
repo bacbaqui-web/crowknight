@@ -112,3 +112,15 @@ test('an instantaneous facing flip cannot connect two opposite sword trails even
   trail.draw(actor, view);
   assert.equal(calls.fills, 0);
 });
+
+test('respawn and animation-clock resets cannot retain a previous-life glow or produce negative fade buckets', () => {
+  const { trail, actor, region } = fixture();
+  actor.player.animTime = 10;
+  trail.capture(actor, [region()]);
+  actor.player.animTime = 0;
+  trail.draw(actor, view);
+  assert.equal(trail.samples(actor).length, 0);
+  trail.capture(actor, [region()]);
+  trail.forget(actor);
+  assert.equal(trail.samples(actor).length, 0);
+});

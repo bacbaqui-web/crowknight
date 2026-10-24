@@ -71,6 +71,7 @@ export function createQuarterRuntime({ ctx, world }) {
     projectileRegion: groundProjectileRegion,
     applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
     respawn(actor, target) {
+      renderer.forgetTrail(actor);
       actor.quarterDepth = Math.max(-430, Math.min(430, depthOf(target) + (Math.random() - 0.5) * 500));
       actor.player.quarterDepth = actor.quarterDepth;
       actor.quarterAim = { x: -1, z: 0 };
