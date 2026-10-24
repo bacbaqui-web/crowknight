@@ -48,3 +48,26 @@ export function progressionChoices(pathId, route = []) {
   });
   });
 }
+
+// Enumerate each reachable decision once, including loops and return branches.
+export function progressionGraph(pathId) {
+  const path = SKILL_PATHS.find(item => item.id === pathId);
+  if (!path) return [];
+  const queue = [{ id: path.root, depth: 0 }];
+  const visited = new Set([path.root]);
+  const result = [];
+  for (let index = 0; index < queue.length; index++) {
+    const node = queue[index];
+    const children = branches[node.id];
+    for (const id of children) {
+      if (!visited.has(id)) {
+        visited.add(id);
+        queue.push({ id, depth: node.depth + 1 });
+      }
+    }
+    const effectId = effectsByNode[node.id] || node.id;
+    result.push({ ...PROGRESSION_SKILLS.find(skill => skill.id === effectId),
+      ...node, effectId, children: [...children], root: node.id === path.root });
+  }
+  return result;
+}

@@ -1,117 +1,140 @@
-const paths = [
-  { id: 'attack', name: '공격', color: '#e99c80', description: '연속 공격 · 충전 · 범위 피해', skills: [
-    ['combo', '맹타', 'sharp-blade', 'Q 연속 공격', '연속 공격 피해 증가', 10, '%', '공격 4타 / 연속 타격', null],
-    ['charge', '응축된 일격', 'swift-preparation', 'Q 유지 → 해제', '충전 공격 피해 증가', 20, '%', '응격 - 기모으기 / 응격 - 공격', null],
-    ['chain', '끝없는 연격', 'seamless-finish', 'Q 연속 공격', '추가 연타 수', 1, '타', '공격 4타 이후 새 연타 모션', 'combo'],
-    ['shock', '지면 강타', 'forceful-strike', '충전 공격 적중', '충격파 범위', 15, '%', '몽둥이 내려찍기 / 지면 파동', 'charge'],
-    ['execute', '처형', 'sharp-blade', 'HP 25% 이하인 적 타격', '추가 피해', 20, '%', '강한 마무리 타격 / 타격 섬광', 'chain'],
-    ['crush', '파괴의 일격', 'long-shadow', '최대 충전 공격', '방어 무시 비율', 10, '%', '크게 내려찍기 / 충격 균열', 'shock'],
-  ] },
-  { id: 'guard', name: '방어', color: '#86b4db', description: '체력 · 회복 · 피해 감소 · 반격', skills: [
-    ['health', '강인한 생명', 'steel-feathers', '상시', '최대 HP', 20, ' HP', '습득 시 몸 주변 생명빛', null],
-    ['armor', '철의 깃털', 'rooted-stance', '상시', '받는 피해 감소', 5, '%', '피격 시 단단한 깃털 연출', null],
-    ['drain', '피의 갈증', 'unyielding-will', '직접 타격 적중', '흡혈 비율', 2, '%', '타격점에서 붉은 빛 흡수', 'health'],
-    ['parry', '찰나의 반격', 'rooted-stance', 'E 방어 시작 순간', '패링 추가 판정 시간', .03, '초', '방어 / 패링 섬광', 'armor'],
-    ['regen', '불굴의 재생', 'steel-feathers', '5초마다', 'HP 회복량', 3, ' HP', '회복 시 은은한 녹색 맥동', 'drain'],
-    ['reflect', '가시 갑옷', 'forceful-strike', '적 공격 방어 시', '피해 반사 비율', 10, '%', '막기 / 반사 충격파', 'parry'],
-  ] },
-  { id: 'move', name: '이동', color: '#a6c793', description: '공중 이동 · 속도 · 연속 회피', skills: [
-    ['jump', '두 번째 날갯짓', 'leaping-feather', '공중에서 Space', '이단점프 높이 보너스', 10, '%', '공중점프', null],
-    ['roll', '그림자 구르기', 'seamless-finish', 'W', '구르기 거리 보너스', 10, '%', '구르기 / 짧은 잔상', null],
-    ['glide', '검은 날개', 'leaping-feather', '공중에서 Space 유지', '활강 가능 시간', .5, '초', '팔과 망토 펼치기 / 활강', 'jump'],
-    ['speed', '바람걸음', 'crow-footsteps', 'Shift 질주', '질주 속도 보너스', 10, '%', '질주 / 바람 잔상', 'roll'],
-    ['air', '낙하 강습', 'forceful-strike', '공중에서 Q 길게 누르기', '낙하 타격 피해 보너스', 20, '%', '공중 준비 / 아래로 내려찍기', 'glide'],
-    ['doubleRoll', '이중 구르기', 'seamless-finish', 'W 연속 두 번', '추가 구르기 재충전 단축', 10, '%', '구르기 → 구르기 / 연속 잔상', 'speed'],
-  ] },
-];
-let currentPath = paths[0];
-let selected = currentPath.skills[0];
-let level = 6;
-const ranks = {};
-const maxRank = 5;
-const spent = path => path.skills.reduce((sum, skill) => sum + (ranks[skill[0]] || 0), 0);
-const points = () => level - 1 - paths.reduce((sum, path) => sum + spent(path), 0);
-const tier = skill => Math.floor(currentPath.skills.indexOf(skill) / 2);
-function unlocked(skill) {
-  return spent(currentPath) >= tier(skill) * 5 && (!skill[8] || (ranks[skill[8]] || 0) >= 3);
-}
-function el(tag, text, className) {
+import { SKILL_PATHS, progressionGraph } from '../src/skill_progression_data.js';
+
+const graphs = new Map(SKILL_PATHS.map(path => [path.id, progressionGraph(path.id)]));
+const maps = document.querySelector('#maps');
+const detail = document.querySelector('#detail');
+let filter = 'all';
+let selection = { pathId: 'attack', nodeId: SKILL_PATHS[0].root };
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const WIDTH = 520;
+const NODE_WIDTH = 196;
+const NODE_HEIGHT = 112;
+
+function html(tag, text, className) {
   const node = document.createElement(tag);
   node.textContent = text;
   if (className) node.className = className;
   return node;
 }
-function effect(skill, rank) {
-  const amount = Number((skill[5] * rank).toFixed(2));
-  if (!rank) return '아직 습득하지 않았습니다';
-  return `${skill[4]} ${amount}${skill[6]}`;
+function svg(tag, attrs, text) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, value);
+  if (text != null) node.textContent = text;
+  return node;
 }
-function render() {
-  document.querySelector('main').style.setProperty('--accent', currentPath.color);
-  document.querySelector('#level').textContent = `Lv. ${level}`;
-  document.querySelector('#points').textContent = points();
-  const tabs = document.querySelector('.tabs');
-  tabs.replaceChildren();
-  for (const path of paths) {
-    const button = el('button', path.name);
-    button.type = 'button';
-    button.setAttribute('role', 'tab');
-    button.setAttribute('aria-selected', String(path === currentPath));
-    button.style.setProperty('--accent', path.color);
-    button.append(el('small', `${spent(path)} 포인트 투자`));
-    button.onclick = () => { currentPath = path; selected = path.skills[0]; render(); };
-    tabs.append(button);
-  }
-  document.querySelector('#path-title').textContent = `${currentPath.name}의 길`;
-  document.querySelector('#path-description').textContent = currentPath.description;
-  document.querySelector('#spent').textContent = `계열 투자 ${spent(currentPath)} PT`;
-  const tree = document.querySelector('#tree');
-  tree.replaceChildren();
-  for (let row = 2; row >= 0; row--) {
-    const section = el('div', '', 'tier');
-    section.append(el('p', row ? `TIER ${row + 1} / 계열 ${row * 5} PT + 선행 기술 3레벨` : 'TIER 1 / 처음부터 투자 가능', 'tier-label'));
-    const nodes = el('div', '', 'tier-nodes');
-    for (const skill of currentPath.skills.slice(row * 2, row * 2 + 2)) {
-      const rank = ranks[skill[0]] || 0;
-      const button = el('button', '', `node${unlocked(skill) ? '' : ' locked'}${rank ? ' learned' : ''}${selected === skill ? ' selected' : ''}`);
-      button.type = 'button';
-      button.setAttribute('aria-label', `${skill[1]} ${rank}/${maxRank}${unlocked(skill) ? '' : ' 잠김'}`);
-      button.setAttribute('aria-pressed', String(selected === skill));
-      const icon = el('span', '', 'icon');
-      const image = document.createElement('img');
-      image.src = `../assets/icons/upgrades/${skill[2]}.svg`;
-      image.alt = '';
-      icon.append(image);
-      button.append(icon, el('span', `${unlocked(skill) ? '' : '잠김 · '}${rank} / ${maxRank}`, 'rank'), el('strong', skill[1]));
-      button.onclick = () => { selected = skill; render(); };
-      nodes.append(button);
-    }
-    section.append(nodes);
-    tree.append(section);
+function destinationLabel(node, target) {
+  if (target.id === node.id) return `↻ ${target.name} 강화`;
+  return `${target.depth <= node.depth ? '↩ ' : ''}${target.name}`;
+}
+function select(pathId, nodeId) {
+  selection = { pathId, nodeId };
+  for (const element of maps.querySelectorAll('.node')) {
+    const active = element.dataset.path === pathId && element.dataset.node === nodeId;
+    element.classList.toggle('active', active);
+    element.setAttribute('aria-pressed', String(active));
   }
   renderDetail();
 }
-function renderDetail() {
-  const skill = selected;
-  const rank = ranks[skill[0]] || 0;
-  const detail = document.querySelector('#detail');
-  detail.replaceChildren(el('span', `${currentPath.name} / ${tier(skill) + 1}단계`, 'tag'), el('h3', skill[1]), el('div', `기술 레벨 ${rank} / ${maxRank}`, 'rank-large'));
-  for (const [label, value] of [['발동 조건', skill[3]], ['현재 효과', effect(skill, rank)], ['다음 레벨', rank < maxRank ? `${rank ? '' : '최초 습득 시 기술 해금 · '}${effect(skill, rank + 1)}` : '최대 레벨에 도달했습니다'], ['제작할 모션', skill[7]]]) {
-    detail.append(el('h4', label), el('p', value));
+function drawMap(path) {
+  const nodes = graphs.get(path.id);
+  const byId = new Map(nodes.map(node => [node.id, node]));
+  const maxDepth = Math.max(...nodes.map(node => node.depth));
+  const height = (maxDepth + 1) * 168 + 28;
+  const positions = new Map();
+  for (let depth = 0; depth <= maxDepth; depth++) {
+    const row = nodes.filter(node => node.depth === depth);
+    row.forEach((node, index) => positions.set(node.id, {
+      x: row.length === 1 ? (WIDTH - NODE_WIDTH) / 2 : 42 + index * 240,
+      y: 18 + depth * 168,
+    }));
   }
-  detail.append(el('h4', '해금 조건'));
-  const parent = currentPath.skills.find(s => s[0] === skill[8]);
-  detail.append(el('p', parent ? `${currentPath.name} 계열 ${tier(skill) * 5} PT 투자 + ${parent[1]} 3레벨 (현재 ${ranks[parent[0]] || 0})` : '선행 조건 없음 · 포인트 1개 필요', 'requirements'));
-  const invest = el('button', rank >= maxRank ? '최대 레벨' : !unlocked(skill) ? '선행 조건을 먼저 충족하세요' : !points() ? '스킬 포인트가 부족합니다' : rank ? '강화하기 · 1 PT' : '습득하기 · 1 PT', 'invest');
-  invest.disabled = !unlocked(skill) || !points() || rank >= maxRank;
-  invest.onclick = () => {
-    if (!unlocked(skill) || !points() || rank >= maxRank) return;
-    ranks[skill[0]] = rank + 1;
-    render();
-    document.querySelector('#notice').textContent = `${skill[1]} ${rank + 1}레벨에 투자했습니다. 시안이며 게임에는 적용되지 않습니다.`;
-  };
-  detail.append(invest);
+  const section = html('article', '', 'map');
+  section.style.setProperty('--accent', path.color);
+  const heading = html('div', '', 'map-heading');
+  const icon = document.createElement('img');
+  icon.src = `../assets/icons/upgrades/${path.icon}.svg`; icon.alt = '';
+  const title = html('div', '');
+  title.append(html('h2', path.name), html('small', `Lv.2 계열 선택 · ${nodes.length}개 분기 위치`));
+  heading.append(icon, title);
+  const diagram = svg('svg', { viewBox: `0 0 ${WIDTH} ${height}`, class: 'diagram', role: 'group', 'aria-label': `${path.name} 전체 분기` });
+  const defs = svg('defs', {});
+  for (const [side, color] of [['left', '#90cafa'], ['right', '#eac083']]) {
+    const marker = svg('marker', { id: `${path.id}-${side}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto-start-reverse' });
+    marker.append(svg('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: color })); defs.append(marker);
+  }
+  diagram.append(defs);
+  for (const node of nodes) {
+    const from = positions.get(node.id);
+    node.children.forEach((id, index) => {
+      if (id === node.id) return;
+      const target = byId.get(id);
+      const to = positions.get(id);
+      const side = index ? 'right' : 'left';
+      let d;
+      if (target.depth > node.depth) {
+        const x = from.x + NODE_WIDTH * (index ? .75 : .25);
+        d = `M${x},${from.y + NODE_HEIGHT} C${x},${from.y + NODE_HEIGHT + 28} ${to.x + NODE_WIDTH / 2},${to.y - 28} ${to.x + NODE_WIDTH / 2},${to.y}`;
+      } else {
+        const outer = index ? WIDTH - 14 : 14;
+        const x = from.x + (index ? NODE_WIDTH : 0);
+        const tx = to.x + (index ? NODE_WIDTH : 0);
+        d = `M${x},${from.y + 56} C${outer},${from.y + 56} ${outer},${to.y + 56} ${tx},${to.y + 56}`;
+      }
+      diagram.append(svg('path', { d, class: `edge ${side}${target.depth <= node.depth ? ' return' : ''}`, 'marker-end': `url(#${path.id}-${side})` }));
+    });
+  }
+  for (const node of nodes) {
+    const { x, y } = positions.get(node.id);
+    const group = svg('g', { transform: `translate(${x} ${y})`, class: 'node', tabindex: 0, role: 'button', 'aria-label': `${node.name}${node.root ? ' 시작 기술' : ''}`, 'data-path': path.id, 'data-node': node.id });
+    group.append(svg('rect', { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 9 }));
+    group.append(svg('image', { href: `../assets/icons/upgrades/${node.icon}.svg`, x: 12, y: 14, width: 25, height: 25, 'aria-hidden': 'true' }));
+    group.append(svg('text', { x: 47, y: 20, class: 'node-label' }, node.root ? 'Lv.3 · 시작 기술' : '후속 선택 · 습득 / 강화'));
+    group.append(svg('text', { x: 47, y: 39, class: 'node-title' }, node.name));
+    node.children.forEach((id, index) => {
+      const target = byId.get(id);
+      group.append(svg('text', { x: 12, y: 72 + index * 23, class: `destination ${index ? 'right' : 'left'}` }, `${index ? '2 오른쪽' : '1 왼쪽'} · ${destinationLabel(node, target)}`));
+    });
+    group.addEventListener('click', () => select(path.id, node.id));
+    group.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(path.id, node.id); }
+    });
+    diagram.append(group);
+  }
+  section.append(heading, diagram);
+  return section;
 }
-document.querySelector('#level-up').onclick = () => { level++; render(); };
-document.querySelector('#reset').onclick = () => { for (const key of Object.keys(ranks)) delete ranks[key]; render(); document.querySelector('#notice').textContent = '투자한 포인트를 모두 돌려받았습니다. 새로고침하면 시안은 Lv.6 / 5포인트로 시작합니다.'; };
+function renderDetail() {
+  const path = SKILL_PATHS.find(item => item.id === selection.pathId);
+  const nodes = graphs.get(path.id);
+  const node = nodes.find(item => item.id === selection.nodeId);
+  detail.style.setProperty('--accent', path.color);
+  const description = html('div', '');
+  description.append(html('h2', `${path.name} · ${node.name}`), html('p', node.detail));
+  const next = html('div', '', 'next');
+  node.children.forEach((id, index) => {
+    const target = nodes.find(item => item.id === id);
+    const button = html('button', '');
+    button.append(html('span', `${index ? '2 · 오른쪽' : '1 · 왼쪽'} 선택 후 다음 분기 보기`, index ? 'right' : 'left'), html('strong', destinationLabel(node, target)));
+    button.onclick = () => select(path.id, id);
+    next.append(button);
+  });
+  detail.replaceChildren(description, next);
+}
+function render() {
+  const controls = document.querySelector('#filters');
+  controls.replaceChildren();
+  for (const item of [{ id: 'all', name: '전체 보기' }, ...SKILL_PATHS]) {
+    const button = html('button', item.name);
+    button.setAttribute('aria-pressed', String(item.id === filter));
+    button.onclick = () => {
+      filter = item.id;
+      if (filter !== 'all' && selection.pathId !== filter) selection = { pathId: filter, nodeId: SKILL_PATHS.find(path => path.id === filter).root };
+      render();
+    };
+    controls.append(button);
+  }
+  maps.classList.toggle('single', filter !== 'all');
+  maps.replaceChildren(...SKILL_PATHS.filter(path => filter === 'all' || filter === path.id).map(drawMap));
+  select(selection.pathId, selection.nodeId);
+}
 render();
