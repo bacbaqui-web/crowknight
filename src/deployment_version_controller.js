@@ -88,7 +88,7 @@ async function clearBrowserCaches() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in window.navigator)) return;
   try {
-    const registration = await window.navigator.serviceWorker.register('./sw.js', {
+    const registration = await window.navigator.serviceWorker.register('./sw.js?runtime=script-refresh-2', {
       scope: './',
       updateViaCache: 'none',
     });
