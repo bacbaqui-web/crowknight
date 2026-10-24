@@ -62,7 +62,13 @@ export function finishPlaneMotion(actor, world = null) {
     player.x = start.x - (player.x - start.x);
   }
   const axis = actor.quarterImpulse || actor.quarterAim || { x: player.facing || 1, z: 0 };
-  const travel = (player.x - start.x) * (player.facing || 1);
+  const walking =
+    start.direction &&
+    player.onGround &&
+    !actor.quarterImpulse &&
+    player.actionSettings?.[player.actionKey]?.group === 'movement';
+  const speed = walking ? actor.quarterMoveSpeed || 1 : 1;
+  const travel = (player.x - start.x) * (player.facing || 1) * speed;
   const rawX = player.x;
   const projectedX = start.x + travel * axis.x;
   player.x = projectedX;

@@ -93,6 +93,7 @@ export function createQuarterRuntime({ ctx, world }) {
       captureAttackRegions(actor, raw, flat);
     },
     beforePlayer(actor, keys, pressed) {
+      actor.quarterMoveSpeed = 1.15;
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
       controlledActor = actor;
