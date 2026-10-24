@@ -94,12 +94,38 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     schedulePreview();
   }
   bindEffectHandles(panel.querySelector('canvas'), preview, (patch) => {
+    if (patch == null) {
+      schedulePreview();
+      return;
+    }
     const profile = selectedProfile();
     if (!profile) return;
     updateEffectProfile(profile, direction, patch);
     sync();
     apply();
   });
+  const zoom = panel.querySelector('[data-effect-zoom]');
+  const setZoom = (value) => {
+    zoom.value = Math.max(50, Math.min(400, value));
+    panel.querySelector('[data-effect-zoom-value]').textContent = `${zoom.value}%`;
+    preview.setZoom(Number(zoom.value) / 100);
+    schedulePreview();
+  };
+  zoom.addEventListener('input', () => setZoom(Number(zoom.value)));
+  panel.querySelector('[data-effect-zoom-in]').addEventListener('click', () => setZoom(Number(zoom.value) + 25));
+  panel.querySelector('[data-effect-zoom-out]').addEventListener('click', () => setZoom(Number(zoom.value) - 25));
+  panel.querySelector('[data-effect-fit]').addEventListener('click', () => {
+    preview.setPan({ x: 0, y: 0 });
+    setZoom(100);
+  });
+  panel.querySelector('canvas').addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      setZoom(Number(zoom.value) + (event.deltaY < 0 ? 10 : -10));
+    },
+    { passive: false }
+  );
   function option(select, value, text) {
     const item = document.createElement('option');
     item.value = value;

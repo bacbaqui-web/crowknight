@@ -1,3 +1,6 @@
+import { createPartEditHandleGeometry, findEditHandleAt } from '../edit_handle_geometry_helper.js';
+import { renderEditHandles } from '../edit_handle_renderer.js';
+import { handleCursor } from '../edit_handle_drawing_helper.js';
 import { effectPoint, screenPoint } from './attack_geometry.js';
 import { effectLayoutKey } from './effect_directions.js';
 import { effectLayoutFor } from './effect_layout.js';
@@ -54,12 +57,22 @@ export function effectHandleFrame(actor, geometry, world, view) {
 export function dragEffectPatch(frame, mode, start, point) {
   const delta = sub(point, start),
     layout = frame.layout;
-  if (mode === 'rotation') {
+  if (mode === 'rotation' || mode === 'rotate') {
     const a = inverseAxes(sub(start, frame.pivot), frame.rotateX, frame.rotateY);
     const b = inverseAxes(sub(point, frame.pivot), frame.rotateX, frame.rotateY);
     if (!a || !b || Math.hypot(b.x, b.y) < 1) return {};
     const angle = layout.rotation + ((Math.atan2(b.y, b.x) - Math.atan2(a.y, a.x)) * 180) / Math.PI;
     return { rotation: ((angle + 540) % 360) - 180 };
+  }
+  if (['width', 'height', 'size'].includes(mode)) {
+    const a = inverseAxes(sub(start, frame.pivot), frame.sourceX, frame.sourceY);
+    const b = inverseAxes(sub(point, frame.pivot), frame.sourceX, frame.sourceY);
+    if (!a || !b) return {};
+    const ratio = (value, base) => (Math.abs(base) < 1e-6 ? 1 : Math.max(0.01, value / base));
+    if (mode === 'width') return { width: layout.width * ratio(b.x, a.x) };
+    if (mode === 'height') return { height: layout.height * ratio(b.y, a.y) };
+    const factor = Math.max(0.01, (a.x * b.x + a.y * b.y) / (a.x * a.x + a.y * a.y || 1));
+    return { width: layout.width * factor, height: layout.height * factor };
   }
   const move = inverseAxes(delta, frame.moveX, frame.moveY);
   if (!move) return {};
@@ -82,30 +95,30 @@ function contains(point, polygon) {
   }
   return inside;
 }
-export function drawEffectHandles(ctx, frame) {
+// Reuse the setting editor's geometry, painting, hit priority and cursors in CSS pixels.
+export function effectEditGeometry(frame, ratio = 1) {
+  const unit = (vector) => {
+    const length = Math.hypot(vector.x, vector.y) || 1;
+    return { x: vector.x / length, y: vector.y / length };
+  };
+  const geometry = createPartEditHandleGeometry({
+    editFocusPartKey: 'effect',
+    editHandleInfo: {
+      anchor: { x: frame.pivot.x / ratio, y: frame.pivot.y / ratio },
+      xAxis: unit(frame.sourceX),
+      yAxis: unit({ x: -frame.sourceY.x, y: -frame.sourceY.y }),
+      target: { type: 'effect' },
+    },
+    actionFrameSelectionActive: false,
+  });
+  delete geometry.handles.opacity;
+  return geometry;
+}
+export function drawEffectHandles(ctx, frame, ratio = 1, activeMode) {
   if (!frame) return;
-  const { pivot, handle } = frame;
   ctx.save();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#63e5ff';
-  ctx.beginPath();
-  ctx.moveTo(pivot.x, pivot.y);
-  ctx.lineTo(handle.x, handle.y);
-  ctx.stroke();
-  for (const [p, color, label] of [
-    [pivot, '#ff6fcf', '앵커'],
-    [handle, '#63e5ff', '회전'],
-  ]) {
-    ctx.fillStyle = '#10231f';
-    ctx.strokeStyle = color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = color;
-    ctx.font = 'bold 15px sans-serif';
-    ctx.fillText(label, p.x + 13, p.y - 10);
-  }
+  ctx.scale(ratio, ratio);
+  renderEditHandles(ctx, effectEditGeometry(frame, ratio), activeMode);
   ctx.restore();
 }
 export function bindEffectHandles(canvas, preview, onChange) {
@@ -125,30 +138,40 @@ export function bindEffectHandles(canvas, preview, onChange) {
     };
   };
   const modeAt = (p, frame) => {
-    const radius = (15 * canvas.width) / canvas.getBoundingClientRect().width;
-    if (Math.hypot(p.x - frame.pivot.x, p.y - frame.pivot.y) < radius) return 'anchor';
-    if (Math.hypot(p.x - frame.handle.x, p.y - frame.handle.y) < radius) return 'rotation';
-    return contains(p, frame.polygon) ? 'position' : null;
+    const ratio = canvas.width / canvas.getBoundingClientRect().width;
+    return (
+      findEditHandleAt({ x: p.x / ratio, y: p.y / ratio }, effectEditGeometry(frame, ratio))?.mode ||
+      (contains(p, frame.polygon) ? 'move' : null)
+    );
   };
   canvas.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0 || drag) return;
+    if (drag || ![0, 1, 2].includes(event.button)) return;
     const frame = preview.getFrame(),
       start = point(event);
-    const mode = frame && modeAt(start, frame);
+    const mode = event.button !== 0 || event.altKey ? 'pan' : (frame && modeAt(start, frame)) || 'pan';
     if (!mode) return;
     event.preventDefault();
-    drag = { frame, start, mode, id: event.pointerId };
+    drag = { frame, start, mode, id: event.pointerId, pan: preview.getPan() };
     preview.setDragging(true);
+    preview.setActiveMode(mode);
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', (event) => {
     const p = point(event);
     if (drag && event.pointerId === drag.id) {
+      if (drag.mode === 'pan') {
+        preview.setPan({ x: drag.pan.x + p.x - drag.start.x, y: drag.pan.y + p.y - drag.start.y });
+        onChange(null);
+        return;
+      }
       pendingPatch = dragEffectPatch(drag.frame, drag.mode, drag.start, p);
       if (scheduled == null) scheduled = requestAnimationFrame(flush);
     } else {
       const frame = preview.getFrame();
-      canvas.style.cursor = frame && modeAt(p, frame) ? 'grab' : 'default';
+      const mode = frame && modeAt(p, frame);
+      canvas.style.cursor = handleCursor(mode) || 'default';
+      preview.setActiveMode(mode);
+      onChange(null);
     }
   });
   const end = (event) => {
@@ -157,8 +180,10 @@ export function bindEffectHandles(canvas, preview, onChange) {
     flush();
     drag = null;
     preview.setDragging(false);
+    preview.setActiveMode(null);
     if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-    onChange({});
+    onChange(null);
   };
+  canvas.addEventListener('contextmenu', (event) => event.preventDefault());
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, end);
 }

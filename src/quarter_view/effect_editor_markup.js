@@ -15,6 +15,13 @@ export const EFFECT_EDITOR_MARKUP = `
   </div>
   <div class="effect-editor-grid">
     <div class="effect-preview-pane">
+      <div class="effect-zoom-controls">
+        <button type="button" data-effect-zoom-out aria-label="미리보기 축소">−</button>
+        <input type="range" data-effect-zoom aria-label="미리보기 확대율" min="50" max="400" step="5" value="100" />
+        <output data-effect-zoom-value>100%</output>
+        <button type="button" data-effect-zoom-in aria-label="미리보기 확대">+</button>
+        <button type="button" data-effect-fit>화면 맞춤</button>
+      </div>
       <canvas
         width="640"
         height="400"
@@ -25,7 +32,7 @@ export const EFFECT_EDITOR_MARKUP = `
         ><input type="checkbox" data-effect-all />5방향 동시 미리보기</label
       >
       <small
-        >분홍 앵커를 끌어 기준점을 바꾸고, 이펙트를 끌어 이동하고, 파란 회전 손잡이를 돌리세요. 화살표 끝에 초승달이 놓입니다. 주황 테두리는 실제 히트박스입니다. 위쪽 이펙트는 캐릭터 뒤에 그립니다.</small
+        >설정 화면과 같은 핸들입니다. 중심 점: 앵커 · 파란 원: 이동 · 노랑: 너비 · 초록: 높이 · 분홍: 전체 크기 · 보라 원: 회전. 휠로 확대하고 빈 곳 드래그, Alt+드래그 또는 마우스 가운데/오른쪽 드래그로 화면을 이동하세요. 주황 테두리는 히트박스입니다.</small
       >
     </div>
     <div class="effect-editor-controls">

@@ -56,3 +56,29 @@ for (const plane of ['ground', 'height'])
       close(after.pivot.y, before.pivot.y);
     }
   });
+
+test('setting editor handle geometry and hit detection are reused for scaling', async () => {
+  const { effectEditGeometry } = await import('../src/quarter_view/effect_editor_handles.js');
+  const { findEditHandleAt } = await import('../src/edit_handle_geometry_helper.js');
+  const frame = {
+    layout: { width: 1.2, height: 0.8 },
+    pivot: { x: 300, y: 200 },
+    sourceX: { x: 2, y: 0 },
+    sourceY: { x: 0, y: -1 },
+  };
+  const geometry = effectEditGeometry(frame, 2);
+  assert.deepEqual(Object.keys(geometry.handles).sort(), ['anchor', 'height', 'move', 'rotate', 'size', 'width']);
+  assert.equal(geometry.anchor.x, 150);
+  for (const mode of ['width', 'height', 'size']) {
+    const handle = geometry.handles[mode].point;
+    assert.equal(findEditHandleAt(handle, geometry).mode, mode);
+    const start = { x: handle.x * 2, y: handle.y * 2 };
+    const end = {
+      x: frame.pivot.x + 1.5 * (start.x - frame.pivot.x),
+      y: frame.pivot.y + 1.5 * (start.y - frame.pivot.y),
+    };
+    const patch = dragEffectPatch(frame, mode, start, end);
+    if (mode !== 'height') close(patch.width, 1.8);
+    if (mode !== 'width') close(patch.height, 1.2);
+  }
+});

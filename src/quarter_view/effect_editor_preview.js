@@ -6,7 +6,7 @@ import { drawQuarterAttackEffect } from './attack_effects.js';
 import { EFFECT_EDIT_DIRECTIONS } from './effect_directions.js';
 import { drawEffectGuides } from './effect_guides.js';
 import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
-import { groundPoint } from './camera.js';
+import { groundPoint, QUARTER_PROJECTION } from './camera.js';
 import { groundAttackRegions, attackRegionPoint, screenPoint, effectPoint } from './attack_geometry.js';
 
 export function createEffectEditorPreview(canvas) {
@@ -14,6 +14,10 @@ export function createEffectEditorPreview(canvas) {
     world = { floorY: 430 };
   const read = createRuntimeEffectReader();
   let source, action, actor, frame, frozenView;
+  let zoomFactor = 1,
+    pan = { x: 0, y: 0 },
+    activeMode,
+    zoomFocus;
   let dragging = false,
     lastTime;
   function prepare(next, key) {
@@ -21,6 +25,7 @@ export function createEffectEditorPreview(canvas) {
     source = next;
     action = key;
     frozenView = null;
+    zoomFocus = null;
     lastTime = null;
     if (!next || !key) {
       actor = null;
@@ -104,6 +109,12 @@ export function createEffectEditorPreview(canvas) {
       if (playing && frozenView) view.zoom = Math.min(view.zoom, frozenView.zoom);
       frozenView = { ...view };
     }
+    const focus = (zoomFocus ||= geometry
+      ? effectHandleFrame(actor, geometry, world, view).pivot
+      : { x: canvas.width / 2, y: canvas.height * 0.58 });
+    view.zoom *= zoomFactor;
+    view.x = ((zoomFactor - 1) * (focus.x - canvas.width / 2) - pan.x) / view.zoom;
+    view.depth = ((zoomFactor - 1) * (focus.y - canvas.height * 0.58) - pan.y) / (QUARTER_PROJECTION.slope * view.zoom);
     drawEffectGuides(ctx, actor, geometry, world, view, selected.key, EFFECT_EDIT_DIRECTIONS);
     const directions = all ? EFFECT_EDIT_DIRECTIONS : [selected];
     const paintEffects = (back) => {
@@ -142,11 +153,21 @@ export function createEffectEditorPreview(canvas) {
       ctx.stroke();
     }
     frame = effectHandleFrame(actor, geometry, world, view);
-    drawEffectHandles(ctx, frame);
+    drawEffectHandles(ctx, frame, canvas.width / (canvas.getBoundingClientRect().width || canvas.width), activeMode);
   }
   return {
     draw,
     getFrame: () => frame,
+    setZoom(value) {
+      zoomFactor = Math.max(0.5, Math.min(4, value));
+    },
+    getPan: () => ({ ...pan }),
+    setPan(value) {
+      pan = value;
+    },
+    setActiveMode(value) {
+      activeMode = value;
+    },
     resetClock() {
       lastTime = null;
     },

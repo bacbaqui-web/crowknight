@@ -176,3 +176,22 @@ body:has(#quarterEffectEditor[open]) #quarterTrajectoryPanel {
   margin-top: 8px;
   padding: 7px 12px;
 }
+
+.effect-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.effect-zoom-controls input {
+  min-width: 0;
+  width: 100%;
+}
+.effect-zoom-controls button {
+  flex-shrink: 0;
+  padding: 5px 8px;
+}
+.effect-zoom-controls output {
+  min-width: 34px;
+}
