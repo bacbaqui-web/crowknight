@@ -1,4 +1,4 @@
-const SLOPE = Math.sin((22 * Math.PI) / 180);
+const SLOPE = Math.sin((18 * Math.PI) / 180);
 export const QUARTER_PROJECTION = Object.freeze({ slope: SLOPE });
 
 // Keep the existing low camera angle with a constant orthographic scale.
