@@ -100,7 +100,7 @@ export const EFFECT_EDITOR_MARKUP = `
         ><input type="checkbox" data-effect-linked checked />8방향 함께
         맞추기</label
       >
-      <small>켜면 한 방향의 조정값을 나머지 방향에도 회전해 적용합니다.</small>
+      <small>한 방향의 조정값을 8방향에 회전해 적용합니다.</small>
       <label class="effect-slider"
         >앞뒤 위치 (px)<input
           type="number"

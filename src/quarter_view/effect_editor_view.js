@@ -97,6 +97,7 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     actionSelect.disabled = !actionSelect.options.length;
     if (actionSelect.disabled)
       status.textContent = '화살 판정은 투사체를 따릅니다. 조절할 근접 공격이 있는 캐릭터를 선택하세요.';
+    else status.textContent = '설정은 이 브라우저에 저장됩니다. 조절 후 패널을 닫고 P로 재개하세요.';
     sync();
   }
   actorSelect.addEventListener('change', syncActions);

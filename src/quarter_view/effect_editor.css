@@ -116,7 +116,7 @@
   grid-template-columns: 1fr 74px;
   align-items: center;
   gap: 3px 8px;
-  margin: 9px 0;
+  margin: 6px 0;
 }
 .effect-slider input[type='range'] {
   grid-column: 1 / -1;
