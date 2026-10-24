@@ -8,6 +8,8 @@ import { mergeTuning } from '../src/project_data_normalizer_helper.js';
 import { prepareSkillActions } from '../src/skill_runtime_helper.js';
 import { requestRuntimeAction } from '../src/action_trigger_engine.js';
 import { resolveGroundCollision } from '../src/quarter_view/spatial.js';
+import { prepareQuarterFacing } from '../src/quarter_view/facing.js';
+import { attackPoint } from '../src/quarter_view/attack_geometry.js';
 import { applyGroundKnockback } from '../src/quarter_view/knockback.js';
 import { preparePlaneMotion, finishPlaneMotion, movementInput } from '../src/quarter_view/motion.js';
 
@@ -20,7 +22,7 @@ function fixture(physics = world.worldPhysics) {
   prepareSkillActions(tuning);
   const player = new PuppetPlayer(480, 430, {});
   player.applyTuning(tuning);
-  const actor = { player, quarterDepth: 0, quarterAim: { x: 1, z: 0 } };
+  const actor = { player, tuning, quarterDepth: 0, quarterAim: { x: 1, z: 0 } };
   let previous = new Set();
   return {
     actor,
@@ -188,5 +190,59 @@ test('collision pushes at either depth wall cannot create an outward position an
       const delta = step([code]);
       assert.equal(delta.z, 0);
     }
+  }
+});
+
+test('a buffered reverse attack aligns visual facing, blend and hitbox aim at the same action start', () => {
+  for (const direction of [-1, 1])
+    for (const releaseDirection of [false, true]) {
+      const { actor, step } = fixture();
+      const player = actor.player;
+      player.facing = -direction;
+      actor.quarterAim = { x: -direction, z: 0 };
+      step(['KeyQ']);
+      step([], 14);
+      const previousSerial = player.attackSerial;
+      const code = direction < 0 ? 'ArrowLeft' : 'ArrowRight';
+      step([code, 'KeyQ']);
+      assert.equal(player.facing, -direction, 'blocked input must not turn the active attack');
+      for (let i = 0; i < 10 && player.attackSerial === previousSerial; i++) step(releaseDirection ? [] : [code]);
+      assert.ok(player.attackSerial > previousSerial);
+      assert.equal(player.customActionKey, 'customAction4_2');
+      assert.equal(player.facing, direction);
+      assert.equal(player.customActionFacing, direction);
+      assert.equal(player.customActionViewFacing, direction);
+      assert.deepEqual(actor.quarterAim, { x: direction, z: 0 });
+    }
+});
+
+test('depth-only follow-up attacks preserve the side-facing sprite while aiming along depth', () => {
+  for (const facing of [-1, 1]) {
+    const { actor, step } = fixture();
+    actor.player.facing = facing;
+    actor.quarterAim = { x: facing, z: 0 };
+    step(['KeyQ']);
+    step([], 14);
+    step(['QuarterDown', 'KeyQ']);
+    step(['QuarterDown'], 10);
+    assert.equal(actor.player.customActionKey, 'customAction4_2');
+    assert.equal(actor.player.facing, facing);
+    assert.deepEqual(actor.quarterAim, { x: 0, z: 1 });
+  }
+});
+
+test('charged attacks requested before the motion update use the latest horizontal input facing', () => {
+  for (const direction of [-1, 1]) {
+    const { actor } = fixture();
+    const player = actor.player;
+    player.facing = -direction;
+    actor.quarterAim = { x: -direction, z: 0 };
+    player.runSkills = { chargeAttack: 1 };
+    player.runSkillActions = actor.tuning.skillActions;
+    prepareQuarterFacing(actor, { x: direction, z: 0 });
+    assert.ok(requestRuntimeAction(player, player.runSkillActions.chargeAttack, player.facing));
+    assert.equal(player.facing, direction);
+    assert.equal(player.customActionViewFacing, direction);
+    assert.deepEqual(actor.quarterAim, { x: direction, z: 0 });
   }
 });

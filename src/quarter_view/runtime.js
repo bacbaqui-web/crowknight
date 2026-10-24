@@ -5,6 +5,7 @@ import { applyQuarterKnockback } from './knockback.js';
 import { GAME_KEYS } from '../game_config_data.js';
 import { createQuarterRenderer } from './renderer.js';
 import { depthOf } from './camera.js';
+import { prepareQuarterFacing } from './facing.js';
 import { movementInput, preparePlaneMotion, finishPlaneMotion, enemyPlaneDirection } from './motion.js';
 import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundProjectileRegion } from './spatial.js';
 
@@ -78,6 +79,7 @@ export function createQuarterRuntime({ ctx, world }) {
     document.querySelector('#quarterPaused').hidden = !paused;
   }
   return {
+    prepareInput: (actor, keys) => prepareQuarterFacing(actor, movementInput(keys)),
     startFrame: frameMeter.start,
     finishFrame: frameMeter.finish,
     draw(frame) {
@@ -109,6 +111,7 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterAim = { x: actor.player.facing || 1, z: 0 };
         actor.quarterImpulse = null;
         actor.quarterImpulseSerial = null;
+        actor.quarterInputDirection = null;
         actor.quarterVelocityFacing = actor.player.facing || 1;
         actor.quarterPendingInputs = new Map();
         actor.quarterSynthetic = null;

@@ -83,7 +83,8 @@ export function updateActionTriggerRuntime(player, dt, keys, pressed) {
     return new Set();
   }
 
-  startCustomAction(player, match.action.key, match.facing, match.triggerMode, match.pressCodes);
+  const facing = player.resolveActionFacing?.(match.action.key, match.facing, match.consumedCodes) ?? match.facing;
+  startCustomAction(player, match.action.key, facing, match.triggerMode, match.pressCodes);
   startActionCooldown(player, match.action.key, runtimeNowMs(player));
   runtime.consumedCodes = match.consumedCodes;
   return new Set(match.consumedCodes);
@@ -175,6 +176,7 @@ export function requestRuntimeAction(player, key, facing = null, triggerMode = '
   if (!canRunActionCondition(player, key)) return false;
   if (!actionLinkResult(player, key).allowed) return false;
   if (!actionCooldownResult(player, key, runtimeNowMs(player)).allowed) return false;
+  facing = player.resolveActionFacing?.(key, facing, []) ?? facing;
   startCustomAction(player, key, facing, triggerMode, []);
   startActionCooldown(player, key, runtimeNowMs(player));
   return true;

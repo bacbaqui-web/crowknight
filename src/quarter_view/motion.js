@@ -1,5 +1,6 @@
 import { depthOf, normalizeDirection } from './camera.js';
 import { constrainGroundPosition } from './bounds.js';
+import { prepareQuarterFacing } from './facing.js';
 import { prepareActionInput, finishActionInput } from './action_input.js';
 
 export function movementInput(keys) {
@@ -10,6 +11,7 @@ export function movementInput(keys) {
 }
 export function preparePlaneMotion(actor, direction, keys = null, pressed = null) {
   const player = actor.player;
+  if (keys) prepareQuarterFacing(actor, direction);
   const group = player.actionSettings?.[player.actionKey]?.group;
   if (direction && (!player.isCustomActionActive || group === 'movement')) {
     actor.quarterAim = direction;

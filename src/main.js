@@ -356,6 +356,7 @@ function update(dt) {
   runLifecycle.updateSurvivalTime(dt);
   maintainEnemyFlow({ actors: gameActors, playerActor, world, particleEffects, dt: 0 });
 
+  quarter?.prepareInput(playerActor, keys);
   updateRunSkills(playerActor.player, dt);
   playerActor.player.runGuardReady = pressed.has('KeyE');
   const chargeInput = updateChargeAttack(playerActor.player, dt, keys, pressed, requestRuntimeAction);
