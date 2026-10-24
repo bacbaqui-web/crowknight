@@ -1,5 +1,5 @@
 import { groundPoint, depthOf } from './camera.js';
-import { regionPoints, sweptInteractionRegion } from '../interaction_swept_region_helper.js';
+import { sweptInteractionRegion } from '../interaction_swept_region_helper.js';
 import { previousAttackRegion } from '../interaction_overlap_helper.js';
 
 export const ATTACK_HALF_WIDTH = 16;
@@ -20,6 +20,7 @@ export function screenPoint(point, world, view) {
   return { x: p.x, y: p.y - (world.floorY - point.y) * p.scale, scale: p.scale };
 }
 export function captureAttackRegions(actor, regions) {
+  actor.quarterAttackRawRegions = regions;
   actor.quarterAttackRegions = regions.map((region) => {
     const previous = region.reaction?.hitMode === 'trace' ? previousAttackRegion(actor, region) : null;
     return previous ? sweptInteractionRegion(previous, region) : region;
@@ -31,21 +32,4 @@ export function currentAttackRegions(actor) {
   if (actor.quarterAttackSerial === actor.player.attackSerial && actor.quarterAttackRegions)
     return actor.quarterAttackRegions;
   return actor.player.attackInteractionRegions || [];
-}
-export function prismFaces(front, back) {
-  return [
-    front,
-    [...back].reverse(),
-    ...front.map((point, index) => {
-      const next = (index + 1) % front.length;
-      return [point, front[next], back[next], back[index]];
-    }),
-  ];
-}
-export function attackFaces(actor, region) {
-  const points = regionPoints(region);
-  return prismFaces(
-    points.map((point) => attackPoint(actor, point, -ATTACK_HALF_WIDTH)),
-    points.map((point) => attackPoint(actor, point, ATTACK_HALF_WIDTH))
-  );
 }

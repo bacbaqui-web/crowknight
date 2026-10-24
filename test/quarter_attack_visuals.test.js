@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { groundPoint, normalizeDirection } from '../src/quarter_view/camera.js';
 import {
   attackPoint,
-  attackFaces,
   captureAttackRegions,
   currentAttackRegions,
   screenPoint,
@@ -68,17 +67,7 @@ test('all eight attack directions align the effect anchor with the actual ground
       assert.equal(JSON.stringify(a), before);
     }
 });
-test('hitbox volume preserves authored height, forward extent and shared lane width', () => {
-  const a = actor({ x: 0, z: 1 }),
-    r = a.player.attackInteractionRegions[0],
-    faces = attackFaces(a, r);
-  assert.equal(faces.length, 6);
-  const corners = faces.flat();
-  assert.equal(Math.min(...corners.map((p) => p.y)), r.y);
-  assert.equal(Math.max(...corners.map((p) => p.y)), r.y + r.h);
-  assert.equal(Math.min(...corners.map((p) => p.depth)), a.quarterDepth + r.x - a.player.x);
-  assert.equal(Math.max(...corners.map((p) => p.depth)), a.quarterDepth + r.x + r.w - a.player.x);
-  assert.equal(Math.max(...corners.map((p) => p.x)) - Math.min(...corners.map((p) => p.x)), ATTACK_HALF_WIDTH * 2);
+test('ground display keeps the original combined attack and target lane width', () => {
   for (const scale of [0.1, 0.5, 1, 2, 3]) {
     const target = { player: { transform: { scale } } };
     assert.equal(ATTACK_HALF_WIDTH + targetLaneRadius(target), Math.max(32, Math.min(70, scale * 42)));
@@ -118,6 +107,8 @@ test('toggle, short dashed history and restart reset never change combat data', 
   const legend = { hidden: true, textContent: '' },
     dashes = [];
   const ctx = {
+    arc() {},
+    fillText() {},
     save() {},
     restore() {},
     setLineDash(value) {

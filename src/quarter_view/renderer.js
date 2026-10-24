@@ -14,6 +14,9 @@ export function createQuarterRenderer({ ctx, world }) {
     world,
     button: document.querySelector('#quarterHitboxes'),
     legend: document.querySelector('#quarterHitboxLegend'),
+    panel: document.querySelector('#quarterTrajectoryPanel'),
+    trajectoryCanvas: document.querySelector('#quarterTrajectory'),
+    trajectoryStatus: document.querySelector('#quarterTrajectoryStatus'),
   });
   function projectEntity(entity) {
     const x = entity.player?.x ?? entity.x ?? entity.targetX ?? view.x;

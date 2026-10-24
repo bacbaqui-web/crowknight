@@ -56,6 +56,7 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterImpulse = null;
         actor.quarterSynthetic = null;
         actor.quarterAttackRegions = [];
+        actor.quarterAttackRawRegions = [];
         actor.quarterAttackSerial = null;
       });
       syncPause();
