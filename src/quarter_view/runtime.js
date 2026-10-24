@@ -40,6 +40,32 @@ export function createQuarterRuntime({ ctx, world }) {
       dirty = true;
     },
   });
+  const modeSelect = document.querySelector('#quarterCombatMode');
+  let testMode = true,
+    currentActors = [];
+  try {
+    testMode = localStorage.getItem('crowKnight.quarterDirectionalTest') !== 'off';
+  } catch {
+    /* Session default. */
+  }
+  modeSelect.value = testMode ? 'directional' : 'image';
+  modeSelect.addEventListener('change', () => {
+    testMode = modeSelect.value === 'directional';
+    try {
+      localStorage.setItem('crowKnight.quarterDirectionalTest', testMode ? 'on' : 'off');
+    } catch {
+      /* Session only. */
+    }
+    renderer.resetEffectCache();
+    for (const actor of currentActors) {
+      actor.quarterDirectionalTest = testMode;
+      actor.previousAttackRegions = [];
+      const raw = renderer.prepareAttackRegions(actor, actor.player.attackInteractionRegions || []);
+      captureAttackRegions(actor, raw);
+    }
+    renderer.resetDebugHistory();
+    dirty = true;
+  });
   const effectEditor = createEffectEditorView({
     panel: document.querySelector('#quarterEffectEditor'),
     onOpen: () => pauseForSettings(),
@@ -64,11 +90,13 @@ export function createQuarterRuntime({ ctx, world }) {
       captureAttackRegions(actor, raw, flat);
     },
     beforePlayer(actor, keys, pressed) {
+      actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
       controlledActor = actor;
       return preparePlaneMotion(actor, movementInput(keys), keys, pressed);
     },
     beforeEnemy(actor, target) {
+      actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
       const direction = enemyPlaneDirection(actor, target);
       preparePlaneMotion(actor, direction);
@@ -121,12 +149,14 @@ export function createQuarterRuntime({ ctx, world }) {
     mapCode: (code) => MAP[code] || code,
     gameKeys: new Set([...GAME_KEYS, 'QuarterUp', 'QuarterDown']),
     reset(actors) {
+      currentActors = actors;
       paused = false;
       externalPaused = previousFrozen = false;
       frameMeter.reset();
       renderer.resetEffectCache();
       renderer.resetDebugHistory();
       actors.forEach((actor, index) => {
+        actor.quarterDirectionalTest = testMode;
         actor.quarterFloorY = world.floorY;
         actor.quarterDepth = index === 0 ? 0 : ((index % 5) - 2) * 85;
         actor.player.quarterDepth = actor.quarterDepth;
@@ -141,6 +171,8 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterAttackRawRegions = [];
         actor.quarterAttackSerial = null;
       });
+      if (testMode && document.querySelector('#quarterHitboxes').getAttribute('aria-pressed') !== 'true')
+        document.querySelector('#quarterHitboxes').click();
       attackSettings.reset(actors);
       effectEditor.reset(actors);
       paused =

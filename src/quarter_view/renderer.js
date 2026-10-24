@@ -1,3 +1,5 @@
+import { directionalAttackRegions } from './directional_attack.js';
+import { createNativeWeaponTrail } from './native_weapon_trail.js';
 import { alignEffectRegions, effectImageBounds } from './effect_geometry.js';
 import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
 import { drawQuarterAttackEffect, drawActorEffectLayers } from './attack_effects.js';
@@ -14,6 +16,7 @@ import { formulaScreenZoom } from '../zoom_formula_runtime_helper.js';
 
 export function createQuarterRenderer({ ctx, world }) {
   let view;
+  const nativeTrail = createNativeWeaponTrail(ctx, world);
   const readEffectFrame = createRuntimeEffectReader();
   const hitboxes = createHitboxView({
     ctx,
@@ -65,7 +68,7 @@ export function createQuarterRenderer({ ctx, world }) {
           // Afterimages render different poses; cache only the normal, stable draw below.
           actor.player.renderPartOffsets = new Map();
           try {
-            if (actor === playerActor && actor.quarterEffectGuides)
+            if (actor === playerActor && actor.quarterEffectGuides && !actor.quarterDirectionalTest)
               drawEffectGuides(ctx, actor, effectFrameGeometry(actor, readEffectFrame, loadedEffects), world, view);
             drawActorEffectLayers(
               actor,
@@ -81,7 +84,10 @@ export function createQuarterRenderer({ ctx, world }) {
                   restore();
                 }
               },
-              () => drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame)
+              () =>
+                actor.quarterDirectionalTest
+                  ? nativeTrail.draw(actor, view)
+                  : drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame)
             );
           } finally {
             actor.player.renderPartOffsets = null;
@@ -106,10 +112,19 @@ export function createQuarterRenderer({ ctx, world }) {
   return {
     draw,
     projectEntity,
-    prepareAttackRegions: (actor, raw) => alignEffectRegions(actor, raw, readEffectFrame, loadedEffects),
+    prepareAttackRegions(actor, raw) {
+      if (actor.quarterDirectionalTest) {
+        nativeTrail.capture(actor, raw);
+        return directionalAttackRegions(actor, raw);
+      }
+      return alignEffectRegions(actor, raw, readEffectFrame, loadedEffects);
+    },
     getEffectAssets: () => loadedEffects,
     resetDebugHistory: hitboxes.reset,
     getRenderStats: () => drawGround.stats,
-    resetEffectCache: readEffectFrame.reset,
+    resetEffectCache() {
+      readEffectFrame.reset();
+      nativeTrail.reset();
+    },
   };
 }

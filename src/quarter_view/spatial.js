@@ -7,6 +7,10 @@ import { collisionPushShares } from '../combat_collision_helper.js';
 
 export function combatTargetRegions(attacker, target, regions, source = null) {
   if (attacker.quarterDepth == null && target.quarterDepth == null) return regions;
+  if (source?.quarterHeightRange) {
+    const [top, bottom] = source.quarterHeightRange;
+    regions = regions.filter((region) => region.y < bottom && region.y + region.h > top);
+  }
   const plane = source?.quarterPlane || attackPlane(attacker);
   if (plane === 'effect-height') {
     const origin = source.quarterOrigin || attackOrigin(attacker);

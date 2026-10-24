@@ -1,3 +1,4 @@
+import { directionalAttackRegions } from '../src/quarter_view/directional_attack.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -331,6 +332,48 @@ for (const direction of EFFECT_DIRECTIONS)
         ...world,
         quarterView: { ...plane, prepareAttackRegions: (actor, raw) => alignEffectRegions(actor, raw, read) },
       },
+      particleEffects: particles,
+      onPlayerDeath() {},
+      onPlayerKill() {},
+      onEnemyDeath() {},
+    });
+    assert.ok(front.hp < hp);
+    assert.equal(back.hp, backHp);
+  });
+
+for (const aim of EFFECT_DIRECTIONS)
+  test(`directional trial live combat hits ${aim.key} box and excludes behind`, () => {
+    const hero = makeActor('player_01', 480, 0);
+    hero.quarterAim = aim;
+    const action = hero.player.customActions.find((a) => hero.player.actionSettings[a.key]?.group === 'attack');
+    let box;
+    for (let f = 0; f <= 100; f++) {
+      hero.player.actionPreview = { action: action.key, t: f / 100 };
+      box = directionalAttackRegions(hero, hero.player.attackInteractionRegions)[0];
+      if (box) break;
+    }
+    assert.ok(box);
+    const front = makeActor(
+      'swordman',
+      box.quarterBoxOrigin.x + aim.x * box.quarterBoxLength * 0.5,
+      aim.z * box.quarterBoxLength * 0.5
+    );
+    const back = makeActor('swordman', box.quarterBoxOrigin.x - aim.x * 70, -aim.z * 70);
+    front.id = 'front';
+    back.id = 'back';
+    for (const a of [hero, front, back]) Object.defineProperty(a.player, 'collisionInteractionRegions', { value: [] });
+    for (const a of [front, back]) {
+      Object.defineProperty(a.player, 'hurtInteractionRegions', {
+        value: [{ key: 'body', x: a.player.x - 1, y: 350, w: 2, h: 80, reaction: { hurtByAttack: true } }],
+      });
+      Object.defineProperty(a.player, 'guardInteractionRegions', { value: [] });
+    }
+    const hp = front.hp,
+      backHp = back.hp;
+    resolveCombat({
+      actors: [hero, front, back],
+      playerActor: hero,
+      world: { ...world, quarterView: { ...plane, prepareAttackRegions: directionalAttackRegions } },
       particleEffects: particles,
       onPlayerDeath() {},
       onPlayerKill() {},

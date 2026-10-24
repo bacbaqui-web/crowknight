@@ -3,6 +3,8 @@ import { attackPoint, effectPoint } from './attack_geometry.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 
 export function attackFootprint(actor, region, floorY) {
+  if (region.quarterDirectionalBox)
+    return regionPoints(region).map((p) => ({ x: p.x, depth: p.y, y: region.quarterElevation }));
   return regionPoints(region).map((point) => ({
     ...(region.quarterEffectContact
       ? effectPoint(actor, point, region.quarterEffectCenter, undefined, region.quarterEffectRadius)
@@ -19,7 +21,7 @@ export function createAttackHistory() {
       return null;
     }
     const raw = actor.quarterAttackRawRegions || actor.player.attackInteractionRegions || [];
-    const plane = attackPlane(actor);
+    const plane = raw[0]?.quarterDirectionalBox ? 'ground' : attackPlane(actor);
     const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${plane}`;
     let entry = entries.get(actor);
     if (!raw.length) {
@@ -41,13 +43,25 @@ export function createAttackHistory() {
     const facing = actor.player.facing || 1;
     const originY = plane === 'height' ? floorY : actor.player.y;
     const localPolygons = raw.map((region) =>
-      regionPoints(region).map((p) => ({ x: (p.x - actor.player.x) * facing, y: originY - p.y }))
+      regionPoints(region).map((p) => {
+        if (region.quarterDirectionalBox) {
+          const dx = p.x - region.quarterBoxOrigin.x,
+            dz = p.y - region.quarterBoxOrigin.depth;
+          const aim = region.quarterBoxAim;
+          return { x: dx * aim.x + dz * aim.z, y: -dx * aim.z + dz * aim.x };
+        }
+        return { x: (p.x - actor.player.x) * facing, y: originY - p.y };
+      })
     );
     entry.samples.push({
       time,
       polygons: localPolygons,
-      center: { x: ((left + right) / 2 - actor.player.x) * facing, y: originY - (top + bottom) / 2 },
-      ground: attackPoint(actor, { x: (left + right) / 2, y: (top + bottom) / 2 }, 0, plane),
+      center: raw[0]?.quarterDirectionalBox
+        ? { x: raw[0].quarterBoxLength / 2, y: 0 }
+        : { x: ((left + right) / 2 - actor.player.x) * facing, y: originY - (top + bottom) / 2 },
+      ground: raw[0]?.quarterDirectionalBox
+        ? raw[0].quarterBoxOrigin
+        : attackPoint(actor, { x: (left + right) / 2, y: (top + bottom) / 2 }, 0, plane),
       footprints: raw.map((region) => attackFootprint(actor, region, floorY)),
     });
     // One bounded sequence per actor; keep its start when a long action produces many samples.
