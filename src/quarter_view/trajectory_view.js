@@ -33,7 +33,7 @@ export function createTrajectoryView(canvas, status) {
     ctx.setLineDash([]);
     ctx.font = '10px sans-serif';
     ctx.fillStyle = '#b4c4ac';
-    ctx.fillText('앞 →', width - 45, zero.y - 5);
+    ctx.fillText('앞(공격 방향) →', width - 90, zero.y - 5);
     ctx.fillText('높이 ↑', zero.x + 4, 12);
     const last = samples.at(-1);
     samples.forEach((sample, index) => {
