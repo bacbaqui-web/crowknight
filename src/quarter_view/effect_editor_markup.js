@@ -24,7 +24,7 @@ export const EFFECT_EDITOR_MARKUP = `
         ><input type="checkbox" data-effect-all />8방향 동시 미리보기</label
       >
       <small
-        >화살표 끝에 초승달이 놓입니다. 주황 테두리는 실제 히트박스입니다. 위쪽
+        >분홍 앵커를 끌어 기준점을 바꾸고, 이펙트를 끌어 이동하고, 파란 회전 손잡이를 돌리세요. 화살표 끝에 초승달이 놓입니다. 주황 테두리는 실제 히트박스입니다. 위쪽
         3방향은 캐릭터 뒤에 그립니다.</small
       >
     </div>
@@ -176,6 +176,7 @@ export const EFFECT_EDITOR_MARKUP = `
         >위치 0은 원본 간격입니다. 좌우 위치는 선택한 화살표의 옆
         방향입니다. 앵커 0은 이미지 중심이며, 앵커가 화살표 끝에 놓입니다. 앵커 앞뒤 +는 이미지 앞쪽, 위아래 +는 위쪽입니다. 회전·크기는 이 점을 기준으로 적용됩니다.</small
       >
+      <label class="effect-slider">공중 높이 (px)<input type="number" data-effect-field="elevation" aria-label="이펙트 공중 높이" min="-300" max="300" step="1" value="0" /><input type="range" data-effect-field="elevation" aria-label="이펙트 공중 높이 슬라이더" min="-300" max="300" step="1" value="0" /></label>
       <label class="effect-check"
         ><input type="checkbox" data-effect-guides checked />플레이 중 8방향
         화살표 표시</label

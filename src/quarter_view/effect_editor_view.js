@@ -1,3 +1,4 @@
+import { bindEffectHandles } from './effect_editor_handles.js';
 import { EFFECT_EDITOR_MARKUP } from './effect_editor_markup.js';
 import { createEffectEditorPreview } from './effect_editor_preview.js';
 import {
@@ -65,7 +66,8 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
       field.disabled = !profile;
       const key = field.dataset.effectField;
       const value = profile?.directions[direction]?.[key] ?? (key === 'width' || key === 'height' ? 1 : 0);
-      if (field !== skipField) field.value = key === 'width' || key === 'height' ? Math.round(value * 100) : value;
+      if (field !== skipField)
+        field.value = key === 'width' || key === 'height' ? Math.round(value * 100) : Math.round(value * 10) / 10;
     }
     panel.querySelector('[data-effect-reset]').disabled = !profile;
     link.disabled = !profile;
@@ -77,6 +79,13 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     }
     schedulePreview();
   }
+  bindEffectHandles(panel.querySelector('canvas'), preview, (patch) => {
+    const profile = selectedProfile();
+    if (!profile) return;
+    updateEffectProfile(profile, direction, patch);
+    sync();
+    apply();
+  });
   function option(select, value, text) {
     const item = document.createElement('option');
     item.value = value;

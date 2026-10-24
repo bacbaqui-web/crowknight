@@ -228,6 +228,7 @@ test('manual per-direction position and size changes move the rendered image and
             width: 1.6,
             height: 0.7,
             rotation: 33,
+            elevation: 25,
             anchorX: 18,
             anchorY: -12,
           },

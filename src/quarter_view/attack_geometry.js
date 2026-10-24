@@ -40,7 +40,7 @@ export function effectPoint(actor, point, center, plane = attackPlane(actor), ra
         aim.z * lateral +
         (plane === 'height' && Math.abs(aim.x) < 0.1 ? -aim.z * 0.2 * forward : 0),
       depth: depthOf(actor) + aim.z * (radius + forward) + aim.x * lateral,
-      y: plane === 'height' ? center.y - cross : (actor.quarterFloorY ?? actor.player.y),
+      y: plane === 'height' ? center.y - cross + (layout.elevation || 0) : (actor.quarterFloorY ?? actor.player.y),
     };
   }
   const directed = { ...actor, quarterAim: aim };

@@ -157,12 +157,17 @@ body:has(#quarterEffectEditor[open]) #quarterTrajectoryPanel {
     grid-template-columns: 1fr;
   }
   .effect-preview-pane canvas {
-    max-height: 190px;
-    object-fit: contain;
+    width: min(100%, 304px);
+    margin-inline: auto;
   }
 }
 
 #quarterHitboxLegend,
 #quarterTrajectoryPanel {
   margin-top: 50px;
+}
+
+.effect-preview-pane canvas {
+  touch-action: none;
+  user-select: none;
 }

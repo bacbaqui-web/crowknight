@@ -1,3 +1,4 @@
+import { effectHandleFrame, drawEffectHandles } from './effect_editor_handles.js';
 import { PuppetPlayer } from '../actor_runtime_engine.js';
 import { drawActor } from '../actor_canvas_renderer.js';
 import { effectFrameGeometry, alignEffectRegions } from './effect_geometry.js';
@@ -12,7 +13,8 @@ export function createEffectEditorPreview(canvas) {
   const ctx = canvas.getContext('2d'),
     world = { floorY: 430 };
   const read = createRuntimeEffectReader();
-  let source, action, actor;
+  let source, action, actor, frame, frozenView;
+  let dragging = false;
   function prepare(next, key) {
     if (source === next && action === key) return;
     source = next;
@@ -45,6 +47,7 @@ export function createEffectEditorPreview(canvas) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#0e1b17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    frame = null;
     if (!actor) {
       ctx.fillStyle = '#c8dccd';
       ctx.font = '20px sans-serif';
@@ -76,6 +79,10 @@ export function createEffectEditorPreview(canvas) {
           above = Math.max(above, canvas.height * 0.58 - screen.y);
           below = Math.max(below, screen.y - canvas.height * 0.58);
         }
+      const handleFrame = effectHandleFrame(actor, geometry, world, { ...view, zoom: 1 });
+      horizontal = Math.max(horizontal, Math.abs(handleFrame.pivot.x - canvas.width / 2) + 100);
+      above = Math.max(above, canvas.height * 0.58 - handleFrame.pivot.y + 100);
+      below = Math.max(below, handleFrame.pivot.y - canvas.height * 0.58 + 100);
       view.zoom = Math.min(
         0.9,
         (canvas.width / 2 - 20) / horizontal,
@@ -83,6 +90,8 @@ export function createEffectEditorPreview(canvas) {
         (canvas.height * 0.42 - 20) / below
       );
     }
+    if (dragging && frozenView) Object.assign(view, frozenView);
+    else frozenView = { ...view };
     drawEffectGuides(ctx, actor, geometry, world, view, selected.key);
     const directions = all ? EFFECT_DIRECTIONS : [selected];
     const paintEffects = (back) => {
@@ -120,6 +129,14 @@ export function createEffectEditorPreview(canvas) {
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
+    frame = effectHandleFrame(actor, geometry, world, view);
+    drawEffectHandles(ctx, frame);
   }
-  return { draw };
+  return {
+    draw,
+    getFrame: () => frame,
+    setDragging(value) {
+      dragging = value;
+    },
+  };
 }
