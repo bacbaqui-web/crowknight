@@ -22,7 +22,7 @@ main { max-width: 1680px; margin: auto; padding: 0 32px 32px; }
 .left { color: #90cafa; }.right { color: #eac083; }
 .hint, .footnote { font-size: 11px; }
 .maps { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; margin-top: 18px; }
-.maps.single { grid-template-columns: minmax(0,760px); justify-content: center; }
+.maps.single { grid-template-columns: minmax(0,1200px); justify-content: center; }
 .map { min-width: 0; border: 1px solid #344059; border-top: 3px solid var(--accent); border-radius: 12px; background: #121b28; overflow: hidden; }
 .map h2 { margin: 0; font-size: 20px; color: var(--accent); }
 .map-heading { padding: 18px 18px 8px; display: flex; align-items: center; gap: 12px; }
@@ -48,3 +48,6 @@ main { max-width: 1680px; margin: auto; padding: 0 32px 32px; }
 button:focus-visible, a:focus-visible { outline: 2px solid #f3d798; outline-offset: 3px; }
 @media(max-width:1100px) { .maps { grid-template-columns: 1fr; max-width: 760px; margin-inline: auto; } .controls { align-items: flex-start; flex-direction: column; } }
 @media(max-width:600px) { header { display: block; padding: 24px 16px; } nav { margin-top: 18px; } main { padding-inline: 12px; } .flow { gap: 10px; flex-direction: column; align-items: flex-start; } .flow i { display: none; } .detail { grid-template-columns: 1fr; } #filters button { padding: 9px 12px; } }
+
+.maps.single .map { overflow-x: auto; }
+.maps.single .diagram { min-width: 680px; }

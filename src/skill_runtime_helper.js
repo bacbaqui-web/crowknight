@@ -6,7 +6,9 @@ export const RUN_SKILLS = [
     detail: 'Q 길게 누르고 놓으면 강공격 · 최대 3배 피해 · 강화마다 범위·히트박스·이펙트 +20%',
     icon: 'swift-preparation',
   },
-  { id: 'fourthStrike', name: '네 번째 칼날', detail: '공격 4타 해금 · 강화마다 4타 피해 +20%', icon: 'sharp-blade' },
+  { id: 'fifthStrike', name: '다섯 번째 공격', detail: '공격 5타 해금 · 강화마다 5타 피해 +20%', icon: 'sharp-blade' },
+  { id: 'sixthStrike', name: '여섯 번째 공격', detail: '공격 6타 해금 · 강화마다 6타 피해 +20%', icon: 'sharp-blade' },
+  { id: 'fourthStrike', name: '네 번째 공격', detail: '공격 4타 해금 · 강화마다 4타 피해 +20%', icon: 'sharp-blade' },
   {
     id: 'parry',
     name: '찰나의 반격',
@@ -37,6 +39,8 @@ export function prepareSkillActions(tuning) {
   const find = (name) => actions.find((action) => action.name === name)?.key;
   tuning.skillActions = {
     fourthStrike: find('공격4'),
+    fifthStrike: find('공격5'),
+    sixthStrike: find('공격6'),
     doubleJump: find('공중점프'),
     backflip: find('백플립'),
     ...tuning.skillActions,
@@ -181,6 +185,23 @@ export function prepareSkillActions(tuning) {
     }
     tuning.skillPrototypeReady = true;
   }
+  for (const [id, name, previous] of [
+    ['fifthStrike', '공격5', 'fourthStrike'], ['sixthStrike', '공격6', 'fifthStrike'],
+  ]) {
+    if (tuning.skillActions[id] && actions.some(action => action.key === tuning.skillActions[id])) continue;
+    const source = tuning.skillActions[previous];
+    add(id, name, source, { type: 'single', keys: ['Q'], triggerMode: 'tap' }, 'ground', 'attack');
+    const key = tuning.skillActions[id];
+    const settings = tuning.actionSettings[key];
+    settings.playback = 'once';
+    settings.formulas = (settings.formulas || []).filter(formula => !['link', 'cast', 'cooldown'].includes(formula.type));
+    settings.formulas.push({ type: 'link', enabled: true, fromActions: [source], startFrame: 1, endFrame: 50, consumeTrigger: true });
+    if (settings.runtimeRules?.link) settings.runtimeRules.link.enabled = false;
+    tuning.effectOffsets[key] = clone(tuning.effectOffsets[source] || {});
+    tuning.effectSettings[key] = clone(tuning.effectSettings[source] || {});
+  }
+  tuning.skillPrototypeReady = true;
+
 }
 
 export function canUseRunSkill(player, key) {
@@ -191,7 +212,7 @@ export function canUseRunSkill(player, key) {
     !player.runSkills.chargeAttack
   )
     return false;
-  for (const id of ['fourthStrike', 'doubleJump', 'backflip']) {
+  for (const id of ['fourthStrike', 'fifthStrike', 'sixthStrike', 'doubleJump', 'backflip']) {
     if (bindings[id] !== key) continue;
     if (!player.runSkills[id]) return false;
     if (id === 'doubleJump' && (player.onGround || player.runAirJumpUsed)) return false;
@@ -218,7 +239,9 @@ export function updateRunSkills(player, dt) {
 export function runSkillDamageMultiplier(player) {
   if (player.runSkills && player.runChargedAttack && player.customActionKey === player.runSkillActions.chargeAttack)
     return player.runChargedPower || 1;
-  return player.runSkills && player.customActionKey === player.runSkillActions.fourthStrike
-    ? 1 + Math.max(0, player.runSkills.fourthStrike - 1) * 0.2
-    : 1;
+  const ranks = player.runSkills;
+  if (!ranks) return 1;
+  const strike = ['fourthStrike', 'fifthStrike', 'sixthStrike'].find(id =>
+    player.runSkillActions?.[id] && player.customActionKey === player.runSkillActions[id]);
+  return strike ? (1 + Math.max(0, (ranks[strike] || 1) - 1) * 0.2) * (1 + (ranks.comboForce || 0) * 0.15) : 1;
 }

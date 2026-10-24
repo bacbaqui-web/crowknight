@@ -15,19 +15,16 @@ function setup() {
   c.reset();
   return { c, player, offers };
 }
-test('첫 레벨업은 세 계열만 선택하고 다음 레벨업에서 시작 기술을 습득한다', () => {
+test('첫 레벨업에서 계열과 시작 기술을 함께 습득한다', () => {
   const { c, offers, player } = setup();
-  c.addExperience(1100);
+  c.addExperience(400);
   c.update(0, { floorY: 0 });
   assert.deepEqual(offers[0].map(s => s.id), ['attack', 'guard', 'move']);
   assert.equal(c.choose('missing'), false);
   assert.equal(c.choose('attack', offers[0]), true);
-  assert.deepEqual(c.snapshot().ranks, {});
+  assert.deepEqual(c.snapshot().ranks, { fourthStrike: 1 });
   assert.equal(player.player.runSkillPathColor, '#ff8a78');
   assert.equal(c.choose('attack', offers[0]), false);
-  assert.deepEqual(offers[1].map(s => s.effectId), ['fourthStrike']);
-  assert.equal(c.choose(offers[1][0].id, offers[1]), true);
-  assert.equal(player.player.runSkills.fourthStrike, 1);
   assert.equal(c.isPaused(), false);
   c.stop();
   assert.equal(player.player.runSkillPathColor, undefined);
@@ -37,7 +34,7 @@ test('첫 레벨업은 세 계열만 선택하고 다음 레벨업에서 시작 
 });
 test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 않는다', () => {
   for (const [path, root, left, right] of [
-    ['attack', 'fourthStrike', 'fourthStrike', 'chargeAttack'],
+    ['attack', 'fourthStrike', 'fifthStrike', 'chargeAttack'],
     ['guard', 'parry', 'armor', 'vitality'],
     ['move', 'doubleJump', 'backflip', 'swiftness'],
   ]) {
@@ -45,14 +42,14 @@ test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 
     c.addExperience(399);c.update(0, { floorY: 0 });
     assert.equal(offers.length, 0);
     c.addExperience(1);c.update(0, { floorY: 0 });c.choose(path);
+    assert.equal(c.snapshot().ranks[root], 1);
     for (let step = 0; step < 4; step++) {
       c.addExperience(5000);c.update(0, { floorY: 0 });
-      const pair = offers.at(-1);
-      if (step === 0) assert.deepEqual(pair.map(s => s.effectId), [root]);
-      if (step === 1) assert.deepEqual(pair.map(s => s.effectId), [left, right]);
+      const pair = offers.at(-1).filter(choice => !choice.reinforce);
+      if (step === 0) assert.deepEqual(pair.map(s => s.effectId), [left, right]);
       assert.ok(pair.every(s => s.pathId === path));
       const oldToken = pair;
-      c.choose(pair.at(-1).id, pair);
+      c.choose(pair.at(-1).id, offers.at(-1));
       assert.equal(c.choose(oldToken[0].id, oldToken), false);
     }
   }
@@ -101,7 +98,7 @@ test('세팅용 기본 기술 액션은 중복 없이 생성된다', () => {
   const n = tuning.customActions.length;
   prepareSkillActions(tuning);
   assert.equal(tuning.customActions.length, n);
-  for (const id of ['fourthStrike', 'doubleJump', 'backflip', 'guard'])
+  for (const id of ['fourthStrike', 'fifthStrike', 'sixthStrike', 'doubleJump', 'backflip', 'guard'])
     assert.ok(tuning.actionOffsets[tuning.skillActions[id]]);
 });
 test('4타 피해 강화와 패링의 피해 차단/반격 경직을 실제 전투 함수에 적용한다', async () => {

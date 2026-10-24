@@ -27,10 +27,12 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
     const choice = offered.find(skill => skill.id === id);
     if (!pathId) {
       pathId = choice.pathId;
+      ranks[choice.effectId] = 1;
+      route.push(0);
       getPlayer().player.runSkillPathColor = choice.color;
     } else {
       ranks[choice.effectId] = (ranks[choice.effectId] || 0) + 1;
-      route.push(choice.direction);
+      if (!choice.reinforce) route.push(choice.direction);
     }
     getPlayer().player.runSkills = { ...ranks };
     syncProgressionHealth(getPlayer(), true);

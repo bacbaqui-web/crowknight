@@ -3,10 +3,10 @@ import { SKILL_PATHS, progressionGraph } from '../src/skill_progression_data.js'
 const graphs = new Map(SKILL_PATHS.map(path => [path.id, progressionGraph(path.id)]));
 const maps = document.querySelector('#maps');
 const detail = document.querySelector('#detail');
-let filter = 'all';
+let filter = 'attack';
 let selection = { pathId: 'attack', nodeId: SKILL_PATHS[0].root };
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const WIDTH = 520;
+
 const NODE_WIDTH = 196;
 const NODE_HEIGHT = 112;
 
@@ -39,11 +39,12 @@ function drawMap(path) {
   const byId = new Map(nodes.map(node => [node.id, node]));
   const maxDepth = Math.max(...nodes.map(node => node.depth));
   const height = (maxDepth + 1) * 168 + 28;
+  const WIDTH = Math.max(520, ...nodes.map(node => nodes.filter(other => other.depth === node.depth).length * 240 + 40));
   const positions = new Map();
   for (let depth = 0; depth <= maxDepth; depth++) {
     const row = nodes.filter(node => node.depth === depth);
     row.forEach((node, index) => positions.set(node.id, {
-      x: row.length === 1 ? (WIDTH - NODE_WIDTH) / 2 : 42 + index * 240,
+      x: WIDTH / row.length * (index + 0.5) - NODE_WIDTH / 2,
       y: 18 + (maxDepth - depth) * 168,
     }));
   }
@@ -53,7 +54,7 @@ function drawMap(path) {
   const icon = document.createElement('img');
   icon.src = `../assets/icons/upgrades/${path.icon}.svg`; icon.alt = '';
   const title = html('div', '');
-  title.append(html('h2', path.name), html('small', `Lv.2 계열 선택 · ${nodes.length}개 분기 위치`));
+  title.append(html('h2', path.name), html('small', `Lv.2 계열 선택과 시작 기술 습득 · ${nodes.length}개 분기 위치`));
   heading.append(icon, title);
   const diagram = svg('svg', { viewBox: `0 0 ${WIDTH} ${height}`, class: 'diagram', role: 'group', 'aria-label': `${path.name} 전체 분기` });
   const defs = svg('defs', {});
@@ -80,7 +81,7 @@ function drawMap(path) {
     const group = svg('g', { transform: `translate(${x} ${y})`, class: 'node', tabindex: 0, role: 'button', 'aria-label': `${node.name}${node.root ? ' 시작 기술' : ''}`, 'data-path': path.id, 'data-node': node.id });
     group.append(svg('rect', { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 9 }));
     group.append(svg('image', { href: `../assets/icons/upgrades/${node.icon}.svg`, x: 12, y: 14, width: 25, height: 25, 'aria-hidden': 'true' }));
-    group.append(svg('text', { x: 47, y: 20, class: 'node-label' }, node.root ? 'Lv.3 · 시작 기술' : `${node.depth + 1}단계 · 선행 기술 필요`));
+    group.append(svg('text', { x: 47, y: 20, class: 'node-label' }, node.root ? 'Lv.2 · 시작 기술' : `${node.depth + 1}단계 · 선행 기술 필요`));
     group.append(svg('text', { x: 47, y: 39, class: 'node-title' }, node.name));
     node.children.forEach((id, index) => {
       const target = byId.get(id);
@@ -112,7 +113,7 @@ function renderDetail() {
     next.append(button);
   });
   const parents = nodes.filter(parent => parent.children.includes(node.id));
-  description.append(html('p', node.root ? '시작 기술 · 계열 선택 후 습득' : `선행 조건: ${parents.map(parent => parent.name).join(' 또는 ')} 습득`));
+  description.append(html('p', node.root ? '시작 기술 · 계열 선택 즉시 습득' : `선행 조건: ${parents.map(parent => parent.name).join(' 또는 ')} 습득`));
   if (!node.children.length) next.append(html('p', '현재 최상위 기술입니다. 다음 레벨업부터 이 기술을 계속 강화합니다. 새 상위 기술은 추후 확장합니다.'));
   detail.replaceChildren(description, next);
 }

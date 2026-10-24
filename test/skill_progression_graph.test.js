@@ -15,7 +15,7 @@ for (const path of SKILL_PATHS) {
       visited.add(id);
       const node = byId.get(id);
       assert.ok(node.name && node.detail);
-      const choices = progressionChoices(path.id, route);
+      const choices = progressionChoices(path.id, route).filter(choice => !choice.reinforce);
       if (!node.children.length) {
         assert.equal(choices.length, 1);
         assert.equal(choices[0].nodeId, node.id);
