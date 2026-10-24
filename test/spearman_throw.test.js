@@ -20,7 +20,7 @@ function fixture() {
   return { actor, target };
 }
 function aim(actor, target, world = {}) {
-  assert.equal(updateSpearmanThrow(actor, target, 8, world), true);
+  assert.equal(updateSpearmanThrow(actor, target, SPEARMAN_THROW.survival, world), true);
   assert.equal(actor.spearmanThrow.phase, 'aiming');
 }
 function release(actor, target, world = {}) {
@@ -28,9 +28,9 @@ function release(actor, target, world = {}) {
   updateSpearmanThrow(actor, target, 0.4, world);
 }
 
-test('생존 8초까지 기다리고 일시정지 중에는 타이머가 진행되지 않는다', () => {
+test('생존 30초까지 기다리고 일시정지 중에는 타이머가 진행되지 않는다', () => {
   const { actor, target } = fixture();
-  updateSpearmanThrow(actor, target, 7.9, {});
+  updateSpearmanThrow(actor, target, 29.9, {});
   for (let i = 0; i < 20; i++) updateSpearmanThrow(actor, target, 0, {});
   assert.equal(actor.spearmanThrow.phase, 'waiting');
   updateSpearmanThrow(actor, target, 0.11, {});

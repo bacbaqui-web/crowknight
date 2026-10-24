@@ -2,7 +2,7 @@ import { requestRuntimeAction } from './action_trigger_engine.js';
 import { interactionReactionFromValue } from './interaction_region_engine.js';
 import { ACTION_FPS } from './game_config_data.js';
 
-export const SPEARMAN_THROW = Object.freeze({ survival: 8, warning: 1, lockAfter: 0.6, speed: 900, range: 1300 });
+export const SPEARMAN_THROW = Object.freeze({ survival: 30, warning: 1, lockAfter: 0.6, speed: 900, range: 1300 });
 const ACTION = 'spearmanThrow';
 
 export function resetSpearmanThrow(actor) {
