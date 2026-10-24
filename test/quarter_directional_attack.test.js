@@ -6,7 +6,7 @@ import { ATTACK_INTERACTION_OBJECT_KEY } from '../src/interaction_object_model_d
 import { scaleUpgradeAttackRegions } from '../src/run_upgrade_effect_helper.js';
 import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
 import { combatTargetRegions } from '../src/quarter_view/spatial.js';
-import { createNativeWeaponTrail, crescentRibbon } from '../src/quarter_view/native_weapon_trail.js';
+import { createNativeWeaponTrail, crescentRibbon, trailHitboxOffset } from '../src/quarter_view/native_weapon_trail.js';
 const raw = [
   { key: ATTACK_INTERACTION_OBJECT_KEY, x: 30, y: -90, w: 100, h: 30, reaction: { damage: 17, hitMode: 'trace' } },
 ];
@@ -165,7 +165,7 @@ test('crescent follows sparse rotation smoothly, tapers at both tips and leads t
   const width = (i) => Math.hypot(ribbon.outer[i].x - ribbon.inner[i].x, ribbon.outer[i].y - ribbon.inner[i].y);
   assert.ok(width(0) < 1e-6);
   assert.ok(width(ribbon.outer.length - 1) < 1e-6);
-  assert.ok(width(Math.floor(ribbon.outer.length / 2)) > 20);
+  assert.ok(width(Math.floor(ribbon.outer.length / 2)) > 40);
 });
 
 test('sector rejects bounding-box corners and reaches its curved front', () => {
@@ -228,4 +228,18 @@ test('arrow collision and overlay match its rendered rotated rectangle for every
       assert.ok(Math.hypot(a.x - b.x, a.y - b.y) < 1e-8);
     }
   }
+});
+
+test('trail hitbox influence is partial, capped and follows the depth direction', () => {
+  const a = actor();
+  a.quarterAim = { x: 0, z: 1 };
+  const region = directionalAttackRegions(a, raw)[0];
+  const points = [{}, { x: 0, y: -70 }, { x: 0, y: -70 }];
+  const offset = trailHitboxOffset(a, points, [region]);
+  assert.equal(offset.x, 0);
+  assert.ok(offset.y > 0 && offset.y < 32);
+  const huge = { ...region, quarterBoxLength: 10000 };
+  const capped = trailHitboxOffset(a, points, [huge]);
+  assert.ok(Math.abs(Math.hypot(capped.x, capped.y) - 32) < 1e-8);
+  assert.deepEqual(trailHitboxOffset(a, points, []), { x: 0, y: 0 });
 });

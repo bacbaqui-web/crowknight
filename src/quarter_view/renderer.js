@@ -114,8 +114,9 @@ export function createQuarterRenderer({ ctx, world }) {
     projectEntity,
     prepareAttackRegions(actor, raw) {
       if (actor.quarterDirectionalTest) {
-        nativeTrail.capture(actor, raw);
-        return directionalAttackRegions(actor, raw);
+        const regions = directionalAttackRegions(actor, raw);
+        nativeTrail.capture(actor, raw, regions);
+        return regions;
       }
       return alignEffectRegions(actor, raw, readEffectFrame, loadedEffects);
     },
