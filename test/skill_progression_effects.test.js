@@ -7,8 +7,8 @@ import { upgradeVelocity } from '../src/run_upgrade_effect_helper.js';
 
 test('연타 가지에서 충전 가지로 돌아가지 않고 선택한 자식만 따라간다', () => {
   assert.deepEqual(progressionChoices('attack', [0]).map(s => s.effectId), ['fourthStrike', 'chargeAttack']);
-  assert.deepEqual(progressionChoices('attack', [0, 0]).map(s => s.effectId), ['fourthStrike', 'power']);
-  assert.deepEqual(progressionChoices('attack', [0, 1]).map(s => s.effectId), ['chargeAttack', 'reach']);
+  assert.deepEqual(progressionChoices('attack', [0, 0]).map(s => s.effectId), ['power', 'reach']);
+  assert.deepEqual(progressionChoices('attack', [0, 1]).map(s => s.effectId), ['power', 'reach']);
 });
 test('체력 기술과 보스 체력 배율이 공존하고 증가분만 회복한다', () => {
   const actor = { hp: 50, maxHp: 120, tuning: { maxHp: 100 }, player: { runUpgrades: { health: 1.2 }, runSkills: { vitality: 2 } } };

@@ -38,8 +38,8 @@ test('첫 레벨업은 세 계열만 선택하고 다음 레벨업에서 시작 
 test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 않는다', () => {
   for (const [path, root, left, right] of [
     ['attack', 'fourthStrike', 'fourthStrike', 'chargeAttack'],
-    ['guard', 'vitality', 'armor', 'parry'],
-    ['move', 'swiftness', 'doubleJump', 'backflip'],
+    ['guard', 'parry', 'armor', 'vitality'],
+    ['move', 'doubleJump', 'backflip', 'swiftness'],
   ]) {
     const { c, offers } = setup();
     c.addExperience(399);c.update(0, { floorY: 0 });

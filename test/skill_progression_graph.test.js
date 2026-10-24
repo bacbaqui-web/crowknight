@@ -16,6 +16,13 @@ for (const path of SKILL_PATHS) {
       const node = byId.get(id);
       assert.ok(node.name && node.detail);
       const choices = progressionChoices(path.id, route);
+      if (!node.children.length) {
+        assert.equal(choices.length, 1);
+        assert.equal(choices[0].nodeId, node.id);
+        assert.equal(choices[0].mastery, true);
+        continue;
+      }
+      assert.ok(node.children.every(child => byId.get(child).depth > node.depth));
       assert.deepEqual(node.children.map(child => byId.get(child).effectId), choices.map(choice => choice.effectId));
       node.children.forEach((child, direction) => queue.push({ id: child, route: [...route, direction] }));
     }

@@ -16,17 +16,24 @@ const PASSIVES = [
   { id: 'leap', name: '가벼운 깃털', detail: '도약 높이 +10% · 최대 +100%', icon: 'leaping-feather' },
 ];
 export const PROGRESSION_SKILLS = [...RUN_SKILLS, ...PASSIVES];
-const effectsByNode = { attackRoot: 'fourthStrike', guardRoot: 'vitality', moveRoot: 'swiftness', combo: 'fourthStrike' };
+const effectsByNode = { attackRoot: 'fourthStrike', guardRoot: 'parry', moveRoot: 'doubleJump', combo: 'fourthStrike' };
+// Every edge advances one tier. A leaf can be trained without reopening earlier branches.
 const branches = {
-  attackRoot: ['combo', 'chargeAttack'], guardRoot: ['armor', 'parry'], moveRoot: ['doubleJump', 'backflip'],
-  combo: ['combo', 'power'],
-  fourthStrike: ['fourthStrike', 'chargeAttack'], chargeAttack: ['chargeAttack', 'reach'],
-  power: ['power', 'fourthStrike'], reach: ['reach', 'power'],
-  vitality: ['armor', 'parry'], armor: ['armor', 'vitality'],
-  parry: ['parry', 'lifeSteal'], lifeSteal: ['lifeSteal', 'vitality'],
-  swiftness: ['doubleJump', 'backflip'], doubleJump: ['doubleJump', 'leap'],
-  backflip: ['backflip', 'swiftness'], leap: ['leap', 'swiftness'],
+  attackRoot: ['combo', 'chargeAttack'],
+  combo: ['power', 'reach'], chargeAttack: ['power', 'reach'],
+  guardRoot: ['armor', 'vitality'],
+  armor: ['parryMaster', 'lifeSteal'], vitality: ['parryMaster', 'lifeSteal'],
+  moveRoot: ['backflip', 'swiftness'],
+  backflip: ['jumpMaster', 'leap'], swiftness: ['jumpMaster', 'leap'],
 };
+effectsByNode.parryMaster = 'parry';
+effectsByNode.jumpMaster = 'doubleJump';
+const nodeNames = { combo: '강화된 4타', parryMaster: '숙련된 패링', jumpMaster: '상승의 날갯짓' };
+function nodeSkill(id) {
+  const effectId = effectsByNode[id] || id;
+  const skill = PROGRESSION_SKILLS.find(item => item.id === effectId);
+  return { ...skill, name: nodeNames[id] || skill.name, effectId };
+}
 
 export function progressionChoices(pathId, route = []) {
   if (!pathId) return SKILL_PATHS.map(path => ({
@@ -36,20 +43,28 @@ export function progressionChoices(pathId, route = []) {
   const path = SKILL_PATHS.find(item => item.id === pathId);
   if (!path) return [];
   let current = path.root;
-  for (const direction of route.slice(1)) current = branches[current][direction];
-  const nodes = route.length ? branches[current] : [path.root];
+  for (const direction of route.slice(1)) {
+    const children = branches[current];
+    if (children) {
+      if (!children[direction]) return [];
+      current = children[direction];
+    }
+  }
+  const mastery = route.length > 0 && !branches[current];
+  const nodes = route.length ? (branches[current] || [current]) : [path.root];
   return nodes.map((node, index) => {
     const effectId = effectsByNode[node] || node;
     return ({
-    ...PROGRESSION_SKILLS.find(skill => skill.id === effectId),
+    ...nodeSkill(node),
     id: `${path.id}:${route.join('') || 'root'}:${index}`,
     effectId, direction: index, color: path.color, pathId,
-    branchLabel: route.length ? `${index ? '오른쪽' : '왼쪽'} 가지` : '트리 시작 기술',
+    nodeId: node, mastery,
+    branchLabel: mastery ? '최상위 기술 숙련 · 이전 분기로 돌아가지 않습니다' : route.length ? `${index ? '오른쪽' : '왼쪽'} 가지` : '트리 시작 기술',
   });
   });
 }
 
-// Enumerate each reachable decision once, including loops and return branches.
+// The map and game share the same prerequisite edges.
 export function progressionGraph(pathId) {
   const path = SKILL_PATHS.find(item => item.id === pathId);
   if (!path) return [];
@@ -58,7 +73,7 @@ export function progressionGraph(pathId) {
   const result = [];
   for (let index = 0; index < queue.length; index++) {
     const node = queue[index];
-    const children = branches[node.id];
+    const children = branches[node.id] || [];
     for (const id of children) {
       if (!visited.has(id)) {
         visited.add(id);
@@ -66,7 +81,7 @@ export function progressionGraph(pathId) {
       }
     }
     const effectId = effectsByNode[node.id] || node.id;
-    result.push({ ...PROGRESSION_SKILLS.find(skill => skill.id === effectId),
+    result.push({ ...nodeSkill(node.id),
       ...node, effectId, children: [...children], root: node.id === path.root });
   }
   return result;

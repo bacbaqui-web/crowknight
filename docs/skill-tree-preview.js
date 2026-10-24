@@ -23,8 +23,7 @@ function svg(tag, attrs, text) {
   return node;
 }
 function destinationLabel(node, target) {
-  if (target.id === node.id) return `↻ ${target.name} 강화`;
-  return `${target.depth <= node.depth ? '↩ ' : ''}${target.name}`;
+  return target.name;
 }
 function select(pathId, nodeId) {
   selection = { pathId, nodeId };
@@ -45,7 +44,7 @@ function drawMap(path) {
     const row = nodes.filter(node => node.depth === depth);
     row.forEach((node, index) => positions.set(node.id, {
       x: row.length === 1 ? (WIDTH - NODE_WIDTH) / 2 : 42 + index * 240,
-      y: 18 + depth * 168,
+      y: 18 + (maxDepth - depth) * 168,
     }));
   }
   const section = html('article', '', 'map');
@@ -70,17 +69,10 @@ function drawMap(path) {
       const target = byId.get(id);
       const to = positions.get(id);
       const side = index ? 'right' : 'left';
-      let d;
-      if (target.depth > node.depth) {
-        const x = from.x + NODE_WIDTH * (index ? .75 : .25);
-        d = `M${x},${from.y + NODE_HEIGHT} C${x},${from.y + NODE_HEIGHT + 28} ${to.x + NODE_WIDTH / 2},${to.y - 28} ${to.x + NODE_WIDTH / 2},${to.y}`;
-      } else {
-        const outer = index ? WIDTH - 14 : 14;
-        const x = from.x + (index ? NODE_WIDTH : 0);
-        const tx = to.x + (index ? NODE_WIDTH : 0);
-        d = `M${x},${from.y + 56} C${outer},${from.y + 56} ${outer},${to.y + 56} ${tx},${to.y + 56}`;
-      }
-      diagram.append(svg('path', { d, class: `edge ${side}${target.depth <= node.depth ? ' return' : ''}`, 'marker-end': `url(#${path.id}-${side})` }));
+      const x = from.x + NODE_WIDTH * (index ? .75 : .25);
+      const endY = to.y + NODE_HEIGHT;
+      const d = `M${x},${from.y} C${x},${from.y - 28} ${to.x + NODE_WIDTH / 2},${endY + 28} ${to.x + NODE_WIDTH / 2},${endY}`;
+      diagram.append(svg('path', { d, class: `edge ${side}`, 'marker-end': `url(#${path.id}-${side})` }));
     });
   }
   for (const node of nodes) {
@@ -88,12 +80,13 @@ function drawMap(path) {
     const group = svg('g', { transform: `translate(${x} ${y})`, class: 'node', tabindex: 0, role: 'button', 'aria-label': `${node.name}${node.root ? ' 시작 기술' : ''}`, 'data-path': path.id, 'data-node': node.id });
     group.append(svg('rect', { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 9 }));
     group.append(svg('image', { href: `../assets/icons/upgrades/${node.icon}.svg`, x: 12, y: 14, width: 25, height: 25, 'aria-hidden': 'true' }));
-    group.append(svg('text', { x: 47, y: 20, class: 'node-label' }, node.root ? 'Lv.3 · 시작 기술' : '후속 선택 · 습득 / 강화'));
+    group.append(svg('text', { x: 47, y: 20, class: 'node-label' }, node.root ? 'Lv.3 · 시작 기술' : `${node.depth + 1}단계 · 선행 기술 필요`));
     group.append(svg('text', { x: 47, y: 39, class: 'node-title' }, node.name));
     node.children.forEach((id, index) => {
       const target = byId.get(id);
       group.append(svg('text', { x: 12, y: 72 + index * 23, class: `destination ${index ? 'right' : 'left'}` }, `${index ? '2 오른쪽' : '1 왼쪽'} · ${destinationLabel(node, target)}`));
     });
+    if (!node.children.length) group.append(svg('text', { x: 12, y: 78, class: 'destination' }, '최상위 · 이후 이 기술 숙련'));
     group.addEventListener('click', () => select(path.id, node.id));
     group.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(path.id, node.id); }
@@ -118,6 +111,9 @@ function renderDetail() {
     button.onclick = () => select(path.id, id);
     next.append(button);
   });
+  const parents = nodes.filter(parent => parent.children.includes(node.id));
+  description.append(html('p', node.root ? '시작 기술 · 계열 선택 후 습득' : `선행 조건: ${parents.map(parent => parent.name).join(' 또는 ')} 습득`));
+  if (!node.children.length) next.append(html('p', '현재 최상위 기술입니다. 다음 레벨업부터 이 기술을 계속 강화합니다. 새 상위 기술은 추후 확장합니다.'));
   detail.replaceChildren(description, next);
 }
 function render() {
