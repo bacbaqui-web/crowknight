@@ -50,6 +50,32 @@ export function combatTargetRegions(attacker, target, regions, source = null) {
   });
 }
 export function groundProjectileRegion(projectile, region) {
+  if (projectile.linearSpear) {
+    const aim = projectile.quarterAim;
+    const halfWidth = projectile.hitboxWidth / 2;
+    const halfHeight = projectile.hitboxHeight / 2;
+    const points = [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ].map(([along, across]) => ({
+      x: projectile.x + aim.x * halfWidth * along - aim.z * halfHeight * across,
+      y: depthOf(projectile) + aim.z * halfWidth * along + aim.x * halfHeight * across,
+    }));
+    const xs = points.map((p) => p.x),
+      ys = points.map((p) => p.y);
+    return {
+      ...region,
+      points,
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+      quarterPlane: 'ground',
+      quarterHeightRange: [projectile.y - halfHeight, projectile.y + halfHeight],
+    };
+  }
   if (projectile.quarterPlane === 'height')
     return {
       ...region,

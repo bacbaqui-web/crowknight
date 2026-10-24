@@ -53,6 +53,7 @@ export function createRunActorState({ actors = [], world = null, createRuntimePl
       rollGhostTimer: 0,
       lastHitSerials: {},
       aiActionCooldowns: {},
+      spearmanThrow: null,
       runtimeBossKillCounted: false,
       healthTrail: null,
       hp: source.maxHp,

@@ -5,13 +5,17 @@ import { interactionReactionFromValue } from './interaction_region_engine.js';
 import { actionFormula, actionFormulaFrameFromProgress } from './formula_runtime_engine.js';
 import { timelineFrameCount } from './timeline_playback_helper.js';
 import { resolveEffectAsset } from './asset_loader_helper.js';
+import { takeSpearmanProjectile } from './spearman_throw_runtime.js';
+import { drawLinearSpear, drawSpearWarnings } from './spearman_throw_renderer.js';
 
 let projectilePool = [];
 let nextProjectileId = 1;
+let warningActors = [];
 
 export function resetProjectileRuntime() {
   projectilePool = [];
   nextProjectileId = 1;
+  warningActors = [];
 }
 
 export function activeProjectiles() {
@@ -19,6 +23,15 @@ export function activeProjectiles() {
 }
 
 export function updateProjectileRuntime({ actors = [], playerActor = null, world = null, dt = 0 } = {}) {
+  warningActors = actors.filter((actor) => actor.spearmanThrow?.aim);
+  for (const actor of actors) {
+    const spear = takeSpearmanProjectile(actor);
+    if (spear) {
+      spear.id = nextProjectileId++;
+      spear.key = `${actor.runtimeInstanceId || actor.id}:spear:${spear.id}`;
+      projectilePool.push(spear);
+    }
+  }
   actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor));
   projectilePool.forEach((projectile) => advanceProjectile(projectile, dt));
   projectilePool = projectilePool.filter(
@@ -31,6 +44,7 @@ export function removeProjectile(projectile) {
 }
 
 export function drawProjectiles(ctx, effectAssets, project = null) {
+  drawSpearWarnings(ctx, warningActors, project);
   projectilePool.forEach((projectile) =>
     project
       ? project({ ...projectile, x: projectile.targetX, quarterDepth: projectile.targetDepth }, () =>
@@ -39,9 +53,11 @@ export function drawProjectiles(ctx, effectAssets, project = null) {
       : drawProjectileLandingMarker(ctx, projectile)
   );
   projectilePool.forEach((projectile) =>
-    project
-      ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
-      : drawProjectile(ctx, projectile, effectAssets)
+    projectile.linearSpear
+      ? drawLinearSpear(ctx, projectile, project)
+      : project
+        ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
+        : drawProjectile(ctx, projectile, effectAssets)
   );
 }
 
@@ -193,7 +209,7 @@ export function projectileAttackRegion(projectile) {
 }
 
 function drawProjectile(ctx, projectile, effectAssets) {
-  const asset = resolveEffectAsset(effectAssets, projectile.imageKey, projectile.ownerId);
+  const asset = projectile.asset || resolveEffectAsset(effectAssets, projectile.imageKey, projectile.ownerId);
   const w = Math.max(1, Number(projectile.hitboxWidth || 1));
   const h = Math.max(1, Number(projectile.hitboxHeight || 1));
   ctx.save();
@@ -209,6 +225,7 @@ function drawProjectile(ctx, projectile, effectAssets) {
 }
 
 function drawProjectileLandingMarker(ctx, projectile) {
+  if (projectile.linearSpear) return;
   const progress = Math.max(0, Math.min(1, projectile.elapsedFrames / Math.max(1, projectile.flightFrames)));
   const pulse = 0.5 + Math.sin(progress * Math.PI * 8) * 0.5;
   const alpha = 0.32 + pulse * 0.42;

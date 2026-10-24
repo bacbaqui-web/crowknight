@@ -7,6 +7,7 @@ import { updateActorCombatTimers } from './combat_engine.js';
 import { isEnemyAiActionRegistered, resolveEnemyAiSettings } from './enemy_ai_settings_helper.js';
 import { activeActionFormulaAtProgress } from './formula_runtime_engine.js';
 import { timelineFrameCount } from './timeline_playback_helper.js';
+import { resetSpearmanThrow, updateSpearmanThrow } from './spearman_throw_runtime.js';
 
 export function updateBattleActorMotion({ actors, playerActor, keys, pressed, world, dt }) {
   updateActorCombatTimers(actors, dt);
@@ -24,7 +25,8 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
       if (actor.respawning) return;
       faceNpcActorTowardPlayer(actor, playerActor);
       plane?.beforeEnemy(actor, playerActor);
-      if (!(actor.player.runParryStun > 0)) runEnemyRangeAi(actor, playerActor, world);
+      const throwing = updateSpearmanThrow(actor, playerActor, dt, world);
+      if (!throwing && !(actor.player.runParryStun > 0)) runEnemyRangeAi(actor, playerActor, world);
       actor.player.updateNpc(dt, playerActor.player, motionWorld);
       plane?.afterMotion(actor);
     });
@@ -180,6 +182,7 @@ export function resolveEnemyActorSpawnRule(world, actorId) {
 }
 
 function respawnEnemyActor(actor, playerActor, world) {
+  resetSpearmanThrow(actor);
   syncActorHealthCapacity(actor, true);
   actor.hp = actor.maxHp;
   actor.respawning = false;
