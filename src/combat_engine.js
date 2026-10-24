@@ -48,7 +48,8 @@ export function resolveCombat({
   const attacks = new Map();
   if (world?.quarterView)
     actors.forEach((actor) => {
-      const raw = cachedInteractionRegions(regionCache, actor, 'attack');
+      const native = cachedInteractionRegions(regionCache, actor, 'attack');
+      const raw = world.quarterView.prepareAttackRegions?.(actor, native) ?? native;
       const regions = world.quarterView.attackRegions?.(actor, raw) ?? raw;
       world.quarterView.captureAttackRegions?.(actor, raw, regions);
       attacks.set(actor, regions);

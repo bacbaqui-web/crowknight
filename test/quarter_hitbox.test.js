@@ -15,6 +15,7 @@ import {
   groundProjectileRegion,
 } from '../src/quarter_view/spatial.js';
 import { captureAttackRegions, groundAttackRegions } from '../src/quarter_view/attack_geometry.js';
+import { alignEnemyWeaponRegions } from '../src/quarter_view/weapon_contact.js';
 import { attackPlane } from '../src/attack_plane_helper.js';
 import { resolveCombat, resolveProjectileCombat } from '../src/combat_engine.js';
 
@@ -183,4 +184,51 @@ test('real projectile combat misses a different height and hits a matching heigh
   run();
   assert.ok(target.hp < hp);
   assert.equal(projectile.active, false);
+});
+
+test('real enemy combat consumes the weapon-aligned region that is also captured for effects and the debug overlay', () => {
+  for (const id of ['enemy_01', 'swordman']) {
+    const enemy = makeActor(id, 480, 0),
+      hero = makeActor('player_01', 480, 0);
+    enemy.player.attackSerial = 7;
+    const attack = enemy.player.customActions.find((a) => enemy.player.actionSettings[a.key]?.group === 'attack');
+    let raw;
+    for (let i = 0; i <= 100; i++) {
+      enemy.player.actionPreview = { action: attack.key, t: i / 100 };
+      raw = enemy.player.attackInteractionRegions;
+      if (raw.length) break;
+    }
+    assert.ok(raw.length);
+    const aligned = alignEnemyWeaponRegions(enemy, raw);
+    const flat = groundAttackRegions(enemy, aligned)[0];
+    hero.player.x = flat.x + flat.w / 2;
+    hero.quarterDepth = flat.y + flat.h / 2;
+    for (const actor of [hero, enemy])
+      Object.defineProperty(actor.player, 'collisionInteractionRegions', { value: [] });
+    let captured;
+    const stage = {
+      ...world,
+      quarterView: {
+        ...plane,
+        prepareAttackRegions: alignEnemyWeaponRegions,
+        captureAttackRegions(actor, regions, projected) {
+          captureAttackRegions(actor, regions, projected);
+          if (actor === enemy) captured = regions;
+        },
+      },
+    };
+    const hp = hero.hp;
+    resolveCombat({
+      actors: [enemy, hero],
+      playerActor: hero,
+      world: stage,
+      particleEffects: particles,
+      onPlayerDeath() {},
+      onPlayerKill() {},
+      onEnemyDeath() {},
+    });
+    assert.ok(hero.hp < hp, `${id} fitted hitbox must deal actual damage`);
+    assert.deepEqual(captured[0].points, aligned[0].points);
+    assert.deepEqual(captured[0].reaction, raw[0].reaction);
+  }
 });

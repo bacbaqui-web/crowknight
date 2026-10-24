@@ -165,14 +165,29 @@ function syncProjectilePosition(projectile) {
 export function projectileAttackRegion(projectile) {
   const w = Math.max(1, Number(projectile?.hitboxWidth || 1));
   const h = Math.max(1, Number(projectile?.hitboxHeight || 1));
+  const angle = Number(projectile.angle || 0),
+    c = Math.cos(angle),
+    s = Math.sin(angle);
+  const points = [
+    [-w / 2, -h / 2],
+    [w / 2, -h / 2],
+    [w / 2, h / 2],
+    [-w / 2, h / 2],
+  ].map(([x, y]) => ({
+    x: Number(projectile.x || 0) + x * c - y * s,
+    y: Number(projectile.y || 0) + x * s + y * c,
+  }));
+  const xs = points.map((p) => p.x),
+    ys = points.map((p) => p.y);
   return {
     key: projectile.key,
     role: 'attack',
     active: true,
-    x: Number(projectile.x || 0) - w / 2,
-    y: Number(projectile.y || 0) - h / 2,
-    w,
-    h,
+    points,
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    w: Math.max(...xs) - Math.min(...xs),
+    h: Math.max(...ys) - Math.min(...ys),
     reaction: projectile.reaction,
   };
 }
