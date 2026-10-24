@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+import vm from 'node:vm';
+
+test('all browser projection consumers resolve to the same fresh modules before game startup', () => {
+  const html = readFileSync(new URL('../quarter-view.html', import.meta.url), 'utf8');
+  const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].find((match) =>
+    match[1].includes("map.type = 'importmap'")
+  );
+  assert.ok(inline);
+  assert.ok(inline.index < html.indexOf('src="./src/quarter_view/startup.js'));
+  const maps = [];
+  const context = {
+    URL,
+    location: { href: 'https://example.test/crowknight/quarter-view.html?view=release' },
+    document: { createElement: () => ({}), currentScript: { after: (script) => maps.push(script) } },
+    Date: { now: () => 123 },
+  };
+  vm.runInNewContext(inline[1], context);
+  assert.equal(maps[0].type, 'importmap');
+  const imports = JSON.parse(maps[0].textContent).imports;
+  assert.equal(Object.keys(imports).length, 3);
+  for (const name of ['camera', 'ground_shaders', 'gpu_ground_renderer']) {
+    const key = `https://example.test/crowknight/src/quarter_view/${name}.js`;
+    assert.equal(imports[key], `${key}?projection=3f`);
+  }
+});

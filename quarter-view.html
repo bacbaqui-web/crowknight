@@ -296,6 +296,22 @@
       </section>
     </main>
 
+    <script>
+      (() => {
+        const imports = {};
+        const revision = Date.now().toString(36);
+        for (const name of ['camera', 'ground_shaders', 'gpu_ground_renderer']) {
+          const canonical = new URL(`./src/quarter_view/${name}.js`, location.href);
+          const fresh = new URL(canonical);
+          fresh.searchParams.set('projection', revision);
+          imports[canonical.href] = fresh.href;
+        }
+        const map = document.createElement('script');
+        map.type = 'importmap';
+        map.textContent = JSON.stringify({ imports });
+        document.currentScript.after(map);
+      })();
+    </script>
     <script type="module" src="./src/quarter_view/startup.js?boot=script-refresh-2"></script>
   </body>
 </html>
