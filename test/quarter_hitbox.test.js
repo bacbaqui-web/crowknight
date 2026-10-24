@@ -9,6 +9,7 @@ import { prepareSkillActions } from '../src/skill_runtime_helper.js';
 import { requestRuntimeAction } from '../src/action_trigger_engine.js';
 import { preparePlaneMotion, finishPlaneMotion, movementInput } from '../src/quarter_view/motion.js';
 import { combatTargetRegions, resolveGroundCollision, sameGroundContact } from '../src/quarter_view/spatial.js';
+import { captureAttackRegions } from '../src/quarter_view/attack_geometry.js';
 import { resolveCombat } from '../src/combat_engine.js';
 
 const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
@@ -34,6 +35,7 @@ function makeActor(id, x, depth) {
   };
 }
 const plane = {
+  captureAttackRegions,
   targetRegions: combatTargetRegions,
   resolveCollision: resolveGroundCollision,
   sameGroundContact,
@@ -68,6 +70,7 @@ for (const side of [-1, 1])
       preparePlaneMotion(hero, null, new Set(['KeyQ']), new Set(['KeyQ']));
       assert.equal(requestRuntimeAction(hero.player, hero.tuning.skillActions.firstStrike, facing, 'tap'), true);
       finishPlaneMotion(hero);
+      let sawActiveHitbox = false;
       for (let frame = 0; frame < 30; frame++) {
         preparePlaneMotion(hero, null);
         hero.player.updateNpc(1 / 60, null, world);
@@ -81,7 +84,9 @@ for (const side of [-1, 1])
           onPlayerKill() {},
           onEnemyDeath() {},
         });
+        if (hero.quarterAttackRegions.length) sawActiveHitbox = true;
       }
+      assert.equal(sawActiveHitbox, true, 'combat must expose its actual active hitbox for the overlay');
       assert.ok(targets[0].hp < originalHp[0], 'forward target should be hit by the authored attack');
       assert.equal(targets[1].hp, originalHp[1], 'rear target must not be hit');
       assert.equal(targets[2].hp, originalHp[2], 'side target must not be hit');

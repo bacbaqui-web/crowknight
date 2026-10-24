@@ -1,5 +1,7 @@
+import { drawQuarterAttackEffect } from './attack_effects.js';
+import { createHitboxView } from './hitbox_view.js';
 import { groundPoint, depthOf } from './camera.js';
-import { drawActor, drawAttackTrail } from '../actor_canvas_renderer.js';
+import { drawActor } from '../actor_canvas_renderer.js';
 import { drawFormulaAfterimages } from '../afterimage_runtime_helper.js';
 import { drawRollGhosts } from '../roll_ghost_engine.js';
 import { drawProjectiles } from '../projectile_runtime_engine.js';
@@ -7,6 +9,12 @@ import { formulaScreenZoom } from '../zoom_formula_runtime_helper.js';
 
 export function createQuarterRenderer({ ctx, world }) {
   let view;
+  const hitboxes = createHitboxView({
+    ctx,
+    world,
+    button: document.querySelector('#quarterHitboxes'),
+    legend: document.querySelector('#quarterHitboxLegend'),
+  });
   function projectEntity(entity) {
     const x = entity.player?.x ?? entity.x ?? entity.targetX ?? view.x;
     const point = groundPoint(x, depthOf(entity), view);
@@ -87,8 +95,8 @@ export function createQuarterRenderer({ ctx, world }) {
           activeEditPartKey: () => null,
           activeEditPartKeys: () => [],
         });
-        drawAttackTrail(ctx, actor, effectAssets);
         ctx.restore();
+        drawQuarterAttackEffect(ctx, actor, effectAssets, world, view);
       });
     const project = (entity, drawEntity) => {
       const restore = projectEntity(entity);
@@ -100,7 +108,8 @@ export function createQuarterRenderer({ ctx, world }) {
     drawProjectiles(ctx, effectAssets, project);
     particleEffects.drawHitSparks();
     particleEffects.drawDeathParticles();
+    hitboxes.draw(actors, playerActor, view);
     ctx.restore();
   }
-  return { draw, projectEntity };
+  return { draw, projectEntity, resetDebugHistory: hitboxes.reset };
 }

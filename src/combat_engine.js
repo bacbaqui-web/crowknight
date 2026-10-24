@@ -48,6 +48,7 @@ export function resolveCombat({
     if (attacker.player?.dead) return;
     if (attacker.respawning) return;
     const attackRegions = cachedInteractionRegions(regionCache, attacker, 'attack');
+    world?.quarterView?.captureAttackRegions?.(attacker, attackRegions);
     if (!attackRegions.length) return;
 
     actors.forEach((target) => {

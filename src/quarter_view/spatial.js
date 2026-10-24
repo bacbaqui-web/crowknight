@@ -1,3 +1,4 @@
+import { ATTACK_HALF_WIDTH, targetLaneRadius } from './attack_geometry.js';
 import { depthOf, normalizeDirection } from './camera.js';
 import { readInteractionRegions } from '../combat_cache_helper.js';
 import { collisionPushShares } from '../combat_collision_helper.js';
@@ -8,7 +9,7 @@ export function combatTargetRegions(attacker, target, regions) {
   const dx = target.player.x - attacker.player.x;
   const dz = depthOf(target) - depthOf(attacker);
   // A separate ground lane prevents hitting distant feet through tall sprites.
-  const width = Math.max(32, Math.min(70, (target.player.transform?.scale || 1) * 42));
+  const width = ATTACK_HALF_WIDTH + targetLaneRadius(target);
   if (Math.abs(-dx * aim.z + dz * aim.x) > width) return [];
   const projectedX = (dx * aim.x + dz * aim.z) * attacker.player.facing;
   const shift = projectedX - dx;

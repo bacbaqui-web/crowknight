@@ -20,6 +20,10 @@
       <section class="stage-wrap player-stage" aria-label="게임 화면">
         <div class="quarter-label"><strong>쿼터뷰 시험장</strong><a href="./index.html">횡스크롤 본편 ↗</a></div>
         <button id="quarterPause" type="button">일시정지 · P</button>
+        <button id="quarterHitboxes" type="button" aria-pressed="false" aria-controls="quarterHitboxLegend">
+          히트박스 표시: 꺼짐
+        </button>
+        <div id="quarterHitboxLegend" role="status" hidden></div>
         <div id="quarterPaused" hidden>일시정지 · P / 계속하기</div>
         <canvas id="game" width="960" height="540"></canvas>
 

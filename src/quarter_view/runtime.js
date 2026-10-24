@@ -1,3 +1,4 @@
+import { captureAttackRegions } from './attack_geometry.js';
 import { GAME_KEYS } from '../game_config_data.js';
 import { createQuarterRenderer } from './renderer.js';
 import { depthOf } from './camera.js';
@@ -9,6 +10,7 @@ export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
   let paused = false;
   world.quarterView = {
+    captureAttackRegions,
     beforePlayer: (actor, keys, pressed) => preparePlaneMotion(actor, movementInput(keys), keys, pressed),
     beforeEnemy(actor, target) {
       const direction = enemyPlaneDirection(actor, target);
@@ -46,12 +48,15 @@ export function createQuarterRuntime({ ctx, world }) {
     gameKeys: new Set([...GAME_KEYS, 'QuarterUp', 'QuarterDown']),
     reset(actors) {
       paused = false;
+      renderer.resetDebugHistory();
       actors.forEach((actor, index) => {
         actor.quarterDepth = index === 0 ? 0 : ((index % 5) - 2) * 85;
         actor.player.quarterDepth = actor.quarterDepth;
         actor.quarterAim = { x: actor.player.facing || 1, z: 0 };
         actor.quarterImpulse = null;
         actor.quarterSynthetic = null;
+        actor.quarterAttackRegions = [];
+        actor.quarterAttackSerial = null;
       });
       syncPause();
     },
