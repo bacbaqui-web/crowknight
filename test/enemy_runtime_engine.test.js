@@ -281,3 +281,26 @@ test('Enemy가 Action 실행 불가능 상태이면 새 AI Action을 시작하�
   assert.equal(enemy.player.customActionKey, 'active-action');
   assert.deepEqual(enemy.aiActionCooldowns, {});
 });
+
+test('distant quarter-view enemies wait the normal interval then spawn by the current player', () => {
+  const playerActor = createPlayerActor({ x: 10000 });
+  const enemy = createEnemy({ x: 0 });
+  const world = {
+    floorY: 0,
+    enemyRules: { spawnRule: { maxAlive: 1, intervalSec: 2 } },
+    quarterView: {
+      shouldRecycleEnemy: (actor, target) => Math.abs(actor.player.x - target.player.x) > 3000,
+      respawn: (actor, target) => {
+        actor.player.x = target.player.x + 800;
+      },
+    },
+  };
+  const args = { actors: [playerActor, enemy], playerActor, world };
+  maintainEnemyFlow({ ...args, dt: 0.5 });
+  assert.equal(enemy.respawning, true);
+  assert.equal(enemy.enemyRespawnTimer, 1.5);
+  playerActor.player.x = 20000;
+  maintainEnemyFlow({ ...args, dt: 1.5 });
+  assert.equal(enemy.respawning, false);
+  assert.equal(enemy.player.x, 20800);
+});

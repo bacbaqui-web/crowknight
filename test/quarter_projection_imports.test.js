@@ -21,7 +21,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 31);
+  assert.equal(Object.keys(imports).length, 32);
   for (const name of [
     'camera',
     'ground_shaders',

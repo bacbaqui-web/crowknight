@@ -1,4 +1,4 @@
-import { createSurroundingSpawner } from './bounds.js';
+import { createSurroundingSpawner, outsideSpawnArea } from './bounds.js';
 import { createPerformanceView } from './performance_view.js';
 import { createEffectEditorView } from './effect_editor_view.js';
 import { createAttackSettingsView } from './attack_settings_view.js';
@@ -118,6 +118,7 @@ export function createQuarterRuntime({ ctx, world }) {
     projectileRegion: groundProjectileRegion,
     applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
     respawn: spawnAround,
+    shouldRecycleEnemy: (actor, target) => outsideSpawnArea(actor, target, world),
     projectEntity: renderer.projectEntity,
   };
   function syncPause() {

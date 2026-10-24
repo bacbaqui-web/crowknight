@@ -126,6 +126,12 @@ export function maintainEnemyFlow({ actors = [], playerActor = null, world = nul
 
   byActorId.forEach((actorGroup, actorId) => {
     const rule = resolveEnemyActorSpawnRule(world, actorId);
+    actorGroup.forEach((actor) => {
+      if (!actor.respawning && !actor.player?.dead && world?.quarterView?.shouldRecycleEnemy?.(actor, playerActor)) {
+        hideEnemyActor(actor);
+        actor.enemyRespawnTimer = rule.intervalSec;
+      }
+    });
     const aliveActors = actorGroup.filter((actor) => !actor.respawning && !actor.player?.dead);
 
     aliveActors.slice(rule.maxAlive).forEach((actor) => hideEnemyActor(actor));

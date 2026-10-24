@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSurroundingSpawner } from '../src/quarter_view/bounds.js';
+import { createSurroundingSpawner, outsideSpawnArea } from '../src/quarter_view/bounds.js';
 
 test('eight successive spawns surround the current player at the configured safe radius', () => {
   const spawn = createSurroundingSpawner(
@@ -32,4 +32,20 @@ test('reversed and too-small spawn distances still keep a safe gap', () => {
     hero = { player: { x: 0 }, quarterDepth: 0 };
   spawn(enemy, hero);
   assert.ok(Math.abs(Math.hypot(enemy.player.x, enemy.quarterDepth) - 240) < 1e-8);
+});
+
+test('only distant enemies recycle, in any direction and relative to the moving player', () => {
+  const hero = { player: { x: 100000 }, quarterDepth: -100000 };
+  for (const [x, z] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ]) {
+    const enemy = { player: { x: hero.player.x + x * 1500 }, quarterDepth: hero.quarterDepth + z * 1500 };
+    assert.equal(outsideSpawnArea(enemy, hero, {}), false);
+    enemy.player.x = hero.player.x + x * 3000;
+    enemy.quarterDepth = hero.quarterDepth + z * 3000;
+    assert.equal(outsideSpawnArea(enemy, hero, {}), true);
+  }
 });

@@ -33,3 +33,9 @@ export function createSurroundingSpawner(world, random = Math.random) {
     actor.quarterImpulse = null;
   };
 }
+
+export function outsideSpawnArea(actor, target, world) {
+  const rule = world?.enemyRules?.spawnRule || {};
+  const radius = Math.max(240, Number(rule.cameraOffsetMin ?? 740), Number(rule.cameraOffsetMax ?? 960));
+  return Math.hypot(actor.player.x - target.player.x, depthOf(actor) - depthOf(target)) > Math.max(2200, radius * 2.5);
+}
