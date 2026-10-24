@@ -4,6 +4,7 @@ import { createEffectEditorPreview } from './effect_editor_preview.js';
 import {
   createEffectProfile,
   updateEffectProfile,
+  resetEffectAdjustment,
   readEffectLayoutState,
   saveEffectLayoutState,
   normalizeEffectLayoutState,
@@ -84,6 +85,11 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
         field.value = key === 'width' || key === 'height' ? Math.round(value * 100) : Math.round(value * 10) / 10;
     }
     panel.querySelector('[data-effect-reset]').disabled = !profile;
+    panel.querySelector('[data-effect-reset-adjustment]').disabled = !profile || direction === 'right';
+    panel.querySelector('[data-effect-edit-mode]').textContent =
+      direction === 'right'
+        ? '오른쪽 기본 편집 · 변경하면 모든 방향에 적용됩니다. 방향별 보정은 유지됩니다.'
+        : '방향별 보정 편집 · 오른쪽 기본을 회전한 결과에서 이 방향만 보정합니다. 숫자는 보정 후 최종값입니다.';
     play.disabled = !profile;
     if (!profile) setPlaying(false);
     guides.checked = state.guides;
@@ -174,6 +180,13 @@ export function createEffectEditorView({ panel, onOpen, onChange, getAssets, sto
     apply();
   });
   all.addEventListener('change', schedulePreview);
+  panel.querySelector('[data-effect-reset-adjustment]').addEventListener('click', () => {
+    const profile = selectedProfile();
+    if (!profile) return;
+    resetEffectAdjustment(profile, direction);
+    sync();
+    apply();
+  });
   panel.querySelector('[data-effect-reset]').addEventListener('click', () => {
     const actor = selectedActor();
     if (!actor) return;

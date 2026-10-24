@@ -29,16 +29,74 @@ export function normalizeEffectLayout(value = {}) {
     })
   );
 }
+const scaleFields = new Set(['width', 'height']);
+const wrapAngle = (angle) => ((((angle + 180) % 360) + 360) % 360) - 180;
+function adjustmentFor(base, layout) {
+  return Object.fromEntries(
+    Object.keys(fields).map((key) => [
+      key,
+      scaleFields.has(key)
+        ? layout[key] / base[key]
+        : key === 'rotation'
+          ? wrapAngle(layout[key] - base[key])
+          : layout[key] - base[key],
+    ])
+  );
+}
+function refreshEffectProfile(profile) {
+  profile.directions = Object.fromEntries(
+    EFFECT_EDIT_DIRECTIONS.map(({ key }) => {
+      const adjustment = key === 'right' ? {} : profile.adjustments[key] || {};
+      const layout = Object.fromEntries(
+        Object.keys(fields).map((field) => {
+          const fallback = scaleFields.has(field) ? 1 : 0;
+          const offset = Number.isFinite(adjustment[field]) ? adjustment[field] : fallback;
+          const value = scaleFields.has(field) ? profile.base[field] * offset : profile.base[field] + offset;
+          return [field, field === 'rotation' ? wrapAngle(value) : value];
+        })
+      );
+      return [key, normalizeEffectLayout(layout)];
+    })
+  );
+}
 export function createEffectProfile(value = {}) {
-  return {
-    directions: Object.fromEntries(
-      EFFECT_EDIT_DIRECTIONS.map(({ key }) => [key, normalizeEffectLayout(value?.directions?.[key])])
-    ),
+  const profile = {
+    mode: 'right-base',
+    base: normalizeEffectLayout(value?.base || value?.directions?.right),
+    adjustments: {},
   };
+  for (const { key } of EFFECT_EDIT_DIRECTIONS) {
+    if (key === 'right') continue;
+    if (value?.mode === 'right-base') {
+      if (value?.adjustments?.[key]) profile.adjustments[key] = { ...value.adjustments[key] };
+    } else if (value?.directions?.[key])
+      profile.adjustments[key] = adjustmentFor(profile.base, normalizeEffectLayout(value.directions[key]));
+  }
+  refreshEffectProfile(profile);
+  return profile;
 }
 export function updateEffectProfile(profile, direction, patch) {
   const key = effectLayoutKey(direction);
-  profile.directions[key] = normalizeEffectLayout({ ...profile.directions[key], ...patch });
+  const next = normalizeEffectLayout({ ...profile.directions[key], ...patch });
+  if (key === 'right') profile.base = next;
+  else {
+    const adjustment = adjustmentFor(profile.base, next);
+    profile.adjustments[key] = {
+      ...profile.adjustments[key],
+      ...Object.fromEntries(
+        Object.keys(patch)
+          .filter((field) => field in fields)
+          .map((field) => [field, adjustment[field]])
+      ),
+    };
+  }
+  refreshEffectProfile(profile);
+}
+export function resetEffectAdjustment(profile, direction) {
+  const key = effectLayoutKey(direction);
+  if (key === 'right') return;
+  delete profile.adjustments[key];
+  refreshEffectProfile(profile);
 }
 export function effectLayoutFor(actor, direction = effectDirection(actor).key) {
   return (

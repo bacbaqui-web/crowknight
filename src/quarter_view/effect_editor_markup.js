@@ -43,7 +43,8 @@ export const EFFECT_EDITOR_MARKUP = `
         <button type="button" data-effect-direction="down-right" aria-label="오른쪽 아래 이펙트" aria-pressed="false">↘</button>
         <button type="button" data-effect-direction="down" aria-label="아래쪽 이펙트" aria-pressed="false">↓</button>
       </div>
-      <small>각 방향은 독립적으로 저장됩니다. 왼쪽 공격에는 오른쪽 설정을 거울상으로 적용합니다.</small>
+      <small>오른쪽이 기본입니다. 다른 방향에는 자동 회전해 적용하고, 각 방향에서는 추가 보정만 저장합니다. 왼쪽은 거울상입니다.</small>
+      <p data-effect-edit-mode role="status"></p>
       <label class="effect-slider"
         >앞뒤 위치 (px)<input
           type="number"
@@ -127,6 +128,7 @@ export const EFFECT_EDITOR_MARKUP = `
     </div>
   </div>
   <div class="effect-editor-actions">
+    <button type="button" data-effect-reset-adjustment>이 방향 보정 초기화</button>
     <button type="button" data-effect-reset>이 공격 초기화</button>
     <button type="button" data-effect-export>설정 내보내기</button>
     <button type="button" data-effect-load>설정 불러오기</button>

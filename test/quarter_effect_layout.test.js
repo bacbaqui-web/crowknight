@@ -5,6 +5,7 @@ import {
   DEFAULT_EFFECT_LAYOUT,
   createEffectProfile,
   updateEffectProfile,
+  resetEffectAdjustment,
   readEffectLayoutState,
   saveEffectLayoutState,
   normalizeEffectLayoutState,
@@ -13,23 +14,27 @@ import {
 import { effectPoint } from '../src/quarter_view/attack_geometry.js';
 import { drawActorEffectLayers } from '../src/quarter_view/attack_effects.js';
 
-test('five independent directions ignore legacy linking and left attacks reuse their right counterpart', () => {
-  const profile = createEffectProfile({ linked: true });
-  assert.deepEqual(Object.keys(profile.directions), ['up', 'up-right', 'right', 'down-right', 'down']);
-  updateEffectProfile(profile, 'up', { width: 2, rotation: 41 });
-  for (const direction of EFFECT_EDIT_DIRECTIONS)
-    assert.equal(profile.directions[direction.key].width, direction.key === 'up' ? 2 : 1);
-  updateEffectProfile(profile, 'right', { width: 1.7 });
+test('right base propagates to five rotated directions while each adjustment survives base edits and persistence', () => {
+  const profile = createEffectProfile();
+  updateEffectProfile(profile, 'right', { width: 1.5, distance: 30, rotation: 20 });
+  for (const { key } of EFFECT_EDIT_DIRECTIONS) assert.deepEqual(profile.directions[key], profile.directions.right);
+  updateEffectProfile(profile, 'up', { width: 1.8, distance: 42, rotation: 27 });
+  assert.equal(profile.directions.right.width, 1.5);
+  updateEffectProfile(profile, 'right', { width: 2, distance: 50, rotation: 40 });
+  assert.equal(profile.directions.up.width, 2.4);
+  assert.equal(profile.directions.up.distance, 62);
+  assert.equal(profile.directions.up.rotation, 47);
+  assert.deepEqual(profile.directions.down, profile.directions.right);
+  const restored = createEffectProfile(JSON.parse(JSON.stringify(profile)));
+  assert.deepEqual(restored, profile);
+  resetEffectAdjustment(restored, 'up');
+  assert.deepEqual(restored.directions.up, restored.directions.right);
   const actor = { player: { actionKey: 'slash' }, quarterEffectLayouts: { slash: profile } };
-  assert.equal(effectLayoutFor(actor, 'left'), profile.directions.right);
   assert.equal(effectLayoutFor(actor, 'up-left'), profile.directions['up-right']);
-  assert.equal(effectLayoutFor(actor, 'down-left'), profile.directions['down-right']);
-  assert.equal(profile.directions.up.width, 2);
-  assert.equal(profile.directions.down.width, 1);
-  const restored = createEffectProfile({ ...profile, linked: true });
-  updateEffectProfile(restored, 'down', { width: 2.5 });
-  assert.equal(restored.directions.right.width, 1.7);
-  assert.equal(restored.directions.up.width, 2);
+  const migrated = createEffectProfile({ directions: { right: { width: 1.5 }, up: { width: 1.8 } } });
+  assert.ok(Math.abs(migrated.directions.up.width - 1.8) < 1e-9);
+  updateEffectProfile(migrated, 'right', { width: 2 });
+  assert.equal(migrated.directions.up.width, 2.4);
 });
 test('profile persistence clamps invalid values and preserves independent actors and attacks', () => {
   const state = normalizeEffectLayoutState({
@@ -87,8 +92,7 @@ test('independent offsets rotate with all eight arrows and sizes share the same 
     quarterEffectLayouts: { slash: profile },
   };
   const center = { x: 500, y: 350 };
-  for (const { key } of EFFECT_EDIT_DIRECTIONS)
-    updateEffectProfile(profile, key, { distance: 50, side: 20, width: 2, height: 0.5 });
+  updateEffectProfile(profile, 'right', { distance: 50, side: 20, width: 2, height: 0.5 });
   for (const aim of EFFECT_DIRECTIONS) {
     actor.quarterAim = aim;
     const mirror = aim.x < 0 ? -1 : 1;
