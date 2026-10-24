@@ -11,6 +11,7 @@ from file_transaction import json_bytes, replace_bytes, write_json_bundle
 
 IMAGE_SUFFIXES = {'.png', '.webp', '.jpg', '.jpeg', '.gif', '.svg'}
 CHARACTER_PARTS = {
+    'backpack': 'backpack.png', 'collar': 'collar.png',
     'body': 'body.png', 'head': 'head.png', 'cape': 'cape.png', 'shield': 'shield.png',
     'upperArmL': 'upper_arm_l.png', 'lowerArmL': 'lower_arm_l.png',
     'upperArmR': 'upper_arm_r.png', 'lowerArmR': 'lower_arm_r.png',

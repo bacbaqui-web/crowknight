@@ -1,3 +1,4 @@
+import { configurePowderBomb, advancePowderBomb, powderBlastRegion, drawPowderBomb } from './powder_bomb_runtime.js';
 import { attackPlane } from './attack_plane_helper.js';
 import { ACTION_FPS } from './game_config_data.js';
 import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_model_data.js';
@@ -32,7 +33,7 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
       projectilePool.push(spear);
     }
   }
-  actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor));
+  actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor, world));
   projectilePool.forEach((projectile) => advanceProjectile(projectile, dt));
   projectilePool = projectilePool.filter(
     (projectile) => projectile.active && !projectileOutOfBounds(projectile, world)
@@ -40,7 +41,8 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
 }
 
 export function removeProjectile(projectile) {
-  if (projectile) projectile.active = false;
+  if (projectile?.powderBomb) projectile.damageSpent = true;
+  else if (projectile) projectile.active = false;
 }
 
 export function drawProjectiles(ctx, effectAssets, project = null) {
@@ -53,15 +55,17 @@ export function drawProjectiles(ctx, effectAssets, project = null) {
       : drawProjectileLandingMarker(ctx, projectile)
   );
   projectilePool.forEach((projectile) =>
-    projectile.linearSpear
-      ? drawLinearSpear(ctx, projectile, project)
-      : project
-        ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
-        : drawProjectile(ctx, projectile, effectAssets)
+    projectile.powderBomb
+      ? drawPowderBomb(ctx, projectile, project)
+      : projectile.linearSpear
+        ? drawLinearSpear(ctx, projectile, project)
+        : project
+          ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
+          : drawProjectile(ctx, projectile, effectAssets)
   );
 }
 
-function spawnActorProjectileIfNeeded(actor, playerActor) {
+function spawnActorProjectileIfNeeded(actor, playerActor, world) {
   if (!actor?.player || actor.player.dead || actor.respawning || actor === playerActor) return;
   const player = actor.player;
   const actionKey = player.actionKey;
@@ -86,7 +90,7 @@ function spawnActorProjectileIfNeeded(actor, playerActor) {
   if (currentFrame < spawnFrame || runtime.spawned.has(spawnKey)) return;
 
   runtime.spawned.add(spawnKey);
-  spawnProjectile(actor, playerActor, formula, settings);
+  spawnProjectile(actor, playerActor, formula, settings, world);
 }
 
 function ensureActorProjectileRuntime(actor, actionKey, elapsed) {
@@ -104,7 +108,7 @@ function resetActorProjectileRuntime(actor, actionKey, elapsed) {
   if (actor) actor.projectileRuntime = { actionKey, elapsed, spawned: new Set() };
 }
 
-function spawnProjectile(actor, playerActor, formula, settings) {
+function spawnProjectile(actor, playerActor, formula, settings, world) {
   const facing = Number(actor.player.facing || 1) < 0 ? -1 : 1;
   const startX = Number(actor.player.x || 0) + Number(formula.offsetX || 0) * facing;
   const startY = Number(actor.player.y || 0) + Number(formula.offsetY || 0);
@@ -145,6 +149,7 @@ function spawnProjectile(actor, playerActor, formula, settings) {
     reaction: projectileReaction(actor, settings),
   };
   nextProjectileId += 1;
+  configurePowderBomb(projectile, actor, world);
   syncProjectilePosition(projectile);
   projectilePool.push(projectile);
 }
@@ -163,6 +168,7 @@ function projectileReaction(actor, settings) {
 function advanceProjectile(projectile, dt) {
   projectile.previousX = projectile.x;
   projectile.previousY = projectile.y;
+  if (advancePowderBomb(projectile, dt)) return;
   projectile.elapsedFrames += Math.max(0, Number(dt || 0)) * ACTION_FPS;
   syncProjectilePosition(projectile);
   if (projectile.elapsedFrames >= projectile.flightFrames) projectile.active = false;
@@ -179,6 +185,7 @@ function syncProjectilePosition(projectile) {
 }
 
 export function projectileAttackRegion(projectile) {
+  if (projectile.powderBomb) return powderBlastRegion(projectile);
   const w = Math.max(1, Number(projectile?.hitboxWidth || 1));
   const h = Math.max(1, Number(projectile?.hitboxHeight || 1));
   const angle = Number(projectile.angle || 0),
@@ -225,7 +232,7 @@ function drawProjectile(ctx, projectile, effectAssets) {
 }
 
 function drawProjectileLandingMarker(ctx, projectile) {
-  if (projectile.linearSpear) return;
+  if (projectile.linearSpear || projectile.powderBomb) return;
   const progress = Math.max(0, Math.min(1, projectile.elapsedFrames / Math.max(1, projectile.flightFrames)));
   const pulse = 0.5 + Math.sin(progress * Math.PI * 8) * 0.5;
   const alpha = 0.32 + pulse * 0.42;

@@ -4,6 +4,8 @@ export const CHARACTER_ASSET_PATHS = {
   body: 'body.png',
   head: 'head.png',
   cape: 'cape.png',
+  backpack: 'backpack.png',
+  collar: 'collar.png',
   shield: 'shield.png',
   upperArmL: 'upper_arm_l.png',
   lowerArmL: 'lower_arm_l.png',
@@ -29,7 +31,9 @@ export function loadCharacterAssets(folder, version = '', sources = {}) {
       Object.entries(CHARACTER_ASSET_PATHS)
         .filter(
           ([key]) =>
-            (!sources.__snapshot || sources[key]) && (!Array.isArray(sources.__parts) || sources.__parts.includes(key))
+            (!['backpack', 'collar'].includes(key) || sources[key] || sources.__parts?.includes(key)) &&
+            (!sources.__snapshot || sources[key]) &&
+            (!Array.isArray(sources.__parts) || sources.__parts.includes(key))
         )
         .map(([key, filename]) => [key, versionedPath(sources?.[key] || `${base}/${filename}`, version)])
     )

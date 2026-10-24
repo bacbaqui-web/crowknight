@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+  <meta charset="utf-8" /><title>화약 공병장 동작 검증</title
+  ><style>
+    body {
+      margin: 0;
+      background: #222631;
+      color: #eee;
+      font: 16px sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+    p {
+      text-align: center;
+    }
+    button {
+      padding: 10px;
+      margin: 4px;
+    }
+  </style>
+  <p>
+    화약 공병장 · 실제 게임 렌더러 <button id="idle">대기</button><button id="walk">걷기</button
+    ><button id="throw">투척</button>
+  </p>
+  <canvas id="preview" width="1100" height="650"></canvas>
+  <script type="module">
+    import { PuppetPlayer } from '../../src/actor_runtime_engine.js';
+    import { loadCharacterAssets } from '../../src/asset_loader_helper.js';
+    import { requestRuntimeAction } from '../../src/action_trigger_engine.js';
+    import {
+      updateProjectileRuntime,
+      drawProjectiles,
+      activeProjectiles,
+      resetProjectileRuntime,
+    } from '../../src/projectile_runtime_engine.js';
+    const data = await fetch('../../data/draft.json').then((r) => r.json());
+    const def = data.actors.powder_chief;
+    const sources = Object.fromEntries(
+      Object.entries((await import('../../src/asset_loader_helper.js')).CHARACTER_ASSET_PATHS)
+        .filter(([k]) => def.assets.__parts.includes(k))
+        .map(([k, v]) => [k, '../../assets/characters/bosses/powder_chief/' + v])
+    );
+    const assets = await loadCharacterAssets('bosses/powder_chief', '', { ...sources, __parts: def.assets.__parts });
+    const player = new PuppetPlayer(390, 500, assets);
+    player.applyTuning(def.tuning);
+    player.captureEditRegions = false;
+    const actor = { id: 'powder_chief', player, group: 'bosses' };
+    const target = { id: 'target', player: { x: 750, y: 500 } };
+    const world = { floorY: 500, gravity: 1800, minX: 0, maxX: 1100 };
+    const canvas = document.querySelector('canvas'),
+      ctx = canvas.getContext('2d');
+    let mode = 'idle';
+    const choose = (action) => {
+      mode = action;
+      player.customActionKey = null;
+      player.customActionTime = 0;
+      player.x = 390;
+      resetProjectileRuntime();
+      if (action !== 'idle') requestRuntimeAction(player, action, 1, 'tap');
+    };
+    document.querySelector('#idle').onclick = () => choose('idle');
+    document.querySelector('#walk').onclick = () => choose('powderWalk');
+    document.querySelector('#throw').onclick = () => choose('powderThrow');
+    function render() {
+      ctx.clearRect(0, 0, 1100, 650);
+      ctx.strokeStyle = '#626976';
+      ctx.beginPath();
+      ctx.moveTo(0, 500);
+      ctx.lineTo(1100, 500);
+      ctx.stroke();
+      player.draw(ctx);
+      drawProjectiles(ctx, {});
+      ctx.fillStyle = '#aaa';
+      ctx.fillText('폭탄 착지 위치', 700, 540);
+    }
+    window.powderPreview = {
+      player,
+      actor,
+      target,
+      world,
+      choose,
+      render,
+      activeProjectiles,
+      step(dt) {
+        player.updateNpc(dt, target.player, world);
+        updateProjectileRuntime({ actors: [actor], playerActor: target, world, dt });
+        render();
+      },
+    };
+    let last = performance.now();
+    function tick(now) {
+      let dt = Math.min(0.04, (now - last) / 1000);
+      last = now;
+      if (!window.manualPreview) {
+        if (mode === 'powderWalk' && !player.isCustomActionActive) requestRuntimeAction(player, mode, 1, 'tap');
+        window.powderPreview.step(dt);
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    render();
+  </script>
+</html>

@@ -191,6 +191,7 @@ export function resolveProjectileCombat({
   projectiles.forEach((projectile) => {
     if (!projectile?.active || !projectile.owner) return;
     const rawAttackRegion = projectileAttackRegion(projectile);
+    if (!rawAttackRegion.active) return;
     const attackRegion = world?.quarterView?.projectileRegion?.(projectile, rawAttackRegion) ?? rawAttackRegion;
     actors.forEach((target) => {
       if (!projectile.active) return;

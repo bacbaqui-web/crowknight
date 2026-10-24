@@ -12,6 +12,8 @@ PART_LAYER_NAMES = {
     "body",
     "head",
     "cape",
+    "backpack",
+    "collar",
     "shield",
     "upper_arm_l",
     "lower_arm_l",

@@ -104,6 +104,8 @@ export function drawPuppetLayer(player, ctx, layer, pose, rig) {
       );
     },
     cape: () => drawPuppetImagePart(player, ctx, player.assets.cape, rig.cape, 0, 0, pose.body * 0.4, 'cape'),
+    backpack: () => drawPuppetImagePart(player, ctx, player.assets.backpack, rig.backpack, 0, 0, pose.body, 'backpack'),
+    collar: () => drawPuppetImagePart(player, ctx, player.assets.collar, rig.collar, 0, 0, pose.body, 'collar'),
     shield: () => drawPuppetShield(player, ctx, pose, rig),
     leftArm: () => {
       const shoulder = player.getPartOffset('shoulderL');

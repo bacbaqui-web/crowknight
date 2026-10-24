@@ -83,7 +83,12 @@ function createDeathRagdollParts(player, vector, scale) {
   const baseSpeed = 330 + vector.power * 110;
   const axis = { x: vector.x, y: vector.y };
   const side = { x: -axis.y, y: axis.x };
-  return DEATH_RAGDOLL_PARTS.map((def, index) => {
+  const accessories = [
+    { key: 'backpack', asset: 'backpack', x: -35, y: -80, weight: 1.5, spin: -0.5 },
+    { key: 'collar', asset: 'collar', x: 0, y: -80, weight: 0.5, spin: 1 },
+  ].filter((part) => player.assets?.[part.asset]);
+  const definitions = [...DEATH_RAGDOLL_PARTS, ...accessories];
+  return definitions.map((def, index) => {
     const image = player.assets?.[def.asset];
     if (!image) return null;
     const rigPart = player.rig?.[def.key] || {};

@@ -1,3 +1,4 @@
+import { blastEllipse } from '../powder_bomb_runtime.js';
 import { linearSpearCorners } from '../spearman_throw_renderer.js';
 import { attackPlane } from '../attack_plane_helper.js';
 import { constrainGroundPosition } from './bounds.js';
@@ -51,6 +52,16 @@ export function combatTargetRegions(attacker, target, regions, source = null) {
   });
 }
 export function groundProjectileRegion(projectile, region) {
+  if (projectile.powderBomb) {
+    return {
+      ...region,
+      quarterPlane: 'ground',
+      y: depthOf(projectile) - projectile.radius,
+      h: projectile.radius * 2,
+      points: blastEllipse(projectile.x, depthOf(projectile), projectile.radius, projectile.radius),
+      quarterHeightRange: [projectile.targetY - projectile.radius, projectile.targetY],
+    };
+  }
   if (projectile.linearSpear) {
     const points = linearSpearCorners(projectile).map((p) => ({
       x: p.x,

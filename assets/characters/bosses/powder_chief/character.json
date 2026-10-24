@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "powder_chief",
+  "type": "enemy",
+  "label": "화약 공병장",
+  "name": "화약 공병장",
+  "x": 1100,
+  "folder": "bosses/powder_chief",
+  "storageFolder": "bosses/powder_chief",
+  "group": "bosses",
+  "tint": "#b19a56",
+  "deleted": false,
+  "deletable": true,
+  "psdFileName": "enemy.psd"
+}

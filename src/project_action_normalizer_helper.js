@@ -110,6 +110,7 @@ export function normalizeActionOffsets(current = {}, customActions = [], deleted
     normalized[action] = {};
     ACTION_PART_KEYS.forEach((part) => {
       const value = current?.[action]?.[part] ?? current?.[action]?.[legacyActionPartKey(part)];
+      if (['backpack', 'collar'].includes(part) && value === undefined) return;
       normalized[action][part] = normalizeActionFrameValue(
         actionFrameValueWithInteractionDefaults(action, part, value)
       );

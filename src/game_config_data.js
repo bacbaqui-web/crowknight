@@ -84,6 +84,8 @@ export const ACTION_PART_KEYS = [
   'body',
   'head',
   'cape',
+  'backpack',
+  'collar',
   'shield',
   'upperArmL',
   'lowerArmL',
