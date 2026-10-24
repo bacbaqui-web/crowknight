@@ -1,3 +1,5 @@
+import { createGpuGroundRenderer } from './gpu_ground_renderer.js';
+import { createGroundOverlay } from './ground_overlay.js';
 import { groundPoint } from './camera.js';
 
 // Preserve the existing tile pattern, projecting only columns that can enter the viewport.
@@ -27,7 +29,7 @@ export function visibleGroundTiles(view, center) {
   return tiles;
 }
 function createGroundPainter(ctx, world) {
-  let shade, shadeHeight;
+  const overlay = createGroundOverlay(ctx, world);
   function path(tile) {
     tile.points.forEach((p, index) => (index ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.closePath();
@@ -48,30 +50,12 @@ function createGroundPainter(ctx, world) {
     ctx.strokeStyle = '#71826a25';
     ctx.lineWidth = 1;
     ctx.stroke();
-    for (const z of [-480, 480]) {
-      const a = groundPoint(center - 1900, z, view),
-        b = groundPoint(center + 1900, z, view);
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = '#b5c38880';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    if (shadeHeight !== world.viewH) {
-      shadeHeight = world.viewH;
-      shade = ctx.createLinearGradient(0, 0, 0, shadeHeight);
-      shade.addColorStop(0, '#0d1918ee');
-      shade.addColorStop(0.48, '#17251f00');
-      shade.addColorStop(1, '#07100b44');
-    }
-    ctx.fillStyle = shade;
-    ctx.fillRect(0, 0, world.viewW, world.viewH);
+    overlay(hero, view);
   };
 }
 
 // Camera shake is applied by the caller, so a stationary camera can reuse this exact image.
-export function createGroundRenderer(ctx, world, createSurface = () => document.createElement('canvas')) {
+export function createCanvasGroundRenderer(ctx, world, createSurface = () => document.createElement('canvas')) {
   const surface = createSurface();
   const paint = createGroundPainter(surface.getContext('2d', { alpha: false }), world);
   let previous = null;
@@ -88,5 +72,35 @@ export function createGroundRenderer(ctx, world, createSurface = () => document.
     ctx.drawImage(surface, 0, 0);
   };
   draw.stats = stats;
+  return draw;
+}
+
+export function createGroundRenderer(ctx, world, createSurface = () => document.createElement('canvas')) {
+  const gpu = createGpuGroundRenderer(ctx, world, createSurface);
+  if (!gpu) {
+    const canvas = createCanvasGroundRenderer(ctx, world, createSurface);
+    canvas.backend = 'canvas';
+    return canvas;
+  }
+  let fallback = null,
+    backend = 'gpu';
+  const draw = (hero, view) => {
+    if (gpu(hero, view)) {
+      backend = 'gpu';
+      return;
+    }
+    fallback ||= createCanvasGroundRenderer(ctx, world, createSurface);
+    backend = 'canvas';
+    fallback(hero, view);
+  };
+  draw.stats = {
+    get groundHits() {
+      return gpu.stats.groundHits + (fallback?.stats.groundHits || 0);
+    },
+    get groundBuilds() {
+      return gpu.stats.groundBuilds + (fallback?.stats.groundBuilds || 0);
+    },
+  };
+  Object.defineProperty(draw, 'backend', { get: () => backend });
   return draw;
 }

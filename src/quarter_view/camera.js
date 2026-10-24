@@ -1,6 +1,7 @@
 const SLOPE = Math.sin((22 * Math.PI) / 180);
 const COSINE = Math.cos((22 * Math.PI) / 180);
 const DISTANCE = 4200;
+export const QUARTER_PROJECTION = Object.freeze({ slope: SLOPE, cosine: COSINE, distance: DISTANCE });
 
 // Simulation coordinates stay independent of the camera and perspective.
 export function groundPoint(x, depth, view) {

@@ -64,7 +64,7 @@ export function createPerformanceView({
       );
       const hits = counters.groundHits - before.groundHits,
         builds = counters.groundBuilds - before.groundBuilds;
-      setText(cache, `바닥 캐시: 재사용 ${hits} · 새로 그림 ${builds}`);
+      setText(cache, `바닥 캐시: 재사용 ${hits} · 생성 ${builds}`);
       before = { ...counters };
     },
     reset() {
