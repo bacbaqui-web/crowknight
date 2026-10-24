@@ -15,7 +15,8 @@ export function directionalAttackRegions(actor, regions) {
   const aim = actor.quarterInputDirection || actor.quarterAim || { x: player.facing || 1, z: 0 };
   const direction = normalizeDirection(aim.x, aim.z) || { x: player.facing || 1, z: 0 };
   const reach = (player.runUpgrades?.reach || 1) * progressionEffects(player).reach * chargeAttackScale(player);
-  const halfWidth = Math.max(12, Math.min(25, (body?.w || 36) / 2));
+  const halfWidth = Math.max(12, Math.min(25, (body?.w || 36) / 2)) * 1.25;
+  const depthReach = 1 + 0.35 * Math.abs(direction.z);
   return regions.map((region) => {
     if (![ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)) return region;
     // Native regions already contain the reach multiplier. Recover their authored extent before measuring it.
@@ -28,7 +29,9 @@ export function directionalAttackRegions(actor, regions) {
             player.y + (point.y - player.y) / reach - elevation
           )
         )
-      ) * reach;
+      ) *
+      reach *
+      depthReach;
     const points = [
       [0, -halfWidth],
       [length, -halfWidth],

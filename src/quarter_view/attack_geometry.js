@@ -107,6 +107,7 @@ export function attackOrigin(actor) {
   };
 }
 export function captureAttackRegions(actor, regions, flat = groundAttackRegions(actor, regions)) {
+  actor.quarterAttackPosition = { x: actor.player.x, y: actor.player.y, depth: depthOf(actor) };
   actor.quarterAttackRawRegions = regions;
   actor.quarterAttackRegions = flat.map((region) => {
     const previous = region.reaction?.hitMode === 'trace' ? previousAttackRegion(actor, region) : null;
@@ -117,7 +118,19 @@ export function captureAttackRegions(actor, regions, flat = groundAttackRegions(
 export function currentAttackRegions(actor) {
   if (actor.respawning || actor.player.dead) return [];
   if (actor.quarterAttackSerial === actor.player.attackSerial && actor.quarterAttackRegions)
-    return actor.quarterAttackRegions;
+    return actor.quarterAttackRegions.map((region) => {
+      const origin = actor.quarterAttackPosition;
+      if (!region.quarterDirectionalBox || !origin) return region;
+      const dx = actor.player.x - origin.x,
+        dz = depthOf(actor) - origin.depth;
+      return {
+        ...region,
+        x: region.x + dx,
+        y: region.y + dz,
+        quarterElevation: region.quarterElevation + actor.player.y - origin.y,
+        points: region.points.map((p) => ({ x: p.x + dx, y: p.y + dz })),
+      };
+    });
   return groundAttackRegions(actor, actor.player.attackInteractionRegions || []);
 }
 

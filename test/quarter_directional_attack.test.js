@@ -84,9 +84,68 @@ test('visual trail follows native weapon coordinates regardless of aim and has a
     trail.capture(a, raw);
   }
   const samples = trail.samples(a);
-  assert.ok(samples.length <= 14);
+  assert.ok(samples.length <= 48);
   assert.deepEqual(samples.at(-1).points[1], { x: 130, y: -70, depth: 80 });
   a.player.dead = true;
   trail.capture(a, raw);
   assert.equal(trail.samples(a).length, 0);
+});
+
+test('box is thicker and depth directions have extra reach', () => {
+  const a = actor();
+  a.quarterAim = { x: 1, z: 0 };
+  const right = directionalAttackRegions(a, raw)[0];
+  a.quarterAim = { x: 0, z: 1 };
+  const down = directionalAttackRegions(a, raw)[0];
+  assert.equal(right.h, 50);
+  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 1.35) < 1e-8);
+});
+
+test('live box follows attack displacement after capture without moving its old snapshot', async () => {
+  const { captureAttackRegions, currentAttackRegions } = await import('../src/quarter_view/attack_geometry.js');
+  const a = actor();
+  const box = directionalAttackRegions(a, raw)[0];
+  captureAttackRegions(a, [box]);
+  a.player.x += 12;
+  a.player.y -= 3;
+  a.quarterDepth += 25;
+  const moved = currentAttackRegions(a)[0];
+  assert.equal(moved.x, box.x + 12);
+  assert.equal(moved.y, box.y + 25);
+  assert.equal(moved.quarterElevation, box.quarterElevation - 3);
+  assert.equal(a.quarterAttackRegions[0], box);
+});
+
+test('whole swing stays visible together and fades together after attack stops', () => {
+  const a = actor();
+  a.player.rig = { weapon: { w: 100, h: 10, ax: 0, ay: 0 } };
+  a.player.getPartOffset = () => ({});
+  a.player.weaponAnchorTransform = () => ({ a: 1, b: 0, c: 0, d: 1, e: 30, f: -70 });
+  let fills = 0;
+  const ctx = {
+    save() {},
+    restore() {},
+    beginPath() {},
+    moveTo() {},
+    lineTo() {},
+    closePath() {},
+    fill() {
+      fills++;
+    },
+  };
+  const trail = createNativeWeaponTrail(ctx, { floorY: 0 });
+  for (let i = 0; i < 60; i++) {
+    a.player.animTime = i / 120;
+    trail.capture(a, raw);
+  }
+  assert.equal(trail.samples(a)[0].time, 0);
+  assert.ok(trail.samples(a).length <= 48);
+  a.player.animTime += 0.12;
+  trail.capture(a, []);
+  trail.draw(a, { x: 0, depth: 0, width: 800, height: 600, zoom: 1 });
+  assert.equal(fills, 1);
+  assert.ok(ctx.globalAlpha > 0 && ctx.globalAlpha < 0.36);
+  a.player.animTime += 0.2;
+  trail.draw(a, {});
+  assert.equal(fills, 1);
 });
