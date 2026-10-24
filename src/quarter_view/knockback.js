@@ -23,11 +23,13 @@ export function applyGroundKnockback(attacker, target, region) {
   const dz = (direction.z * power + aim.z * forward + aim.x * lateral) * multiplier;
   if (Math.hypot(dx, dz) <= 0.0001) return;
   const oldAxis = target.quarterImpulse || target.quarterAim || { x: target.player.facing || 1, z: 0 };
-  const oldSpeed = Number(target.player.vx || 0) * (target.player.facing || 1);
+  const oldSpeed = Number(target.player.vx || 0) * (target.quarterVelocityFacing || target.player.facing || 1);
   const vx = oldAxis.x * oldSpeed + dx,
     vz = oldAxis.z * oldSpeed + dz;
   target.quarterImpulse = normalizeDirection(vx, vz);
+  target.quarterImpulseSerial = target.player.attackSerial;
   target.player.vx = Math.hypot(vx, vz) * (target.player.facing || 1);
+  target.quarterVelocityFacing = target.player.facing || 1;
   target.player.velocityControl = { ...target.player.velocityControl, x: true };
 }
 
@@ -39,4 +41,5 @@ export function applyQuarterKnockback(attacker, target, region, world) {
   const aim = region.quarterOrigin?.aim || attacker.quarterAim || { x: attacker.player.facing || 1, z: 0 };
   const sign = (attacker.player.facing || 1) * (target.player.facing || 1);
   target.quarterImpulse = { x: aim.x * sign, z: aim.z * sign };
+  target.quarterImpulseSerial = target.player.attackSerial;
 }

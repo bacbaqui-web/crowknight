@@ -1,0 +1,141 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+import { PuppetPlayer } from '../src/actor_runtime_engine.js';
+import { defaultTuningFor } from '../src/actor_tuning_helper.js';
+import { mergeTuning } from '../src/project_data_normalizer_helper.js';
+import { prepareSkillActions } from '../src/skill_runtime_helper.js';
+import { requestRuntimeAction } from '../src/action_trigger_engine.js';
+import { applyGroundKnockback } from '../src/quarter_view/knockback.js';
+import { preparePlaneMotion, finishPlaneMotion, movementInput } from '../src/quarter_view/motion.js';
+
+const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
+const world = { floorY: 430, minX: -100000, maxX: 100000, worldPhysics: { gravity: 1, inertia: 30 } };
+function fixture() {
+  const def = saved.characters.find((a) => a.id === 'player_01');
+  const tuning = mergeTuning(defaultTuningFor(def), saved.actors.player_01.tuning);
+  prepareSkillActions(tuning);
+  const player = new PuppetPlayer(480, 430, {});
+  player.applyTuning(tuning);
+  const actor = { player, quarterDepth: 0, quarterAim: { x: 1, z: 0 } };
+  let previous = new Set();
+  return {
+    actor,
+    step(codes = [], count = 1) {
+      let delta;
+      for (let i = 0; i < count; i++) {
+        const keys = new Set(codes),
+          pressed = new Set(codes.filter((key) => !previous.has(key)));
+        previous = keys;
+        const x = player.x,
+          z = actor.quarterDepth;
+        const input = preparePlaneMotion(actor, movementInput(keys), keys, pressed);
+        player.update(1 / 60, input.keys, input.pressed, world);
+        finishPlaneMotion(actor);
+        delta = { x: player.x - x, z: actor.quarterDepth - z };
+      }
+      return delta;
+    },
+  };
+}
+
+test('a recovered walk releases the old knockback axis, preserving its first hit displacement', () => {
+  for (const code of ['ArrowLeft', 'ArrowRight', 'QuarterUp', 'QuarterDown']) {
+    const { actor, step } = fixture();
+    step(['ArrowRight'], 30);
+    requestRuntimeAction(actor.player, 'hurt', -1);
+    const serial = actor.player.attackSerial;
+    applyGroundKnockback({ player: { x: actor.player.x + 100, facing: -1 }, quarterAim: { x: 0, z: 1 } }, actor, {
+      reaction: { knockback: 50, knockbackMode: 'set' },
+    });
+    const impulse = actor.quarterImpulse;
+    const hit = step([], 1);
+    assert.ok(hit.x * impulse.x + hit.z * impulse.z > 0);
+    step([code], 360);
+    actor.quarterDepth = 0;
+    const delta = step([code], 3);
+    assert.ok(actor.player.attackSerial > serial, 'returns to an input action');
+    assert.equal(actor.quarterImpulse, null);
+    const direction = movementInput(new Set([code]));
+    assert.ok(delta.x * direction.x + delta.z * direction.z > 0, code);
+    assert.ok(Math.abs(delta.x * direction.z - delta.z * direction.x) < 1e-6, code);
+  }
+});
+
+test('simultaneous movement and action edges start the action instead of losing it to walk matching', () => {
+  for (const [code, expected] of [
+    ['KeyQ', 'customAction4'],
+    ['KeyW', 'customAction8'],
+    ['Space', 'customAction3'],
+  ]) {
+    const { actor, step } = fixture();
+    step(['ArrowRight', code]);
+    assert.equal(actor.player.customActionKey, expected);
+    assert.equal(
+      actor.quarterPendingInputs.size,
+      0,
+      JSON.stringify({ code, codes: actor.player.customActionPressCodes })
+    );
+  }
+});
+
+test('an input just before an attack link opens is consumed once and only fresh edges enter sequence history', () => {
+  const { actor, step } = fixture();
+  step(['KeyQ']);
+  step([], 14);
+  step(['KeyQ']);
+  assert.equal(actor.player.customActionKey, 'customAction4', 'early press is initially blocked');
+  assert.equal(actor.quarterPendingInputs.size, 1);
+  step([], 10);
+  assert.equal(actor.player.customActionKey, 'customAction4_2');
+  assert.equal(actor.quarterPendingInputs.size, 0);
+  assert.equal(actor.player.actionTriggerRuntime.history.filter((entry) => entry.key === 'Q').length, 2);
+});
+
+test('an expired blocked input never fires after recovery', () => {
+  const { actor, step } = fixture();
+  requestRuntimeAction(actor.player, 'hurt', 1);
+  step(['KeyW']);
+  step([], 360);
+  assert.equal(actor.quarterPendingInputs.size, 0);
+  assert.notEqual(actor.player.customActionKey, 'customAction8');
+  assert.equal(actor.player.attackSerial, 1);
+});
+
+test('attack-to-roll and roll-to-walk transitions adopt the current depth direction', () => {
+  const { actor, step } = fixture();
+  step(['KeyQ']);
+  step([], 15);
+  step(['QuarterDown', 'KeyW']);
+  step(['QuarterDown'], 8);
+  assert.equal(actor.player.customActionKey, 'customAction8');
+  assert.deepEqual(actor.quarterAim, { x: 0, z: 1 });
+  step(['QuarterUp'], 240);
+  actor.quarterDepth = 0;
+  const delta = step(['QuarterUp'], 3);
+  assert.ok(delta.z < 0);
+  assert.ok(Math.abs(delta.x) < 1e-6);
+});
+
+test('hurt-facing changes do not reverse the pre-hit velocity used when accumulating knockback', () => {
+  const { actor, step } = fixture();
+  step(['ArrowRight'], 30);
+  const speed = actor.player.vx;
+  requestRuntimeAction(actor.player, 'hurt', -1);
+  applyGroundKnockback({ player: { x: actor.player.x + 100, facing: -1 }, quarterAim: { x: 0, z: 1 } }, actor, {
+    reaction: { knockback: 50, knockbackMode: 'set' },
+  });
+  const resultingSpeed = Math.abs(actor.player.vx);
+  assert.ok(Math.abs(actor.quarterImpulse.x * resultingSpeed - speed) < 1e-6);
+  assert.ok(Math.abs(actor.quarterImpulse.z * resultingSpeed - 50) < 1e-6);
+});
+
+test('buffer retries cannot invent a four-press guard sequence', () => {
+  const { actor, step } = fixture();
+  requestRuntimeAction(actor.player, 'hurt', 1);
+  step(['KeyE']);
+  step([], 6);
+  assert.equal(actor.player.actionTriggerRuntime.history.filter((entry) => entry.key === 'E').length, 1);
+  assert.notEqual(actor.player.customActionKey, 'skill_chargePose');
+});

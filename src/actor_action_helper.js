@@ -151,6 +151,11 @@ function airControlPressedInputs(player, world, keys, pressed) {
   const nextPressed = new Set(pressed || []);
   nextPressed.delete('ArrowLeft');
   nextPressed.delete('ArrowRight');
+  if (pressed.fresh) {
+    nextPressed.fresh = new Set(pressed.fresh);
+    nextPressed.fresh.delete('ArrowLeft');
+    nextPressed.fresh.delete('ArrowRight');
+  }
   return nextPressed;
 }
 

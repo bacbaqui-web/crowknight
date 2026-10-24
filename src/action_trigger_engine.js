@@ -45,9 +45,11 @@ const ACTION_TIME_EPSILON = 0.000001;
 
 export function updateActionTriggerRuntime(player, dt, keys, pressed) {
   const runtime = ensureActionTriggerRuntime(player);
+  runtime.consumedCodes = [];
   runtime.nowMs += Math.max(0, Number(dt || 0)) * 1000;
   recordTriggerInputTrace(player, keys, pressed);
-  recordPressedInputs(runtime, pressed);
+  // Buffered retries may trigger actions, but only fresh edges belong in sequence history.
+  recordPressedInputs(runtime, pressed.fresh || pressed);
   trimInputHistory(runtime);
   updateActivePressAction(player, keys);
 
@@ -83,6 +85,7 @@ export function updateActionTriggerRuntime(player, dt, keys, pressed) {
 
   startCustomAction(player, match.action.key, match.facing, match.triggerMode, match.pressCodes);
   startActionCooldown(player, match.action.key, runtimeNowMs(player));
+  runtime.consumedCodes = match.consumedCodes;
   return new Set(match.consumedCodes);
 }
 

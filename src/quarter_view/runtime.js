@@ -19,7 +19,8 @@ export function createQuarterRuntime({ ctx, world }) {
     dirty = true,
     viewportWidth,
     viewportHeight,
-    pauseForSettings = () => {};
+    pauseForSettings = () => {},
+    controlledActor;
   const frameMeter = createPerformanceView({
     button: document.querySelector('#quarterFps'),
     panel: document.querySelector('#quarterPerformance'),
@@ -42,7 +43,10 @@ export function createQuarterRuntime({ ctx, world }) {
   world.quarterView = {
     motionWorld,
     captureAttackRegions,
-    beforePlayer: (actor, keys, pressed) => preparePlaneMotion(actor, movementInput(keys), keys, pressed),
+    beforePlayer(actor, keys, pressed) {
+      controlledActor = actor;
+      return preparePlaneMotion(actor, movementInput(keys), keys, pressed);
+    },
     beforeEnemy(actor, target) {
       const direction = enemyPlaneDirection(actor, target);
       preparePlaneMotion(actor, direction);
@@ -79,6 +83,7 @@ export function createQuarterRuntime({ ctx, world }) {
     draw(frame) {
       if (externalPaused !== Boolean(frame.scenePaused)) frameMeter.reset();
       externalPaused = Boolean(frame.scenePaused);
+      if (externalPaused) controlledActor?.quarterPendingInputs?.clear();
       const frozen = paused || externalPaused;
       if (frozen && previousFrozen && !dirty && viewportWidth === world.viewW && viewportHeight === world.viewH)
         return false;
@@ -103,6 +108,9 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.player.quarterDepth = actor.quarterDepth;
         actor.quarterAim = { x: actor.player.facing || 1, z: 0 };
         actor.quarterImpulse = null;
+        actor.quarterImpulseSerial = null;
+        actor.quarterVelocityFacing = actor.player.facing || 1;
+        actor.quarterPendingInputs = new Map();
         actor.quarterSynthetic = null;
         actor.quarterAttackRegions = [];
         actor.quarterAttackRawRegions = [];
@@ -117,6 +125,7 @@ export function createQuarterRuntime({ ctx, world }) {
         if (!isActive()) return;
         paused = !paused;
         clearInput();
+        controlledActor?.quarterPendingInputs?.clear();
         syncPause();
       };
       pauseForSettings = () => {
@@ -124,6 +133,7 @@ export function createQuarterRuntime({ ctx, world }) {
       };
       document.querySelector('#quarterPause').addEventListener('click', toggle);
       addEventListener('keydown', (event) => {
+        if (event.metaKey || event.ctrlKey) controlledActor?.quarterPendingInputs?.clear();
         if (
           event.code === 'KeyP' &&
           !event.repeat &&
