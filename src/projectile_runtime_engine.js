@@ -256,7 +256,11 @@ function projectileOutOfBounds(projectile, world) {
   const maxX = Number.isFinite(Number(world?.maxX)) ? Number(world.maxX) + margin : Number(projectile.x || 0) + margin;
   const minY = -margin;
   const maxY = Number(world?.floorY ?? 540) + margin;
-  return projectile.x < minX || projectile.x > maxX || projectile.y < minY || projectile.y > maxY;
+  return (
+    (!world?.quarterView?.unbounded && (projectile.x < minX || projectile.x > maxX)) ||
+    projectile.y < minY ||
+    projectile.y > maxY
+  );
 }
 
 function clampFrame(value, frameCount) {

@@ -6,7 +6,12 @@ import { ATTACK_INTERACTION_OBJECT_KEY } from '../src/interaction_object_model_d
 import { scaleUpgradeAttackRegions } from '../src/run_upgrade_effect_helper.js';
 import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
 import { combatTargetRegions } from '../src/quarter_view/spatial.js';
-import { createNativeWeaponTrail, crescentRibbon, trailHitboxOffset } from '../src/quarter_view/native_weapon_trail.js';
+import {
+  createNativeWeaponTrail,
+  crescentRibbon,
+  trailHitboxOffset,
+  directionalTrailPose,
+} from '../src/quarter_view/native_weapon_trail.js';
 const raw = [
   { key: ATTACK_INTERACTION_OBJECT_KEY, x: 30, y: -90, w: 100, h: 30, reaction: { damage: 17, hitMode: 'trace' } },
 ];
@@ -237,9 +242,47 @@ test('trail hitbox influence is partial, capped and follows the depth direction'
   const points = [{}, { x: 0, y: -70 }, { x: 0, y: -70 }];
   const offset = trailHitboxOffset(a, points, [region]);
   assert.equal(offset.x, 0);
-  assert.ok(offset.y > 0 && offset.y < 32);
+  assert.ok(offset.y > 0 && offset.y < 48);
   const huge = { ...region, quarterBoxLength: 10000 };
   const capped = trailHitboxOffset(a, points, [huge]);
-  assert.ok(Math.abs(Math.hypot(capped.x, capped.y) - 32) < 1e-8);
+  assert.ok(Math.abs(Math.hypot(capped.x, capped.y) - 48) < 1e-8);
   assert.deepEqual(trailHitboxOffset(a, points, []), { x: 0, y: 0 });
+});
+
+test('up and down rotate the whole weapon arc without changing its shape', () => {
+  const a = actor();
+  const points = [
+    { x: 50, y: -70 },
+    { x: 120, y: -70 },
+    { x: 120, y: -60 },
+    { x: 50, y: -60 },
+  ];
+  for (const z of [-1, 1]) {
+    a.quarterAim = { x: 0, z };
+    const region = directionalAttackRegions(a, raw)[0];
+    const pose = directionalTrailPose(a, points, { x: 50, y: -70 }, region);
+    assert.ok(Math.abs(pose.points[1].x) < 1e-8);
+    assert.ok((pose.points[1].y + 70) * z > 100);
+    assert.ok(
+      Math.abs(Math.hypot(pose.points[1].x - pose.points[0].x, pose.points[1].y - pose.points[0].y) - 70) < 1e-8
+    );
+  }
+});
+
+test('unbounded ground permits all directions and draws tiles far beyond the old depth limits', async () => {
+  const { constrainGroundPosition } = await import('../src/quarter_view/bounds.js');
+  const { visibleGroundTiles } = await import('../src/quarter_view/ground_renderer.js');
+  for (const sign of [-1, 1]) {
+    const a = actor();
+    a.player.x = sign * 100000;
+    a.quarterDepth = sign * 100000;
+    constrainGroundPosition(a, { minX: 0, maxX: 100, quarterView: { unbounded: true } });
+    assert.equal(a.player.x, sign * 100000);
+    assert.equal(a.quarterDepth, sign * 100000);
+    const tiles = visibleGroundTiles(
+      { x: a.player.x, depth: a.quarterDepth, width: 1280, height: 720, zoom: 1 },
+      a.player.x
+    );
+    assert.ok(tiles.length > 30 && tiles.length < 1000);
+  }
 });

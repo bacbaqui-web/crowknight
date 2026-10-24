@@ -48,7 +48,7 @@ export function createQuarterRenderer({ ctx, world }) {
       width: world.viewW,
       height: world.viewH,
       x: playerActor.player.x + 110,
-      depth: depthOf(playerActor) * 0.35,
+      depth: depthOf(playerActor),
       zoom: formulaScreenZoom(actors, screenZoom),
     };
     ctx.save();

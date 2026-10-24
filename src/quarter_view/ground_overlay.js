@@ -4,7 +4,7 @@ export function createGroundOverlay(ctx, world) {
   let shade, shadeHeight;
   return (hero, view) => {
     const center = Math.floor(hero.player.x / 100) * 100;
-    for (const z of [-480, 480]) {
+    for (const z of world.quarterView?.unbounded ? [] : [-480, 480]) {
       const a = groundPoint(center - 1900, z, view),
         b = groundPoint(center + 1900, z, view);
       ctx.beginPath();

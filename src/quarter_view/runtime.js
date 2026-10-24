@@ -84,6 +84,7 @@ export function createQuarterRuntime({ ctx, world }) {
     dirty = true;
   });
   world.quarterView = {
+    unbounded: true,
     motionWorld,
     prepareAttackRegions: renderer.prepareAttackRegions,
     captureAttackRegions(actor, raw, flat) {
@@ -115,7 +116,7 @@ export function createQuarterRuntime({ ctx, world }) {
     projectileRegion: groundProjectileRegion,
     applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
     respawn(actor, target) {
-      actor.quarterDepth = Math.max(-430, Math.min(430, depthOf(target) + (Math.random() - 0.5) * 500));
+      actor.quarterDepth = depthOf(target) + (Math.random() - 0.5) * 500;
       actor.player.quarterDepth = actor.quarterDepth;
       actor.quarterAim = { x: -1, z: 0 };
       actor.quarterImpulse = null;

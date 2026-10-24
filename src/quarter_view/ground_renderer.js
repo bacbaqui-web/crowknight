@@ -1,11 +1,14 @@
 import { createGpuGroundRenderer } from './gpu_ground_renderer.js';
 import { createGroundOverlay } from './ground_overlay.js';
-import { groundPoint } from './camera.js';
+import { groundPoint, QUARTER_PROJECTION } from './camera.js';
 
 // Preserve the existing tile pattern, projecting only columns that can enter the viewport.
 export function visibleGroundTiles(view, center) {
   const tiles = [];
-  for (let row = -24; row <= 24; row++) {
+  const radius = view.height / (view.zoom * QUARTER_PROJECTION.slope);
+  const firstRow = Math.floor((view.depth - radius) / 80) - 1;
+  const lastRow = Math.ceil((view.depth + radius) / 80) + 1;
+  for (let row = firstRow; row <= lastRow; row++) {
     const z = row * 80;
     const top = groundPoint(center, z - 80, view),
       bottom = groundPoint(center, z + 80, view);

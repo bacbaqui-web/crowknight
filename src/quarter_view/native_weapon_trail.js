@@ -24,7 +24,8 @@ export function createNativeWeaponTrail(ctx, world) {
     if (entry.samples.at(-1)?.time === now) return;
     const contact = weaponContactRegion(actor, raw[0]);
     if (!contact.quarterWeaponContact) return;
-    const points = regionPoints(contact).map((p) => ({ x: p.x, y: p.y, depth: depthOf(actor) }));
+    const pose = directionalTrailPose(actor, regionPoints(contact), contact.quarterWeaponAnchor, hitRegions[0]);
+    const points = pose.points.map((p) => ({ ...p, depth: depthOf(actor) }));
     const desired = trailHitboxOffset(actor, points, hitRegions);
     const old = entry.offset || desired;
     entry.offset = { x: old.x + (desired.x - old.x) * 0.25, y: old.y + (desired.y - old.y) * 0.25 };
@@ -33,8 +34,8 @@ export function createNativeWeaponTrail(ctx, world) {
       time: now,
       points: points.map((p) => ({ ...p, x: p.x + offset.x, y: p.y + offset.y })),
       anchor: {
-        x: contact.quarterWeaponAnchor.x + offset.x,
-        y: contact.quarterWeaponAnchor.y + offset.y,
+        x: pose.anchor.x + offset.x,
+        y: pose.anchor.y + offset.y,
         depth: depthOf(actor),
       },
     });
@@ -160,8 +161,25 @@ export function trailHitboxOffset(actor, points, regions) {
       Math.hypot(p.x - origin.x, p.y - origin.y) > Math.hypot(best.x - origin.x, best.y - origin.y) ? p : best
     );
   } else return { x: 0, y: 0 };
-  const dx = (target.x - tip.x) * 0.25,
-    dy = (target.y - tip.y) * 0.25;
-  const scale = Math.min(1, 32 / Math.max(0.001, Math.hypot(dx, dy)));
+  const influence = region.quarterDirectionalBox ? 0.45 : 0.25;
+  const dx = (target.x - tip.x) * influence,
+    dy = (target.y - tip.y) * influence;
+  const scale = Math.min(1, (region.quarterDirectionalBox ? 48 : 32) / Math.max(0.001, Math.hypot(dx, dy)));
   return { x: dx * scale, y: dy * scale };
+}
+
+// Rotate the complete native swing as a rigid shape; its curvature and timing stay intact.
+export function directionalTrailPose(actor, points, anchor, region) {
+  if (!region?.quarterDirectionalBox) return { points, anchor };
+  const aim = region.quarterBoxAim;
+  const angle = Math.atan2(aim.z * QUARTER_PROJECTION.slope, aim.x) - (actor.player.facing < 0 ? Math.PI : 0);
+  const c = Math.cos(angle),
+    s = Math.sin(angle),
+    origin = region.quarterBoxOrigin;
+  const rotate = (p) => {
+    const x = p.x - origin.x,
+      y = p.y - origin.y;
+    return { x: origin.x + x * c - y * s, y: origin.y + x * s + y * c };
+  };
+  return { points: points.map(rotate), anchor: rotate(anchor) };
 }
