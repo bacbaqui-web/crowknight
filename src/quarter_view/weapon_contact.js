@@ -35,6 +35,7 @@ export function weaponContactRegion(actor, original) {
     ys = points.map((p) => p.y);
   return {
     ...original,
+    quarterWeaponContact: true,
     points,
     x: Math.min(...xs),
     y: Math.min(...ys),
@@ -59,4 +60,10 @@ export function syncEnemyWeaponFacing(actor) {
   actor.quarterAim = { x: -aim.x, z: aim.z };
   // A mirrored pose is a discontinuity, not a sword sweep across the entire actor.
   actor.previousAttackRegions = [];
+}
+
+export function weaponTrailRegion(actor, region) {
+  if (region.quarterWeaponContact) return region;
+  const contact = weaponContactRegion(actor, region);
+  return contact === region ? region : scaleUpgradeAttackRegions(actor.player, [contact])[0];
 }

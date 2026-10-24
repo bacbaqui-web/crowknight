@@ -21,8 +21,16 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 3);
-  for (const name of ['camera', 'ground_shaders', 'gpu_ground_renderer']) {
+  assert.equal(Object.keys(imports).length, 7);
+  for (const name of [
+    'camera',
+    'ground_shaders',
+    'gpu_ground_renderer',
+    'attack_geometry',
+    'slash_trail',
+    'weapon_contact',
+    'knockback',
+  ]) {
     const key = `https://example.test/crowknight/src/quarter_view/${name}.js`;
     assert.equal(imports[key], `${key}?projection=3f`);
   }

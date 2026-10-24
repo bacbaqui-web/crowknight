@@ -17,7 +17,7 @@ export function applyGroundKnockback(attacker, target, region) {
   }
   const power = Math.max(0, Number(reaction.knockback || 0));
   const forward = Number(reaction.knockbackExtraVx || 0),
-    lateral = -Number(reaction.knockbackExtraVy || 0);
+    lateral = -Number(reaction.knockbackExtraVy || 0) * (attacker.player.facing || 1);
   const multiplier = (attacker.player.runUpgrades?.knockback || 1) * (target.player.runUpgrades?.resistance || 1);
   const dx = (direction.x * power + aim.x * forward - aim.z * lateral) * multiplier;
   const dz = (direction.z * power + aim.z * forward + aim.x * lateral) * multiplier;

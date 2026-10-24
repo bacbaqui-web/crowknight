@@ -6,7 +6,8 @@ import { previousAttackRegion } from '../interaction_overlap_helper.js';
 export function attackPoint(actor, point, lateral = 0, plane = attackPlane(actor)) {
   const aim = actor.quarterAim || { x: actor.player.facing || 1, z: 0 };
   const forward = (point.x - actor.player.x) * (actor.player.facing || 1);
-  if (plane === 'ground') lateral += actor.player.y - point.y;
+  // Preserve the weapon's handedness when rotating its mirrored side pose onto the floor.
+  if (plane === 'ground') lateral += (actor.player.y - point.y) * (actor.player.facing || 1);
   return {
     x: actor.player.x + aim.x * forward - aim.z * lateral,
     depth: depthOf(actor) + aim.z * forward + aim.x * lateral,

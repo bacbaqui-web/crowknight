@@ -1,7 +1,7 @@
 import { attackPlane } from '../attack_plane_helper.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 import { attackPoint, screenPoint } from './attack_geometry.js';
-import { isProjectileAttack } from './weapon_contact.js';
+import { isProjectileAttack, weaponTrailRegion } from './weapon_contact.js';
 
 export const TRAIL_LIMIT = 24;
 export const TRAIL_LIFETIME = 0.18;
@@ -35,7 +35,7 @@ export function createSlashTrails(ctx, world) {
     const plane = attackPlane(actor);
     for (let index = 0; index < Math.min(2, raw.length); index++) {
       const region = raw[index];
-      const p = regionPoints(region);
+      const p = regionPoints(weaponTrailRegion(actor, region));
       if (p.length < 4) continue;
       const wide = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) >= Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y);
       const base = wide ? mid(p[0], p[3]) : mid(p[0], p[1]);

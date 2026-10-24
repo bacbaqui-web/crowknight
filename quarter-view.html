@@ -300,7 +300,15 @@
       (() => {
         const imports = {};
         const revision = Date.now().toString(36);
-        for (const name of ['camera', 'ground_shaders', 'gpu_ground_renderer']) {
+        for (const name of [
+          'camera',
+          'ground_shaders',
+          'gpu_ground_renderer',
+          'attack_geometry',
+          'slash_trail',
+          'weapon_contact',
+          'knockback',
+        ]) {
           const canonical = new URL(`./src/quarter_view/${name}.js`, location.href);
           const fresh = new URL(canonical);
           fresh.searchParams.set('projection', revision);
