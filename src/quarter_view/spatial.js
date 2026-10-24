@@ -1,4 +1,5 @@
 import { attackPlane } from '../attack_plane_helper.js';
+import { constrainGroundPosition } from './bounds.js';
 import { attackOrigin } from './attack_geometry.js';
 import { depthOf, normalizeDirection } from './camera.js';
 import { readInteractionRegions, cachedInteractionRegions } from '../combat_cache_helper.js';
@@ -44,7 +45,7 @@ export function groundProjectileRegion(projectile, region) {
   return { ...region, quarterPlane: 'ground', y: depthOf(projectile) - 16, h: 32, points: null };
 }
 
-export function resolveGroundCollision(a, b, dimensions = null) {
+export function resolveGroundCollision(a, b, dimensions = null, world = null) {
   const dx = b.player.x - a.player.x,
     dz = depthOf(b) - depthOf(a);
   const distance = Math.hypot(dx, dz);
@@ -72,6 +73,8 @@ export function resolveGroundCollision(a, b, dimensions = null) {
   a.quarterDepth -= normal.z * overlap * shares.aShare;
   b.player.x += normal.x * overlap * shares.bShare;
   b.quarterDepth += normal.z * overlap * shares.bShare;
+  constrainGroundPosition(a, world);
+  constrainGroundPosition(b, world);
 }
 export function sameGroundContact(a, b) {
   return Math.abs(depthOf(a) - depthOf(b)) <= 35;

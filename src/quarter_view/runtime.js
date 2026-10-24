@@ -58,7 +58,7 @@ export function createQuarterRuntime({ ctx, world }) {
     },
     distance: (a, b) => Math.hypot(a.player.x - b.player.x, depthOf(a) - depthOf(b)),
     targetRegions: combatTargetRegions,
-    resolveCollision: resolveGroundCollision,
+    resolveCollision: (a, b, dimensions) => resolveGroundCollision(a, b, dimensions, world),
     sameGroundContact,
     attackRegions: groundAttackRegions,
     projectileRegion: groundProjectileRegion,

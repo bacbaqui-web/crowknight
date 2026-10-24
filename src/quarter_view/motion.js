@@ -1,4 +1,5 @@
 import { depthOf, normalizeDirection } from './camera.js';
+import { constrainGroundPosition } from './bounds.js';
 import { prepareActionInput, finishActionInput } from './action_input.js';
 
 export function movementInput(keys) {
@@ -62,8 +63,9 @@ export function finishPlaneMotion(actor, world = null) {
   const travel = (player.x - start.x) * (player.facing || 1);
   const rawX = player.x;
   const projectedX = start.x + travel * axis.x;
-  player.x = Math.max(world?.minX ?? -Infinity, Math.min(world?.maxX ?? Infinity, projectedX));
-  actor.quarterDepth = Math.max(-480, Math.min(480, start.z + travel * axis.z));
+  player.x = projectedX;
+  actor.quarterDepth = start.z + travel * axis.z;
+  constrainGroundPosition(actor, world);
   const shift = player.x - rawX;
   const targetMove = player.customActionTargetMove;
   if (targetMove) {

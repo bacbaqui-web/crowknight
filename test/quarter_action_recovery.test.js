@@ -7,12 +7,14 @@ import { defaultTuningFor } from '../src/actor_tuning_helper.js';
 import { mergeTuning } from '../src/project_data_normalizer_helper.js';
 import { prepareSkillActions } from '../src/skill_runtime_helper.js';
 import { requestRuntimeAction } from '../src/action_trigger_engine.js';
+import { resolveGroundCollision } from '../src/quarter_view/spatial.js';
 import { applyGroundKnockback } from '../src/quarter_view/knockback.js';
 import { preparePlaneMotion, finishPlaneMotion, movementInput } from '../src/quarter_view/motion.js';
 
 const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
 const world = { floorY: 430, minX: -100000, maxX: 100000, worldPhysics: { gravity: 1, inertia: 30 } };
-function fixture() {
+function fixture(physics = world.worldPhysics) {
+  const stage = { ...world, worldPhysics: physics };
   const def = saved.characters.find((a) => a.id === 'player_01');
   const tuning = mergeTuning(defaultTuningFor(def), saved.actors.player_01.tuning);
   prepareSkillActions(tuning);
@@ -31,7 +33,7 @@ function fixture() {
         const x = player.x,
           z = actor.quarterDepth;
         const input = preparePlaneMotion(actor, movementInput(keys), keys, pressed);
-        player.update(1 / 60, input.keys, input.pressed, world);
+        player.update(1 / 60, input.keys, input.pressed, stage);
         finishPlaneMotion(actor);
         delta = { x: player.x - x, z: actor.quarterDepth - z };
       }
@@ -138,4 +140,53 @@ test('buffer retries cannot invent a four-press guard sequence', () => {
   step([], 6);
   assert.equal(actor.player.actionTriggerRuntime.history.filter((entry) => entry.key === 'E').length, 1);
   assert.notEqual(actor.player.customActionKey, 'skill_chargePose');
+});
+
+test('public gravity, inertia and air control never reverse recovered movement across hit and facing phases', () => {
+  const physics = { gravity: 25, inertia: 3, airControl: 10 };
+  for (const facing of [-1, 1])
+    for (const warmup of [0, 12, 20]) {
+      for (const code of ['ArrowLeft', 'ArrowRight', 'QuarterUp', 'QuarterDown']) {
+        const { actor, step } = fixture(physics);
+        actor.player.facing = facing;
+        step([facing < 0 ? 'ArrowLeft' : 'ArrowRight'], warmup);
+        requestRuntimeAction(actor.player, 'hurt', -facing);
+        applyGroundKnockback({ player: { x: actor.player.x + 100, facing: -1 }, quarterAim: { x: 0, z: 1 } }, actor, {
+          reaction: { knockback: 50, knockbackMode: 'set' },
+        });
+        let recovered = 0;
+        for (let frame = 0; frame < 180; frame++) {
+          const delta = step([code]);
+          if (actor.player.customActionKey !== 'customAction1' || actor.quarterImpulse) continue;
+          recovered++;
+          const direction = movementInput(new Set([code]));
+          assert.ok(
+            delta.x * direction.x + delta.z * direction.z >= -1e-6,
+            JSON.stringify({ facing, warmup, code, frame, delta, vx: actor.player.vx })
+          );
+        }
+        assert.ok(recovered > 60);
+      }
+    }
+});
+
+test('collision pushes at either depth wall cannot create an outward position and an opposite-input correction next frame', () => {
+  for (const edge of [-480, 480]) {
+    const { actor, step } = fixture({ gravity: 25, inertia: 3, airControl: 10 });
+    actor.quarterDepth = edge;
+    const code = edge < 0 ? 'QuarterUp' : 'QuarterDown';
+    const region = { x: 0, y: 350, w: 60, h: 80, reaction: { noOverlap: true, pushPower: 1, resistance: 1 } };
+    Object.defineProperty(actor.player, 'collisionInteractionRegions', { value: [region] });
+    const other = {
+      quarterDepth: edge - Math.sign(edge) * 20,
+      player: { x: actor.player.x, y: 430, collisionInteractionRegions: [region] },
+    };
+    for (let frame = 0; frame < 60; frame++) {
+      resolveGroundCollision(actor, other, null, world);
+      assert.equal(actor.quarterDepth, edge);
+      assert.equal(actor.player.quarterDepth, edge);
+      const delta = step([code]);
+      assert.equal(delta.z, 0);
+    }
+  }
 });
