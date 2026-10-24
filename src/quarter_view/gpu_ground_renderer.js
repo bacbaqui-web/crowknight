@@ -41,12 +41,7 @@ function pipeline(gl) {
   const location = (name) => gl.getUniformLocation(program, name);
   gl.uniform1i(location('uTile'), 0);
   gl.uniform2f(location('uTileSize'), GROUND_TILE_SIZE.x, GROUND_TILE_SIZE.z);
-  gl.uniform3f(
-    location('uProjection'),
-    QUARTER_PROJECTION.slope,
-    QUARTER_PROJECTION.cosine,
-    QUARTER_PROJECTION.distance
-  );
+  gl.uniform1f(location('uSlope'), QUARTER_PROJECTION.slope);
   return { program, texture, size: location('uSize'), view: location('uView') };
 }
 export function createGpuGroundRenderer(ctx, world, createSurface) {

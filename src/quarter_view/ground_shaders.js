@@ -7,19 +7,13 @@ precision highp float;
 uniform sampler2D uTile;
 uniform vec2 uSize;
 uniform vec3 uView;
-uniform vec3 uProjection;
+uniform float uSlope;
 uniform vec2 uTileSize;
 out vec4 color;
 void main() {
   vec3 base=vec3(23.,37.,31.)/255.;
-  float screenZ=(uSize.y-gl_FragCoord.y-uSize.y*.58)/uView.z;
-  float denominator=uProjection.x*uProjection.z+screenZ*uProjection.y;
-  if(denominator<=0.) { color=vec4(base,1.);return; }
-  float relativeZ=screenZ*uProjection.z/denominator;
-  float z=uView.y+relativeZ;
-  if(abs(z)>2000.) { color=vec4(base,1.);return; }
-  float scale=uProjection.z/(uProjection.z-relativeZ*uProjection.y);
-  float x=uView.x+(gl_FragCoord.x-uSize.x*.5)/(uView.z*scale);
+  float z=uView.y+(uSize.y-gl_FragCoord.y-uSize.y*.58)/(uView.z*uSlope);
+  float x=uView.x+(gl_FragCoord.x-uSize.x*.5)/uView.z;
   vec2 grid=vec2(x/(uTileSize.x*.5)+z/uTileSize.y,x/(uTileSize.x*.5)-z/uTileSize.y);
   float row=floor(grid.x+.5)-floor(grid.y+.5);
   if(abs(row)>24.) { color=vec4(base,1.);return; }

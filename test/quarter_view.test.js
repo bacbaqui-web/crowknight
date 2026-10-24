@@ -33,16 +33,29 @@ function close(a, b, label) {
   assert.ok(Math.abs(a - b) < 1e-7, `${label}: ${a} != ${b}`);
 }
 
-test('lower camera perspective is mild and projection is invertible', () => {
+test('low camera angle is preserved with a constant orthographic scale and invertible projection', () => {
   const view = { width: 1280, height: 760, x: 480, depth: 0, zoom: 1 };
   for (const depth of [-480, -100, 0, 150, 480]) {
     const p = groundPoint(830, depth, view),
       back = groundFromScreen(p.x, p.y, view);
     close(back.x, 830, 'x');
     close(back.depth, depth, 'depth');
-    assert.ok(p.scale > 0.9 && p.scale < 1.13);
+    assert.equal(p.scale, view.zoom);
   }
   assert.ok(groundPoint(480, 100, view).y - groundPoint(480, 0, view).y < 40);
+  for (const zoom of [0.6, 1, 1.4])
+    for (const cameraDepth of [-300, 0, 300]) {
+      const camera = { ...view, zoom, depth: cameraDepth };
+      for (const depth of [-480, 0, 480]) {
+        const a = groundPoint(480, depth, camera),
+          b = groundPoint(580, depth, camera);
+        close(b.x - a.x, 100 * zoom, 'constant apparent width');
+        close(a.scale, zoom, 'constant apparent height');
+        const recovered = groundFromScreen(b.x, b.y, camera);
+        close(recovered.x, 580, 'orthographic inverse x');
+        close(recovered.depth, depth, 'orthographic inverse depth');
+      }
+    }
 });
 
 for (const def of saved.characters) {

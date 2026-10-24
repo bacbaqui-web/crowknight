@@ -27,6 +27,7 @@ function fixture() {
     },
     getUniformLocation: (_, name) => name,
     uniform1i() {},
+    uniform1f() {},
     uniform2f() {},
     uniform3f(name, ...values) {
       if (name === 'uView') calls.view = values;
