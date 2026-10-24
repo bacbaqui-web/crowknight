@@ -1,26 +1,13 @@
 import { attackPlane } from '../attack_plane_helper.js';
 import { constrainGroundPosition } from './bounds.js';
 import { attackOrigin } from './attack_geometry.js';
-import { depthOf, normalizeDirection, QUARTER_PROJECTION } from './camera.js';
+import { depthOf, normalizeDirection } from './camera.js';
 import { readInteractionRegions, cachedInteractionRegions } from '../combat_cache_helper.js';
 import { collisionPushShares } from '../combat_collision_helper.js';
 
 export function combatTargetRegions(attacker, target, regions, source = null) {
   if (attacker.quarterDepth == null && target.quarterDepth == null) return regions;
   const plane = source?.quarterPlane || attackPlane(attacker);
-  if (plane === 'weapon') {
-    const depth = depthOf(target),
-      origin = source?.quarterOrigin || attackOrigin(attacker);
-    return regions
-      .filter((region) => Math.abs(depth - origin.depth) <= Math.max(35, Math.min(70, region.w / 2)) * 2)
-      .map((region) => ({
-        ...region,
-        y: region.y + depth * QUARTER_PROJECTION.slope,
-        ...(region.points
-          ? { points: region.points.map((point) => ({ x: point.x, y: point.y + depth * QUARTER_PROJECTION.slope })) }
-          : {}),
-      }));
-  }
   if (plane === 'height') {
     const origin = source?.quarterOrigin || attackOrigin(attacker);
     const dx = target.player.x - origin.x,

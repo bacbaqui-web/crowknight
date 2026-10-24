@@ -132,3 +132,15 @@ test('respawn and animation-clock resets cannot retain a previous-life glow or p
   trail.forget(actor);
   assert.equal(trail.samples(actor).length, 0);
 });
+
+test('changing only the depth aim cannot bridge opposite effect sweeps while the native facing stays fixed', () => {
+  const { trail, actor, region } = fixture();
+  actor.quarterAim = { x: 0, z: -1 };
+  trail.capture(actor, [region()]);
+  actor.quarterAim = { x: 0, z: 1 };
+  actor.player.animTime += 1 / 60;
+  trail.capture(actor, [region()]);
+  const last = trail.samples(actor).at(-1);
+  assert.deepEqual(last.sweep, last.polygon);
+  assert.equal(actor.player.facing, 1);
+});

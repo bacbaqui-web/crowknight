@@ -7,7 +7,7 @@ export function applyGroundKnockback(attacker, target, region) {
   const aim = attacker.quarterAim || { x: attacker.player.facing || 1, z: 0 };
   let direction = aim;
   if (reaction.knockbackMode !== 'set') {
-    const previous = region.quarterPlane === 'weapon' ? null : previousAttackRegion(attacker, region);
+    const previous = previousAttackRegion(attacker, region);
     const current = interactionRegionCenter(region);
     const before = previous && interactionRegionCenter(previous);
     direction =

@@ -202,7 +202,7 @@ test('real player and enemy combat consume the weapon-aligned region captured fo
     const aligned = alignEnemyWeaponRegions(enemy, raw);
     const flat = groundAttackRegions(enemy, aligned)[0];
     hero.player.x = flat.x + flat.w / 2;
-    hero.quarterDepth = 0;
+    hero.quarterDepth = flat.y + flat.h / 2;
     Object.defineProperty(hero.player, 'hurtInteractionRegions', {
       value: [
         {
@@ -245,3 +245,50 @@ test('real player and enemy combat consume the weapon-aligned region captured fo
     assert.deepEqual(captured[0].reaction, { ...raw[0].reaction, hitMode: 'trace' });
   }
 });
+
+for (const facing of [-1, 1])
+  for (const z of [-1, 1])
+    test(`weapon-derived live combat keeps native facing ${facing} and damages the ${z < 0 ? 'up' : 'down'} lane only`, () => {
+      const hero = makeActor('player_01', 480, 0);
+      hero.player.facing = facing;
+      hero.quarterAim = { x: 0, z };
+      const action = hero.player.customActions.find(
+        (action) => hero.player.actionSettings[action.key]?.group === 'attack'
+      );
+      let aligned, flat;
+      for (let i = 0; i <= 100; i++) {
+        hero.player.actionPreview = { action: action.key, t: i / 100 };
+        aligned = alignEnemyWeaponRegions(hero, hero.player.attackInteractionRegions);
+        flat = groundAttackRegions(hero, aligned)[0];
+        if (flat && (z > 0 ? flat.y > 20 : flat.y + flat.h < -20)) break;
+      }
+      assert.ok(flat && (z > 0 ? flat.y > 20 : flat.y + flat.h < -20));
+      const native = JSON.stringify(hero.player.weaponAnchorTransform());
+      const front = makeActor('swordman', flat.x + flat.w / 2, flat.y + flat.h / 2);
+      front.id = 'front';
+      const back = makeActor('swordman', front.player.x, -front.quarterDepth);
+      back.id = 'back';
+      for (const actor of [hero, front, back])
+        Object.defineProperty(actor.player, 'collisionInteractionRegions', { value: [] });
+      for (const target of [front, back]) {
+        Object.defineProperty(target.player, 'hurtInteractionRegions', {
+          value: [{ key: 'body', x: target.player.x - 1, y: 350, w: 2, h: 80, reaction: { hurtByAttack: true } }],
+        });
+        Object.defineProperty(target.player, 'guardInteractionRegions', { value: [] });
+      }
+      const frontHp = front.hp,
+        backHp = back.hp;
+      resolveCombat({
+        actors: [hero, front, back],
+        playerActor: hero,
+        world: { ...world, quarterView: { ...plane, prepareAttackRegions: alignEnemyWeaponRegions } },
+        particleEffects: particles,
+        onPlayerDeath() {},
+        onPlayerKill() {},
+        onEnemyDeath() {},
+      });
+      assert.ok(front.hp < frontHp);
+      assert.equal(back.hp, backHp);
+      assert.equal(hero.player.facing, facing);
+      assert.equal(JSON.stringify(hero.player.weaponAnchorTransform()), native);
+    });

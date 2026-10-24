@@ -36,18 +36,19 @@ export function createSlashTrails(ctx, world) {
     for (const region of raw.slice(0, 2)) {
       const contact = weaponTrailRegion(actor, region),
         p = regionPoints(contact);
-      const plane = contact.quarterWeaponContact ? 'weapon' : attackPlane(actor);
+      const plane = attackPlane(actor);
       if (p.length < 4) continue;
       const project = (point) => {
-        const result = attackPoint(actor, point, 0, plane, contact.quarterWeaponAnchor);
-        if (plane === 'ground' && !contact.quarterWeaponAnchor) result.y = world.floorY;
+        const result = attackPoint(actor, point, 0, plane);
+        if (plane === 'ground') result.y = world.floorY;
         return result;
       };
       const polygon = p.map(project);
       const wide = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) >= Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y);
       const root = project(wide ? mid(p[0], p[3]) : mid(p[0], p[1]));
       const tip = project(wide ? mid(p[1], p[2]) : mid(p[3], p[2]));
-      const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${plane}:${region.key}:${actor.player.facing}`;
+      const aim = actor.quarterAim;
+      const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${plane}:${region.key}:${actor.player.facing}:${aim?.x}:${aim?.z}`;
       const previous = entry.samples.findLast((sample) => sample.key === key && now - sample.time <= 0.065);
       // Use the exact captured collision sweep, including its active-frame boundaries.
       const captured =

@@ -47,7 +47,8 @@ export function weaponContactRegion(actor, original) {
 }
 
 export function alignWeaponRegions(actor, regions) {
-  const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${actor.player.facing}`;
+  const aim = actor.quarterAim;
+  const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${actor.player.facing}:${aim?.x}:${aim?.z}`;
   if (actor.quarterWeaponContactKey !== key) actor.previousAttackRegions = [];
   actor.quarterWeaponContactKey = key;
   if (!regions.length || isProjectileAttack(actor)) return regions;

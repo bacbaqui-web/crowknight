@@ -13,9 +13,7 @@ import {
   screenPoint,
   attackRegionPoint,
 } from '../src/quarter_view/attack_geometry.js';
-import { combatTargetRegions } from '../src/quarter_view/spatial.js';
-import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
-import { groundPoint, QUARTER_PROJECTION } from '../src/quarter_view/camera.js';
+import { groundPoint } from '../src/quarter_view/camera.js';
 import { createSlashTrails } from '../src/quarter_view/slash_trail.js';
 import { cloneInteractionRegionSnapshot, regionPoints } from '../src/interaction_swept_region_helper.js';
 import {
@@ -92,7 +90,7 @@ function recordingContext() {
 }
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-5, `${a} vs ${b}`);
 for (const id of ['player_01', 'enemy_01', 'swordman'])
-  test(`${id}: actual drawn blade corners, glow and damage use identical projection at every active pose`, () => {
+  test(`${id}: native blade rendering stays unchanged while glow and damage share the aimed projection at every active pose`, () => {
     const actor = fixture(id),
       player = actor.player;
     let checked = 0;
@@ -139,10 +137,15 @@ for (const id of ['player_01', 'enemy_01', 'swordman'])
               ];
               // Obtain the configured plane through the same authoritative geometry path.
               const flat = groundAttackRegions(actor, [region])[0];
+              region.points.forEach((point, index) => {
+                const directed = attackPoint(actor, point, 0, flat.quarterPlane);
+                close(flat.points[index].x, flat.quarterPlane === 'ground' ? directed.x : point.x);
+                close(flat.points[index].y, flat.quarterPlane === 'ground' ? directed.depth : point.y);
+              });
               for (let i = 0; i < 4; i++) {
                 const drawn = transformMatrixPoint(image.matrix, ...local[i]);
                 const expected = screenPoint(
-                  attackPoint(actor, region.points[i], 0, flat.quarterPlane, region.quarterWeaponAnchor),
+                  { x: region.points[i].x, depth: actor.quarterDepth, y: region.points[i].y },
                   world,
                   view
                 );
@@ -182,7 +185,7 @@ test('fast blade movement shares the exact collision sweep with the glow, and in
       const last = trail.samples(actor).at(-1),
         damage = actor.quarterAttackRegions[0];
       assert.deepEqual(
-        last.sweep.map((point) => ({ x: point.x, y: point.y })),
+        last.sweep.map((point) => ({ x: point.x, y: damage.quarterPlane === 'ground' ? point.depth : point.y })),
         damage.points
       );
       checked++;
@@ -192,13 +195,35 @@ test('fast blade movement shares the exact collision sweep with the glow, and in
   assert.ok(checked > 1);
 });
 
-test('native weapon contact uses visible height and rejects a far depth overlap', () => {
-  const actor = fixture('player_01');
-  const source = { quarterPlane: 'weapon', quarterOrigin: { depth: 60 }, x: 500, y: 300, w: 40, h: 20 };
-  const target = { quarterDepth: 100, player: { x: 500, y: 430 } };
-  const raw = [{ x: 500, y: 300 - 100 * QUARTER_PROJECTION.slope, w: 30, h: 20 }];
-  assert.ok(interactionRegionsOverlap(source, combatTargetRegions(actor, target, raw, source)[0]));
-  assert.equal(combatTargetRegions(actor, { ...target, quarterDepth: 500 }, raw, source).length, 0);
-  const high = [{ ...raw[0], y: raw[0].y - 150 }];
-  assert.equal(interactionRegionsOverlap(source, combatTargetRegions(actor, target, high, source)[0]), false);
+test('weapon-derived ground geometry rotates through eight aim directions without changing its native pose', () => {
+  const actor = fixture('player_01'),
+    player = actor.player;
+  const action = player.customActions.find((action) => player.actionSettings[action.key]?.group === 'attack');
+  let raw;
+  for (let i = 0; i <= 100; i++) {
+    player.actionPreview = { action: action.key, t: i / 100 };
+    raw = alignEnemyWeaponRegions(actor, player.attackInteractionRegions);
+    if (raw.length) break;
+  }
+  assert.ok(raw.length);
+  const native = JSON.stringify(player.weaponAnchorTransform());
+  const mean = raw[0].points.reduce((s, p) => ({ x: s.x + p.x / 4, y: s.y + p.y / 4 }), { x: 0, y: 0 });
+  const forward = (mean.x - player.x) * player.facing;
+  for (const [x, z] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1],
+  ]) {
+    const length = Math.hypot(x, z);
+    actor.quarterAim = { x: x / length, z: z / length };
+    const region = groundAttackRegions(actor, raw)[0];
+    const center = region.points.reduce((s, p) => ({ x: s.x + p.x / 4, y: s.y + p.y / 4 }), { x: 0, y: 0 });
+    close((center.x - player.x) * actor.quarterAim.x + (center.y - actor.quarterDepth) * actor.quarterAim.z, forward);
+    assert.equal(JSON.stringify(player.weaponAnchorTransform()), native);
+  }
 });
