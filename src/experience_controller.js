@@ -1,3 +1,4 @@
+import { syncProgressionHealth } from './skill_progression_effects.js';
 import { attractPickup } from './pickup_magnet_helper.js';
 import { progressionChoices } from './skill_progression_data.js';
 export function createExperienceController({ getPlayer, clearInput, view }) {
@@ -9,6 +10,7 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
     orbs = [];
   let pathId = null;
   const ranks = {};
+  let route = [];
   const threshold = () => (40 + (level - 1) * 20) * 10;
   function render() {
     getPlayer().experience = { level, xp, threshold: threshold() };
@@ -16,15 +18,22 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
   }
   function offer() {
     if (!active || !pending || offered) return;
-    offered = progressionChoices(pathId);
+    offered = progressionChoices(pathId, route);
     clearInput();
     view.show(offered, ranks, choose, pathId);
   }
   function choose(id, offerToken = offered) {
     if (!active || !offered || offerToken !== offered || !offered.some((skill) => skill.id === id)) return false;
-    if (!pathId) pathId = offered.find((skill) => skill.id === id).pathId;
-    ranks[id] = (ranks[id] || 0) + 1;
+    const choice = offered.find(skill => skill.id === id);
+    if (!pathId) {
+      pathId = choice.pathId;
+      getPlayer().player.runSkillPathColor = choice.color;
+    } else {
+      ranks[choice.effectId] = (ranks[choice.effectId] || 0) + 1;
+      route.push(choice.direction);
+    }
     getPlayer().player.runSkills = { ...ranks };
+    syncProgressionHealth(getPlayer(), true);
     pending--;
     offered = null;
     view.hide();
@@ -48,12 +57,15 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       active = true;
       level = 1;
       pathId = null;
+      route = [];
+      delete getPlayer().player.runSkillPathColor;
       xp = pending = 0;
       offered = null;
       orbs = [];
       for (const key of Object.keys(ranks)) delete ranks[key];
       const p = getPlayer().player;
       p.runSkills = {};
+      syncProgressionHealth(getPlayer());
       p.runSkillActions = getPlayer().tuning.skillActions;
       p.runAirJumpUsed = false;
       p.runCharge = null;
@@ -69,6 +81,8 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
       pending = 0;
       offered = null;
       delete getPlayer().player.runSkills;
+      delete getPlayer().player.runSkillPathColor;
+      syncProgressionHealth(getPlayer());
       getPlayer().player.runCharge = null;
       delete getPlayer().experience;
       view.hide();
@@ -137,6 +151,6 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
     choose,
     isPaused: () => Boolean(pending || offered),
     orbSnapshot: () => orbs.map((orb) => ({ ...orb })),
-    snapshot: () => ({ level, xp, pending, pathId, ranks: { ...ranks } }),
+    snapshot: () => ({ level, xp, pending, pathId, route: [...route], ranks: { ...ranks } }),
   };
 }

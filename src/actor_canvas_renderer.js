@@ -46,7 +46,15 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   const selectedGlowParts = actor === selectedActor ? activeEditPartKeys() : [];
   actor.player.glowPart = selectedGlowPart;
   actor.player.glowParts = selectedGlowParts;
+  ctx.save();
+  if (actor.player.runSkillPathColor && !actor.player.dead) {
+    ctx.shadowColor = actor.player.runSkillPathColor;
+    ctx.shadowBlur = 7;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
   actor.player.draw(ctx);
+  ctx.restore();
   actor.player.glowPart = previousGlowPart;
   actor.player.glowParts = previousGlowParts;
 

@@ -1,3 +1,4 @@
+import { progressionEffects, progressionMaxHealth } from './skill_progression_effects.js';
 import { chargeAttackScale } from './charge_attack_helper.js';
 import { baseHealth } from './actor_health_helper.js';
 // Run modifiers live on runtime players; authored tuning and snapshots stay untouched.
@@ -23,8 +24,7 @@ export function applyRunUpgradeEffects(actors, playerActor, snapshot) {
     const previous = actor.maxHp ?? baseHealth(actor.tuning);
     const effects = upgradeEffects(snapshot[actor === playerActor ? 'player' : 'enemy']);
     actor.player.runUpgrades = effects;
-    const base = baseHealth(actor.tuning);
-    actor.maxHp = base * effects.health;
+    actor.maxHp = progressionMaxHealth(actor);
     // Grant only the newly added capacity, equally for both sides; dead actors stay dead.
     if (!actor.player.dead && actor.hp > 0)
       actor.hp = Math.min(actor.maxHp, actor.hp + Math.max(0, actor.maxHp - previous));
@@ -35,13 +35,13 @@ export function clearRunUpgradeEffects(actors) {
   for (const actor of actors) {
     delete actor.player.runUpgrades;
     delete actor.player.runUpgradeAttackWindow;
-    actor.maxHp = baseHealth(actor.tuning);
+    actor.maxHp = progressionMaxHealth(actor);
     actor.hp = Math.min(actor.hp, actor.maxHp);
   }
 }
 
 export function scaleUpgradeAttackRegions(player, regions) {
-  const scale = (player.runUpgrades?.reach || 1) * chargeAttackScale(player);
+  const scale = (player.runUpgrades?.reach || 1) * progressionEffects(player).reach * chargeAttackScale(player);
   if (scale === 1) return regions;
   // Expand damage geometry about the actor without scaling hurt/collision boxes or the sprite.
   return regions.map((region) => {
@@ -71,11 +71,11 @@ export function scaleUpgradeAttackRegions(player, regions) {
 }
 
 export function upgradeVelocity(player, settings, x, y) {
-  if (!player.runUpgrades) return { x, y };
+  const effects = progressionEffects(player);
   if (settings.group !== 'movement') return { x, y };
   const skillJump =
     player.customActionKey === player.runSkillActions?.doubleJump
       ? 1 + Math.max(0, (player.runSkills?.doubleJump || 1) - 1) * 0.1
       : 1;
-  return { x: x * player.runUpgrades.speed, y: y < 0 ? y * Math.sqrt(player.runUpgrades.jump * skillJump) : y };
+  return { x: x * (player.runUpgrades?.speed || 1) * effects.speed, y: y < 0 ? y * Math.sqrt((player.runUpgrades?.jump || 1) * skillJump * effects.jump) : y };
 }

@@ -1,3 +1,4 @@
+import { progressionEffects } from './skill_progression_effects.js';
 import { upgradeVelocity } from './run_upgrade_effect_helper.js';
 import { timelineFrameCount, timelineFrameDelta, timelinePlaybackProgress } from './timeline_playback_helper.js';
 import { actionMoveMirrorSign } from './action_mirror_helper.js';
@@ -104,13 +105,13 @@ function startTargetMove(player, state, targetMove, settings) {
   state.startX = Number(player.x || 0);
   state.startY = Number(player.y || 0);
   const move = { x: Number(targetMove.x || 0), y: Number(targetMove.y || 0) };
-  if (settings.group === 'movement' && move.y < 0) move.y *= player.runUpgrades?.jump || 1;
+  if (settings.group === 'movement' && move.y < 0) move.y *= (player.runUpgrades?.jump || 1) * progressionEffects(player).jump;
   state.targetX = shadowX + move.x * mirrorSign;
   state.targetY = shadowY + move.y;
   state.elapsedFrames = 0;
   state.moveFrames =
     normalizeTargetMoveFrames(targetMove.moveFrames) /
-    (settings.group === 'movement' ? player.runUpgrades?.speed || 1 : 1);
+    (settings.group === 'movement' ? (player.runUpgrades?.speed || 1) * progressionEffects(player).speed : 1);
   state.active = true;
   state.started = true;
 }

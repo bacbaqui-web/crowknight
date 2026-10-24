@@ -1,3 +1,4 @@
+import { progressionEffects } from './skill_progression_effects.js';
 import { runSkillDamageMultiplier } from './skill_runtime_helper.js';
 import { recordHealthDamage } from './actor_health_helper.js';
 import { requestRuntimeAction } from './action_trigger_engine.js';
@@ -36,11 +37,16 @@ export function applyInteractionDamage({
   }
   const damage = Math.max(
     0,
-    Number(rawDamage ?? 20) * (attacker.player.runUpgrades?.damage || 1) * runSkillDamageMultiplier(attacker.player)
+    Number(rawDamage ?? 20) * (attacker.player.runUpgrades?.damage || 1) * runSkillDamageMultiplier(attacker.player) * progressionEffects(attacker.player).damage * progressionEffects(target.player).armor
   );
   if (!Number.isFinite(damage) || damage <= 0) return false;
   recordHealthDamage(target);
+  const actualDamage = Math.min(target.hp, damage);
   target.hp = Math.max(0, target.hp - damage);
+  const lifeSteal = progressionEffects(attacker.player).lifeSteal;
+  if (lifeSteal && attacker.hp > 0 && !attacker.player.dead) {
+    attacker.hp = Math.min(attacker.maxHp, attacker.hp + actualDamage * lifeSteal);
+  }
   world?.combatSounds?.contact('hit', attacker, target);
   target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
   if (isRuntimeDebugEnabled()) {

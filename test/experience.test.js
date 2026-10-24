@@ -15,45 +15,46 @@ function setup() {
   c.reset();
   return { c, player, offers };
 }
-test('경험치 여러 레벨 이월과 중복 선택 방지', () => {
+test('첫 레벨업은 세 계열만 선택하고 다음 레벨업에서 시작 기술을 습득한다', () => {
   const { c, offers, player } = setup();
   c.addExperience(1100);
   c.update(0, { floorY: 0 });
-  assert.deepEqual(c.snapshot(), { level: 3, xp: 100, pending: 2, pathId: null, ranks: {} });
-  assert.equal(offers[0].length, 4);
-  assert.equal(new Set(offers[0].map((s) => s.id)).size, 4);
+  assert.deepEqual(offers[0].map(s => s.id), ['attack', 'guard', 'move']);
   assert.equal(c.choose('missing'), false);
-  assert.equal(c.choose('fourthStrike', offers[0]), true);
-  assert.equal(c.choose('fourthStrike', offers[0]), false);
-  assert.deepEqual(offers[1].map((skill) => skill.id), ['chargeAttack', 'fourthStrike']);
-  assert.equal(c.choose('parry'), false);
-  c.choose('fourthStrike', offers[1]);
-  assert.equal(player.player.runSkills.fourthStrike, 2);
+  assert.equal(c.choose('attack', offers[0]), true);
+  assert.deepEqual(c.snapshot().ranks, {});
+  assert.equal(player.player.runSkillPathColor, '#ff8a78');
+  assert.equal(c.choose('attack', offers[0]), false);
+  assert.deepEqual(offers[1].map(s => s.effectId), ['fourthStrike']);
+  assert.equal(c.choose(offers[1][0].id, offers[1]), true);
+  assert.equal(player.player.runSkills.fourthStrike, 1);
   assert.equal(c.isPaused(), false);
   c.stop();
-  c.addExperience(100);
-  assert.equal(c.choose('fourthStrike'), false);
+  assert.equal(player.player.runSkillPathColor, undefined);
   c.reset();
-  assert.equal(c.snapshot().level, 1);
   assert.equal(c.snapshot().pathId, null);
+  assert.deepEqual(c.snapshot().route, []);
 });
-test('경험치 기준이 열 배이며 방어/점프/구르기 선택 후 다른 계열이 나오지 않는다', () => {
-  for (const id of ['parry', 'doubleJump', 'backflip']) {
+test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 않는다', () => {
+  for (const [path, root, left, right] of [
+    ['attack', 'fourthStrike', 'fourthStrike', 'chargeAttack'],
+    ['guard', 'vitality', 'armor', 'parry'],
+    ['move', 'swiftness', 'doubleJump', 'backflip'],
+  ]) {
     const { c, offers } = setup();
-    c.addExperience(399);
-    c.update(0, { floorY: 0 });
-    assert.equal(c.snapshot().level, 1);
+    c.addExperience(399);c.update(0, { floorY: 0 });
     assert.equal(offers.length, 0);
-    c.addExperience(1);
-    c.update(0, { floorY: 0 });
-    assert.equal(c.snapshot().level, 2);
-    assert.deepEqual(offers[0].map((skill) => skill.id), ['fourthStrike', 'parry', 'doubleJump', 'backflip']);
-    c.choose(id);
-    c.addExperience(600);
-    c.update(0, { floorY: 0 });
-    assert.deepEqual(offers[1].map((skill) => skill.id), [id]);
-    c.choose(id);
-    assert.equal(c.snapshot().ranks[id], 2);
+    c.addExperience(1);c.update(0, { floorY: 0 });c.choose(path);
+    for (let step = 0; step < 4; step++) {
+      c.addExperience(5000);c.update(0, { floorY: 0 });
+      const pair = offers.at(-1);
+      if (step === 0) assert.deepEqual(pair.map(s => s.effectId), [root]);
+      if (step === 1) assert.deepEqual(pair.map(s => s.effectId), [left, right]);
+      assert.ok(pair.every(s => s.pathId === path));
+      const oldToken = pair;
+      c.choose(pair.at(-1).id, pair);
+      assert.equal(c.choose(oldToken[0].id, oldToken), false);
+    }
   }
 });
 test('흰 구슬은 비행/착지 후 가까이 가야 수집되며 원거리 흡수하지 않는다', () => {

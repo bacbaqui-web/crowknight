@@ -1,6 +1,5 @@
 import { bindChoiceNumberKeys } from './input_control_controller.js';
-import { RUN_SKILLS } from './skill_runtime_helper.js';
-import { SKILL_PATHS } from './skill_progression_data.js';
+import { SKILL_PATHS, PROGRESSION_SKILLS } from './skill_progression_data.js';
 export function createExperienceView(root = document.querySelector('.stage-wrap'), { showHud = false } = {}) {
   const hud = document.createElement('div');
   hud.className = 'experience-hud';
@@ -40,7 +39,7 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
       bar.max = threshold;
       bar.value = xp;
       skills.textContent = Object.entries(ranks)
-        .map(([id, rank]) => `${RUN_SKILLS.find((skill) => skill.id === id)?.name || id} ${rank}`)
+        .map(([id, rank]) => `${PROGRESSION_SKILLS.find((skill) => skill.id === id)?.name || id} ${rank}`)
         .join(' · ');
     },
     setVisible(value) {
@@ -49,7 +48,8 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
     show(offered, ranks, choose, pathId) {
       title.textContent = pathId
         ? `레벨업 · ${SKILL_PATHS.find((path) => path.id === pathId)?.name} 계열 기술 습득과 강화`
-        : '첫 레벨업 · 이번 판의 기술 계열을 선택하세요';
+        : '첫 레벨업 · 이번 판의 길을 선택하세요';
+      modal.classList.toggle('path-choice', !pathId);
       cards.replaceChildren();
       for (const [index, skill] of offered.entries()) {
         const button = document.createElement('button');
@@ -63,9 +63,14 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
         image.src = new window.URL(`../assets/icons/upgrades/${skill.icon}.svg`, import.meta.url).href;
         image.alt = '';
         const name = document.createElement('strong');
-        name.textContent = `${skill.name} · ${ranks[skill.id] ? '강화' : '습득'}`;
+        name.textContent = skill.kind === 'path' ? skill.name : `${skill.name} · ${ranks[skill.effectId] ? '강화' : '습득'}`;
         const detail = document.createElement('span');
         detail.textContent = skill.detail;
+        if (skill.branchLabel) {
+          const branch = document.createElement('small');
+          branch.textContent = skill.branchLabel;
+          button.append(branch);
+        }
         button.append(shortcut, image, name, detail);
         button.onclick = () => choose(skill.id, offered);
         cards.append(button);
