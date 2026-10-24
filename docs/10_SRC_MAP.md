@@ -386,7 +386,6 @@ Input
 - `combat_audio_player.js`: 로컬 CC0 WAV 로딩/디코딩, 음량/동시 재생 제한, 제스처 해제/음소거.
 - `combat_sound_controller.js`: 공격 판정 시작과 실제 피해/방어/패링에 전투음 연결.
 
-- `game_music_controller.js`: 플레이 OST 반복 재생/정지, 낮은 볼륨/음소거, 배경 탭 재생 제어.
 
 - `skill_progression_data.js`: 첫 레벨업 4계열 및 선택 계열의 후속 기술 선택 목록.
 
