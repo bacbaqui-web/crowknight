@@ -1,10 +1,12 @@
 import { attackPlane } from '../attack_plane_helper.js';
-import { attackPoint } from './attack_geometry.js';
+import { attackPoint, effectPoint } from './attack_geometry.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 
 export function attackFootprint(actor, region, floorY) {
   return regionPoints(region).map((point) => ({
-    ...attackPoint(actor, point, 0, attackPlane(actor)),
+    ...(region.quarterEffectContact
+      ? effectPoint(actor, point, region.quarterEffectCenter, undefined, region.quarterEffectRadius)
+      : attackPoint(actor, point, 0, attackPlane(actor))),
     ...(attackPlane(actor) === 'ground' ? { y: floorY } : {}),
   }));
 }

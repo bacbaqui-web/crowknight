@@ -1,5 +1,6 @@
 import { attackPlane } from '../attack_plane_helper.js';
-import { groundPoint, depthOf } from './camera.js';
+import { effectDirection } from './effect_directions.js';
+import { groundPoint, depthOf, QUARTER_PROJECTION } from './camera.js';
 import { regionPoints, sweptInteractionRegion } from '../interaction_swept_region_helper.js';
 import { previousAttackRegion } from '../interaction_overlap_helper.js';
 
@@ -15,6 +16,28 @@ export function attackPoint(actor, point, lateral = 0, plane = attackPlane(actor
     y: plane === 'height' ? point.y : (actor.quarterFloorY ?? actor.player.y),
   };
 }
+// Image and collision corners share this projection, including visible thickness at depth-only height attacks.
+export function effectPoint(actor, point, center, plane = attackPlane(actor), radius) {
+  const aim = effectDirection(actor),
+    facing = actor.player.facing || 1;
+  if (radius != null) {
+    const forward = (point.x - center.x) * facing;
+    const lateral = plane === 'ground' ? (center.y - point.y) * facing : 0;
+    return {
+      x:
+        actor.player.x +
+        aim.x * (radius + forward) -
+        aim.z * lateral +
+        (plane === 'height' && Math.abs(aim.x) < 0.1 ? -aim.z * 0.2 * forward : 0),
+      depth: depthOf(actor) + aim.z * (radius + forward) + aim.x * lateral,
+      y: plane === 'height' ? point.y : (actor.quarterFloorY ?? actor.player.y),
+    };
+  }
+  const directed = { ...actor, quarterAim: aim };
+  const result = attackPoint(directed, point, 0, plane);
+  if (plane === 'height' && Math.abs(aim.x) < 0.1) result.x += -aim.z * 0.2 * (point.x - center.x) * facing;
+  return result;
+}
 export function screenPoint(point, world, view) {
   const p = groundPoint(point.x, point.depth, view);
   return { x: p.x, y: p.y - (world.floorY - point.y) * p.scale, scale: p.scale };
@@ -23,9 +46,29 @@ export function screenPoint(point, world, view) {
 export function groundAttackRegions(actor, regions) {
   const plane = attackPlane(actor);
   const flat = regions.map((region) => {
+    if (region.quarterEffectContact && plane === 'height') {
+      const points = regionPoints(region).map((point) => {
+        const p = effectPoint(actor, point, region.quarterEffectCenter, plane, region.quarterEffectRadius);
+        return { x: p.x, y: p.y + p.depth * QUARTER_PROJECTION.slope };
+      });
+      const xs = points.map((p) => p.x),
+        ys = points.map((p) => p.y);
+      return {
+        ...region,
+        quarterPlane: 'effect-height',
+        quarterOrigin: { ...attackOrigin(actor), aim: effectDirection(actor) },
+        points,
+        x: Math.min(...xs),
+        y: Math.min(...ys),
+        w: Math.max(...xs) - Math.min(...xs),
+        h: Math.max(...ys) - Math.min(...ys),
+      };
+    }
     if (plane === 'height') return { ...region, quarterPlane: plane, quarterOrigin: attackOrigin(actor) };
     const points = regionPoints(region).map((point) => {
-      const p = attackPoint(actor, point, 0, plane);
+      const p = region.quarterEffectContact
+        ? effectPoint(actor, point, region.quarterEffectCenter, plane, region.quarterEffectRadius)
+        : attackPoint(actor, point, 0, plane);
       return { x: p.x, y: p.depth };
     });
     const xs = points.map((p) => p.x),
@@ -68,6 +111,7 @@ export function currentAttackRegions(actor) {
 }
 
 export function attackRegionPoint(actor, point, region, floorY) {
+  if (region.quarterPlane === 'effect-height') return { x: point.x, depth: 0, y: point.y };
   if (region.quarterPlane === 'height') return attackPoint(actor, point, 0, 'height');
   return { x: point.x, depth: point.y, y: region.quarterElevation ?? floorY };
 }

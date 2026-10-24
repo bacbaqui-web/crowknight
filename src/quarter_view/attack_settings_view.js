@@ -45,7 +45,7 @@ export function createAttackSettingsView({ panel, onOpen, onChange, storage = lo
       overrides[actor.id]?.[key] ?? actor.player.actionSettings?.[key]?.quarterAttackPlane
     );
     const mode = attackPlane(actor, key);
-    status.textContent = `${mode === 'height' ? '높이 공격: 공격과 상대의 높이가 겹칠 때 적중합니다.' : '지면 공격: 공격 궤적을 바닥에 눕히고 높이를 무시합니다.'} ${persisted ? '캐릭터·무기 모습은 유지하고 검광·판정만 공격 방향을 따릅니다. 선택은 이 브라우저의 시험장에 저장됩니다.' : '브라우저 저장을 사용할 수 없어 이번 실행에만 적용됩니다.'}`;
+    status.textContent = `${mode === 'height' ? '높이 공격: 공격과 상대의 높이가 겹칠 때 적중합니다.' : '지면 공격: 공격 궤적을 바닥에 눕히고 높이를 무시합니다.'} ${persisted ? '캐릭터·무기 모습은 유지하고 이펙트·판정만 공격 방향을 따릅니다. 선택은 이 브라우저의 시험장에 저장됩니다.' : '브라우저 저장을 사용할 수 없어 이번 실행에만 적용됩니다.'}`;
   }
   function syncActions() {
     const actor = selectedActor();

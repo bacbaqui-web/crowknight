@@ -34,7 +34,7 @@ export function applyGroundKnockback(attacker, target, region) {
 }
 
 export function applyQuarterKnockback(attacker, target, region, world) {
-  if (region.quarterPlane !== 'height') return applyGroundKnockback(attacker, target, region);
+  if (!['height', 'effect-height'].includes(region.quarterPlane)) return applyGroundKnockback(attacker, target, region);
   const before = target.player.vx;
   applyKnockback(attacker, target, region, { ...world, quarterView: null });
   if (target.player.vx === before) return;

@@ -5,7 +5,7 @@ import { applyQuarterKnockback } from './knockback.js';
 import { GAME_KEYS } from '../game_config_data.js';
 import { createQuarterRenderer } from './renderer.js';
 import { depthOf } from './camera.js';
-import { alignWeaponRegions, syncEnemyWeaponFacing } from './weapon_contact.js';
+import { syncEnemyWeaponFacing } from './weapon_contact.js';
 import { prepareQuarterFacing } from './facing.js';
 import { movementInput, preparePlaneMotion, finishPlaneMotion, enemyPlaneDirection } from './motion.js';
 import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundProjectileRegion } from './spatial.js';
@@ -44,10 +44,9 @@ export function createQuarterRuntime({ ctx, world }) {
   });
   world.quarterView = {
     motionWorld,
-    prepareAttackRegions: alignWeaponRegions,
+    prepareAttackRegions: renderer.prepareAttackRegions,
     captureAttackRegions(actor, raw, flat) {
       captureAttackRegions(actor, raw, flat);
-      renderer.captureTrails(actor, raw);
     },
     beforePlayer(actor, keys, pressed) {
       controlledActor = actor;
@@ -71,7 +70,6 @@ export function createQuarterRuntime({ ctx, world }) {
     projectileRegion: groundProjectileRegion,
     applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
     respawn(actor, target) {
-      renderer.forgetTrail(actor);
       actor.quarterDepth = Math.max(-430, Math.min(430, depthOf(target) + (Math.random() - 0.5) * 500));
       actor.player.quarterDepth = actor.quarterDepth;
       actor.quarterAim = { x: -1, z: 0 };
@@ -110,7 +108,6 @@ export function createQuarterRuntime({ ctx, world }) {
       externalPaused = previousFrozen = false;
       frameMeter.reset();
       renderer.resetEffectCache();
-      renderer.resetTrails();
       renderer.resetDebugHistory();
       actors.forEach((actor, index) => {
         actor.quarterFloorY = world.floorY;

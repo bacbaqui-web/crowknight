@@ -15,6 +15,9 @@ import {
   groundProjectileRegion,
 } from '../src/quarter_view/spatial.js';
 import { captureAttackRegions, groundAttackRegions } from '../src/quarter_view/attack_geometry.js';
+import { alignEffectRegions } from '../src/quarter_view/effect_geometry.js';
+import { EFFECT_DIRECTIONS } from '../src/quarter_view/effect_directions.js';
+import { createRuntimeEffectReader } from '../src/runtime_effect_reader.js';
 import { alignEnemyWeaponRegions } from '../src/quarter_view/weapon_contact.js';
 import { attackPlane } from '../src/attack_plane_helper.js';
 import { resolveCombat, resolveProjectileCombat } from '../src/combat_engine.js';
@@ -292,3 +295,47 @@ for (const facing of [-1, 1])
       assert.equal(hero.player.facing, facing);
       assert.equal(JSON.stringify(hero.player.weaponAnchorTransform()), native);
     });
+
+for (const direction of EFFECT_DIRECTIONS)
+  test(`effect-image live damage uses the ${direction.key} placement and excludes its opposite`, () => {
+    const hero = makeActor('player_01', 480, 0),
+      read = createRuntimeEffectReader();
+    hero.quarterAim = direction;
+    const action = hero.player.customActions.find((a) => hero.player.actionSettings[a.key]?.group === 'attack');
+    let flat;
+    for (let frame = 0; frame <= 100; frame++) {
+      hero.player.actionPreview = { action: action.key, t: frame / 100 };
+      const raw = alignEffectRegions(hero, hero.player.attackInteractionRegions, read);
+      flat = groundAttackRegions(hero, raw)[0];
+      if (flat) break;
+    }
+    assert.ok(flat);
+    const front = makeActor('swordman', flat.x + flat.w / 2, flat.y + flat.h / 2);
+    front.id = 'effect-front';
+    const back = makeActor('swordman', 960 - front.player.x, -front.quarterDepth);
+    back.id = 'effect-back';
+    for (const actor of [hero, front, back])
+      Object.defineProperty(actor.player, 'collisionInteractionRegions', { value: [] });
+    for (const target of [front, back]) {
+      Object.defineProperty(target.player, 'hurtInteractionRegions', {
+        value: [{ key: 'body', x: target.player.x - 1, y: 350, w: 2, h: 80, reaction: { hurtByAttack: true } }],
+      });
+      Object.defineProperty(target.player, 'guardInteractionRegions', { value: [] });
+    }
+    const hp = front.hp,
+      backHp = back.hp;
+    resolveCombat({
+      actors: [hero, front, back],
+      playerActor: hero,
+      world: {
+        ...world,
+        quarterView: { ...plane, prepareAttackRegions: (actor, raw) => alignEffectRegions(actor, raw, read) },
+      },
+      particleEffects: particles,
+      onPlayerDeath() {},
+      onPlayerKill() {},
+      onEnemyDeath() {},
+    });
+    assert.ok(front.hp < hp);
+    assert.equal(back.hp, backHp);
+  });

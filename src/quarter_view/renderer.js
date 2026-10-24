@@ -1,5 +1,4 @@
-import { createSlashTrails } from './slash_trail.js';
-import { isProjectileAttack } from './weapon_contact.js';
+import { alignEffectRegions, effectImageBounds } from './effect_geometry.js';
 import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
 import { drawQuarterAttackEffect } from './attack_effects.js';
 import { createHitboxView } from './hitbox_view.js';
@@ -33,8 +32,12 @@ export function createQuarterRenderer({ ctx, world }) {
     return () => ctx.restore();
   }
   const drawGround = createGroundRenderer(ctx, world);
-  const trails = createSlashTrails(ctx, world);
+  let loadedEffects;
   function draw({ actors, playerActor, particleEffects, experience, healthDrops, effectAssets, screenZoom }) {
+    if (loadedEffects !== effectAssets) {
+      loadedEffects = effectAssets;
+      Object.values(effectAssets || {}).forEach(effectImageBounds);
+    }
     const shake = particleEffects.getScreenShakeOffset();
     view = {
       width: world.viewW,
@@ -70,9 +73,7 @@ export function createQuarterRenderer({ ctx, world }) {
             } finally {
               restore();
             }
-            if (isProjectileAttack(actor))
-              drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame);
-            trails.draw(actor, view, actor === playerActor);
+            drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame);
           } finally {
             actor.player.renderPartOffsets = null;
           }
@@ -96,10 +97,7 @@ export function createQuarterRenderer({ ctx, world }) {
   return {
     draw,
     projectEntity,
-    captureTrails: trails.capture,
-    resetTrails: trails.reset,
-    forgetTrail: trails.forget,
-    trailStats: trails.stats,
+    prepareAttackRegions: (actor, raw) => alignEffectRegions(actor, raw, readEffectFrame, loadedEffects),
     resetDebugHistory: hitboxes.reset,
     getRenderStats: () => drawGround.stats,
     resetEffectCache: readEffectFrame.reset,

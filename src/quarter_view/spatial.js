@@ -1,13 +1,28 @@
 import { attackPlane } from '../attack_plane_helper.js';
 import { constrainGroundPosition } from './bounds.js';
 import { attackOrigin } from './attack_geometry.js';
-import { depthOf, normalizeDirection } from './camera.js';
+import { depthOf, normalizeDirection, QUARTER_PROJECTION } from './camera.js';
 import { readInteractionRegions, cachedInteractionRegions } from '../combat_cache_helper.js';
 import { collisionPushShares } from '../combat_collision_helper.js';
 
 export function combatTargetRegions(attacker, target, regions, source = null) {
   if (attacker.quarterDepth == null && target.quarterDepth == null) return regions;
   const plane = source?.quarterPlane || attackPlane(attacker);
+  if (plane === 'effect-height') {
+    const origin = source.quarterOrigin || attackOrigin(attacker);
+    const dx = target.player.x - origin.x,
+      dz = depthOf(target) - origin.depth;
+    const lateral = -dx * origin.aim.z + dz * origin.aim.x;
+    return regions
+      .filter((region) => Math.abs(lateral) <= 16 + Math.max(8, Math.min(70, region.w / 2)))
+      .map((region) => ({
+        ...region,
+        y: region.y + depthOf(target) * QUARTER_PROJECTION.slope,
+        ...(region.points
+          ? { points: region.points.map((p) => ({ x: p.x, y: p.y + depthOf(target) * QUARTER_PROJECTION.slope })) }
+          : {}),
+      }));
+  }
   if (plane === 'height') {
     const origin = source?.quarterOrigin || attackOrigin(attacker);
     const dx = target.player.x - origin.x,

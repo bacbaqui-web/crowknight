@@ -107,12 +107,9 @@ export function drawAttackTrail(ctx, actor, effectAssets, readEffectFrame = effe
     ctx.stroke();
     ctx.restore();
   }
-  const { key: effectKey } = active;
-  const progress = active.usesEffectPlayback
-    ? runtimeEffectPlaybackProgress(player, effectKey, actor.tuning.effectSettings?.[effectKey])
-    : active.progress;
-  const config = readEffectFrame(actor.tuning, effectKey, progress);
-  if (!config || config.image === 'none' || Number(config.opacity ?? 1) <= 0) return;
+  const frame = readAttackEffectFrame(actor, readEffectFrame, active);
+  if (!frame) return;
+  const { effectKey, config } = frame;
   const asset = resolveEffectAsset(effectAssets, config.image, actor.id);
   if (!asset) return;
 
@@ -141,6 +138,20 @@ export function drawAttackTrail(ctx, actor, effectAssets, readEffectFrame = effe
   ctx.globalAlpha = clamp(Number(config.opacity ?? 1), 0, 1);
   ctx.drawImage(asset, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   ctx.restore();
+}
+
+export function readAttackEffectFrame(
+  actor,
+  readEffectFrame = effectFrameAt,
+  active = activePlayerEffectAction(actor.player)
+) {
+  if (!active || actor.player.runCharge?.animating || actor.respawning || actor.player.dead) return null;
+  const { key: effectKey } = active;
+  const progress = active.usesEffectPlayback
+    ? runtimeEffectPlaybackProgress(actor.player, effectKey, actor.tuning.effectSettings?.[effectKey])
+    : active.progress;
+  const config = readEffectFrame(actor.tuning, effectKey, progress);
+  return !config || config.image === 'none' || Number(config.opacity ?? 1) <= 0 ? null : { effectKey, config };
 }
 
 function activePlayerEffectAction(player) {
