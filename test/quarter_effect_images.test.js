@@ -182,3 +182,28 @@ test('image-based aerial hitboxes preserve vertical knockback and ground aiming'
   assert.equal(target.quarterImpulse.x, 0);
   assert.equal(Math.abs(target.quarterImpulse.z), 1);
 });
+
+test('each of the eight effect placements is independent of the unchanged sprite facing', () => {
+  const actor = fixture('player_01'),
+    player = actor.player,
+    read = createRuntimeEffectReader();
+  const action = player.customActions.find((a) => player.actionSettings[a.key]?.group === 'attack');
+  for (let i = 0; i <= 100; i++) {
+    player.actionPreview = { action: action.key, t: i / 100 };
+    if (player.attackInteractionRegions.length) break;
+  }
+  for (const aim of EFFECT_DIRECTIONS) {
+    actor.quarterAim = aim;
+    const positions = [];
+    for (const facing of [-1, 1]) {
+      player.facing = facing;
+      positions.push(
+        groundAttackRegions(actor, alignEffectRegions(actor, player.attackInteractionRegions, read, assets))[0].points
+      );
+    }
+    positions[0].forEach((point, i) => {
+      close(point.x, positions[1][i].x);
+      close(point.y, positions[1][i].y);
+    });
+  }
+});

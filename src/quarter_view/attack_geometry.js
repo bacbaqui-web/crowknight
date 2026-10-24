@@ -22,7 +22,7 @@ export function effectPoint(actor, point, center, plane = attackPlane(actor), ra
     facing = actor.player.facing || 1;
   if (radius != null) {
     const forward = (point.x - center.x) * facing;
-    const lateral = plane === 'ground' ? (center.y - point.y) * facing : 0;
+    const lateral = plane === 'ground' ? center.y - point.y : 0;
     return {
       x:
         actor.player.x +
