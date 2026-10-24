@@ -1,5 +1,5 @@
 const FILES = {
-  experiencePickup: ['experience-pickup.wav', 0.32, 1],
+  experiencePickup: ['experience-tap.wav', 0.42, 1],
   healthPickup: ['health-pickup.wav', 0.4, 1],
   clubSwing: ['club-swing.wav', 0.33, 0.92],
   swordSwing: ['sword-swing.wav', 0.26, 1.08],
