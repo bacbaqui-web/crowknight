@@ -1,3 +1,4 @@
+import { createPerformanceView } from './performance_view.js';
 import { createAttackSettingsView } from './attack_settings_view.js';
 import { captureAttackRegions, groundAttackRegions } from './attack_geometry.js';
 import { applyQuarterKnockback } from './knockback.js';
@@ -11,10 +12,20 @@ const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', K
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
   let paused = false,
+    externalPaused = false,
+    previousFrozen = false,
     dirty = true,
     viewportWidth,
     viewportHeight,
     pauseForSettings = () => {};
+  const frameMeter = createPerformanceView({
+    button: document.querySelector('#quarterFps'),
+    panel: document.querySelector('#quarterPerformance'),
+    root: document.body,
+    getCounters: renderer.getRenderStats,
+    isPaused: () => paused || externalPaused,
+  });
+  document.addEventListener('visibilitychange', frameMeter.reset);
   const attackSettings = createAttackSettingsView({
     panel: document.querySelector('#quarterAttackSettings'),
     onOpen: () => pauseForSettings(),
@@ -54,22 +65,34 @@ export function createQuarterRuntime({ ctx, world }) {
     projectEntity: renderer.projectEntity,
   };
   function syncPause() {
+    frameMeter.reset();
     dirty = true;
     document.querySelector('#quarterPause').textContent = paused ? '계속하기 · P' : '일시정지 · P';
     document.querySelector('#quarterPaused').hidden = !paused;
   }
   return {
+    startFrame: frameMeter.start,
+    finishFrame: frameMeter.finish,
     draw(frame) {
-      if (paused && !dirty && viewportWidth === world.viewW && viewportHeight === world.viewH) return;
+      if (externalPaused !== Boolean(frame.scenePaused)) frameMeter.reset();
+      externalPaused = Boolean(frame.scenePaused);
+      const frozen = paused || externalPaused;
+      if (frozen && previousFrozen && !dirty && viewportWidth === world.viewW && viewportHeight === world.viewH)
+        return false;
       renderer.draw(frame);
       dirty = false;
       viewportWidth = world.viewW;
       viewportHeight = world.viewH;
+      previousFrozen = frozen;
+      return true;
     },
     mapCode: (code) => MAP[code] || code,
     gameKeys: new Set([...GAME_KEYS, 'QuarterUp', 'QuarterDown']),
     reset(actors) {
       paused = false;
+      externalPaused = previousFrozen = false;
+      frameMeter.reset();
+      renderer.resetEffectCache();
       renderer.resetDebugHistory();
       actors.forEach((actor, index) => {
         actor.quarterFloorY = world.floorY;

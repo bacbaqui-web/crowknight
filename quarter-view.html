@@ -23,6 +23,20 @@
         <button id="quarterHitboxes" type="button" aria-pressed="false" aria-controls="quarterHitboxLegend">
           히트박스 표시: 꺼짐
         </button>
+        <button id="quarterFps" type="button" aria-pressed="false" aria-controls="quarterPerformance">
+          FPS 표시: 꺼짐
+        </button>
+        <aside
+          id="quarterPerformance"
+          title="보정 전 requestAnimationFrame 간격으로 계산한 최근 1초 평균입니다."
+          aria-label="실시간 성능"
+          aria-live="off"
+          hidden
+        >
+          <strong data-fps-value>측정 중…</strong>
+          <span data-fps-timing></span><span data-fps-cache></span>
+          <small>최근 1초 · 캐시 횟수는 최근 갱신 구간 기준</small>
+        </aside>
         <details id="quarterAttackSettings">
           <summary>공격 방식 선택</summary>
           <label>캐릭터<select data-attack-actor aria-label="공격 방식 캐릭터" disabled></select></label>

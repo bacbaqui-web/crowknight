@@ -2,7 +2,7 @@ import { axisFromMatrix, transformPoint } from './puppet_player_geometry_helper.
 import { createEditableTransform, editableTransformDrawRect } from './editable_object_model_helper.js';
 
 export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
-  if (!key) return null;
+  if (!key || player.captureEditRegions === false) return null;
 
   const matrix = ctx.getTransform();
   const points = [
@@ -28,7 +28,7 @@ export function recordPuppetImageRegion(player, ctx, key, x, y, w, h) {
 }
 
 export function recordPuppetEditHandle(player, ctx, key, placementMatrix = null) {
-  if (!key) return null;
+  if (!key || player.captureEditRegions === false) return null;
 
   const matrix = ctx.getTransform();
   const anchor = transformPoint(matrix, 0, 0);
@@ -63,7 +63,7 @@ export function recordPuppetRectPart(
   h,
   { ax = Number(w || 0) / 2, ay = Number(h || 0) / 2, rot = 0, opacity = 1, type = 'part', source = null } = {}
 ) {
-  if (!key) return null;
+  if (!key || player.captureEditRegions === false) return null;
 
   const transform = createEditableTransform({
     x: Number(x || 0) + Number(ax || 0),
@@ -103,6 +103,7 @@ export function recordPuppetRectPart(
 }
 
 export function recordPuppetJointRegion(player, ctx, key, x, y) {
+  if (player.captureEditRegions === false) return null;
   const matrix = ctx.getTransform();
   const point = transformPoint(matrix, x, y);
   const size = 18;

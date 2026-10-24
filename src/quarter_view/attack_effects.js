@@ -31,11 +31,11 @@ export function attackEffectMatrix(actor, world, view) {
     d = lateral.y - center.y;
   return { a, b, c, d, e: center.x - a * anchor.x - c * anchor.y, f: center.y - b * anchor.x - d * anchor.y };
 }
-export function drawQuarterAttackEffect(ctx, actor, effectAssets, world, view) {
+export function drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame) {
   if (actor.respawning || actor.player.dead) return;
   const m = attackEffectMatrix(actor, world, view);
   ctx.save();
   ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
-  drawAttackTrail(ctx, actor, effectAssets);
+  drawAttackTrail(ctx, actor, effectAssets, readEffectFrame);
   ctx.restore();
 }

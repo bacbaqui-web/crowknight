@@ -1,3 +1,4 @@
+import { healthTickPath, healthTickSpacing } from './health_meter_path_cache.js';
 import { clamp } from './common_helper.js';
 
 // Old saved settings used 20 HP per pip. New saves use maxHp directly.
@@ -37,15 +38,22 @@ export function drawHealthMeter(ctx, actor, x, y, width) {
   ctx.fillRect(left, y, width * ratio(actor.hp), height);
   ctx.strokeStyle = 'rgba(0,0,0,.65)';
   ctx.lineWidth = 1;
-  ctx.beginPath();
-  // Retain ten-HP ticks while readable; dense upgrades must not create unbounded paths.
-  const tickStep = 10 * Math.max(1, Math.ceil(max / 10 / Math.max(1, Math.floor(width / 3))));
-  for (let hp = tickStep; hp < max; hp += tickStep) {
-    const tickX = left + (width * hp) / max;
-    ctx.moveTo(tickX, y);
-    ctx.lineTo(tickX, y + height);
+  const path = healthTickPath(max, width);
+  if (path) {
+    ctx.save();
+    ctx.translate(left, y);
+    ctx.stroke(path);
+    ctx.restore();
+  } else {
+    ctx.beginPath();
+    const tickStep = healthTickSpacing(max, width);
+    for (let hp = tickStep; hp < max; hp += tickStep) {
+      const tickX = left + (width * hp) / max;
+      ctx.moveTo(tickX, y);
+      ctx.lineTo(tickX, y + height);
+    }
+    ctx.stroke();
   }
-  ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,.4)';
   ctx.strokeRect(left, y, width, height);
 }

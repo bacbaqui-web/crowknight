@@ -301,10 +301,13 @@ requestAnimationFrame(loop);
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.033);
   last = now;
+  const frameStart = quarter?.startFrame();
+  let rendered;
   withRuntimeReadCache(() => {
     update(dt);
-    draw();
+    rendered = draw();
   });
+  quarter?.finishFrame(now, frameStart, rendered);
   pressed.clear();
   requestAnimationFrame(loop);
 }
@@ -503,7 +506,9 @@ function draw() {
   const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const playerActor = runActorState.getPlayer();
   if (quarter) {
-    quarter.draw({
+    const rendered = quarter.draw({
+      scenePaused:
+        controlGuideOpen || (runLifecycle.isRunActive() && (runUpgrades.isPaused() || experience.isPaused())),
       actors: gameActors,
       playerActor,
       particleEffects,
@@ -513,7 +518,7 @@ function draw() {
       screenZoom,
     });
     syncRunHud();
-    return;
+    return rendered;
   }
   const renderActors = runActorState.getRenderActors(gameActors);
   const lifecycle = runLifecycle.getSnapshot();

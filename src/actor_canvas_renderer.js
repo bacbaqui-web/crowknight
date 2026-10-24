@@ -81,7 +81,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   ctx.textAlign = 'left';
 }
 
-export function drawAttackTrail(ctx, actor, effectAssets) {
+export function drawAttackTrail(ctx, actor, effectAssets, readEffectFrame = effectFrameAt) {
   if (actor.respawning) return;
   const player = actor.player;
   if (player.runCharge?.animating) return;
@@ -111,7 +111,7 @@ export function drawAttackTrail(ctx, actor, effectAssets) {
   const progress = active.usesEffectPlayback
     ? runtimeEffectPlaybackProgress(player, effectKey, actor.tuning.effectSettings?.[effectKey])
     : active.progress;
-  const config = effectFrameAt(actor.tuning, effectKey, progress);
+  const config = readEffectFrame(actor.tuning, effectKey, progress);
   if (!config || config.image === 'none' || Number(config.opacity ?? 1) <= 0) return;
   const asset = resolveEffectAsset(effectAssets, config.image, actor.id);
   if (!asset) return;

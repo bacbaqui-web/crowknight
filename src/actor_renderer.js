@@ -45,7 +45,7 @@ export function drawPuppetPlayer(player, ctx) {
   ctx.rotate(p.root);
   ctx.translate(master.anchorX || 0, master.anchorY || 0);
   ctx.translate(master.x || 0, master.y || 0);
-  const masterPlacementMatrix = ctx.getTransform();
+  const masterPlacementMatrix = player.captureEditRegions === false ? null : ctx.getTransform();
   ctx.rotate(deg(master.rot || 0));
   ctx.scale(Math.max(0.05, 1 + Number(master.w || 0)), Math.max(0.05, 1 + Number(master.h || 0)));
   recordPuppetEditHandle(player, ctx, 'master', masterPlacementMatrix);
@@ -328,7 +328,7 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
 
   ctx.save();
   ctx.translate(transform.x, transform.y);
-  const placementMatrix = ctx.getTransform();
+  const placementMatrix = player.captureEditRegions === false ? null : ctx.getTransform();
   ctx.rotate(rotation + deg(transform.rot));
   recordPuppetImageRegion(player, ctx, key, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
@@ -356,6 +356,7 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
 }
 
 function drawPuppetImageLessChildParts(player, ctx, parentKey, parentX, parentY) {
+  if (player.captureEditRegions === false) return;
   imageLessChildPartsForParent(parentKey).forEach(({ key: partKey, type }) => {
     const part = player.rig?.[partKey];
     if (!part) return;
@@ -368,6 +369,7 @@ function drawPuppetImageLessChildParts(player, ctx, parentKey, parentX, parentY)
 }
 
 function drawDetachedAttackInteractionObject(player, ctx) {
+  if (player.captureEditRegions === false) return;
   if (attackInteractionFollowsWeapon(player)) return;
   const part = player.rig?.[ATTACK_INTERACTION_OBJECT_KEY];
   if (!part) return;
@@ -390,6 +392,7 @@ function imageLessChildPartsForParent(parentKey) {
 }
 
 function drawPuppetImageLessRectPart(player, ctx, key, part, parentX, parentY, { type = 'part' } = {}) {
+  if (player.captureEditRegions === false) return;
   const offset = player.getPartOffset(key);
   const { width, height } = partRectSize(part, offset, part.baseW || 1, part.baseH || 1);
   const appearance = createEditableAppearance({

@@ -68,6 +68,7 @@ test('ground image is reused only while camera, viewport and tile origin are ide
   for (let i = 0; i < 5; i++) draw(hero, view);
   assert.equal(paints, 2);
   assert.equal(blits, 5);
+  assert.deepEqual(draw.stats, { groundHits: 4, groundBuilds: 1 });
   for (const change of [
     () => view.x++,
     () => view.depth++,

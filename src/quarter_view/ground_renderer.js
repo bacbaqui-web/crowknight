@@ -75,14 +75,18 @@ export function createGroundRenderer(ctx, world, createSurface = () => document.
   const surface = createSurface();
   const paint = createGroundPainter(surface.getContext('2d', { alpha: false }), world);
   let previous = null;
-  return (hero, view) => {
+  const stats = { groundHits: 0, groundBuilds: 0 };
+  const draw = (hero, view) => {
     const key = [world.viewW, world.viewH, view.x, view.depth, view.zoom, Math.floor(hero.player.x / 100)];
     if (!previous || key.some((value, index) => value !== previous[index])) {
       if (surface.width !== world.viewW) surface.width = world.viewW;
       if (surface.height !== world.viewH) surface.height = world.viewH;
       paint(hero, view);
+      stats.groundBuilds++;
       previous = key;
-    }
+    } else stats.groundHits++;
     ctx.drawImage(surface, 0, 0);
   };
+  draw.stats = stats;
+  return draw;
 }

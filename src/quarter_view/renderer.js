@@ -1,3 +1,4 @@
+import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
 import { drawQuarterAttackEffect } from './attack_effects.js';
 import { createHitboxView } from './hitbox_view.js';
 import { createGroundRenderer } from './ground_renderer.js';
@@ -10,6 +11,7 @@ import { formulaScreenZoom } from '../zoom_formula_runtime_helper.js';
 
 export function createQuarterRenderer({ ctx, world }) {
   let view;
+  const readEffectFrame = createRuntimeEffectReader();
   const hitboxes = createHitboxView({
     ctx,
     world,
@@ -46,24 +48,31 @@ export function createQuarterRenderer({ ctx, world }) {
       .filter((actor) => !actor.respawning)
       .sort((a, b) => depthOf(a) - depthOf(b))
       .forEach((actor) => {
-        drawFormulaAfterimages(ctx, actor, projectEntity);
-        drawRollGhosts(ctx, actor, projectEntity);
-        // Afterimages render different poses; cache only the normal, stable draw below.
-        actor.player.renderPartOffsets = new Map();
+        // Picking handles are only consumed by the editor, never by quarter-view combat.
+        const captureEditRegions = actor.player.captureEditRegions;
+        actor.player.captureEditRegions = false;
         try {
-          const restore = projectEntity(actor);
+          drawFormulaAfterimages(ctx, actor, projectEntity);
+          drawRollGhosts(ctx, actor, projectEntity);
+          // Afterimages render different poses; cache only the normal, stable draw below.
+          actor.player.renderPartOffsets = new Map();
           try {
-            drawActor(ctx, world, actor, {
-              selectedActor: null,
-              activeEditPartKey: () => null,
-              activeEditPartKeys: () => [],
-            });
+            const restore = projectEntity(actor);
+            try {
+              drawActor(ctx, world, actor, {
+                selectedActor: null,
+                activeEditPartKey: () => null,
+                activeEditPartKeys: () => [],
+              });
+            } finally {
+              restore();
+            }
+            drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame);
           } finally {
-            restore();
+            actor.player.renderPartOffsets = null;
           }
-          drawQuarterAttackEffect(ctx, actor, effectAssets, world, view);
         } finally {
-          actor.player.renderPartOffsets = null;
+          actor.player.captureEditRegions = captureEditRegions;
         }
       });
     const project = (entity, drawEntity) => {
@@ -79,5 +88,11 @@ export function createQuarterRenderer({ ctx, world }) {
     hitboxes.draw(actors, playerActor, view);
     ctx.restore();
   }
-  return { draw, projectEntity, resetDebugHistory: hitboxes.reset };
+  return {
+    draw,
+    projectEntity,
+    resetDebugHistory: hitboxes.reset,
+    getRenderStats: () => drawGround.stats,
+    resetEffectCache: readEffectFrame.reset,
+  };
 }
