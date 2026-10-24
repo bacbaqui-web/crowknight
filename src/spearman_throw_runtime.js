@@ -124,6 +124,7 @@ function disarm(actor) {
   player.rig.weapon.opacity = 0;
   player.layerOrder = player.layerOrder.filter((part) => part !== 'weapon');
   player.actionSettings.customAction2.ai.enabled = false;
+  if (player.actionSettings.spearmanPunch?.ai) player.actionSettings.spearmanPunch.ai.enabled = true;
   player.actionSettings.customAction1.ai.minRange = 40;
   player.actionSettings.customAction3.ai.minRange = 120;
   for (const action of ['idle', 'customAction1', 'customAction3']) {
