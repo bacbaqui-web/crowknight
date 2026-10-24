@@ -330,7 +330,6 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   ctx.translate(transform.x, transform.y);
   const placementMatrix = player.captureEditRegions === false ? null : ctx.getTransform();
   ctx.rotate(rotation + deg(transform.rot));
-  player.projectImagePart?.(ctx, key);
   recordPuppetImageRegion(player, ctx, key, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
   drawPuppetImageLessChildParts(player, ctx, key, drawRect.x, drawRect.y);

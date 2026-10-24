@@ -1,4 +1,3 @@
-import { weaponImageProjection } from './weapon_projection.js';
 import { createSlashTrails } from './slash_trail.js';
 import { isProjectileAttack } from './weapon_contact.js';
 import { createRuntimeEffectReader } from '../runtime_effect_reader.js';
@@ -46,7 +45,6 @@ export function createQuarterRenderer({ ctx, world }) {
     };
     ctx.save();
     ctx.translate(shake.x, shake.y);
-    const projectionBase = ctx.getTransform();
     drawGround(playerActor, view);
     particleEffects.drawDust();
     [...actors]
@@ -62,12 +60,6 @@ export function createQuarterRenderer({ ctx, world }) {
           // Afterimages render different poses; cache only the normal, stable draw below.
           actor.player.renderPartOffsets = new Map();
           try {
-            actor.player.projectImagePart = (partContext, key) => {
-              const matrix = weaponImageProjection(actor, key, world, view);
-              if (!matrix) return;
-              partContext.setTransform(projectionBase);
-              partContext.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f);
-            };
             const restore = projectEntity(actor);
             try {
               drawActor(ctx, world, actor, {
@@ -82,7 +74,6 @@ export function createQuarterRenderer({ ctx, world }) {
               drawQuarterAttackEffect(ctx, actor, effectAssets, world, view, readEffectFrame);
             trails.draw(actor, view, actor === playerActor);
           } finally {
-            actor.player.projectImagePart = null;
             actor.player.renderPartOffsets = null;
           }
         } finally {

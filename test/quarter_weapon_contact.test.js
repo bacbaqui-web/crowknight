@@ -51,7 +51,7 @@ for (const id of ['player_01', 'enemy_01', 'swordman'])
     assert.ok(checked > 20);
     assert.equal(JSON.stringify(tuning), original);
   });
-test('arrows retain projectile handling and melee reach upgrades still expand the weapon-bound geometry', () => {
+test('arrows retain projectile handling and invisible reach upgrades cannot extend contact beyond the unchanged blade', () => {
   const def = saved.characters.find((a) => a.id === 'archer'),
     tuning = mergeTuning(defaultTuningFor(def), saved.actors.archer.tuning);
   const player = new PuppetPlayer(480, 430, {});
@@ -65,7 +65,7 @@ test('arrows retain projectile handling and melee reach upgrades still expand th
   const a = alignEnemyWeaponRegions(actor, raw)[0];
   player.runUpgrades.reach = 1.5;
   const b = alignEnemyWeaponRegions(actor, raw)[0];
-  assert.ok(Math.abs(b.w / a.w - 1.5) < 1e-6);
+  assert.ok(Math.abs(b.w / a.w - 1) < 1e-6);
 });
 
 test('an attacking enemy turning its sprite also mirrors the attack aim without sweeping through its body', () => {

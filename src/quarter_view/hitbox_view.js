@@ -2,7 +2,7 @@ import { groundProjectileRegion } from './spatial.js';
 import { activeProjectiles, projectileAttackRegion } from '../projectile_runtime_engine.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 import { depthOf } from './camera.js';
-import { currentAttackRegions, screenPoint, attackPoint } from './attack_geometry.js';
+import { currentAttackRegions, screenPoint, attackRegionPoint } from './attack_geometry.js';
 import { createAttackHistory } from './attack_history.js';
 import { createTrajectoryView } from './trajectory_view.js';
 
@@ -122,11 +122,7 @@ export function createHitboxView({
       }
       regions.forEach((region) =>
         drawPolygon(
-          regionPoints(region).map((p) =>
-            region.quarterPlane === 'height'
-              ? attackPoint(actor, p, 0, 'height')
-              : { x: p.x, depth: p.y, y: region.quarterElevation ?? world.floorY }
-          ),
+          regionPoints(region).map((p) => attackRegionPoint(actor, p, region, world.floorY)),
           view,
           color
         )

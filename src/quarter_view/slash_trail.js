@@ -1,6 +1,6 @@
 import { attackPlane } from '../attack_plane_helper.js';
 import { regionPoints, sweptInteractionRegion } from '../interaction_swept_region_helper.js';
-import { attackPoint, screenPoint } from './attack_geometry.js';
+import { attackPoint, screenPoint, groundAttackRegions, attackRegionPoint } from './attack_geometry.js';
 import { isProjectileAttack, weaponTrailRegion } from './weapon_contact.js';
 
 export const TRAIL_LIMIT = 24;
@@ -32,10 +32,11 @@ export function createSlashTrails(ctx, world) {
     if (entry.time === now) return;
     entry.time = now;
     prune(entry, now);
-    const plane = attackPlane(actor);
+
     for (const region of raw.slice(0, 2)) {
       const contact = weaponTrailRegion(actor, region),
         p = regionPoints(contact);
+      const plane = contact.quarterWeaponContact ? 'weapon' : attackPlane(actor);
       if (p.length < 4) continue;
       const project = (point) => {
         const result = attackPoint(actor, point, 0, plane, contact.quarterWeaponAnchor);
@@ -53,23 +54,9 @@ export function createSlashTrails(ctx, world) {
         actor.quarterAttackSerial === actor.player.attackSerial
           ? actor.quarterAttackRegions?.find((item) => item.key === region.key)
           : null;
-      let sweep;
-      if (captured)
-        sweep = regionPoints(captured).map((point) =>
-          plane === 'ground'
-            ? { x: point.x, depth: point.y, y: captured.quarterElevation ?? world.floorY }
-            : project(point)
-        );
-      else if (previous) {
-        const coordinates = (points) => points.map((point) => ({ x: point.x, y: point.depth }));
-        const swept = sweptInteractionRegion(
-          { points: plane === 'ground' ? coordinates(previous.polygon) : previous.nativePolygon },
-          { points: plane === 'ground' ? coordinates(polygon) : p }
-        );
-        sweep = swept.points.map((point) =>
-          plane === 'ground' ? { x: point.x, depth: point.y, y: root.y } : project(point)
-        );
-      } else sweep = polygon;
+      const collision = groundAttackRegions(actor, [contact])[0];
+      const swept = captured || (previous ? sweptInteractionRegion(previous.collision, collision) : collision);
+      const sweep = regionPoints(swept).map((point) => attackRegionPoint(actor, point, swept, world.floorY));
       entry.samples.push({
         time: now,
         key,
@@ -77,6 +64,7 @@ export function createSlashTrails(ctx, world) {
         tip,
         polygon,
         nativePolygon: p,
+        collision,
         sweep,
         screenRoot: {},
         screenTip: {},

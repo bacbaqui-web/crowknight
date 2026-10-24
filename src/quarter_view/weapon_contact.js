@@ -1,6 +1,5 @@
 import { ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY } from '../interaction_object_model_data.js';
 import { transformMatrixPoint } from '../puppet_player_geometry_helper.js';
-import { scaleUpgradeAttackRegions } from '../run_upgrade_effect_helper.js';
 
 export function isProjectileAttack(actor) {
   return (
@@ -54,7 +53,7 @@ export function alignWeaponRegions(actor, regions) {
   if (!regions.length || isProjectileAttack(actor)) return regions;
   return regions.map((region) =>
     [ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)
-      ? scaleWeaponContact(actor, weaponContactRegion(actor, region))
+      ? weaponContactRegion(actor, region)
       : region
   );
 }
@@ -71,17 +70,8 @@ export function syncEnemyWeaponFacing(actor) {
 export function weaponTrailRegion(actor, region) {
   if (region.quarterWeaponContact) return region;
   const contact = weaponContactRegion(actor, region);
-  return contact === region ? region : scaleWeaponContact(actor, contact);
+  return contact;
 }
 
 // Retained for existing editor and diagnostic consumers.
 export const alignEnemyWeaponRegions = alignWeaponRegions;
-
-export function scaleWeaponContact(actor, contact) {
-  if (!contact.quarterWeaponAnchor) return contact;
-  // Reach grows the visible blade about the grip, keeping it attached to the hand.
-  const origin = Object.create(actor.player);
-  origin.x = contact.quarterWeaponAnchor.x;
-  origin.y = contact.quarterWeaponAnchor.y;
-  return scaleUpgradeAttackRegions(origin, [contact])[0];
-}

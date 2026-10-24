@@ -44,6 +44,14 @@ export function createAttackSettingsView({ panel, onOpen, onChange, storage = lo
     planeSelect.value = normalizeAttackPlane(
       overrides[actor.id]?.[key] ?? actor.player.actionSettings?.[key]?.quarterAttackPlane
     );
+    const projectile = actor.player.actionSettings?.[key]?.formulas?.some(
+      (formula) => formula.type === 'projectile' && formula.enabled
+    );
+    if (!projectile && actor.player.rig?.weapon) {
+      planeSelect.disabled = true;
+      status.textContent = '근접 공격: 무기 모습은 유지하며 보이는 칼날 궤적으로 검광과 피해를 판정합니다.';
+      return;
+    }
     const mode = attackPlane(actor, key);
     status.textContent = `${mode === 'height' ? '높이 공격: 공격과 상대의 높이가 겹칠 때 적중합니다.' : '지면 공격: 공격 궤적을 바닥에 눕히고 높이를 무시합니다.'} ${persisted ? '선택은 이 브라우저의 시험장에 저장됩니다.' : '브라우저 저장을 사용할 수 없어 이번 실행에만 적용됩니다.'}`;
   }

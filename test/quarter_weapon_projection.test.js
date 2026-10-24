@@ -5,14 +5,17 @@ import { URL } from 'node:url';
 import { PuppetPlayer } from '../src/actor_runtime_engine.js';
 import { defaultTuningFor } from '../src/actor_tuning_helper.js';
 import { mergeTuning } from '../src/project_data_normalizer_helper.js';
-import { weaponImageProjection } from '../src/quarter_view/weapon_projection.js';
 import { alignEnemyWeaponRegions } from '../src/quarter_view/weapon_contact.js';
 import {
   attackPoint,
   groundAttackRegions,
   captureAttackRegions,
   screenPoint,
+  attackRegionPoint,
 } from '../src/quarter_view/attack_geometry.js';
+import { combatTargetRegions } from '../src/quarter_view/spatial.js';
+import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
+import { groundPoint, QUARTER_PROJECTION } from '../src/quarter_view/camera.js';
 import { createSlashTrails } from '../src/quarter_view/slash_trail.js';
 import { cloneInteractionRegionSnapshot, regionPoints } from '../src/interaction_swept_region_helper.js';
 import {
@@ -106,14 +109,16 @@ for (const id of ['player_01', 'enemy_01', 'swordman'])
           (action) => player.actionSettings[action.key]?.group === 'attack'
         )) {
           for (let frame = 0; frame <= 100; frame++) {
+            player.y = 430 - (frame % 3) * 65;
+            actor.quarterDepth = 60 + (frame % 3) * 40;
             player.actionPreview = { action: action.key, t: frame / 100 };
             const raw = alignEnemyWeaponRegions(actor, player.attackInteractionRegions);
             if (!raw.length) continue;
             const { ctx, images } = recordingContext();
-            player.projectImagePart = (context, key) => {
-              const matrix = weaponImageProjection(actor, key, world, view);
-              if (matrix) context.setTransform(matrix);
-            };
+            const base = groundPoint(player.x, actor.quarterDepth, view);
+            ctx.translate(base.x, base.y);
+            ctx.scale(base.scale, base.scale);
+            ctx.translate(-player.x, -world.floorY);
             player.draw(ctx);
             for (const region of raw) {
               if (!region.quarterWeaponContact) continue;
@@ -150,9 +155,7 @@ for (const id of ['player_01', 'enemy_01', 'swordman'])
               const sample = trail.samples(actor)[0];
               const damage = actor.quarterAttackRegions[0];
               const expected = regionPoints(damage).map((point) =>
-                damage.quarterPlane === 'ground'
-                  ? { x: point.x, depth: point.y, y: damage.quarterElevation }
-                  : attackPoint(actor, point, 0, 'height')
+                attackRegionPoint(actor, point, damage, world.floorY)
               );
               assert.deepEqual(sample.sweep, expected);
               checked++;
@@ -179,7 +182,7 @@ test('fast blade movement shares the exact collision sweep with the glow, and in
       const last = trail.samples(actor).at(-1),
         damage = actor.quarterAttackRegions[0];
       assert.deepEqual(
-        last.sweep.map((point) => ({ x: point.x, y: point.depth })),
+        last.sweep.map((point) => ({ x: point.x, y: point.y })),
         damage.points
       );
       checked++;
@@ -187,4 +190,15 @@ test('fast blade movement shares the exact collision sweep with the glow, and in
     actor.previousAttackRegions = flat.map((region) => cloneInteractionRegionSnapshot(region, player.actionKey));
   }
   assert.ok(checked > 1);
+});
+
+test('native weapon contact uses visible height and rejects a far depth overlap', () => {
+  const actor = fixture('player_01');
+  const source = { quarterPlane: 'weapon', quarterOrigin: { depth: 60 }, x: 500, y: 300, w: 40, h: 20 };
+  const target = { quarterDepth: 100, player: { x: 500, y: 430 } };
+  const raw = [{ x: 500, y: 300 - 100 * QUARTER_PROJECTION.slope, w: 30, h: 20 }];
+  assert.ok(interactionRegionsOverlap(source, combatTargetRegions(actor, target, raw, source)[0]));
+  assert.equal(combatTargetRegions(actor, { ...target, quarterDepth: 500 }, raw, source).length, 0);
+  const high = [{ ...raw[0], y: raw[0].y - 150 }];
+  assert.equal(interactionRegionsOverlap(source, combatTargetRegions(actor, target, high, source)[0]), false);
 });

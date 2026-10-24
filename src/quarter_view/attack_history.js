@@ -17,7 +17,7 @@ export function createAttackHistory() {
       return null;
     }
     const raw = actor.quarterAttackRawRegions || actor.player.attackInteractionRegions || [];
-    const plane = attackPlane(actor);
+    const plane = raw.some((region) => region.quarterWeaponContact) ? 'height' : attackPlane(actor);
     const key = `${actor.player.attackSerial}:${actor.player.actionKey}:${plane}`;
     let entry = entries.get(actor);
     if (!raw.length) {
@@ -45,7 +45,13 @@ export function createAttackHistory() {
       time,
       polygons: localPolygons,
       center: { x: ((left + right) / 2 - actor.player.x) * facing, y: originY - (top + bottom) / 2 },
-      ground: attackPoint(actor, { x: (left + right) / 2, y: (top + bottom) / 2 }),
+      ground: attackPoint(
+        actor,
+        { x: (left + right) / 2, y: (top + bottom) / 2 },
+        0,
+        raw[0]?.quarterWeaponContact ? 'weapon' : attackPlane(actor),
+        raw[0]?.quarterWeaponAnchor
+      ),
       footprints: raw.map((region) => attackFootprint(actor, region, floorY)),
     });
     // One bounded sequence per actor; keep its start when a long action produces many samples.

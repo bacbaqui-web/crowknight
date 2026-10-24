@@ -202,9 +202,18 @@ test('real player and enemy combat consume the weapon-aligned region captured fo
     const aligned = alignEnemyWeaponRegions(enemy, raw);
     const flat = groundAttackRegions(enemy, aligned)[0];
     hero.player.x = flat.x + flat.w / 2;
-    hero.quarterDepth = flat.y + flat.h / 2;
+    hero.quarterDepth = 0;
     Object.defineProperty(hero.player, 'hurtInteractionRegions', {
-      value: [{ key: 'body', x: hero.player.x - 5, y: 350, w: 10, h: 80, reaction: { hurtByAttack: true } }],
+      value: [
+        {
+          key: 'body',
+          x: hero.player.x - 5,
+          y: flat.y + flat.h / 2 - 5,
+          w: 10,
+          h: 10,
+          reaction: { hurtByAttack: true },
+        },
+      ],
     });
     Object.defineProperty(hero.player, 'guardInteractionRegions', { value: [] });
     for (const actor of [hero, enemy])
