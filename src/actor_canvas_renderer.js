@@ -65,14 +65,19 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   if (flicker) ctx.restore();
   if (actor.player.dead) return;
 
-  const width = Math.min(240, Math.max(100, actor.maxHp * 1.2));
+  const compactHud = Boolean(world.quarterView);
+  const width = Math.min(240, Math.max(100, actor.maxHp * 1.2)) * (compactHud ? 0.65 : 1);
   const hud = actorHudLayout(actor, { useCustomOffset: actor === selectedActor && isSettingsPanelOpen() });
 
-  drawHealthMeter(ctx, actor, hud.hpBar.x, hud.hpBar.y, width);
+  ctx.save();
+  ctx.translate(hud.hpBar.x, hud.hpBar.y);
+  ctx.scale(1, compactHud ? 0.65 : 1);
+  drawHealthMeter(ctx, actor, 0, 0, width);
+  ctx.restore();
   if (actor.experience) {
     const { level, xp, threshold } = actor.experience;
     const left = hud.hpBar.x - width / 2,
-      top = hud.hpBar.y + 11;
+      top = hud.hpBar.y + (compactHud ? 8 : 11);
     ctx.fillStyle = 'rgba(0,0,0,.65)';
     ctx.fillRect(left, top, width, 3);
     ctx.fillStyle = '#f8fafc';
@@ -80,12 +85,16 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
     ctx.fillStyle = '#f8fafc';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(`Lv.${level}${actor.experience.banked ? ` · 보관 ${actor.experience.banked}` : ''}`, left - 4, top + 4);
+    ctx.fillText(
+      `Lv.${level}${actor.experience.banked ? ` · 보관 ${actor.experience.banked}` : ''}`,
+      left - 4,
+      top + 4
+    );
   }
   ctx.fillStyle = actor.hurtCooldown > 0 ? '#fff' : actor.tint;
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(actor.name, hud.name.x, hud.name.y);
+  if (!compactHud) ctx.fillText(actor.name, hud.name.x, hud.name.y);
   ctx.textAlign = 'left';
 }
 

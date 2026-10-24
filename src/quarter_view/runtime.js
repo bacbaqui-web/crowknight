@@ -87,6 +87,7 @@ export function createQuarterRuntime({ ctx, world }) {
   });
   world.quarterView = {
     unbounded: true,
+    showDamage: renderer.showDamage,
     motionWorld,
     prepareAttackRegions: renderer.prepareAttackRegions,
     captureAttackRegions(actor, raw, flat) {

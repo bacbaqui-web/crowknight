@@ -27,20 +27,29 @@ export function applyInteractionDamage({
   onEnemyDeath,
 }) {
   if (target.player.runEvadeTime > 0) return false;
-  const blocking = Boolean(target.player.runSkills && (guarded ||
-    (target.player.runSkillActions?.guard && target.player.customActionKey === target.player.runSkillActions.guard)));
+  const blocking = Boolean(
+    target.player.runSkills &&
+    (guarded ||
+      (target.player.runSkillActions?.guard && target.player.customActionKey === target.player.runSkillActions.guard))
+  );
   if (blocking) {
     if (allowParry && trySkillParry(attacker, target, world)) return false;
     world?.combatSounds?.contact('block', attacker, target);
   }
   const damage = Math.max(
     0,
-    Number(rawDamage ?? 20) * (blocking ? 0.2 : 1) * (attacker.player.runUpgrades?.damage || 1) * runSkillDamageMultiplier(attacker.player) * progressionEffects(attacker.player).damage * progressionEffects(target.player).armor
+    Number(rawDamage ?? 20) *
+      (blocking ? 0.2 : 1) *
+      (attacker.player.runUpgrades?.damage || 1) *
+      runSkillDamageMultiplier(attacker.player) *
+      progressionEffects(attacker.player).damage *
+      progressionEffects(target.player).armor
   );
   if (!Number.isFinite(damage) || damage <= 0) return false;
   recordHealthDamage(target);
   const actualDamage = Math.min(target.hp, damage);
   target.hp = Math.max(0, target.hp - damage);
+  if (actualDamage > 0) world?.quarterView?.showDamage?.(target, actualDamage);
   const lifeSteal = progressionEffects(attacker.player).lifeSteal;
   if (lifeSteal && attacker.hp > 0 && !attacker.player.dead) {
     attacker.hp = Math.min(attacker.maxHp, attacker.hp + actualDamage * lifeSteal);

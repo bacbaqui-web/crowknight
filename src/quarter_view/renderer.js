@@ -1,3 +1,4 @@
+import { createDamageNumbers } from './damage_numbers.js';
 import { directionalAttackRegions } from './directional_attack.js';
 import { createNativeWeaponTrail } from './native_weapon_trail.js';
 import { alignEffectRegions, effectImageBounds } from './effect_geometry.js';
@@ -16,6 +17,7 @@ import { formulaScreenZoom } from '../zoom_formula_runtime_helper.js';
 
 export function createQuarterRenderer({ ctx, world }) {
   let view;
+  const damageNumbers = createDamageNumbers(ctx, world);
   const followJump = createJumpCameraFollow();
   const nativeTrail = createNativeWeaponTrail(ctx, world);
   const readEffectFrame = createRuntimeEffectReader();
@@ -108,10 +110,12 @@ export function createQuarterRenderer({ ctx, world }) {
     particleEffects.drawHitSparks();
     particleEffects.drawDeathParticles();
     hitboxes.draw(actors, playerActor, view);
+    damageNumbers.draw(view, playerActor.player.animTime);
     ctx.restore();
   }
   return {
     draw,
+    showDamage: damageNumbers.show,
     projectEntity,
     prepareAttackRegions(actor, raw) {
       if (actor.quarterDirectionalTest) {
@@ -127,6 +131,7 @@ export function createQuarterRenderer({ ctx, world }) {
     resetEffectCache() {
       readEffectFrame.reset();
       nativeTrail.reset();
+      damageNumbers.reset();
     },
   };
 }
