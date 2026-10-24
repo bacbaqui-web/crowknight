@@ -1,16 +1,47 @@
+import { attackPlane } from '../attack_plane_helper.js';
+import { attackOrigin } from './attack_geometry.js';
 import { depthOf, normalizeDirection } from './camera.js';
 import { readInteractionRegions } from '../combat_cache_helper.js';
 import { collisionPushShares } from '../combat_collision_helper.js';
 
-export function combatTargetRegions(attacker, target, regions) {
+export function combatTargetRegions(attacker, target, regions, source = null) {
   if (attacker.quarterDepth == null && target.quarterDepth == null) return regions;
+  const plane = source?.quarterPlane || attackPlane(attacker);
+  if (plane === 'height') {
+    const origin = source?.quarterOrigin || attackOrigin(attacker);
+    const dx = target.player.x - origin.x,
+      dz = depthOf(target) - origin.depth;
+    const lateral = -dx * origin.aim.z + dz * origin.aim.x;
+    const forward = (dx * origin.aim.x + dz * origin.aim.z) * origin.facing;
+    return regions
+      .filter((region) => Math.abs(lateral) <= 16 + Math.max(8, Math.min(70, region.w / 2)))
+      .map((region) => {
+        const shift = origin.x + forward - target.player.x;
+        return {
+          ...region,
+          x: region.x + shift,
+          ...(region.points ? { points: region.points.map((p) => ({ x: p.x + shift, y: p.y })) } : {}),
+        };
+      });
+  }
   return regions.map((region) => {
     const radius = Math.max(8, Math.min(70, region.w / 2));
     return { ...region, y: depthOf(target) - radius, h: radius * 2, points: null };
   });
 }
 export function groundProjectileRegion(projectile, region) {
-  return { ...region, y: depthOf(projectile) - 16, h: 32, points: null };
+  if (projectile.quarterPlane === 'height')
+    return {
+      ...region,
+      quarterPlane: 'height',
+      quarterOrigin: {
+        x: projectile.x,
+        depth: depthOf(projectile),
+        facing: 1,
+        aim: projectile.quarterAim || { x: 1, z: 0 },
+      },
+    };
+  return { ...region, quarterPlane: 'ground', y: depthOf(projectile) - 16, h: 32, points: null };
 }
 
 export function resolveGroundCollision(a, b) {

@@ -8,9 +8,15 @@ import { mergeTuning } from '../src/project_data_normalizer_helper.js';
 import { prepareSkillActions } from '../src/skill_runtime_helper.js';
 import { requestRuntimeAction } from '../src/action_trigger_engine.js';
 import { preparePlaneMotion, finishPlaneMotion, movementInput } from '../src/quarter_view/motion.js';
-import { combatTargetRegions, resolveGroundCollision, sameGroundContact } from '../src/quarter_view/spatial.js';
+import {
+  combatTargetRegions,
+  resolveGroundCollision,
+  sameGroundContact,
+  groundProjectileRegion,
+} from '../src/quarter_view/spatial.js';
 import { captureAttackRegions, groundAttackRegions } from '../src/quarter_view/attack_geometry.js';
-import { resolveCombat } from '../src/combat_engine.js';
+import { attackPlane } from '../src/attack_plane_helper.js';
+import { resolveCombat, resolveProjectileCombat } from '../src/combat_engine.js';
 
 const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
 function makeActor(id, x, depth) {
@@ -38,6 +44,7 @@ const plane = {
   captureAttackRegions,
   attackRegions: groundAttackRegions,
   targetRegions: combatTargetRegions,
+  projectileRegion: groundProjectileRegion,
   resolveCollision: resolveGroundCollision,
   sameGroundContact,
   afterHit() {},
@@ -100,3 +107,80 @@ for (const altitude of [0, 200])
         assert.deepEqual(hero.quarterAim, { x: 0, z });
       });
     }
+
+for (const mode of ['ground', 'height']) {
+  test(`published first strike ${mode} mode respects the selected altitude rule`, () => {
+    const hero = makeActor('player_01', 480, 0);
+    hero.quarterAttackPlanes = { [hero.tuning.skillActions.firstStrike]: mode };
+    const target = makeActor('swordman', 550, 0);
+    target.player.y -= 300;
+    const hp = target.hp;
+    assert.ok(requestRuntimeAction(hero.player, hero.tuning.skillActions.firstStrike, 1, 'tap'));
+    for (let i = 0; i < 30; i++) {
+      hero.player.updateNpc(1 / 60, null, world);
+      resolveCombat({
+        actors: [hero, target],
+        playerActor: hero,
+        world,
+        particleEffects: particles,
+        onPlayerDeath() {},
+        onPlayerKill() {},
+        onEnemyDeath() {},
+      });
+    }
+    assert.equal(target.hp < hp, mode === 'ground');
+  });
+}
+
+test('published jump, dive and archer actions automatically use height while regular strike stays ground', () => {
+  const hero = makeActor('player_01', 480, 0),
+    archer = makeActor('archer', 700, 0);
+  for (const name of ['공중공격', '낙하공격']) {
+    const key = hero.player.customActions.find((action) => action.name === name).key;
+    assert.equal(attackPlane(hero, key), 'height');
+  }
+  assert.equal(attackPlane(hero, hero.tuning.skillActions.firstStrike), 'ground');
+  const shot = archer.player.customActions.find((action) => action.name === '공격').key;
+  assert.equal(attackPlane(archer, shot, true), 'height');
+});
+test('real projectile combat misses a different height and hits a matching height after the owner turns away', () => {
+  const owner = makeActor('archer', 480, 0),
+    target = makeActor('player_01', 480, 120);
+  target.player.y = 230;
+  const hurt = target.player.hurtInteractionRegions[0];
+  const projectile = {
+    active: true,
+    owner,
+    key: 'arrow-test',
+    x: 480,
+    y: hurt.y + hurt.h / 2,
+    quarterDepth: 120,
+    quarterPlane: 'height',
+    quarterAim: { x: 0, z: 1 },
+    hitboxWidth: 30,
+    hitboxHeight: 10,
+    hitTargets: new Set(),
+    reaction: { hitMode: 'box', knockback: 0 },
+  };
+  owner.quarterAim = { x: -1, z: 0 };
+  const hp = target.hp;
+  target.player.y = 430;
+  const run = () =>
+    resolveProjectileCombat({
+      projectiles: [projectile],
+      actors: [owner, target],
+      playerActor: target,
+      world,
+      particleEffects: particles,
+      onPlayerDeath() {},
+      onPlayerKill() {},
+      onEnemyDeath() {},
+    });
+  run();
+  assert.equal(target.hp, hp);
+  assert.equal(projectile.active, true);
+  target.player.y = 230;
+  run();
+  assert.ok(target.hp < hp);
+  assert.equal(projectile.active, false);
+});

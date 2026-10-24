@@ -338,6 +338,18 @@
                 <select id="actionTriggerPressKey" hidden></select>
               </div>
             </div>
+            <div class="select-row">
+              <label for="actionQuarterPlane">공격 면</label>
+              <select
+                id="actionQuarterPlane"
+                aria-label="쿼터뷰 공격 방식"
+                title="쿼터뷰에서 이 액션의 공격 판정과 이펙트에 적용됩니다."
+              >
+                <option value="auto">자동 (화살·점프는 높이)</option>
+                <option value="ground">지면 공격 (높이 무시)</option>
+                <option value="height">높이 공격 (공중 판정)</option>
+              </select>
+            </div>
             <div class="timeline-settings">
               <div class="timeline-frame-input">
                 <input id="actionDuration" type="number" min="2" max="50" step="1" />

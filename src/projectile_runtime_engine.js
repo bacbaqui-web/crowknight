@@ -1,3 +1,4 @@
+import { attackPlane } from './attack_plane_helper.js';
 import { ACTION_FPS } from './game_config_data.js';
 import { ATTACK_INTERACTION_OBJECT_KEY } from './interaction_object_model_data.js';
 import { interactionReactionFromValue } from './interaction_region_engine.js';
@@ -103,6 +104,8 @@ function spawnProjectile(actor, playerActor, formula, settings) {
     imageKey: formula.imageKey,
     ...(actor.quarterDepth != null
       ? {
+          quarterPlane: attackPlane(actor, actor.player.actionKey, true),
+          quarterAim: projectileGroundDirection(startX, targetX, actor.quarterDepth, playerActor?.quarterDepth || 0),
           quarterDepth: actor.quarterDepth,
           startDepth: actor.quarterDepth,
           targetDepth: playerActor?.quarterDepth || 0,
@@ -232,4 +235,11 @@ function clampFrame(value, frameCount) {
 
 function lerp(a, b, t) {
   return Number(a || 0) + (Number(b || 0) - Number(a || 0)) * t;
+}
+
+function projectileGroundDirection(x, targetX, depth, targetDepth) {
+  const dx = targetX - x,
+    dz = targetDepth - depth,
+    length = Math.hypot(dx, dz) || 1;
+  return { x: dx / length, z: dz / length };
 }

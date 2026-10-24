@@ -37,7 +37,10 @@ export function attackRegionOverlaps(attacker, attackRegion, targetRegion) {
 export function previousAttackRegion(attacker, attackRegion) {
   const currentActionKey = attacker?.player?.actionKey;
   return (attacker?.previousAttackRegions || []).find(
-    (region) => region?.key === attackRegion?.key && region?.actionKey === currentActionKey
+    (region) =>
+      region?.key === attackRegion?.key &&
+      region?.actionKey === currentActionKey &&
+      region?.quarterPlane === attackRegion?.quarterPlane
   );
 }
 

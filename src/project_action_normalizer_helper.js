@@ -1,3 +1,4 @@
+import { normalizeAttackPlane } from './attack_plane_helper.js';
 import { frameValue, actionAnchorValue, syncFrameAliases } from './animation_frame_data.js';
 import { ACTION_FRAME_KEYS, ACTION_PART_KEYS } from './game_config_data.js';
 import { DEFAULT_PLAYER_TUNING } from './player_default_tuning_data.js';
@@ -48,6 +49,8 @@ export function normalizeActionSettings(current = {}, fallback = {}, customActio
         runtimeRules: source.runtimeRules ?? base.runtimeRules ?? defaultSettings.runtimeRules,
       }),
     };
+    if (source.quarterAttackPlane !== undefined || base.quarterAttackPlane !== undefined)
+      normalized[key].quarterAttackPlane = normalizeAttackPlane(source.quarterAttackPlane ?? base.quarterAttackPlane);
     if (source.ai || base.ai) normalized[key].ai = normalizeEnemyAiSettings(source.ai ?? base.ai);
     normalized[key].runtimeRules = normalizeActionRuntimeRules(
       source.runtimeRules ?? base.runtimeRules ?? defaultSettings.runtimeRules,

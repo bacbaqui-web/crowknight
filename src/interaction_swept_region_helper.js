@@ -24,6 +24,7 @@ export function sweptInteractionRegion(previous, current) {
 export function cloneInteractionRegionSnapshot(region, actionKey) {
   return {
     key: region.key,
+    ...(region.quarterPlane ? { quarterPlane: region.quarterPlane } : {}),
     actionKey,
     x: region.x,
     y: region.y,

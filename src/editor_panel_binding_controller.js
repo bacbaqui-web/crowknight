@@ -16,6 +16,7 @@ export function bindActionTimelineControls(elements, actions) {
       cancel: elements.actionCancel,
       blend: elements.actionBlend,
       condition: elements.actionCondition,
+      quarterPlane: elements.actionQuarterPlane,
       copyFrame: elements.actionCopyFrame,
       pasteFrame: elements.actionPasteFrame,
       undoFrame: elements.actionUndoFrame,
@@ -116,6 +117,10 @@ function bindTimelineControls({ controls, actions, bindNumberDrag, commitUndoSna
   controls.cancel?.addEventListener('click', actions.toggleCancel);
   controls.blend?.addEventListener('click', actions.toggleBlend);
   controls.condition?.addEventListener('click', actions.toggleCondition);
+  controls.quarterPlane?.addEventListener('change', (event) => {
+    actions.updateSetting('quarterAttackPlane', event.target.value);
+    commitUndoSnapshot();
+  });
   controls.copyFrame?.addEventListener('click', actions.copyFrame);
   controls.pasteFrame?.addEventListener('click', actions.pasteFrame);
   controls.undoFrame?.addEventListener('click', actions.undo);

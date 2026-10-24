@@ -1,3 +1,4 @@
+import { normalizeAttackPlane } from './attack_plane_helper.js';
 import { clamp } from './common_helper.js';
 import { normalizeTimelinePlayback, timelinePlaybackTitle } from './timeline_playback_helper.js';
 import { isActionMirrorEnabled } from './action_mirror_helper.js';
@@ -154,6 +155,7 @@ export function syncTimelinePlaybackControls(elements, state) {
   syncActionCancelButton(cancel, settings);
   syncActionBlendButton(blend, settings);
   syncActionConditionButton(condition, settings);
+  if (elements.quarterPlane) elements.quarterPlane.value = normalizeAttackPlane(settings.quarterAttackPlane);
 }
 
 export function syncTimelineToolbar({

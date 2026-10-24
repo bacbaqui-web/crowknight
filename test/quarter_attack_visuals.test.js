@@ -140,3 +140,26 @@ test('toggle, short dashed history and restart reset never change combat data', 
   assert.equal(attributes['aria-pressed'], 'false');
   assert.equal(legend.hidden, true);
 });
+
+test('height attack effects keep altitude and remain visible for every ground aim', () => {
+  for (const [x, z] of [
+    [1, 0],
+    [1, 1],
+    [0, 1],
+    [-1, 1],
+    [-1, 0],
+    [-1, -1],
+    [0, -1],
+    [1, -1],
+  ]) {
+    const a = actor(normalizeDirection(x, z));
+    a.quarterAttackPlanes = { slash: 'height' };
+    const m = attackEffectMatrix(a, world, view),
+      anchor = effectAnchor(a);
+    const actual = apply(m, anchor),
+      expected = screenPoint(attackPoint(a, anchor), world, view);
+    close(actual.x, expected.x);
+    close(actual.y, expected.y);
+    assert.ok(Math.abs(m.a * m.d - m.b * m.c) > 0.05, 'edge-on depth attacks need visible effect thickness');
+  }
+});

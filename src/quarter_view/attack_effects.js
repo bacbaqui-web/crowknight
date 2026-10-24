@@ -1,3 +1,4 @@
+import { attackPlane } from '../attack_plane_helper.js';
 import { drawAttackTrail } from '../actor_canvas_renderer.js';
 import { attackPoint, screenPoint } from './attack_geometry.js';
 
@@ -18,12 +19,14 @@ export function effectAnchor(actor) {
 }
 export function attackEffectMatrix(actor, world, view) {
   const anchor = effectAnchor(actor);
-  const project = (point) => screenPoint({ ...attackPoint(actor, point), y: world.floorY }, world, view);
+  const project = (point) => screenPoint(attackPoint(actor, point), world, view);
   const center = project(anchor);
   const forward = project({ x: anchor.x + 1, y: anchor.y });
   const lateral = project({ x: anchor.x, y: anchor.y + 1 });
-  const a = forward.x - center.x,
-    b = forward.y - center.y;
+  let a = forward.x - center.x;
+  const b = forward.y - center.y;
+  if (attackPlane(actor) === 'height' && Math.abs(a) < center.scale * 0.1)
+    a = (actor.player.facing || 1) * center.scale * 0.18;
   const c = lateral.x - center.x,
     d = lateral.y - center.y;
   return { a, b, c, d, e: center.x - a * anchor.x - c * anchor.y, f: center.y - b * anchor.x - d * anchor.y };

@@ -164,3 +164,50 @@
     font-size: 10px;
   }
 }
+
+#quarterAttackSettings {
+  position: fixed;
+  top: 150px;
+  left: 14px;
+  z-index: 40;
+  width: min(250px, calc(100vw - 28px));
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #61765a;
+  border-radius: 8px;
+  background: #122219f5;
+  color: #e3edce;
+  font: 12px/1.6 sans-serif;
+}
+#quarterAttackSettings summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+#quarterAttackSettings label {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+#quarterAttackSettings select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px;
+  color: #e3edce;
+  background: #24382b;
+  border: 1px solid #61765a;
+  border-radius: 4px;
+}
+#quarterAttackSettings button {
+  padding: 5px 8px;
+  margin-bottom: 8px;
+}
+#quarterAttackSettings small {
+  display: block;
+  color: #b8c7a8;
+}
+@media (max-height: 600px) {
+  #quarterAttackSettings[open] {
+    max-height: calc(100dvh - 165px);
+    overflow-y: auto;
+  }
+}

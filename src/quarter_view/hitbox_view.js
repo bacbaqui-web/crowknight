@@ -1,7 +1,8 @@
+import { groundProjectileRegion } from './spatial.js';
 import { activeProjectiles, projectileAttackRegion } from '../projectile_runtime_engine.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
 import { depthOf } from './camera.js';
-import { currentAttackRegions, screenPoint } from './attack_geometry.js';
+import { currentAttackRegions, screenPoint, attackPoint } from './attack_geometry.js';
 import { createAttackHistory } from './attack_history.js';
 import { createTrajectoryView } from './trajectory_view.js';
 
@@ -121,7 +122,11 @@ export function createHitboxView({
       }
       regions.forEach((region) =>
         drawPolygon(
-          regionPoints(region).map((p) => ({ x: p.x, depth: p.y, y: world.floorY })),
+          regionPoints(region).map((p) =>
+            region.quarterPlane === 'height'
+              ? attackPoint(actor, p, 0, 'height')
+              : { x: p.x, depth: p.y, y: world.floorY }
+          ),
           view,
           color
         )
@@ -129,20 +134,28 @@ export function createHitboxView({
     }
     for (const p of activeProjectiles()) {
       if (!p.active) continue;
-      const r = projectileAttackRegion(p),
-        z = depthOf(p);
-      const points = [
-        [r.x, z - 16],
-        [r.x + r.w, z - 16],
-        [r.x + r.w, z + 16],
-        [r.x, z + 16],
-      ].map(([x, depth]) => ({ x, depth, y: world.floorY }));
+      const r = groundProjectileRegion(p, projectileAttackRegion(p));
+      const points =
+        r.quarterPlane === 'height'
+          ? regionPoints(r).map((point) => ({
+              x: p.x + r.quarterOrigin.aim.x * (point.x - p.x),
+              depth: depthOf(p) + r.quarterOrigin.aim.z * (point.x - p.x),
+              y: point.y,
+            }))
+          : regionPoints(r).map((point) => ({ x: point.x, depth: point.y, y: world.floorY }));
       drawPolygon(points, view, '#c5a0ff');
       active++;
     }
     if (!playerActor.player.dead) drawDirection(playerActor, view);
     trajectory?.draw(heroEntry);
-    legend.textContent = `주황: 내 공격 · 빨강: 적 · 보라: 투사체 (바닥 범위)\n현재 공격 ${active}개 · 점선: 최근 1초\n하늘색: 궤적 · 지면도식 번호 순서 · P: 정지/재개`;
+    const title = panel?.querySelector('strong');
+    const modeLabel = heroEntry?.plane === 'height' ? '높이' : '지면';
+    if (title && title.textContent !== `공격 궤적 · ${modeLabel}`) {
+      title.textContent = `공격 궤적 · ${modeLabel}`;
+      panel.setAttribute('aria-label', `공격 판정 ${modeLabel} 궤적`);
+      trajectoryCanvas?.setAttribute('aria-label', `실제 공격의 ${modeLabel} 궤적`);
+    }
+    legend.textContent = `주황: 내 공격 · 빨강: 적 · 보라: 투사체 · 설정된 공격 면\n현재 공격 ${active}개 · 점선: 최근 1초\n하늘색: 궤적 · 도식 번호 순서 · P: 정지/재개`;
   }
   return { draw, reset: history.reset };
 }

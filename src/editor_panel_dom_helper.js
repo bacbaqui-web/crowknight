@@ -117,6 +117,7 @@ export function getTuningPanelElements(panel) {
     actionCancel: document.querySelector('#actionCancel'),
     actionBlend: document.querySelector('#actionBlend'),
     actionCondition: document.querySelector('#actionCondition'),
+    actionQuarterPlane: document.querySelector('#actionQuarterPlane'),
     actionCopyFrame: document.querySelector('#actionCopyFrame'),
     actionPasteFrame: document.querySelector('#actionPasteFrame'),
     actionUndoFrame: document.querySelector('#actionUndoFrame'),

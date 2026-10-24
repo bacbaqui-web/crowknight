@@ -1,6 +1,6 @@
 import { depthOf, normalizeDirection } from './camera.js';
 import { previousAttackRegion } from '../interaction_overlap_helper.js';
-import { interactionRegionCenter } from '../combat_reaction_helper.js';
+import { interactionRegionCenter, applyKnockback } from '../combat_reaction_helper.js';
 
 export function applyGroundKnockback(attacker, target, region) {
   const reaction = region?.reaction || {};
@@ -29,4 +29,14 @@ export function applyGroundKnockback(attacker, target, region) {
   target.quarterImpulse = normalizeDirection(vx, vz);
   target.player.vx = Math.hypot(vx, vz) * (target.player.facing || 1);
   target.player.velocityControl = { ...target.player.velocityControl, x: true };
+}
+
+export function applyQuarterKnockback(attacker, target, region, world) {
+  if (region.quarterPlane !== 'height') return applyGroundKnockback(attacker, target, region);
+  const before = target.player.vx;
+  applyKnockback(attacker, target, region, { ...world, quarterView: null });
+  if (target.player.vx === before) return;
+  const aim = region.quarterOrigin?.aim || attacker.quarterAim || { x: attacker.player.facing || 1, z: 0 };
+  const sign = (attacker.player.facing || 1) * (target.player.facing || 1);
+  target.quarterImpulse = { x: aim.x * sign, z: aim.z * sign };
 }

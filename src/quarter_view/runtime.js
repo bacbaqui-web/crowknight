@@ -1,5 +1,6 @@
+import { createAttackSettingsView } from './attack_settings_view.js';
 import { captureAttackRegions, groundAttackRegions } from './attack_geometry.js';
-import { applyGroundKnockback } from './knockback.js';
+import { applyQuarterKnockback } from './knockback.js';
 import { GAME_KEYS } from '../game_config_data.js';
 import { createQuarterRenderer } from './renderer.js';
 import { depthOf } from './camera.js';
@@ -9,7 +10,13 @@ import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundP
 const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', KeyX: 'ArrowDown' };
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
-  let paused = false;
+  let paused = false,
+    pauseForSettings = () => {};
+  const attackSettings = createAttackSettingsView({
+    panel: document.querySelector('#quarterAttackSettings'),
+    onOpen: () => pauseForSettings(),
+    onChange: renderer.resetDebugHistory,
+  });
   world.quarterView = {
     captureAttackRegions,
     beforePlayer: (actor, keys, pressed) => preparePlaneMotion(actor, movementInput(keys), keys, pressed),
@@ -28,7 +35,7 @@ export function createQuarterRuntime({ ctx, world }) {
     sameGroundContact,
     attackRegions: groundAttackRegions,
     projectileRegion: groundProjectileRegion,
-    applyKnockback: applyGroundKnockback,
+    applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
     respawn(actor, target) {
       actor.quarterDepth = Math.max(-430, Math.min(430, depthOf(target) + (Math.random() - 0.5) * 500));
       actor.player.quarterDepth = actor.quarterDepth;
@@ -59,6 +66,8 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterAttackRawRegions = [];
         actor.quarterAttackSerial = null;
       });
+      attackSettings.reset(actors);
+      paused = document.querySelector('#quarterAttackSettings').open;
       syncPause();
     },
     bindPause({ isActive, clearInput }) {
@@ -68,6 +77,9 @@ export function createQuarterRuntime({ ctx, world }) {
         clearInput();
         syncPause();
       };
+      pauseForSettings = () => {
+        if (isActive() && !paused) toggle();
+      };
       document.querySelector('#quarterPause').addEventListener('click', toggle);
       addEventListener('keydown', (event) => {
         if (
@@ -75,7 +87,7 @@ export function createQuarterRuntime({ ctx, world }) {
           !event.repeat &&
           !event.metaKey &&
           !event.ctrlKey &&
-          !event.target.closest?.('input, textarea')
+          !event.target.closest?.('input, textarea, select')
         ) {
           event.preventDefault();
           toggle();

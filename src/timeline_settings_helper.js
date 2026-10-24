@@ -1,3 +1,4 @@
+import { normalizeAttackPlane } from './attack_plane_helper.js';
 import {
   clampTimelinePlaybackRate,
   normalizeTimelinePlayback,
@@ -63,6 +64,7 @@ function writeTimelineSetting(settings, prop, value, normalizePlayback) {
     settings.blendFrames = normalizeActionBlendFrames(value);
     writeActionRuntimeRuleSetting(settings, 'blend', 'frames', settings.blendFrames);
   }
+  if (prop === 'quarterAttackPlane') settings.quarterAttackPlane = normalizeAttackPlane(value);
   if (prop === 'condition') settings.condition = normalizeActionCondition(value);
   if (prop === 'editPivot') settings.editPivot = normalizeActionEditPivot(value, settings.editPivot);
 }

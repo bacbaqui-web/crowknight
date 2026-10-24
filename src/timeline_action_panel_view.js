@@ -13,6 +13,7 @@ export function renderActionTimelineSettingsView(elements, state) {
       cancel: elements.actionCancel,
       blend: elements.actionBlend,
       condition: elements.actionCondition,
+      quarterPlane: elements.actionQuarterPlane,
     },
     {
       frameCount: state.frameCount,

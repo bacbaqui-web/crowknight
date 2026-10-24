@@ -67,12 +67,17 @@ export function resolveCombat({
       }
       if (target.lastHitSerials[attacker.id] === attacker.player.attackSerial) return;
       const rawHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
-      const targetHurtRegions = world?.quarterView?.targetRegions(attacker, target, rawHurtRegions) ?? rawHurtRegions;
+      const targetHurtRegions =
+        world?.quarterView?.targetRegions(attacker, target, rawHurtRegions, attackRegions[0]) ?? rawHurtRegions;
       const guardBlockAttackRegion = overlappingGuardBlockAttackRegion(
         attacker,
         attackRegions,
-        world?.quarterView?.targetRegions(attacker, target, cachedInteractionRegions(regionCache, target, 'guard')) ??
-          cachedInteractionRegions(regionCache, target, 'guard')
+        world?.quarterView?.targetRegions(
+          attacker,
+          target,
+          cachedInteractionRegions(regionCache, target, 'guard'),
+          attackRegions[0]
+        ) ?? cachedInteractionRegions(regionCache, target, 'guard')
       );
       const attackRegion = overlappingAttackRegion(attacker, attackRegions, targetHurtRegions);
       if (!attackRegion && !guardBlockAttackRegion) {
@@ -185,7 +190,7 @@ export function resolveProjectileCombat({
       if (projectile.hitTargets?.has(target)) return;
       const rawHurtRegions = cachedInteractionRegions(regionCache, target, 'hurt');
       const targetHurtRegions =
-        world?.quarterView?.targetRegions(projectile.owner, target, rawHurtRegions) ?? rawHurtRegions;
+        world?.quarterView?.targetRegions(projectile.owner, target, rawHurtRegions, attackRegion) ?? rawHurtRegions;
       const hurtRegion = overlappingAttackRegion(projectile.owner, [attackRegion], targetHurtRegions);
       if (!hurtRegion) return;
 
