@@ -34,12 +34,12 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
     buttons[(index + (event.shiftKey ? buttons.length - 1 : 1)) % buttons.length]?.focus();
   });
   return {
-    render({ level, xp, threshold, ranks }) {
-      label.textContent = `Lv.${level} · ${xp} / ${threshold} XP`;
+    render({ level, xp, threshold, ranks, banked = 0 }) {
+      label.textContent = `Lv.${level} · ${xp} / ${threshold} XP${banked ? ` · 보관 포인트 ${banked}` : ''}`;
       bar.max = threshold;
       bar.value = xp;
       skills.textContent = Object.entries(ranks)
-        .map(([id, rank]) => `${PROGRESSION_SKILLS.find((skill) => skill.id === id)?.name || id} ${rank}`)
+        .map(([id, rank]) => `${PROGRESSION_SKILLS.find((skill) => skill.id === id)?.name || id} ${rank}/3`)
         .join(' · ');
     },
     setVisible(value) {
@@ -63,7 +63,7 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
         image.src = new window.URL(`../assets/icons/upgrades/${skill.icon}.svg`, import.meta.url).href;
         image.alt = '';
         const name = document.createElement('strong');
-        name.textContent = skill.kind === 'path' ? skill.name : `${skill.name} · ${ranks[skill.effectId] ? '강화' : '습득'}`;
+        name.textContent = skill.kind === 'path' ? skill.name : `${skill.name} · ${ranks[skill.effectId] ? '강화' : '습득'} ${(ranks[skill.effectId] || 0) + 1}/${skill.maxRank}`;
         const detail = document.createElement('span');
         detail.textContent = skill.detail;
         if (skill.branchLabel) {

@@ -16,6 +16,7 @@ export function applyInteractionDamage({
   attackRegion,
   damage: rawDamage,
   allowParry = true,
+  guarded = false,
   invincibleTime = 0,
   comboStep,
   playerActor,
@@ -26,13 +27,15 @@ export function applyInteractionDamage({
   onEnemyDeath,
 }) {
   if (target.player.runEvadeTime > 0) return false;
-  if (target.player.runSkills && target.player.customActionKey === target.player.runSkillActions.guard) {
-    if (!allowParry || !trySkillParry(attacker, target, world)) world?.combatSounds?.contact('block', attacker, target);
-    return false;
+  const blocking = Boolean(target.player.runSkills && (guarded ||
+    (target.player.runSkillActions?.guard && target.player.customActionKey === target.player.runSkillActions.guard)));
+  if (blocking) {
+    if (allowParry && trySkillParry(attacker, target, world)) return false;
+    world?.combatSounds?.contact('block', attacker, target);
   }
   const damage = Math.max(
     0,
-    Number(rawDamage ?? 20) * (attacker.player.runUpgrades?.damage || 1) * runSkillDamageMultiplier(attacker.player) * progressionEffects(attacker.player).damage * progressionEffects(target.player).armor
+    Number(rawDamage ?? 20) * (blocking ? 0.2 : 1) * (attacker.player.runUpgrades?.damage || 1) * runSkillDamageMultiplier(attacker.player) * progressionEffects(attacker.player).damage * progressionEffects(target.player).armor
   );
   if (!Number.isFinite(damage) || damage <= 0) return false;
   recordHealthDamage(target);
@@ -42,7 +45,7 @@ export function applyInteractionDamage({
   if (lifeSteal && attacker.hp > 0 && !attacker.player.dead) {
     attacker.hp = Math.min(attacker.maxHp, attacker.hp + actualDamage * lifeSteal);
   }
-  world?.combatSounds?.contact('hit', attacker, target);
+  if (!blocking) world?.combatSounds?.contact('hit', attacker, target);
   target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
   if (isRuntimeDebugEnabled()) {
     debugInteractionRuntimeLog('damage-applied', {
@@ -55,7 +58,7 @@ export function applyInteractionDamage({
     });
   }
   if (target.hp > 0) {
-    requestHurtAction(target, attacker);
+    if (!blocking) requestHurtAction(target, attacker);
     return false;
   }
 

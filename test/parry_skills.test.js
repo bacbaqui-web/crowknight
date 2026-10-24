@@ -23,18 +23,20 @@ test('타이밍 패링은 한번만 포인트를 주며 최대 5개, 강화로 �
   assert.equal(requestRuntimeAction(enemy.player, 'attack'), false);
   updateActorCombatTimers([enemy], 1);assert.equal(enemy.player.runParryStun, 0);
 });
-test('실제 피해는 포인트를 지우지만 일반 방어와 회피는 보존한다', () => {
+test('일반 방어도 경감된 피해와 포인트 소멸이 발생하고 회피는 보존한다', () => {
   const enemy = actor(), hero = actor('players');
   hero.player.runSkills.parry = 1;hero.player.runParryPoints = 4;
   hero.player.customActionKey = 'guard';
   applyInteractionDamage({attacker: enemy, target: hero, damage: 10});
-  assert.equal(hero.player.runParryPoints, 4);
+  assert.equal(hero.player.runParryPoints, 0);
+  assert.equal(hero.hp, 198);
+  hero.player.runParryPoints = 4;
   hero.player.customActionKey = 'idle';hero.player.runEvadeTime = 1;
   applyInteractionDamage({attacker: enemy, target: hero, damage: 10});
   assert.equal(hero.player.runParryPoints, 4);
   hero.player.runEvadeTime = 0;
   applyInteractionDamage({attacker: enemy, target: hero, damage: 10});
-  assert.equal(hero.player.runParryPoints, 0);assert.equal(hero.hp, 190);
+  assert.equal(hero.player.runParryPoints, 0);assert.equal(hero.hp, 188);
 });
 test('회복은 포인트 제곱 비례, 전량 소모, 최대 HP 제한, 만피에서는 보존', () => {
   const hero = actor('players');hero.player.runSkills.parryHeal = 1;

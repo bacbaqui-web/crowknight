@@ -1,5 +1,4 @@
 import { resolveMovementSkills } from './movement_skill_combat.js';
-import { trySkillParry } from './parry_skill_helper.js';
 import { resolveParryRelease } from './parry_release_controller.js';
 import { updateHealthTrail } from './actor_health_helper.js';
 import {
@@ -107,7 +106,13 @@ export function resolveCombat({
       target.lastHitSerials[attacker.id] = attacker.player.attackSerial;
 
       if (guardBlockAttackRegion) {
-        if (!trySkillParry(attacker, target, world)) world?.combatSounds?.contact('block', attacker, target);
+        if (target.player.runSkills) {
+          applyInteractionDamage({ attacker, target, attackRegion: guardBlockAttackRegion, damage: 20, guarded: true,
+            invincibleTime: targetHurtInvincibleTime(targetHurtRegions), comboStep, playerActor, world, particleEffects,
+            onPlayerDeath, onPlayerKill, onEnemyDeath });
+          return;
+        }
+        world?.combatSounds?.contact('block', attacker, target);
         triggerWorldAttackCameraShake(world, particleEffects);
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('guard-block', {

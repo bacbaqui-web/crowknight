@@ -127,7 +127,7 @@ test('4타 피해 강화와 패링의 피해 차단/반격 경직을 실제 전�
   };
   const target = { id: 'b', hp: 100, player: { x: 20, actions: [], customActions: [] } };
   applyInteractionDamage({ attacker, target, damage: 20, playerActor: attacker, world: {} });
-  assert.equal(target.hp, 76);
+  assert.equal(target.hp, 70);
   target.player.runSkills = { parry: 1 };
   target.player.runSkillActions = { guard: 'guard' };
   target.player.customActionKey = 'guard';
@@ -135,7 +135,7 @@ test('4타 피해 강화와 패링의 피해 차단/반격 경직을 실제 전�
   attacker.player.actions = [];
   attacker.player.customActions = [];
   applyInteractionDamage({ attacker, target, damage: 20, playerActor: attacker, world: {} });
-  assert.equal(target.hp, 76);
+  assert.equal(target.hp, 70);
   assert.ok(attacker.player.hurtTime >= 0.5);
   assert.equal(target.player.runParryTime, 0);
 });

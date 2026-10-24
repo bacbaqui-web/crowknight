@@ -1,7 +1,7 @@
 import { resetMovementSkills } from './movement_skill_helper.js';
 import { syncProgressionHealth } from './skill_progression_effects.js';
 import { attractPickup, PICKUP_ATTRACTION } from './pickup_magnet_helper.js';
-import { progressionChoices } from './skill_progression_data.js';
+import { progressionChoices, MAX_SKILL_RANK } from './skill_progression_data.js';
 export function createExperienceController({ getPlayer, clearInput, view, onCollect = () => {} }) {
   let active = false,
     level = 1,
@@ -10,22 +10,31 @@ export function createExperienceController({ getPlayer, clearInput, view, onColl
     offered = null,
     orbs = [];
   let pathId = null;
+  let banked = 0;
   const ranks = {};
   let route = [];
   const threshold = () => (40 + (level - 1) * 20) * 10;
   function render() {
-    getPlayer().experience = { level, xp, threshold: threshold() };
-    view.render({ level, xp, threshold: threshold(), ranks: { ...ranks } });
+    getPlayer().experience = { level, xp, banked, threshold: threshold() };
+    view.render({ level, xp, banked, threshold: threshold(), ranks: { ...ranks } });
   }
   function offer() {
     if (!active || !pending || offered) return;
-    offered = progressionChoices(pathId, route);
+    offered = progressionChoices(pathId, route, ranks);
+    if (!offered.length) {
+      banked += pending;
+      pending = 0;
+      offered = null;
+      render();
+      return;
+    }
     clearInput();
     view.show(offered, ranks, choose, pathId);
   }
   function choose(id, offerToken = offered) {
     if (!active || !offered || offerToken !== offered || !offered.some((skill) => skill.id === id)) return false;
     const choice = offered.find((skill) => skill.id === id);
+    if ((ranks[choice.effectId] || 0) >= MAX_SKILL_RANK) return false;
     if (!pathId) {
       pathId = choice.pathId;
       ranks[choice.effectId] = 1;
@@ -60,6 +69,7 @@ export function createExperienceController({ getPlayer, clearInput, view, onColl
       active = true;
       level = 1;
       pathId = null;
+      banked = 0;
       route = [];
       delete getPlayer().player.runSkillPathColor;
       xp = pending = 0;
@@ -161,6 +171,6 @@ export function createExperienceController({ getPlayer, clearInput, view, onColl
     choose,
     isPaused: () => Boolean(pending || offered),
     orbSnapshot: () => orbs.map((orb) => ({ ...orb })),
-    snapshot: () => ({ level, xp, pending, pathId, route: [...route], ranks: { ...ranks } }),
+    snapshot: () => ({ level, xp, pending, banked, pathId, route: [...route], ranks: { ...ranks } }),
   };
 }

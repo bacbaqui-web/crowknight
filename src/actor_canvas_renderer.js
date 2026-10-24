@@ -80,7 +80,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
     ctx.fillStyle = '#f8fafc';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(`Lv.${level}`, left - 4, top + 4);
+    ctx.fillText(`Lv.${level}${actor.experience.banked ? ` · 보관 ${actor.experience.banked}` : ''}`, left - 4, top + 4);
   }
   ctx.fillStyle = actor.hurtCooldown > 0 ? '#fff' : actor.tint;
   ctx.font = '13px sans-serif';

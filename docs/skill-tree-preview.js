@@ -88,7 +88,7 @@ function drawMap(path) {
       const target = byId.get(id);
       group.append(svg('text', { x: 12, y: 72 + index * 23, class: `destination ${index ? 'right' : 'left'}` }, `${index ? '2 오른쪽' : '1 왼쪽'} · ${destinationLabel(node, target)}`));
     });
-    if (!node.children.length) group.append(svg('text', { x: 12, y: 78, class: 'destination' }, '최상위 · 이후 이 기술 숙련'));
+    if (!node.children.length) group.append(svg('text', { x: 12, y: 78, class: 'destination' }, '최상위 · 최대 3레벨'));
     group.addEventListener('click', () => select(path.id, node.id));
     group.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(path.id, node.id); }
@@ -104,7 +104,7 @@ function renderDetail() {
   const node = nodes.find(item => item.id === selection.nodeId);
   detail.style.setProperty('--accent', progressionNodeColor(path.id, node.id));
   const description = html('div', '');
-  description.append(html('h2', `${path.name} · ${node.name}`), html('p', node.detail));
+  description.append(html('h2', `${path.name} · ${node.name}`), html('p', `${node.detail} · 최대 ${node.maxRank}레벨`));
   const next = html('div', '', 'next');
   node.children.forEach((id, index) => {
     const target = nodes.find(item => item.id === id);
@@ -115,7 +115,7 @@ function renderDetail() {
   });
   const parents = nodes.filter(parent => parent.children.includes(node.id));
   description.append(html('p', node.root ? '시작 기술 · 계열 선택 즉시 습득' : `선행 조건: ${parents.map(parent => parent.name).join(' 또는 ')} 습득`));
-  if (!node.children.length) next.append(html('p', '현재 최상위 기술입니다. 다음 레벨업부터 이 기술을 계속 강화합니다. 새 상위 기술은 추후 확장합니다.'));
+  if (!node.children.length) next.append(html('p', '현재 최상위 기술입니다. 최대 3레벨까지 강화합니다. 이후 포인트는 보관되며 전투를 계속할 수 있습니다.'));
   detail.replaceChildren(description, next);
 }
 function render() {

@@ -43,7 +43,7 @@ test('Q 연계는 해금한 4→5→6타 순서로만 진행하고 제작 모션
 test('5·6타 반복 강화와 연타 피해 효과를 계산한다', () => {
   for (const id of ['fifthStrike', 'sixthStrike']) {
     const player = { runSkills: { [id]: 3, comboForce: 2 }, runSkillActions: { [id]: id }, customActionKey: id };
-    assert.ok(Math.abs(runSkillDamageMultiplier(player) - 1.82) < 1e-9);
+    assert.ok(Math.abs(runSkillDamageMultiplier(player) - 1.82 * (id === 'fifthStrike' ? 1.5 : 2)) < 1e-9);
   }
 });
 test('현재 기술을 강화해도 다음 갈림길이 유지된다', () => {

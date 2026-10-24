@@ -10,13 +10,13 @@ export const RUN_SKILLS = [
     detail: 'Q 길게 누르고 놓으면 강공격 · 최대 3배 피해 · 강화마다 범위·히트박스·이펙트 +20%',
     icon: 'swift-preparation',
   },
-  { id: 'fifthStrike', name: '다섯 번째 공격', detail: '공격 5타 해금 · 강화마다 5타 피해 +20%', icon: 'sharp-blade' },
-  { id: 'sixthStrike', name: '여섯 번째 공격', detail: '공격 6타 해금 · 강화마다 6타 피해 +20%', icon: 'sharp-blade' },
-  { id: 'fourthStrike', name: '네 번째 공격', detail: '공격 4타 해금 · 강화마다 4타 피해 +20%', icon: 'sharp-blade' },
+  { id: 'fifthStrike', name: '다섯 번째 공격', detail: '공격 5타 해금 · 기본 30 피해 · 강화마다 5타 피해 +20%', icon: 'sharp-blade' },
+  { id: 'sixthStrike', name: '여섯 번째 공격', detail: '공격 6타 해금 · 기본 40 피해 · 강화마다 6타 피해 +20%', icon: 'sharp-blade' },
+  { id: 'fourthStrike', name: '네 번째 공격', detail: '공격 4타 해금 · 기본 25 피해 · 강화마다 4타 피해 +20%', icon: 'sharp-blade' },
   {
     id: 'parry',
     name: '찰나의 반격',
-    detail: 'E 타이밍 방어 · 적 0.6초 스턴 · 강화마다 판정 +0.03초(최대 0.6초), 스턴 +0.25초',
+    detail: 'E 타이밍 방어 · 적 0.6초 스턴 · 강화마다 판정 +0.03초(최대 0.6초), 스턴 +0.25초 · 일반 방어 피해 20% · 보스 스턴 절반(최대 0.6초)',
     icon: 'rooted-stance',
   },
   {
@@ -251,5 +251,6 @@ export function runSkillDamageMultiplier(player) {
   if (!ranks) return 1;
   const strike = ['fourthStrike', 'fifthStrike', 'sixthStrike'].find(id =>
     player.runSkillActions?.[id] && player.customActionKey === player.runSkillActions[id]);
-  return strike ? (1 + Math.max(0, (ranks[strike] || 1) - 1) * 0.2) * (1 + (ranks.comboForce || 0) * 0.15) : 1;
+  const base = { fourthStrike: 1.25, fifthStrike: 1.5, sixthStrike: 2 };
+  return strike ? base[strike] * (1 + Math.max(0, (ranks[strike] || 1) - 1) * 0.2) * (1 + (ranks.comboForce || 0) * 0.15) : 1;
 }

@@ -1,6 +1,6 @@
 export function parryStats(player) {
   const rank = Math.max(1, player.runSkills?.parry || 1);
-  return { window: Math.min(0.6, 0.15 + (rank - 1) * 0.03), stun: 0.6 + (rank - 1) * 0.25 };
+  return { window: Math.min(0.6, 0.15 + (rank - 1) * 0.03), stun: Math.min(1.5, 0.6 + (rank - 1) * 0.25) };
 }
 
 export function parryColor(player) {
@@ -10,6 +10,7 @@ export function parryColor(player) {
 export function stunParriedEnemy(actor, seconds) {
   const p = actor.player;
   if (p.dead) return;
+  seconds = actor.group === 'bosses' ? Math.min(0.6, seconds * 0.5) : Math.min(1.5, seconds);
   p.runParryStun = Math.max(p.runParryStun || 0, seconds);
   p.hurtTime = Math.max(p.hurtTime || 0, seconds);
   p.customActionKey = null;

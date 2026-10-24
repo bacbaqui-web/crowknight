@@ -21,7 +21,8 @@ const PASSIVES = [
   { id: 'reach', name: '넓은 궤적', detail: '공격 판정 범위 +10% · 최대 +100%', icon: 'long-shadow' },
   { id: 'leap', name: '가벼운 깃털', detail: '도약 높이 +10% · 최대 +100%', icon: 'leaping-feather' },
 ];
-export const PROGRESSION_SKILLS = [...RUN_SKILLS, ...PASSIVES];
+export const MAX_SKILL_RANK = 3;
+export const PROGRESSION_SKILLS = [...RUN_SKILLS, ...PASSIVES].map(skill => ({ ...skill, maxRank: MAX_SKILL_RANK }));
 const effectsByNode = { attackRoot: 'fourthStrike', guardRoot: 'parry', moveRoot: 'sprint' };
 // Every edge advances one tier. A leaf can be trained without reopening earlier branches.
 const branches = {
@@ -46,7 +47,7 @@ export function progressionNodeColor(pathId, nodeId) {
   return SKILL_PATHS.find(path => path.id === pathId)?.color;
 }
 
-export function progressionChoices(pathId, route = []) {
+export function progressionChoices(pathId, route = [], ranks = {}) {
   if (!pathId) return SKILL_PATHS.map(path => ({
     id: path.id, pathId: path.id, kind: 'path', name: path.name, color: path.color,
     icon: path.icon, effectId: path.first, detail: `선택 즉시 ${nodeSkill(path.root).name} 습득 · ${nodeSkill(path.root).detail}`,
@@ -77,7 +78,7 @@ export function progressionChoices(pathId, route = []) {
     ...nodeSkill(current), id: `${pathId}:${route.join('')}:train`, nodeId: current,
     pathId, color: progressionNodeColor(pathId, current), reinforce: true, branchLabel: '현재 기술 강화 · 다음 분기 유지',
   });
-  return choices;
+  return choices.filter(choice => (ranks[choice.effectId] || 0) < MAX_SKILL_RANK);
 }
 
 // The map and game share the same prerequisite edges.

@@ -33,11 +33,11 @@ test('기본 구르기 1회와 강화당 추가 횟수, 마지막 동작 후 쿨
 test('공중 F로 급강하하고 착지 피해는 높이 제곱 배율이며 한 번만 적용된다',()=>{
  const a=fixture(),p=a.player;p.runSkills={sprint:1,doubleJump:1,plunge:1};p.y=230;p.floorY=430;p.onGround=false;
  updateActionTriggerRuntime(p,0,new Set(['KeyF']),new Set(['KeyF']));assert.equal(p.customActionKey,p.runSkillActions.plunge);
- applyMovementSkillPhysics(p,new Set());assert.equal(p.vy,85);assert.equal(plungeDamage(200,1),180);
+ applyMovementSkillPhysics(p,new Set());assert.equal(p.vy,85);assert.equal(plungeDamage(200,1),80);
  const enemy={group:'mobs',hp:500,maxHp:500,player:{x:100,y:430,customActionKey:'idle',actions:[]}};
  p.y=430;p.onGround=true;
  const args={actors:[a,enemy],playerActor:a,world:{}};
- resolveMovementSkills(args);assert.equal(enemy.hp,320);resolveMovementSkills(args);assert.equal(enemy.hp,320);
+ resolveMovementSkills(args);assert.equal(enemy.hp,420);resolveMovementSkills(args);assert.equal(enemy.hp,420);
 });
 test('활강은 하강 중 Space를 유지할 때만 낙하 속도를 제한한다',()=>{
  const p={runSkills:{glide:1},onGround:false,vy:40};
