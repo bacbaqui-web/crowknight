@@ -1,3 +1,4 @@
+export const PICKUP_ATTRACTION = Object.freeze({ radius: 140, speed: 420 });
 // Attraction begins after the fragment has touched the floor, preserving its launch.
 export function attractPickup(pickup, actor, dt, radius, speed) {
   if (!pickup.landed || actor.hp <= 0 || actor.player.dead) return false;

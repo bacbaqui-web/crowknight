@@ -4,11 +4,12 @@ import { createExperienceController } from '../src/experience_controller.js';
 import { canUseRunSkill, startRunSkill, updateRunSkills, prepareSkillActions } from '../src/skill_runtime_helper.js';
 import { mergeTuning } from '../src/project_data_normalizer_helper.js';
 import { DEFAULT_PLAYER_TUNING } from '../src/player_default_tuning_data.js';
-function setup() {
+function setup(onCollect = () => {}) {
   const player = { hp: 100, tuning: { skillActions: { doubleJump: 'jump2' } }, player: { x: 0, y: 0 } };
   const offers = [];
   const c = createExperienceController({
     getPlayer: () => player,
+    onCollect,
     clearInput() {},
     view: { render() {}, show: (offered) => offers.push(offered), hide() {}, setVisible() {} },
   });
@@ -19,7 +20,10 @@ test('첫 레벨업에서 계열과 시작 기술을 함께 습득한다', () =>
   const { c, offers, player } = setup();
   c.addExperience(400);
   c.update(0, { floorY: 0 });
-  assert.deepEqual(offers[0].map(s => s.id), ['attack', 'guard', 'move']);
+  assert.deepEqual(
+    offers[0].map((s) => s.id),
+    ['attack', 'guard', 'move']
+  );
   assert.equal(c.choose('missing'), false);
   assert.equal(c.choose('attack', offers[0]), true);
   assert.deepEqual(c.snapshot().ranks, { fourthStrike: 1 });
@@ -39,15 +43,23 @@ test('선택한 가지의 자식 둘만 제시하며 다른 계열은 섞이지 
     ['move', 'sprint', 'doubleJump', 'rollChain'],
   ]) {
     const { c, offers } = setup();
-    c.addExperience(399);c.update(0, { floorY: 0 });
+    c.addExperience(399);
+    c.update(0, { floorY: 0 });
     assert.equal(offers.length, 0);
-    c.addExperience(1);c.update(0, { floorY: 0 });c.choose(path);
+    c.addExperience(1);
+    c.update(0, { floorY: 0 });
+    c.choose(path);
     assert.equal(c.snapshot().ranks[root], 1);
     for (let step = 0; step < 4; step++) {
-      c.addExperience(5000);c.update(0, { floorY: 0 });
-      const pair = offers.at(-1).filter(choice => !choice.reinforce);
-      if (step === 0) assert.deepEqual(pair.map(s => s.effectId), [left, right]);
-      assert.ok(pair.every(s => s.pathId === path));
+      c.addExperience(5000);
+      c.update(0, { floorY: 0 });
+      const pair = offers.at(-1).filter((choice) => !choice.reinforce);
+      if (step === 0)
+        assert.deepEqual(
+          pair.map((s) => s.effectId),
+          [left, right]
+        );
+      assert.ok(pair.every((s) => s.pathId === path));
       const oldToken = pair;
       c.choose(pair.at(-1).id, offers.at(-1));
       assert.equal(c.choose(oldToken[0].id, oldToken), false);
@@ -126,4 +138,17 @@ test('4타 피해 강화와 패링의 피해 차단/반격 경직을 실제 전�
   assert.equal(target.hp, 76);
   assert.ok(attacker.player.hurtTime >= 0.5);
   assert.equal(target.player.runParryTime, 0);
+});
+
+test('경험치 수집 도착에만 효과음을 한번 내며 직접 지급에는 내지 않는다', () => {
+  const sounds = [];
+  const { c, player } = setup((name) => sounds.push(name));
+  c.addExperience(1);
+  c.recordKill({ group: 'mobs', player: { x: 400, y: 0 } });
+  c.update(1, { floorY: 0 });
+  assert.deepEqual(sounds, []);
+  player.player.x = c.orbSnapshot()[0].x;
+  c.update(0, { floorY: 0 });
+  c.update(0.1, { floorY: 0 });
+  assert.deepEqual(sounds, ['experiencePickup']);
 });

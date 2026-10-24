@@ -1,5 +1,5 @@
-import { attractPickup } from './pickup_magnet_helper.js';
-export function createHealthDrops({ random = Math.random } = {}) {
+import { attractPickup, PICKUP_ATTRACTION } from './pickup_magnet_helper.js';
+export function createHealthDrops({ random = Math.random, onCollect = () => {} } = {}) {
   let pending = [],
     drops = [];
   function recordKill(actor) {
@@ -56,9 +56,10 @@ export function createHealthDrops({ random = Math.random } = {}) {
           }
         }
       }
-      if (drop.age < 10 && attractPickup(drop, playerActor, dt, 40, 260)) {
+      if (drop.age < 10 && attractPickup(drop, playerActor, dt, PICKUP_ATTRACTION.radius, PICKUP_ATTRACTION.speed)) {
         playerActor.hp = Math.min(playerActor.maxHp, playerActor.hp + 10);
         drop.age = 10;
+        onCollect('healthPickup');
       }
     }
     drops = drops.filter((drop) => drop.age < 10);

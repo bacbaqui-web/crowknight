@@ -1,4 +1,6 @@
 const FILES = {
+  experiencePickup: ['experience-pickup.wav', 0.32, 1],
+  healthPickup: ['health-pickup.wav', 0.4, 1],
   clubSwing: ['club-swing.wav', 0.33, 0.92],
   swordSwing: ['sword-swing.wav', 0.26, 1.08],
   bossSwing: ['club-swing.wav', 0.44, 0.68],
@@ -11,8 +13,10 @@ const FILES = {
 };
 
 export function createCombatAudioPlayer() {
+  const { fetch, URL, console } = window;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return { play() {}, reset() {}, unlock: async () => {}, loading: Promise.resolve(), loadedCount: () => 0 };
+  if (!AudioContextClass)
+    return { play() {}, reset() {}, unlock: async () => {}, loading: Promise.resolve(), loadedCount: () => 0 };
   const context = new AudioContextClass();
   const master = context.createGain();
   master.gain.value = 0.7;
@@ -24,22 +28,29 @@ export function createCombatAudioPlayer() {
   const lastPlayed = new Map();
   let muted = false;
   let ready = false;
-  const loading = Promise.all([...new Set(Object.values(FILES).map(([file]) => file))].map(async (file) => {
-    try {
-      const response = await fetch(new URL(`../assets/audio/combat/${file}`, import.meta.url));
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      buffers.set(file, await context.decodeAudioData(await response.arrayBuffer()));
-    } catch (error) {
-      console.warn(`전투 효과음 로드 실패: ${file}`, error);
-    }
-  })).then(() => { ready = true; });
-  function unlock() { return context.resume().catch(() => {}); }
+  const loading = Promise.all(
+    [...new Set(Object.values(FILES).map(([file]) => file))].map(async (file) => {
+      try {
+        const response = await fetch(new URL(`../assets/audio/combat/${file}`, import.meta.url));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        buffers.set(file, await context.decodeAudioData(await response.arrayBuffer()));
+      } catch (error) {
+        console.warn(`전투 효과음 로드 실패: ${file}`, error);
+      }
+    })
+  ).then(() => {
+    ready = true;
+  });
+  function unlock() {
+    return context.resume().catch(() => {});
+  }
   window.addEventListener('pointerdown', unlock, { capture: true });
   window.addEventListener('keydown', unlock, { capture: true });
   const button = document.createElement('button');
   button.type = 'button';
   button.id = 'combatSoundToggle';
-  button.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:20;background:#182331;color:#fff;border:1px solid #758391;border-radius:8px;padding:8px;cursor:pointer';
+  button.style.cssText =
+    'position:fixed;right:12px;bottom:12px;z-index:20;background:#182331;color:#fff;border:1px solid #758391;border-radius:8px;padding:8px;cursor:pointer';
   function syncButton() {
     button.textContent = muted ? '소리 꺼짐' : '소리 켜짐';
     button.setAttribute('aria-label', muted ? '효과음 켜기' : '효과음 끄기');
@@ -69,7 +80,11 @@ export function createCombatAudioPlayer() {
     source.connect(gain);
     gain.connect(master);
     voices.add(source);
-    source.onended = () => { voices.delete(source); source.disconnect(); gain.disconnect(); };
+    source.onended = () => {
+      voices.delete(source);
+      source.disconnect();
+      gain.disconnect();
+    };
     source.start();
   }
   function reset() {

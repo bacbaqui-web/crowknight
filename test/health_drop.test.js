@@ -32,8 +32,10 @@ test('잡몹의 조각 하나만 하트로 변하며 보스와 확률 실패는 
   assert.equal(missed.snapshot().length, 0);
 });
 test('하트는 날아가서 착지한 뒤 접근해야 10 HP를 회복하고 한번만 먹는다', () => {
-  const drops = createHealthDrops({ random: () => 0 });
+  const sounds = [];
+  const drops = createHealthDrops({ random: () => 0, onCollect: (name) => sounds.push(name) });
   const p = player();
+  p.player.x = -1000;
   drops.recordKill(enemy());
   drops.update(0, p, world);
   for (let i = 0; i < 100; i++) drops.update(0.01, p, world);
@@ -41,16 +43,22 @@ test('하트는 날아가서 착지한 뒤 접근해야 10 HP를 회복하고 �
   assert.ok(drop.landed);
   assert.ok(drop.x > 80);
   assert.equal(p.hp, 70);
-  p.player.x = drop.x;
-  drops.update(0, p, world);
+  p.player.x = drop.x - 100;
+  drops.update(0.1, p, world);
+  assert.equal(p.hp, 70);
+  assert.equal(drops.snapshot()[0].magnetized, true);
+  assert.deepEqual(sounds, []);
+  drops.update(0.3, p, world);
   assert.equal(p.hp, 80);
   assert.equal(drops.snapshot().length, 0);
   drops.update(1, p, world);
   assert.equal(p.hp, 80);
+  assert.deepEqual(sounds, ['healthPickup']);
 });
 test('최대 체력 제한, 사망자 회복 금지와 만료/초기화를 적용한다', () => {
   const drops = createHealthDrops({ random: () => 0 });
   const p = player(95);
+  p.player.x = -1000;
   drops.recordKill(enemy());
   drops.update(1, p, world);
   p.player.x = drops.snapshot()[0].x;

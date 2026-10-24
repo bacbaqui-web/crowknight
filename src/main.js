@@ -134,8 +134,9 @@ const experience = createExperienceController({
     cancelChargeAttack(runActorState.getPlayer().player);
   },
   view: createExperienceView(),
+  onCollect: combatAudio.play,
 });
-const healthDrops = createHealthDrops();
+const healthDrops = createHealthDrops({ onCollect: combatAudio.play });
 addEventListener('blur', () => {
   cancelChargeAttack(runActorState.getPlayer().player);
 });

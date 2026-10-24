@@ -1,8 +1,8 @@
 import { resetMovementSkills } from './movement_skill_helper.js';
 import { syncProgressionHealth } from './skill_progression_effects.js';
-import { attractPickup } from './pickup_magnet_helper.js';
+import { attractPickup, PICKUP_ATTRACTION } from './pickup_magnet_helper.js';
 import { progressionChoices } from './skill_progression_data.js';
-export function createExperienceController({ getPlayer, clearInput, view }) {
+export function createExperienceController({ getPlayer, clearInput, view, onCollect = () => {} }) {
   let active = false,
     level = 1,
     xp = 0,
@@ -25,7 +25,7 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
   }
   function choose(id, offerToken = offered) {
     if (!active || !offered || offerToken !== offered || !offered.some((skill) => skill.id === id)) return false;
-    const choice = offered.find(skill => skill.id === id);
+    const choice = offered.find((skill) => skill.id === id);
     if (!pathId) {
       pathId = choice.pathId;
       ranks[choice.effectId] = 1;
@@ -132,9 +132,10 @@ export function createExperienceController({ getPlayer, clearInput, view }) {
           }
           orb.vx *= Math.exp(-(orb.landed ? 3 : 0.42) * step);
         }
-        if (orb.age < 60 && attractPickup(orb, player, dt, 140, 420)) {
+        if (orb.age < 60 && attractPickup(orb, player, dt, PICKUP_ATTRACTION.radius, PICKUP_ATTRACTION.speed)) {
           addExperience(orb.value);
           orb.age = 60;
+          onCollect('experiencePickup');
         }
       }
       orbs = orbs.filter((orb) => orb.age < 60);
