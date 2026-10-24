@@ -305,6 +305,7 @@ export function drawPuppetLeg(player, ctx, x, y, upperRotation, lowerRotation, s
 }
 
 export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rotation, key) {
+  if (!image || !part) return;
   const offset = key ? player.getPartOffset(key) : { x: 0, y: 0, w: 0, h: 0, rot: 0 };
   const imageX = baseX + (part.x || 0) + (part.anchorOffsetX || 0) + offset.x;
   const imageY = baseY + (part.y || 0) + (part.anchorOffsetY || 0) + offset.y;

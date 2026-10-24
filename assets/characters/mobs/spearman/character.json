@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "spearman",
+  "type": "enemy",
+  "label": "창잡이",
+  "name": "창잡이",
+  "x": 900,
+  "folder": "mobs/spearman",
+  "tint": "#3e8750",
+  "deletable": true,
+  "group": "mobs",
+  "deleted": false,
+  "storageFolder": "mobs/spearman"
+}
