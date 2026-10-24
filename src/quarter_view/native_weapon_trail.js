@@ -25,19 +25,12 @@ export function createNativeWeaponTrail(ctx, world) {
     const contact = weaponContactRegion(actor, raw[0]);
     if (!contact.quarterWeaponContact) return;
     const points = regionPoints(contact).map((p) => ({ x: p.x, y: p.y, depth: depthOf(actor) }));
-    const previous = entry.samples.at(-1);
-    const edge =
-      previous && now - previous.time < 0.07 ? [previous.points[0], previous.points[1], points[1], points[0]] : points;
-    entry.samples.push({ time: now, points, edge });
+    entry.samples.push({ time: now, points, anchor: { ...contact.quarterWeaponAnchor, depth: depthOf(actor) } });
     entry.lastActive = now;
-    // Preserve the complete swing; coalesce older segments instead of shaving its beginning off.
-    if (entry.samples.length > limit) {
-      entry.samples.splice(1, 1);
-      const first = entry.samples[0],
-        next = entry.samples[1];
-      next.edge = [first.points[0], first.points[1], next.points[1], next.points[0]];
-    }
+    if (entry.samples.length > limit) entry.samples.splice(1, 1);
+    entry.ribbon = crescentRibbon(entry.samples);
   }
+
   function draw(actor, view) {
     const entry = entries.get(actor);
     if (!entry || actor.player.dead || actor.respawning) return;
@@ -46,14 +39,17 @@ export function createNativeWeaponTrail(ctx, world) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = actor.group === 'players' ? '#83e6ff' : '#ffbd7c';
-    ctx.globalAlpha = 0.36 * (1 - age / lifetime);
+    const fade = 1 - age / lifetime;
+    ctx.globalAlpha = 0.42 * fade * fade * (3 - 2 * fade);
     ctx.beginPath();
-    for (const sample of entry.samples) {
-      sample.edge.forEach((p, i) => {
-        const q = screenPoint(p, world, view);
-        if (i) ctx.lineTo(q.x, q.y);
-        else ctx.moveTo(q.x, q.y);
-      });
+    const ribbon = entry.ribbon;
+    if (ribbon?.outer.length) {
+      smoothBoundary(
+        ctx,
+        ribbon.outer.map((p) => screenPoint(p, world, view)),
+        true
+      );
+      smoothBoundary(ctx, ribbon.inner.map((p) => screenPoint(p, world, view)).reverse(), false);
       ctx.closePath();
     }
     ctx.fill();
@@ -67,4 +63,67 @@ export function createNativeWeaponTrail(ctx, world) {
     },
     samples: (actor) => entries.get(actor)?.samples || [],
   };
+}
+
+// Interpolate blade rotation around its moving grip, not straight chords between sparse animation frames.
+export function crescentRibbon(samples) {
+  if (samples.length < 2) return { outer: [], inner: [] };
+  const arc = [];
+  let previous;
+  for (const sample of samples) {
+    const tip = { x: (sample.points[1].x + sample.points[2].x) / 2, y: (sample.points[1].y + sample.points[2].y) / 2 };
+    const dx = tip.x - sample.anchor.x,
+      dy = tip.y - sample.anchor.y;
+    let angle = Math.atan2(dy, dx);
+    if (previous) {
+      while (angle - previous.angle > Math.PI) angle -= Math.PI * 2;
+      while (angle - previous.angle < -Math.PI) angle += Math.PI * 2;
+    }
+    const current = { ...sample.anchor, angle, radius: Math.hypot(dx, dy) };
+    const steps = previous ? Math.max(1, Math.ceil(Math.abs(angle - previous.angle) / 0.12)) : 1;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const a = previous || current;
+      const lerp = (key) => a[key] + (current[key] - a[key]) * t;
+      arc.push({ x: lerp('x'), y: lerp('y'), depth: lerp('depth'), angle: lerp('angle'), radius: lerp('radius') });
+    }
+    previous = current;
+  }
+  const distances = [0];
+  for (let i = 1; i < arc.length; i++)
+    distances.push(distances[i - 1] + Math.abs(arc[i].angle - arc[i - 1].angle) * arc[i].radius);
+  const total = distances.at(-1);
+  if (total < 2) return { outer: [], inner: [] };
+  const outer = [],
+    inner = [];
+  arc.forEach((p, i) => {
+    const taper = Math.pow(Math.sin((Math.PI * distances[i]) / total), 0.8);
+    const thickness = Math.min(26, p.radius * 0.22) * taper;
+    // The whole ribbon sits outside the blade tip, with a clear 12–24px lead.
+    const radius = p.radius + Math.max(12, Math.min(24, p.radius * 0.18));
+    const point = (r) => ({ x: p.x + Math.cos(p.angle) * r, y: p.y + Math.sin(p.angle) * r, depth: p.depth });
+    outer.push(point(radius + thickness));
+    inner.push(point(radius));
+  });
+  return { outer, inner };
+}
+
+function smoothBoundary(ctx, points, start) {
+  if (!points.length) return;
+  if (start) ctx.moveTo(points[0].x, points[0].y);
+  else ctx.lineTo(points[0].x, points[0].y);
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[Math.max(0, i - 1)],
+      b = points[i],
+      c = points[i + 1],
+      d = points[Math.min(points.length - 1, i + 2)];
+    ctx.bezierCurveTo(
+      b.x + (c.x - a.x) / 6,
+      b.y + (c.y - a.y) / 6,
+      c.x - (d.x - b.x) / 6,
+      c.y - (d.y - b.y) / 6,
+      c.x,
+      c.y
+    );
+  }
 }

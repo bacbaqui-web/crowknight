@@ -6,7 +6,7 @@ import { ATTACK_INTERACTION_OBJECT_KEY } from '../src/interaction_object_model_d
 import { scaleUpgradeAttackRegions } from '../src/run_upgrade_effect_helper.js';
 import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
 import { combatTargetRegions } from '../src/quarter_view/spatial.js';
-import { createNativeWeaponTrail } from '../src/quarter_view/native_weapon_trail.js';
+import { createNativeWeaponTrail, crescentRibbon } from '../src/quarter_view/native_weapon_trail.js';
 const raw = [
   { key: ATTACK_INTERACTION_OBJECT_KEY, x: 30, y: -90, w: 100, h: 30, reaction: { damage: 17, hitMode: 'trace' } },
 ];
@@ -128,6 +128,7 @@ test('whole swing stays visible together and fades together after attack stops',
     beginPath() {},
     moveTo() {},
     lineTo() {},
+    bezierCurveTo() {},
     closePath() {},
     fill() {
       fills++;
@@ -148,4 +149,21 @@ test('whole swing stays visible together and fades together after attack stops',
   a.player.animTime += 0.2;
   trail.draw(a, {});
   assert.equal(fills, 1);
+});
+
+test('crescent follows sparse rotation smoothly, tapers at both tips and leads the weapon', () => {
+  const samples = [0, Math.PI / 3, (Math.PI * 2) / 3].map((angle) => {
+    const tip = { x: Math.cos(angle) * 100, y: Math.sin(angle) * 100 };
+    return { anchor: { x: 0, y: 0, depth: 10 }, points: [{}, tip, tip] };
+  });
+  const ribbon = crescentRibbon(samples);
+  assert.ok(ribbon.outer.length > 15);
+  for (let i = 0; i < ribbon.outer.length; i++) {
+    assert.ok(Math.hypot(ribbon.inner[i].x, ribbon.inner[i].y) > 110);
+    assert.equal(ribbon.outer[i].depth, 10);
+  }
+  const width = (i) => Math.hypot(ribbon.outer[i].x - ribbon.inner[i].x, ribbon.outer[i].y - ribbon.inner[i].y);
+  assert.ok(width(0) < 1e-6);
+  assert.ok(width(ribbon.outer.length - 1) < 1e-6);
+  assert.ok(width(Math.floor(ribbon.outer.length / 2)) > 20);
 });
