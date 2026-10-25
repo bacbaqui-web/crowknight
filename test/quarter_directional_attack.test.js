@@ -52,7 +52,7 @@ test('eight directional sectors start at torso, hit ahead, reject behind/side an
     assert.equal(interactionRegionsOverlap(box, target(10, 50)), false);
   }
 });
-test('reach upgrades and skill reach scale the sector radius, input direction overrides retained aim', () => {
+test('reach upgrades and skill reach scale the sector radius, arrow aim takes precedence over pending movement input', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   a.quarterInputDirection = { x: 0, z: -1 };
@@ -62,7 +62,8 @@ test('reach upgrades and skill reach scale the sector radius, input direction ov
   const boosted = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
   assert.ok(Math.abs(boosted.quarterBoxLength / initial.quarterBoxLength - 1.8) < 1e-8);
   assert.ok(Math.abs(boosted.w / initial.w - 1.8) < 1e-8);
-  assert.equal(boosted.quarterBoxAim.z, -1);
+  assert.equal(boosted.quarterBoxAim.x, 1);
+  assert.equal(boosted.quarterBoxAim.z, 0);
   assert.deepEqual(directionalAttackRegions(a, []), []);
 });
 test('projectiles bypass boxes and airborne melee still filters target height', () => {
@@ -96,14 +97,14 @@ test('visual trail follows native weapon coordinates regardless of aim and has a
   assert.equal(trail.samples(a).length, 0);
 });
 
-test('sector has a 70 degree opening and depth directions have extra reach', () => {
+test('sector has a 100 degree opening and depth reach is half horizontal reach', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   const right = directionalAttackRegions(a, raw)[0];
   a.quarterAim = { x: 0, z: 1 };
   const down = directionalAttackRegions(a, raw)[0];
-  assert.ok(Math.abs(right.h - 2 * right.quarterBoxLength * Math.sin((35 * Math.PI) / 180)) < 1e-8);
-  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 1.35) < 1e-8);
+  assert.ok(Math.abs(right.h - 2 * right.quarterBoxLength * Math.sin((50 * Math.PI) / 180)) < 1e-8);
+  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 0.5) < 1e-8);
 });
 
 test('live box follows attack displacement after capture without moving its old snapshot', async () => {
@@ -249,7 +250,7 @@ test('trail hitbox influence is partial, capped and follows the depth direction'
   assert.deepEqual(trailHitboxOffset(a, points, []), { x: 0, y: 0 });
 });
 
-test('up and down rotate the whole weapon arc without changing its shape', () => {
+test('up and down rotate and uniformly halve the weapon arc', () => {
   const a = actor();
   const points = [
     { x: 50, y: -70 },
@@ -262,9 +263,9 @@ test('up and down rotate the whole weapon arc without changing its shape', () =>
     const region = directionalAttackRegions(a, raw)[0];
     const pose = directionalTrailPose(a, points, { x: 50, y: -70 }, region);
     assert.ok(Math.abs(pose.points[1].x) < 1e-8);
-    assert.ok((pose.points[1].y + 70) * z > 100);
+    assert.ok((pose.points[1].y + 70) * z > 50);
     assert.ok(
-      Math.abs(Math.hypot(pose.points[1].x - pose.points[0].x, pose.points[1].y - pose.points[0].y) - 70) < 1e-8
+      Math.abs(Math.hypot(pose.points[1].x - pose.points[0].x, pose.points[1].y - pose.points[0].y) - 35) < 1e-8
     );
   }
 });
@@ -284,5 +285,29 @@ test('unbounded ground permits all directions and draws tiles far beyond the old
       a.player.x
     );
     assert.ok(tiles.length > 30 && tiles.length < 1000);
+  }
+});
+
+test('all eight arrow directions center the 100 degree fan and use 100/75/50 percent reach', () => {
+  const a = actor();
+  a.quarterAim = { x: 1, z: 0 };
+  const base = directionalAttackRegions(a, raw)[0].quarterBoxLength;
+  for (const aim of EFFECT_DIRECTIONS) {
+    a.quarterAim = aim;
+    const fan = directionalAttackRegions(a, raw)[0];
+    const expected = aim.z === 0 ? 1 : Math.abs(aim.x) < 1e-8 ? 0.5 : 0.75;
+    assert.ok(Math.abs(fan.quarterBoxLength / base - expected) < 1e-8);
+    const origin = fan.points[0];
+    for (const [index, degrees] of [
+      [1, -50],
+      [9, 0],
+      [17, 50],
+    ]) {
+      const p = fan.points[index],
+        dx = p.x - origin.x,
+        dz = p.y - origin.y;
+      const angle = (Math.atan2(-dx * aim.z + dz * aim.x, dx * aim.x + dz * aim.z) * 180) / Math.PI;
+      assert.ok(Math.abs(angle - degrees) < 1e-8);
+    }
   }
 });

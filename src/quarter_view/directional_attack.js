@@ -13,11 +13,11 @@ export function directionalAttackRegions(actor, regions) {
   const body = player.hurtInteractionRegions?.[0];
   const originX = body ? body.x + body.w / 2 : player.x;
   const elevation = body ? body.y + body.h / 2 : player.y - 55;
-  const aim = actor.quarterInputDirection || actor.quarterAim || { x: player.facing || 1, z: 0 };
+  const aim = actor.quarterAim || actor.quarterInputDirection || { x: player.facing || 1, z: 0 };
   const direction = normalizeDirection(aim.x, aim.z) || { x: player.facing || 1, z: 0 };
   const reach = (player.runUpgrades?.reach || 1) * progressionEffects(player).reach * chargeAttackScale(player);
-  const halfAngle = (35 * Math.PI) / 180;
-  const depthReach = 1 + 0.35 * Math.abs(direction.z);
+  const halfAngle = (50 * Math.PI) / 180;
+  const depthReach = 1 - 0.5 * direction.z ** 2;
   return regions.map((region) => {
     if (![ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)) return region;
     // Native regions already contain the reach multiplier. Recover their authored extent before measuring it.
@@ -33,7 +33,7 @@ export function directionalAttackRegions(actor, regions) {
       ) *
       reach *
       depthReach;
-    // A convex 70-degree sector uses the same polygon for display and collision.
+    // A convex 100-degree sector uses the same polygon for display and collision.
     const points = [{ x: originX, y: depthOf(actor) }];
     for (let step = 0; step <= 16; step++) {
       const angle = -halfAngle + (2 * halfAngle * step) / 16;
@@ -59,6 +59,7 @@ export function directionalAttackRegions(actor, regions) {
       quarterElevation: elevation,
       quarterHeightRange: attackPlane(actor) === 'height' ? [elevation - 30, elevation + 30] : null,
       quarterBoxLength: length,
+      quarterDirectionScale: depthReach,
       quarterBoxOrigin: { x: originX, depth: depthOf(actor), y: elevation },
       quarterBoxAim: direction,
     };

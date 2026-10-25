@@ -168,7 +168,7 @@ export function trailHitboxOffset(actor, points, regions) {
   return { x: dx * scale, y: dy * scale };
 }
 
-// Rotate the complete native swing as a rigid shape; its curvature and timing stay intact.
+// Rotate and uniformly size the native swing to match directional reach; preserve its curve and timing.
 export function directionalTrailPose(actor, points, anchor, region) {
   if (!region?.quarterDirectionalBox) return { points, anchor };
   const aim = region.quarterBoxAim;
@@ -177,8 +177,9 @@ export function directionalTrailPose(actor, points, anchor, region) {
     s = Math.sin(angle),
     origin = region.quarterBoxOrigin;
   const rotate = (p) => {
-    const x = p.x - origin.x,
-      y = p.y - origin.y;
+    const scale = region.quarterDirectionScale ?? 1;
+    const x = (p.x - origin.x) * scale,
+      y = (p.y - origin.y) * scale;
     return { x: origin.x + x * c - y * s, y: origin.y + x * s + y * c };
   };
   return { points: points.map(rotate), anchor: rotate(anchor) };
