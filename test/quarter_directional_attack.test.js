@@ -97,14 +97,14 @@ test('visual trail follows native weapon coordinates regardless of aim and has a
   assert.equal(trail.samples(a).length, 0);
 });
 
-test('sector has a 100 degree opening and depth reach is half horizontal reach', () => {
+test('sector has a 120 degree opening and depth reach is 80 percent of horizontal reach', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   const right = directionalAttackRegions(a, raw)[0];
   a.quarterAim = { x: 0, z: 1 };
   const down = directionalAttackRegions(a, raw)[0];
-  assert.ok(Math.abs(right.h - 2 * right.quarterBoxLength * Math.sin((50 * Math.PI) / 180)) < 1e-8);
-  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 0.5) < 1e-8);
+  assert.ok(Math.abs(right.h - 2 * right.quarterBoxLength * Math.sin((60 * Math.PI) / 180)) < 1e-8);
+  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 0.8) < 1e-8);
 });
 
 test('live box follows attack displacement after capture without moving its old snapshot', async () => {
@@ -180,7 +180,7 @@ test('sector rejects bounding-box corners and reaches its curved front', () => {
   const sector = directionalAttackRegions(a, raw)[0];
   const target = (radius, angle) => ({ x: radius * Math.cos(angle) - 1, y: radius * Math.sin(angle) - 1, w: 2, h: 2 });
   assert.ok(interactionRegionsOverlap(sector, target(sector.quarterBoxLength * 0.9, Math.PI / 6)));
-  assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength * 0.6, Math.PI / 3)), false);
+  assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength * 0.6, Math.PI * 0.4)), false);
   assert.equal(interactionRegionsOverlap(sector, target(sector.quarterBoxLength + 4, 0)), false);
 });
 
@@ -250,7 +250,7 @@ test('trail hitbox influence is partial, capped and follows the depth direction'
   assert.deepEqual(trailHitboxOffset(a, points, []), { x: 0, y: 0 });
 });
 
-test('up and down rotate and uniformly halve the weapon arc', () => {
+test('up and down rotate and uniformly scale the weapon arc', () => {
   const a = actor();
   const points = [
     { x: 50, y: -70 },
@@ -265,7 +265,8 @@ test('up and down rotate and uniformly halve the weapon arc', () => {
     assert.ok(Math.abs(pose.points[1].x) < 1e-8);
     assert.ok((pose.points[1].y + 70) * z > 50);
     assert.ok(
-      Math.abs(Math.hypot(pose.points[1].x - pose.points[0].x, pose.points[1].y - pose.points[0].y) - 35) < 1e-8
+      Math.abs(Math.hypot(pose.points[1].x - pose.points[0].x, pose.points[1].y - pose.points[0].y) - 70 * 0.8 * 1.15) <
+        1e-8
     );
   }
 });
@@ -288,26 +289,45 @@ test('unbounded ground permits all directions and draws tiles far beyond the old
   }
 });
 
-test('all eight arrow directions center the 100 degree fan and use 100/75/50 percent reach', () => {
+test('all eight arrow directions center the 120 degree fan and use 100/90/80 percent reach', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   const base = directionalAttackRegions(a, raw)[0].quarterBoxLength;
   for (const aim of EFFECT_DIRECTIONS) {
     a.quarterAim = aim;
     const fan = directionalAttackRegions(a, raw)[0];
-    const expected = aim.z === 0 ? 1 : Math.abs(aim.x) < 1e-8 ? 0.5 : 0.75;
+    const expected = aim.z === 0 ? 1 : Math.abs(aim.x) < 1e-8 ? 0.8 : 0.9;
     assert.ok(Math.abs(fan.quarterBoxLength / base - expected) < 1e-8);
     const origin = fan.points[0];
     for (const [index, degrees] of [
-      [1, -50],
+      [1, -60],
       [9, 0],
-      [17, 50],
+      [17, 60],
     ]) {
       const p = fan.points[index],
         dx = p.x - origin.x,
         dz = p.y - origin.y;
       const angle = (Math.atan2(-dx * aim.z + dz * aim.x, dx * aim.x + dz * aim.z) * 180) / Math.PI;
       assert.ok(Math.abs(angle - degrees) < 1e-8);
+    }
+  }
+});
+
+test('base reach grows 15 percent and authored combo actions stack once with upgrades', () => {
+  const a = actor();
+  const original = Math.hypot(130, -20);
+  const base = directionalAttackRegions(a, raw)[0].quarterBoxLength;
+  assert.ok(Math.abs(base / original - 1.15) < 1e-8);
+  a.player.customActions = [1, 2, 3].map((n) => ({ key: `custom${n}`, name: n === 1 ? '공격' : `공격${n}` }));
+  for (const aim of EFFECT_DIRECTIONS) {
+    a.quarterAim = aim;
+    const directionScale = 1 - 0.2 * aim.z ** 2;
+    for (let n = 1; n <= 3; n++) {
+      a.player.actionKey = `custom${n}`;
+      a.player.runUpgrades = { reach: 1.5 };
+      a.player.runSkills = { reach: 2 };
+      const hit = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
+      assert.ok(Math.abs(hit.quarterBoxLength / base - directionScale * (1 + (n - 1) * 0.1) * 1.8) < 1e-8);
     }
   }
 });

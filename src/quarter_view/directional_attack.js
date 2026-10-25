@@ -16,8 +16,12 @@ export function directionalAttackRegions(actor, regions) {
   const aim = actor.quarterAim || actor.quarterInputDirection || { x: player.facing || 1, z: 0 };
   const direction = normalizeDirection(aim.x, aim.z) || { x: player.facing || 1, z: 0 };
   const reach = (player.runUpgrades?.reach || 1) * progressionEffects(player).reach * chargeAttackScale(player);
-  const halfAngle = (50 * Math.PI) / 180;
-  const depthReach = 1 - 0.5 * direction.z ** 2;
+  const halfAngle = (60 * Math.PI) / 180;
+  const actionName = player.customActions?.find((action) => action.key === player.actionKey)?.name;
+  const strike = /^(?:attack|공격)\s*([123])?$/.exec(actionName || player.actionKey || '');
+  const comboScale = strike ? 1 + (Number(strike[1] || 1) - 1) * 0.1 : 1;
+  const sizeScale = 1.15 * comboScale;
+  const depthReach = 1 - 0.2 * direction.z ** 2;
   return regions.map((region) => {
     if (![ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)) return region;
     // Native regions already contain the reach multiplier. Recover their authored extent before measuring it.
@@ -32,8 +36,9 @@ export function directionalAttackRegions(actor, regions) {
         )
       ) *
       reach *
+      sizeScale *
       depthReach;
-    // A convex 100-degree sector uses the same polygon for display and collision.
+    // A convex 120-degree sector uses the same polygon for display and collision.
     const points = [{ x: originX, y: depthOf(actor) }];
     for (let step = 0; step <= 16; step++) {
       const angle = -halfAngle + (2 * halfAngle * step) / 16;
@@ -59,7 +64,7 @@ export function directionalAttackRegions(actor, regions) {
       quarterElevation: elevation,
       quarterHeightRange: attackPlane(actor) === 'height' ? [elevation - 30, elevation + 30] : null,
       quarterBoxLength: length,
-      quarterDirectionScale: depthReach,
+      quarterDirectionScale: depthReach * sizeScale,
       quarterBoxOrigin: { x: originX, depth: depthOf(actor), y: elevation },
       quarterBoxAim: direction,
     };
