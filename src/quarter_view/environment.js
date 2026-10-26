@@ -1,4 +1,4 @@
-import { forestGround, forestHash } from './forest_layout.js';
+import { forestGround, forestHash, forestWater } from './forest_layout.js';
 import { stunTankOnTerrain } from '../boss_pattern_runtime.js';
 import { depthOf } from './camera.js';
 
@@ -32,7 +32,7 @@ export function createEnvironment() {
         const pz = z * CELL + (forestHash(x + 71, z * 13 + i) - 0.5) * 380;
         const terrain = forestGround(px, pz);
         // Keep the road and clearing walkable, including the obstacle's footprint.
-        if (terrain.edge < 130) continue;
+        if (terrain.edge < 130 || forestWater(px, pz)) continue;
         if (i >= 2 && terrain.edge < 200) continue;
         const type =
           terrain.edge < 230 ? (seed < 0.28 ? 'hut' : 'rock') : seed < 0.1 ? 'hut' : seed < 0.3 ? 'rock' : 'tree';
@@ -56,6 +56,7 @@ export function createEnvironment() {
       if (o.type !== 'tree') addCover(o.x + o.w * 0.65, o.z - 25, i + 20);
     }
     function addCover(px, pz, i) {
+      if (forestWater(px, pz)) return;
       objects.push({
         type: 'bush',
         x: px,
