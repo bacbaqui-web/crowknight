@@ -1,0 +1,110 @@
+[
+  {
+    "title": "Sword Slash and Swing",
+    "author": "DavidDumaisAudio",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/",
+    "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_f5a8065509.mp3",
+    "category": "칼 휘두르기",
+    "id": 1,
+    "approved": false
+  },
+  {
+    "title": "Swing Whoosh 1",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-1-198494/",
+    "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_429c1a01f1.mp3",
+    "category": "몽둥이 휘두르기",
+    "id": 2,
+    "approved": true
+  },
+  {
+    "title": "Swing Whoosh 4",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-4-198496/",
+    "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_3163472c7d.mp3",
+    "category": "몽둥이 휘두르기",
+    "id": 3,
+    "approved": true
+  },
+  {
+    "title": "Swing Whoosh 5",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-5-198498/",
+    "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_c93e2ad962.mp3",
+    "category": "휘두르기",
+    "id": 4,
+    "approved": false
+  },
+  {
+    "title": "Sword Slice",
+    "author": "DRAGON-STUDIO",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
+    "src": "https://cdn.pixabay.com/audio/2025/08/23/audio_4c7ad7fc88.mp3",
+    "id": 5,
+    "approved": false
+  },
+  {
+    "title": "Sword Slash With Metal Shield Impact",
+    "author": "DavidDumaisAudio",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-with-metal-shield-impact-185433/",
+    "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_17bc9d439c.mp3",
+    "id": 6,
+    "approved": false
+  },
+  {
+    "title": "Sword Slash With Metallic Impact",
+    "author": "DavidDumaisAudio",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-with-metallic-impact-185435/",
+    "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_5341835895.mp3",
+    "id": 7,
+    "approved": false
+  },
+  {
+    "title": "Footsteps Grass 1",
+    "author": "SilentStrikeZ (Freesound)",
+    "category": "발걸음",
+    "url": "https://pixabay.com/sound-effects/nature-footsteps-grass-1-6810/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_fd7851ba55.mp3",
+    "id": 8,
+    "approved": false
+  },
+  {
+    "title": "Grass Field Walking Sound",
+    "author": "FeedTheStrayCats",
+    "category": "발걸음",
+    "url": "https://pixabay.com/sound-effects/nature-grass-field-walking-sound-354514/",
+    "src": "https://cdn.pixabay.com/audio/2025/06/04/audio_62343f1d93.mp3",
+    "id": 9,
+    "approved": false
+  },
+  {
+    "title": "Medium Explosion",
+    "author": "JuveriSetila (Freesound)",
+    "category": "폭발",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-medium-explosion-40472/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/10/audio_174242f3f4.mp3",
+    "id": 10,
+    "approved": false
+  },
+  {
+    "title": "Loud Explosion",
+    "author": "DRAGON-STUDIO",
+    "category": "폭발",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-loud-explosion-425457/",
+    "src": "https://cdn.pixabay.com/audio/2025/10/24/audio_47a15da0f9.mp3",
+    "id": 11,
+    "approved": false
+  },
+  {
+    "title": "Punch Impact Hit",
+    "author": "Universfield",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-impact-hit-567196/",
+    "src": "https://cdn.pixabay.com/audio/2026/07/14/audio_aba33aba5f.mp3",
+    "id": 12,
+    "approved": false
+  }
+]
