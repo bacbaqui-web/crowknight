@@ -1,6 +1,6 @@
 import { weaponContactRegion, isProjectileAttack } from './weapon_contact.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
-import { depthOf } from './camera.js';
+import { depthOf, QUARTER_PROJECTION } from './camera.js';
 import { screenPoint } from './attack_geometry.js';
 
 // Visual only: native weapon corners are projected exactly like the unchanged character sprite.
@@ -8,7 +8,7 @@ export function createNativeWeaponTrail(ctx, world) {
   let entries = new WeakMap();
   const lifetime = 0.24,
     limit = 48;
-  function capture(actor, raw) {
+  function capture(actor, raw, hitRegions = []) {
     if (actor.player.dead || actor.respawning) {
       entries.delete(actor);
       return;
@@ -31,7 +31,7 @@ export function createNativeWeaponTrail(ctx, world) {
     });
     entry.lastActive = now;
     if (entry.samples.length > limit) entry.samples.splice(1, 1);
-    entry.ribbon = crescentRibbon(entry.samples);
+    entry.ribbon = orientCrescentAtHitbox(crescentRibbon(entry.samples), hitRegions[0], actor.player.facing);
   }
 
   function draw(actor, view) {
@@ -129,4 +129,25 @@ function smoothBoundary(ctx, points, start) {
       c.y
     );
   }
+}
+
+// Rotate the completed crescent rigidly in projected space, then place its outer midpoint at the strike edge.
+export function orientCrescentAtHitbox(ribbon, region, facing = 1) {
+  if (!region?.quarterDirectionalBox || !ribbon.outer.length) return ribbon;
+  const slope = QUARTER_PROJECTION.slope;
+  const aim = region.quarterBoxAim,
+    origin = region.quarterBoxOrigin;
+  const angle = Math.atan2(aim.z * slope, aim.x) - (facing < 0 ? Math.PI : 0);
+  const c = Math.cos(angle),
+    s = Math.sin(angle);
+  const middle = ribbon.outer[Math.floor(ribbon.outer.length / 2)];
+  const centerY = middle.y + middle.depth * slope;
+  const targetX = origin.x + aim.x * region.quarterBoxLength;
+  const targetY = origin.y + (origin.depth + aim.z * region.quarterBoxLength) * slope;
+  const transform = (p) => {
+    const x = p.x - middle.x,
+      y = p.y + p.depth * slope - centerY;
+    return { x: targetX + x * c - y * s, y: targetY + x * s + y * c - origin.depth * slope, depth: origin.depth };
+  };
+  return { outer: ribbon.outer.map(transform), inner: ribbon.inner.map(transform) };
 }

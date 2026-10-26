@@ -6,7 +6,11 @@ import { ATTACK_INTERACTION_OBJECT_KEY } from '../src/interaction_object_model_d
 import { scaleUpgradeAttackRegions } from '../src/run_upgrade_effect_helper.js';
 import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
 import { combatTargetRegions } from '../src/quarter_view/spatial.js';
-import { createNativeWeaponTrail, crescentRibbon } from '../src/quarter_view/native_weapon_trail.js';
+import {
+  createNativeWeaponTrail,
+  crescentRibbon,
+  orientCrescentAtHitbox,
+} from '../src/quarter_view/native_weapon_trail.js';
 const raw = [
   { key: ATTACK_INTERACTION_OBJECT_KEY, x: 30, y: -90, w: 100, h: 30, reaction: { damage: 17, hitMode: 'trace' } },
 ];
@@ -290,4 +294,48 @@ test('base reach grows 15 percent and authored combo actions stack once with upg
       assert.ok(Math.abs(hit.quarterBoxLength / base - directionScale * (1 + (n - 1) * 0.05) * 1.8) < 1e-8);
     }
   }
+});
+
+test('crescent rotates and translates rigidly for all aim directions and facings', async () => {
+  const {
+    QUARTER_PROJECTION: { slope },
+  } = await import('../src/quarter_view/camera.js');
+  const original = {
+    outer: [
+      { x: 5, y: -60, depth: 10 },
+      { x: 30, y: -30, depth: 20 },
+      { x: 10, y: 0, depth: 30 },
+    ],
+    inner: [
+      { x: 5, y: -60, depth: 10 },
+      { x: 20, y: -30, depth: 20 },
+      { x: 10, y: 0, depth: 30 },
+    ],
+  };
+  const saved = JSON.parse(JSON.stringify(original));
+  for (const aim of EFFECT_DIRECTIONS)
+    for (const facing of [-1, 1]) {
+      const a = actor();
+      a.quarterAim = aim;
+      a.player.runUpgrades = { reach: 1.5 };
+      const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
+      const placed = orientCrescentAtHitbox(original, region, facing);
+      const mid = placed.outer[1],
+        origin = region.quarterBoxOrigin;
+      assert.ok(Math.abs(mid.x - origin.x - aim.x * region.quarterBoxLength) < 1e-8);
+      assert.ok(
+        Math.abs(mid.y + mid.depth * slope - origin.y - (origin.depth + aim.z * region.quarterBoxLength) * slope) < 1e-8
+      );
+      const angle = Math.atan2(aim.z * slope, aim.x) - (facing < 0 ? Math.PI : 0);
+      for (const boundary of ['outer', 'inner'])
+        original[boundary].forEach((p, i) => {
+          const x = p.x - original.outer[1].x,
+            y = p.y + p.depth * slope - original.outer[1].y - original.outer[1].depth * slope;
+          const q = placed[boundary][i];
+          assert.ok(Math.abs(q.x - mid.x - (x * Math.cos(angle) - y * Math.sin(angle))) < 1e-8);
+          assert.ok(Math.abs(q.y - mid.y - (x * Math.sin(angle) + y * Math.cos(angle))) < 1e-8);
+        });
+    }
+  assert.deepEqual(original, saved);
+  assert.equal(orientCrescentAtHitbox(original, {}), original);
 });
