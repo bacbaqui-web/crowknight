@@ -1,3 +1,4 @@
+import { canHitBalloon, isBalloonBomber, popBalloon } from './balloon_bomber_runtime.js';
 import { trySkillParry } from './parry_skill_helper.js';
 import { progressionEffects } from './skill_progression_effects.js';
 import { runSkillDamageMultiplier } from './skill_runtime_helper.js';
@@ -26,6 +27,16 @@ export function applyInteractionDamage({
   onPlayerKill,
   onEnemyDeath,
 }) {
+  if (!canHitBalloon(attacker, target)) return false;
+  if (isBalloonBomber(target.player)) {
+    return popBalloon(target, () => {
+      if (attacker === playerActor) onPlayerKill?.(target);
+      onEnemyDeath?.(target);
+      particleEffects?.triggerHitImpact?.(attacker, target, comboStep, true);
+      target.enemyRespawnTimer = null;
+      target.respawning = false;
+    });
+  }
   if (target.player.runEvadeTime > 0) return false;
   const blocking = Boolean(
     target.player.runSkills &&

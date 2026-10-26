@@ -1,4 +1,5 @@
 import { reflectBarrel } from './boss_hazard_runtime.js';
+import { canHitBalloon, isBalloonBomber } from './balloon_bomber_runtime.js';
 import { resolveMovementSkills } from './movement_skill_combat.js';
 import { resolveParryRelease } from './parry_release_controller.js';
 import { updateHealthTrail } from './actor_health_helper.js';
@@ -223,6 +224,7 @@ export function resolveProjectileCombat({
     const attackRegion = world?.quarterView?.projectileRegion?.(projectile, rawAttackRegion) ?? rawAttackRegion;
     actors.forEach((target) => {
       if (!projectile.active) return;
+      if (isBalloonBomber(target.player)) return;
       if (projectile.mageFire && target.player.groundFireHurtTime > 0) return;
       if (shouldSkipTarget(projectile.owner, target)) return;
       if (shouldBlockMobBossDamage(projectile.owner, target)) {
@@ -348,6 +350,7 @@ export function updateActorCombatTimers(actors, dt) {
 
 export function shouldSkipTarget(attacker, target) {
   return (
+    !canHitBalloon(attacker, target) ||
     target === attacker ||
     target.player?.dead === true ||
     target.respawning ||

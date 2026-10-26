@@ -1,0 +1,98 @@
+{
+  "cape": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 350
+  },
+  "backpack": {
+    "left": 480,
+    "top": 0,
+    "width": 300,
+    "height": 350
+  },
+  "head": {
+    "left": 780,
+    "top": 0,
+    "width": 360,
+    "height": 350
+  },
+  "body": {
+    "left": 1140,
+    "top": 0,
+    "width": 396,
+    "height": 350
+  },
+  "upper_arm_l": {
+    "left": 0,
+    "top": 350,
+    "width": 480,
+    "height": 240
+  },
+  "lower_arm_l": {
+    "left": 480,
+    "top": 350,
+    "width": 300,
+    "height": 240
+  },
+  "upper_arm_r": {
+    "left": 780,
+    "top": 350,
+    "width": 360,
+    "height": 240
+  },
+  "lower_arm_r": {
+    "left": 1140,
+    "top": 350,
+    "width": 396,
+    "height": 240
+  },
+  "upper_leg_l": {
+    "left": 0,
+    "top": 590,
+    "width": 480,
+    "height": 200
+  },
+  "lower_leg_l": {
+    "left": 480,
+    "top": 590,
+    "width": 300,
+    "height": 200
+  },
+  "upper_leg_r": {
+    "left": 780,
+    "top": 590,
+    "width": 360,
+    "height": 200
+  },
+  "lower_leg_r": {
+    "left": 1140,
+    "top": 590,
+    "width": 396,
+    "height": 200
+  },
+  "collar": {
+    "left": 0,
+    "top": 790,
+    "width": 480,
+    "height": 234
+  },
+  "weapon": {
+    "left": 480,
+    "top": 790,
+    "width": 300,
+    "height": 234
+  },
+  "shield": {
+    "left": 780,
+    "top": 790,
+    "width": 360,
+    "height": 234
+  },
+  "fragment_r": {
+    "left": 1140,
+    "top": 790,
+    "width": 396,
+    "height": 234
+  }
+}

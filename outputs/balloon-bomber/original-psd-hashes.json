@@ -1,0 +1,15 @@
+{
+  "assets/backgrounds/background_01.psd": "b160e7871f1c7bb3ac305e6e27ceb85379baa42373ffcc30db3b96682bf42867",
+  "assets/characters/standard.psd": "6fc2bf58a33e03471fb44476d6713b6261c5da887249edbffb940d96b1c89f35",
+  "assets/characters/archer.psd": "f4a4f67dd2a5bd1f1f2308fb99f3efb1c795c1ef22afe7b7dfc5e4dcc3113b4d",
+  "assets/characters/players/player.psd": "d02b71f2e81f84af837035a2b755fb9038d602c05950d39ec157f42beae09155",
+  "assets/characters/bosses/ram_tank/enemy.psd": "b7d852d82c44bcc4a14aea5ef6ad55f1f4277fa609214ce4c4d0ad2d9618acc0",
+  "assets/characters/bosses/powder_chief/enemy.psd": "dd95116947a4a1ac1ecef54fb10666e99639e97227e80bfbfb91faad4b609386",
+  "assets/characters/bosses/enemy_01/enemy.psd": "56d9f33d14561eb07133e60b16045075d16d07c892640aff89a51cef534a3403",
+  "assets/characters/bosses/fire_mage/enemy.psd": "6cf897959fdbfac13a9a102ecf559782d5703a245084193ade0653cdf2d1f813",
+  "assets/characters/players/player_01/player.psd": "d02b71f2e81f84af837035a2b755fb9038d602c05950d39ec157f42beae09155",
+  "assets/characters/mobs/archer/enemy.psd": "624d70d126e6e72894470a5c43c6122c0547b99433234cb8539eaab0bb3d003b",
+  "assets/characters/mobs/swordman/enemy.psd": "959bf86f55de4e89a251877b1c464ad78d0e3b9faa068de4aebced6eae447386",
+  "assets/characters/mobs/spearman/enemy.psd": "5300c1d7d65ac3b29f6da6d70fb0ef54f1a05a9e34bcf074523c4975ae16c4a2",
+  "assets/characters/mobs/enemy_01/enemy.psd": "6ba3ed5cb6741ed620dff7de2330a2058bd8cbe6f10fb87e2d4941c43132abf6"
+}

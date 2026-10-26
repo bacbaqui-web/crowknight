@@ -1,3 +1,4 @@
+import { isBalloonBomber } from '../balloon_bomber_runtime.js';
 import { blastEllipse } from '../powder_bomb_runtime.js';
 import { linearSpearCorners } from '../spearman_throw_renderer.js';
 import { attackPlane } from '../attack_plane_helper.js';
@@ -9,6 +10,10 @@ import { collisionPushShares } from '../combat_collision_helper.js';
 
 export function combatTargetRegions(attacker, target, regions, source = null) {
   if (attacker.quarterDepth == null && target.quarterDepth == null) return regions;
+  if (isBalloonBomber(target.player) && !source?.quarterHeightRange && Number.isFinite(source?.quarterElevation)) {
+    const elevation = source.quarterElevation;
+    regions = regions.filter((region) => region.y < elevation + 40 && region.y + region.h > elevation - 40);
+  }
   if (source?.quarterHeightRange) {
     const [top, bottom] = source.quarterHeightRange;
     regions = regions.filter((region) => region.y < bottom && region.y + region.h > top);

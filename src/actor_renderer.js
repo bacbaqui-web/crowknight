@@ -1,3 +1,4 @@
+import { drawBalloonDefeat } from './balloon_bomber_renderer.js';
 import { isRamTank } from './ram_tank_runtime.js';
 import { drawTankParts } from './ram_tank_renderer.js';
 import { drawFlameSprite } from './flame_effect_renderer.js';
@@ -32,6 +33,7 @@ import {
 } from './interaction_object_model_data.js';
 
 export function drawPuppetPlayer(player, ctx) {
+  if (drawBalloonDefeat(player, ctx, drawPuppetLayer)) return;
   if (drawDeathRagdoll(player, ctx)) return;
 
   const p = player.getPose();

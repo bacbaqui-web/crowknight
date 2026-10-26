@@ -1,3 +1,4 @@
+import { updateBalloonPlayer } from './balloon_bomber_runtime.js';
 import { applyMovementSkillPhysics } from './movement_skill_helper.js';
 import { advanceCustomActionRuntime, updateActionTriggerRuntime } from './action_trigger_engine.js';
 import { updateDeathRagdoll } from './death_ragdoll_engine.js';
@@ -18,6 +19,7 @@ export function updatePuppetPlayer(player, dt, keys, pressed, world) {
 }
 
 export function updatePuppetNpc(player, dt, target, world, bounds = null) {
+  if (updateBalloonPlayer(player, dt, target, world)) return;
   void target;
   void bounds;
   if (player.dead) {

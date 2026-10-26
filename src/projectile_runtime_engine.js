@@ -1,5 +1,6 @@
 import { advanceBossHazard } from './boss_hazard_runtime.js';
 import { drawBossHazard } from './boss_hazard_renderer.js';
+import { collectBalloonBombs } from './balloon_bomber_runtime.js';
 import { drawTankWarnings } from './ram_tank_renderer.js';
 import { collectMageFire, advanceMageFire, mageFireAttackRegion } from './mage_fire_runtime.js';
 import { drawMageFire, drawMageWarnings } from './mage_fire_renderer.js';
@@ -41,6 +42,11 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
       hazard.id = nextProjectileId++;
       hazard.key = `boss:${hazard.id}`;
       projectilePool.push(hazard);
+    }
+    for (const bomb of collectBalloonBombs(actor, world)) {
+      bomb.id = nextProjectileId++;
+      bomb.key = `${actor.runtimeInstanceId || actor.id}:bomb:${bomb.id}`;
+      projectilePool.push(bomb);
     }
     for (const fire of collectMageFire(actor, playerActor, world, dt)) {
       fire.id = nextProjectileId++;
