@@ -6,8 +6,8 @@ import { finishPlaneMotion } from '../src/quarter_view/motion.js';
 const fixture = () => ({ actionKey:'move', onGround:true, vx:80, facing:1, actionSettings:{move:{group:'movement'}} });
 test('authored posture is preserved at walking speed and lean grows with actual speed, capped at original maximum', () => {
   const p=fixture(), base={x:2,y:3,rot:4,opacity:0.7};
-  p.vx=35;assert.equal(movementPoseOffset(p,'body',base),base);
-  p.vx=80;assert.equal(movementPoseOffset(p,'body',base).rot,32.25);
+  p.vx=10;assert.equal(movementPoseOffset(p,'body',base),base);
+  p.vx=80;assert.equal(movementPoseOffset(p,'body',base).rot,43.55);
   p.vx=120;assert.equal(movementPoseOffset(p,'body',base).rot,60.5);
   p.vx=300;assert.equal(movementPoseOffset(p,'body',base).rot,60.5);
   assert.deepEqual(base,{x:2,y:3,rot:4,opacity:0.7});
@@ -23,8 +23,8 @@ test('attack, roll, air, hurt and editor preview keep authored poses', () => {
 test('runtime part offsets receive the speed posture without changing stored keyframes', () => {
   const p=new PuppetPlayer(0,430,{});p.customActionKey='move';p.customActionTime=1;p.onGround=true;p.vx=80;
   p.actionSettings={move:{group:'movement',mirror:true}};p.actionOffsets={move:{body:{x:0,y:0,rot:0}}};
-  assert.equal(p.getPartOffset('body').rot,28.25);
-  p.facing=-1;assert.equal(p.getPartOffset('body').rot,28.25);
+  assert.equal(p.getPartOffset('body').rot,39.55);
+  p.facing=-1;assert.equal(p.getPartOffset('body').rot,39.55);
   assert.equal(p.actionOffsets.move.body.rot,0);
 });
 test('quarter-view speed includes depth travel rather than horizontal projection only', () => {
@@ -32,5 +32,15 @@ test('quarter-view speed includes depth travel rather than horizontal projection
   const actor={player:p,quarterDepth:0,quarterAim:{x:0,z:1},quarterMotionStart:{x:0,z:0,time:0,facing:1,serial:1,direction:{x:0,z:1}}};
   finishPlaneMotion(actor,{quarterView:{unbounded:true}});
   assert.equal(p.groundPoseSpeed,800);
-  assert.equal(movementPoseOffset(p,'body',{rot:0}).rot,28.25);
+  assert.equal(movementPoseOffset(p,'body',{rot:0}).rot,39.55);
+});
+
+test('current quarter-view base speed has a visible lean and sprint leans farther', () => {
+  const p=fixture();p.groundPoseSpeed=35*10*1.32;
+  const walking=movementPoseOffset(p,'body',{rot:0}).rot;
+  assert.ok(walking>20 && walking<21);
+  p.groundPoseSpeed=90*10*1.32;
+  assert.equal(movementPoseOffset(p,'body',{rot:0}).rot,56.5);
+  p.groundPoseSpeed=0;
+  assert.equal(movementPoseOffset(p,'body',{rot:0}).rot,0);
 });

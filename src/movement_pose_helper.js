@@ -15,7 +15,7 @@ export function movementPoseOffset(player, key, offset) {
   if (!delta || player.actionPreview || player.dead || player.hurtTime > 0 ||
       !player.onGround || settings.group !== 'movement' || settings.condition === 'air') return offset;
   const speed = player.groundPoseSpeed ?? Math.abs(Number(player.vx || 0)) * ACTION_FPS;
-  const ratio = Math.max(0, Math.min(1, (speed - 400) / 800));
+  const ratio = Math.max(0, Math.min(1, (speed - 100) / 1000));
   if (!ratio) return offset;
   const mirror = actionTimelineMirrorSign(settings, player.facing);
   return {
