@@ -6,6 +6,7 @@ export const CHARACTER_ASSET_PATHS = {
   cape: 'cape.png',
   backpack: 'backpack.png',
   collar: 'collar.png',
+  flame: 'flame.png',
   shield: 'shield.png',
   upperArmL: 'upper_arm_l.png',
   lowerArmL: 'lower_arm_l.png',
@@ -31,7 +32,7 @@ export function loadCharacterAssets(folder, version = '', sources = {}) {
       Object.entries(CHARACTER_ASSET_PATHS)
         .filter(
           ([key]) =>
-            (!['backpack', 'collar'].includes(key) || sources[key] || sources.__parts?.includes(key)) &&
+            (!['backpack', 'collar', 'flame'].includes(key) || sources[key] || sources.__parts?.includes(key)) &&
             (!sources.__snapshot || sources[key]) &&
             (!Array.isArray(sources.__parts) || sources.__parts.includes(key))
         )

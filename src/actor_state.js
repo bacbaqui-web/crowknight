@@ -1,6 +1,7 @@
 import { resetMovementSkills } from './movement_skill_helper.js';
 export function resetPlayerActionState(player) {
   player.dead = false;
+  player.groundFireHurtTime = 0;
   resetMovementSkills(player);
   player.runParryStun = 0;
   player.runParryPoints = 0;

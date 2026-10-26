@@ -1,0 +1,28 @@
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/psd/refresh HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/character/delete?folder=mobs/test HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/character/move?from=mobs/test&to=bosses/test HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/character/create?folder=mobs/new HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/effect/upload?asset=slash1 HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/state/default HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/characters/index HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "POST /api/project/save HTTP/1.1" 403 -
+127.0.0.1 - - [26/Oct/2026 12:39:35] "GET /api/character/refresh?folder=mobs/test HTTP/1.1" 403 -
+.127.0.0.1 - - [26/Oct/2026 12:39:36] "POST /api/psd/refresh HTTP/1.1" 500 -
+127.0.0.1 - - [26/Oct/2026 12:39:36] "POST /api/character/refresh?folder=mobs/test HTTP/1.1" 500 -
+127.0.0.1 - - [26/Oct/2026 12:39:36] "POST /api/effect/upload?asset=slash1 HTTP/1.1" 500 -
+.127.0.0.1 - - [26/Oct/2026 12:39:36] "POST /api/character/refresh?folder=mobs/test HTTP/1.1" 200 -
+127.0.0.1 - - [26/Oct/2026 12:39:36] "GET /api/character/refresh?folder=mobs/test HTTP/1.1" 200 -
+.127.0.0.1 - - [26/Oct/2026 12:39:37] "POST /api/character/move?from=mobs/test&to=bosses/test HTTP/1.1" 200 -
+127.0.0.1 - - [26/Oct/2026 12:39:37] "POST /api/character/delete?folder=mobs/test HTTP/1.1" 200 -
+.127.0.0.1 - - [26/Oct/2026 12:39:38] "POST /api/character/copy?from=mobs/test&to=mobs/test/child HTTP/1.1" 400 -
+.127.0.0.1 - - [26/Oct/2026 12:39:38] "POST /api/psd/refresh HTTP/1.1" 413 -
+.127.0.0.1 - - [26/Oct/2026 12:39:39] "POST /api/character/refresh?folder=mobs/test HTTP/1.1" 500 -
+.127.0.0.1 - - [26/Oct/2026 12:39:39] "POST /api/effect/upload?asset=slash1 HTTP/1.1" 200 -
+127.0.0.1 - - [26/Oct/2026 12:39:39] "GET /api/effect/refresh?asset=slash1 HTTP/1.1" 200 -
+.127.0.0.1 - - [26/Oct/2026 12:39:40] "POST /api/character/refresh?folder=mobs/test HTTP/1.1" 200 -
+127.0.0.1 - - [26/Oct/2026 12:39:40] "GET /api/character/refresh?folder=mobs/test HTTP/1.1" 200 -
+.
+----------------------------------------------------------------------
+Ran 9 tests in 4.663s
+
+OK

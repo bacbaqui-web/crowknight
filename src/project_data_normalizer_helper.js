@@ -63,7 +63,7 @@ export function mergeTuning(base, saved) {
   }
   const merged = clone(base);
   mergeInto(merged, saved);
-  for (const key of ['backpack', 'collar']) {
+  for (const key of ['backpack', 'collar', 'flame']) {
     if (saved.rig?.[key]) merged.rig[key] = clone(saved.rig[key]);
   }
   migrateSplitRigParts(merged.rig, saved.rig);

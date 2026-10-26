@@ -1,3 +1,5 @@
+import { collectMageFire, advanceMageFire, mageFireAttackRegion } from './mage_fire_runtime.js';
+import { drawMageFire, drawMageWarnings } from './mage_fire_renderer.js';
 import { configurePowderBomb, advancePowderBomb, powderBlastRegion, drawPowderBomb } from './powder_bomb_runtime.js';
 import { attackPlane } from './attack_plane_helper.js';
 import { ACTION_FPS } from './game_config_data.js';
@@ -12,11 +14,13 @@ import { drawLinearSpear, drawSpearWarnings } from './spearman_throw_renderer.js
 let projectilePool = [];
 let nextProjectileId = 1;
 let warningActors = [];
+let mageActors = [];
 
 export function resetProjectileRuntime() {
   projectilePool = [];
   nextProjectileId = 1;
   warningActors = [];
+  mageActors = [];
 }
 
 export function activeProjectiles() {
@@ -24,8 +28,14 @@ export function activeProjectiles() {
 }
 
 export function updateProjectileRuntime({ actors = [], playerActor = null, world = null, dt = 0 } = {}) {
+  mageActors = actors.filter((actor) => actor.id === 'fire_mage');
   warningActors = actors.filter((actor) => actor.spearmanThrow?.aim);
   for (const actor of actors) {
+    for (const fire of collectMageFire(actor, playerActor, world, dt)) {
+      fire.id = nextProjectileId++;
+      fire.key = `${actor.runtimeInstanceId || actor.id}:fire:${fire.id}`;
+      projectilePool.push(fire);
+    }
     const spear = takeSpearmanProjectile(actor);
     if (spear) {
       spear.id = nextProjectileId++;
@@ -41,12 +51,14 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
 }
 
 export function removeProjectile(projectile) {
+  if (projectile?.mageFire) return;
   if (projectile?.powderBomb) projectile.damageSpent = true;
   else if (projectile) projectile.active = false;
 }
 
 export function drawProjectiles(ctx, effectAssets, project = null) {
   drawSpearWarnings(ctx, warningActors, project);
+  drawMageWarnings(ctx, mageActors, project);
   projectilePool.forEach((projectile) =>
     project
       ? project({ ...projectile, x: projectile.targetX, quarterDepth: projectile.targetDepth }, () =>
@@ -55,13 +67,15 @@ export function drawProjectiles(ctx, effectAssets, project = null) {
       : drawProjectileLandingMarker(ctx, projectile)
   );
   projectilePool.forEach((projectile) =>
-    projectile.powderBomb
-      ? drawPowderBomb(ctx, projectile, project)
-      : projectile.linearSpear
-        ? drawLinearSpear(ctx, projectile, project)
-        : project
-          ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
-          : drawProjectile(ctx, projectile, effectAssets)
+    projectile.mageFire
+      ? drawMageFire(ctx, projectile, effectAssets, project)
+      : projectile.powderBomb
+        ? drawPowderBomb(ctx, projectile, project)
+        : projectile.linearSpear
+          ? drawLinearSpear(ctx, projectile, project)
+          : project
+            ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
+            : drawProjectile(ctx, projectile, effectAssets)
   );
 }
 
@@ -168,6 +182,10 @@ function projectileReaction(actor, settings) {
 function advanceProjectile(projectile, dt) {
   projectile.previousX = projectile.x;
   projectile.previousY = projectile.y;
+  if (projectile.mageFire) {
+    advanceMageFire(projectile, dt);
+    return;
+  }
   if (advancePowderBomb(projectile, dt)) return;
   projectile.elapsedFrames += Math.max(0, Number(dt || 0)) * ACTION_FPS;
   syncProjectilePosition(projectile);
@@ -185,6 +203,7 @@ function syncProjectilePosition(projectile) {
 }
 
 export function projectileAttackRegion(projectile) {
+  if (projectile.mageFire) return mageFireAttackRegion(projectile);
   if (projectile.powderBomb) return powderBlastRegion(projectile);
   const w = Math.max(1, Number(projectile?.hitboxWidth || 1));
   const h = Math.max(1, Number(projectile?.hitboxHeight || 1));
@@ -232,7 +251,7 @@ function drawProjectile(ctx, projectile, effectAssets) {
 }
 
 function drawProjectileLandingMarker(ctx, projectile) {
-  if (projectile.linearSpear || projectile.powderBomb) return;
+  if (projectile.linearSpear || projectile.powderBomb || projectile.mageFire) return;
   const progress = Math.max(0, Math.min(1, projectile.elapsedFrames / Math.max(1, projectile.flightFrames)));
   const pulse = 0.5 + Math.sin(progress * Math.PI * 8) * 0.5;
   const alpha = 0.32 + pulse * 0.42;

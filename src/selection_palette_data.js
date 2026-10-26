@@ -14,6 +14,7 @@ export const SELECTION_PALETTE_TARGETS = Object.freeze([
   { type: 'part', key: 'cape' },
   { type: 'part', key: 'backpack' },
   { type: 'part', key: 'collar' },
+  { type: 'part', key: 'flame' },
   { type: 'part', key: 'shoulderL' },
   { type: 'part', key: 'shoulderR' },
   { type: 'part', key: 'body' },

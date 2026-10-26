@@ -52,14 +52,17 @@ export function combatTargetRegions(attacker, target, regions, source = null) {
   });
 }
 export function groundProjectileRegion(projectile, region) {
-  if (projectile.powderBomb) {
+  if (projectile.powderBomb || projectile.mageFire) {
     return {
       ...region,
       quarterPlane: 'ground',
       y: depthOf(projectile) - projectile.radius,
       h: projectile.radius * 2,
       points: blastEllipse(projectile.x, depthOf(projectile), projectile.radius, projectile.radius),
-      quarterHeightRange: [projectile.targetY - projectile.radius, projectile.targetY],
+      quarterHeightRange: [
+        projectile.targetY - (projectile.mageFire ? region.h : projectile.radius),
+        projectile.targetY,
+      ],
     };
   }
   if (projectile.linearSpear) {

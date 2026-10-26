@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "fire_mage",
+  "type": "enemy",
+  "label": "화염 마도사",
+  "name": "화염 마도사",
+  "x": 1320,
+  "folder": "bosses/fire_mage",
+  "storageFolder": "bosses/fire_mage",
+  "group": "bosses",
+  "tint": "#e99548",
+  "deleted": false,
+  "deletable": true,
+  "psdFileName": "enemy.psd"
+}

@@ -1,3 +1,4 @@
+import { drawFlameSprite } from './flame_effect_renderer.js';
 import { clamp, deg } from './common_helper.js';
 import {
   createEditableAppearance,
@@ -105,6 +106,7 @@ export function drawPuppetLayer(player, ctx, layer, pose, rig) {
     },
     cape: () => drawPuppetImagePart(player, ctx, player.assets.cape, rig.cape, 0, 0, pose.body * 0.4, 'cape'),
     backpack: () => drawPuppetImagePart(player, ctx, player.assets.backpack, rig.backpack, 0, 0, pose.body, 'backpack'),
+    flame: () => drawPuppetImagePart(player, ctx, player.assets.flame, rig.flame, 0, 0, pose.head, 'flame'),
     collar: () => drawPuppetImagePart(player, ctx, player.assets.collar, rig.collar, 0, 0, pose.body, 'collar'),
     shield: () => drawPuppetShield(player, ctx, pose, rig),
     leftArm: () => {
@@ -352,7 +354,9 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   if (shouldGlowPartKey(key, player.glowPart, player.glowParts)) {
     drawPuppetImageGlow(ctx, image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   }
-  ctx.drawImage(image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
+  if (key === 'flame') {
+    drawFlameSprite(ctx, image, drawRect.x, drawRect.y, drawRect.w, drawRect.h, player.animTime || 0);
+  } else ctx.drawImage(image, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
   ctx.restore();
 
   if (player.anchorDebugPart === key) recordPuppetAnchorDebugPoint(player, ctx, transform.x, transform.y);

@@ -195,6 +195,7 @@ export function resolveProjectileCombat({
     const attackRegion = world?.quarterView?.projectileRegion?.(projectile, rawAttackRegion) ?? rawAttackRegion;
     actors.forEach((target) => {
       if (!projectile.active) return;
+      if (projectile.mageFire && target.player.groundFireHurtTime > 0) return;
       if (shouldSkipTarget(projectile.owner, target)) return;
       if (shouldBlockMobBossDamage(projectile.owner, target)) {
         logMobBossDamageBlocked(projectile.owner, target, 'projectile-mob-boss-blocked');
@@ -207,7 +208,7 @@ export function resolveProjectileCombat({
       const hurtRegion = overlappingAttackRegion(projectile.owner, [attackRegion], targetHurtRegions);
       if (!hurtRegion) return;
 
-      projectile.hitTargets?.add(target);
+      if (!projectile.mageFire) projectile.hitTargets?.add(target);
       if (cancelHitByActorRule(target, world)) {
         if (isRuntimeDebugEnabled()) {
           debugInteractionRuntimeLog('projectile-hit-cancelled', {
@@ -221,12 +222,13 @@ export function resolveProjectileCombat({
         removeProjectile(projectile);
         return;
       }
+      if (projectile.mageFire) target.player.groundFireHurtTime = projectile.hitCooldown;
       triggerWorldAttackCameraShake(world, particleEffects);
       const removed = applyInteractionDamage({
         attacker: projectile.owner,
         target,
         attackRegion,
-        damage: 20,
+        damage: projectile.damage ?? 20,
         invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
         comboStep: 1,
         playerActor,
@@ -306,6 +308,7 @@ export function syncPreviousAttackRegions(actor, attackRegions = []) {
 export function updateActorCombatTimers(actors, dt) {
   actors.forEach((actor) => {
     updateHealthTrail(actor, dt);
+    actor.player.groundFireHurtTime = Math.max(0, (actor.player.groundFireHurtTime || 0) - dt);
     actor.player.runParryStun = Math.max(0, (actor.player.runParryStun || 0) - dt);
     if (actor.player.runParryPulse) actor.player.runParryPulse.time = Math.max(0, actor.player.runParryPulse.time - dt);
     actor.hurtCooldown = Math.max(0, actor.hurtCooldown - dt);
