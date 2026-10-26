@@ -131,23 +131,35 @@ function smoothBoundary(ctx, points, start) {
   }
 }
 
-// Rotate the completed crescent rigidly in projected space, then place its outer midpoint at the strike edge.
+// The weapon generates the shape; its own outward normal sets orientation, and the aim arrow sets placement.
 export function orientCrescentAtHitbox(ribbon, region, facing = 1) {
   if (!region?.quarterDirectionalBox || !ribbon.outer.length) return ribbon;
   const slope = QUARTER_PROJECTION.slope;
   const aim = region.quarterBoxAim,
     origin = region.quarterBoxOrigin;
-  const angle = Math.atan2(aim.z * slope, aim.x) - (facing < 0 ? Math.PI : 0);
+  const project = (p) => ({ x: p.x, y: p.y + p.depth * slope });
+  const outer = ribbon.outer.map(project),
+    inner = ribbon.inner.map(project);
+  const normal = outer.reduce((sum, p, i) => ({ x: sum.x + p.x - inner[i].x, y: sum.y + p.y - inner[i].y }), {
+    x: 0,
+    y: 0,
+  });
+  const nativeAngle =
+    Math.hypot(normal.x, normal.y) > 0.001 ? Math.atan2(normal.y, normal.x) : facing < 0 ? Math.PI : 0;
+  const angle = Math.atan2(aim.z * slope, aim.x) - nativeAngle;
   const c = Math.cos(angle),
     s = Math.sin(angle);
-  const middle = ribbon.outer[Math.floor(ribbon.outer.length / 2)];
-  const centerY = middle.y + middle.depth * slope;
+  const rotate = (p) => ({ x: p.x * c - p.y * s, y: p.x * s + p.y * c });
+  const rotated = { outer: outer.map(rotate), inner: inner.map(rotate) };
+  const all = [...rotated.outer, ...rotated.inner];
+  const centerX = (Math.min(...all.map((p) => p.x)) + Math.max(...all.map((p) => p.x))) / 2;
+  const centerY = (Math.min(...all.map((p) => p.y)) + Math.max(...all.map((p) => p.y))) / 2;
   const targetX = origin.x + aim.x * region.quarterBoxLength;
   const targetY = origin.y + (origin.depth + aim.z * region.quarterBoxLength) * slope;
-  const transform = (p) => {
-    const x = p.x - middle.x,
-      y = p.y + p.depth * slope - centerY;
-    return { x: targetX + x * c - y * s, y: targetY + x * s + y * c - origin.depth * slope, depth: origin.depth };
-  };
-  return { outer: ribbon.outer.map(transform), inner: ribbon.inner.map(transform) };
+  const place = (p) => ({
+    x: targetX + p.x - centerX,
+    y: targetY + p.y - centerY - origin.depth * slope,
+    depth: origin.depth,
+  });
+  return { outer: rotated.outer.map(place), inner: rotated.inner.map(place) };
 }

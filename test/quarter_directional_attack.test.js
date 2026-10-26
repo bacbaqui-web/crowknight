@@ -320,20 +320,23 @@ test('crescent rotates and translates rigidly for all aim directions and facings
       a.player.runUpgrades = { reach: 1.5 };
       const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
       const placed = orientCrescentAtHitbox(original, region, facing);
-      const mid = placed.outer[1],
-        origin = region.quarterBoxOrigin;
-      assert.ok(Math.abs(mid.x - origin.x - aim.x * region.quarterBoxLength) < 1e-8);
-      assert.ok(
-        Math.abs(mid.y + mid.depth * slope - origin.y - (origin.depth + aim.z * region.quarterBoxLength) * slope) < 1e-8
-      );
-      const angle = Math.atan2(aim.z * slope, aim.x) - (facing < 0 ? Math.PI : 0);
+      const all = [...placed.outer, ...placed.inner];
+      const centerX = (Math.min(...all.map((p) => p.x)) + Math.max(...all.map((p) => p.x))) / 2;
+      const centerY = (Math.min(...all.map((p) => p.y)) + Math.max(...all.map((p) => p.y))) / 2;
+      const origin = region.quarterBoxOrigin;
+      assert.ok(Math.abs(centerX - origin.x - aim.x * region.quarterBoxLength) < 1e-8);
+      assert.ok(Math.abs(centerY - origin.y - aim.z * region.quarterBoxLength * slope) < 1e-8);
+      const normal = { x: placed.outer[1].x - placed.inner[1].x, y: placed.outer[1].y - placed.inner[1].y };
+      assert.ok(normal.x * aim.x + normal.y * aim.z * slope > 0);
+      assert.ok(Math.abs(normal.x * aim.z * slope - normal.y * aim.x) < 1e-8);
       for (const boundary of ['outer', 'inner'])
         original[boundary].forEach((p, i) => {
-          const x = p.x - original.outer[1].x,
-            y = p.y + p.depth * slope - original.outer[1].y - original.outer[1].depth * slope;
+          const distance = Math.hypot(
+            p.x - original.outer[1].x,
+            p.y + p.depth * slope - original.outer[1].y - original.outer[1].depth * slope
+          );
           const q = placed[boundary][i];
-          assert.ok(Math.abs(q.x - mid.x - (x * Math.cos(angle) - y * Math.sin(angle))) < 1e-8);
-          assert.ok(Math.abs(q.y - mid.y - (x * Math.sin(angle) + y * Math.cos(angle))) < 1e-8);
+          assert.ok(Math.abs(Math.hypot(q.x - placed.outer[1].x, q.y - placed.outer[1].y) - distance) < 1e-8);
         });
     }
   assert.deepEqual(original, saved);
