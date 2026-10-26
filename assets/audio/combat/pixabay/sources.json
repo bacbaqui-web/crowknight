@@ -66,5 +66,16 @@
     "trimStart": 4.07,
     "trimEnd": 4.55,
     "processing": "PCM16 WAV; original stereo 24kHz, pitch and gain retained; trim only"
+  },
+  {
+    "file": "pixabay/shield-block-shortsword.mp3",
+    "title": "Shield Block Shortsword",
+    "author": "SectionSound",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "sha256": "c7028380d7c363e207c934cbfc56f5d5e1e52f122d424b2f0ce5537ae5f6cdb2",
+    "selectedCandidate": 15,
+    "processing": "Original MP3; original playback rate; existing block/parry gains"
   }
 ]

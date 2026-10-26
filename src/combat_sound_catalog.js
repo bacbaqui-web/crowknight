@@ -16,8 +16,8 @@ export const COMBAT_SOUNDS = {
   swordHit: sound(['selected/blade-hit-1.wav', 'selected/blade-hit-2.wav'], 0.46),
   bossHit: sound('v2/bossHit.wav', 0.65, 1),
   guardRaise: sound('v2/guardRaise.wav', 0.16, 1),
-  block: sound(['selected/shield-1.wav', 'selected/shield-2.wav'], 0.34),
-  parry: sound(['selected/shield-1.wav', 'selected/shield-2.wav'], 0.42, 1, 0.08, 4),
+  block: sound('pixabay/shield-block-shortsword.mp3', 0.34),
+  parry: sound('pixabay/shield-block-shortsword.mp3', 0.42, 1, 0.08, 4),
   footstep: sound(
     [
       'selected/grass-1.wav',

@@ -6,7 +6,7 @@
     "category": "방패 방어",
     "url": "https://pixabay.com/sound-effects/film-special-effects-shield-guard-6963/",
     "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_9f712797d5.mp3",
-    "status": "new",
+    "status": "previous",
     "approved": false
   },
   {
@@ -16,7 +16,7 @@
     "category": "방패 방어",
     "url": "https://pixabay.com/es/sound-effects/pel%C3%ADculas-y-efectos-especiales-metal-impact-6212/",
     "src": "https://cdn.pixabay.com/audio/2021/08/04/audio_3c2e15a1e8.mp3",
-    "status": "new",
+    "status": "previous",
     "approved": false
   },
   {
@@ -89,8 +89,8 @@
     "category": "방패 방어",
     "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
     "src": "https://cdn.pixabay.com/audio/2023/03/25/audio_b0c7773b14.mp3",
-    "approved": false,
-    "status": "previous"
+    "approved": true,
+    "status": "approved"
   },
   {
     "id": 16,
