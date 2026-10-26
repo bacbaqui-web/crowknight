@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
     <title>Crow Knight</title>
+    <script>
+      const entryUrl = new URL(window.location.href);
+      if (entryUrl.searchParams.get('side') !== '1') {
+        const gameUrl = new URL('./quarter-view.html', entryUrl);
+        gameUrl.search = entryUrl.search;
+        gameUrl.hash = entryUrl.hash;
+        window.location.replace(gameUrl.href);
+      }
+    </script>
     <link rel="stylesheet" href="./src/sidePanels.css" />
     <link rel="stylesheet" href="./src/rankingScreens.css" />
     <link rel="stylesheet" href="./src/settingsPanel.css" />

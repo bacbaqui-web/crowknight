@@ -1,3 +1,4 @@
+import { forestGround, forestHash } from './forest_layout.js';
 import { stunTankOnTerrain } from '../boss_pattern_runtime.js';
 import { depthOf } from './camera.js';
 
@@ -7,11 +8,6 @@ export const SCENERY_TYPES = Object.freeze({
   hut: { w: 170, d: 140, height: 82, climbable: true },
   tree: { w: 42, d: 44, height: 260, climbable: false },
 });
-function hash(x, z) {
-  let n = Math.imul(x, 374761393) ^ Math.imul(z, 668265263);
-  n = Math.imul(n ^ (n >>> 13), 1274126177);
-  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
-}
 export function createEnvironment() {
   let originX = 480;
   const cache = new Map();
@@ -26,18 +22,33 @@ export function createEnvironment() {
         make('tree', originX + 100, -300, 'start-tree')
       );
     } else {
-      const seed = hash(x, z);
-      const type = seed < 0.4 ? 'rock' : seed < 0.78 ? 'tree' : 'hut';
-      objects.push(
-        make(type, originX + x * CELL + (hash(x + 81, z) - 0.5) * 180, z * CELL + (hash(x, z + 71) - 0.5) * 180, key)
-      );
+      for (let i = 0; i < 3; i++) {
+        const seed = forestHash(x * 7 + i, z);
+        const px = originX + x * CELL + (forestHash(x * 11 + i, z + 81) - 0.5) * 380;
+        const pz = z * CELL + (forestHash(x + 71, z * 13 + i) - 0.5) * 380;
+        const terrain = forestGround(px, pz);
+        // Keep the road and clearing walkable, including the obstacle's footprint.
+        if (terrain.edge < 130) continue;
+        if (i === 2 && terrain.edge < 330) continue;
+        const type = i > 0 ? 'tree' : seed < 0.24 ? 'hut' : seed < 0.5 ? 'rock' : 'tree';
+        const object = make(type, px, pz, `${key}:${i}`);
+        if (objects.some((o) => Math.hypot(o.x - px, o.z - pz) < 170)) continue;
+        objects.push(object);
+      }
     }
     cache.set(key, objects);
     if (cache.size > 100) cache.delete(cache.keys().next().value);
     return objects;
   }
   function make(type, x, z, id) {
-    return { ...SCENERY_TYPES[type], type, x, z, id };
+    return {
+      ...SCENERY_TYPES[type],
+      type,
+      x,
+      z,
+      id,
+      variant: Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 3),
+    };
   }
   function nearby(x, z, radiusX = 300, radiusZ = radiusX) {
     const result = [];

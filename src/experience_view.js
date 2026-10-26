@@ -1,3 +1,4 @@
+import { renderSkillTree } from './skill_tree_choice_view.js';
 import { bindChoiceNumberKeys } from './input_control_controller.js';
 import { SKILL_PATHS, PROGRESSION_SKILLS } from './skill_progression_data.js';
 export function createExperienceView(root = document.querySelector('.stage-wrap'), { showHud = false } = {}) {
@@ -21,7 +22,9 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
   title.textContent = '레벨업 · 기술 습득과 강화';
   const cards = document.createElement('div');
   cards.className = 'upgrade-choice-cards';
-  panel.append(title, cards);
+  const subtitle=document.createElement('p');
+  subtitle.className='skill-tree-subtitle';
+  panel.append(title, subtitle, cards);
   modal.append(panel);
   root.append(modal);
   bindChoiceNumberKeys({ modal, cards });
@@ -50,7 +53,14 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
         ? `레벨업 · ${SKILL_PATHS.find((path) => path.id === pathId)?.name} 계열 기술 습득과 강화`
         : '첫 레벨업 · 이번 판의 길을 선택하세요';
       modal.classList.toggle('path-choice', !pathId);
+      subtitle.textContent=pathId?'아래에서 위로 이어지는 성장의 길 · 빛나는 기술을 선택하세요':'공격 · 방어 · 이동 — 이번 전투에서 이어갈 계열을 선택하세요';
+      panel.style.setProperty('--tree-accent',SKILL_PATHS.find(p=>p.id===pathId)?.color || '#d9c79a');
+      cards.classList.toggle('skill-tree-content',Boolean(pathId));
       cards.replaceChildren();
+      if(pathId) {
+        renderSkillTree(cards,offered,ranks,choose,pathId);
+        modal.hidden=false;cards.querySelector('button')?.focus();return;
+      }
       for (const [index, skill] of offered.entries()) {
         const button = document.createElement('button');
         button.className = 'upgrade-choice-card';

@@ -1,3 +1,4 @@
+import { preloadSceneryArt } from './scenery_art.js';
 const { navigator, URL } = window;
 
 function waitFor(target, type, ready) {
@@ -36,6 +37,7 @@ if ('serviceWorker' in navigator) {
     // Keep the existing game available when the browser cannot install a worker.
   }
 }
+await preloadSceneryArt();
 const entry = new URL('../main.js', import.meta.url);
 entry.searchParams.set('__source', Date.now().toString(36));
 await import(entry.href);
