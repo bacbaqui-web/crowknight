@@ -1,3 +1,4 @@
+import { drawTankWarnings } from './ram_tank_renderer.js';
 import { collectMageFire, advanceMageFire, mageFireAttackRegion } from './mage_fire_runtime.js';
 import { drawMageFire, drawMageWarnings } from './mage_fire_renderer.js';
 import { configurePowderBomb, advancePowderBomb, powderBlastRegion, drawPowderBomb } from './powder_bomb_runtime.js';
@@ -15,12 +16,14 @@ let projectilePool = [];
 let nextProjectileId = 1;
 let warningActors = [];
 let mageActors = [];
+let tankActors = [];
 
 export function resetProjectileRuntime() {
   projectilePool = [];
   nextProjectileId = 1;
   warningActors = [];
   mageActors = [];
+  tankActors = [];
 }
 
 export function activeProjectiles() {
@@ -28,6 +31,7 @@ export function activeProjectiles() {
 }
 
 export function updateProjectileRuntime({ actors = [], playerActor = null, world = null, dt = 0 } = {}) {
+  tankActors = actors.filter((actor) => actor.id === 'ram_tank');
   mageActors = actors.filter((actor) => actor.id === 'fire_mage');
   warningActors = actors.filter((actor) => actor.spearmanThrow?.aim);
   for (const actor of actors) {
@@ -57,6 +61,7 @@ export function removeProjectile(projectile) {
 }
 
 export function drawProjectiles(ctx, effectAssets, project = null) {
+  drawTankWarnings(ctx, tankActors, project);
   drawSpearWarnings(ctx, warningActors, project);
   drawMageWarnings(ctx, mageActors, project);
   projectilePool.forEach((projectile) =>

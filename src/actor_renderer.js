@@ -1,3 +1,5 @@
+import { isRamTank } from './ram_tank_runtime.js';
+import { drawTankParts } from './ram_tank_renderer.js';
 import { drawFlameSprite } from './flame_effect_renderer.js';
 import { clamp, deg } from './common_helper.js';
 import {
@@ -52,7 +54,8 @@ export function drawPuppetPlayer(player, ctx) {
   recordPuppetEditHandle(player, ctx, 'master', masterPlacementMatrix);
   ctx.translate(-(master.anchorX || 0), -(master.anchorY || 0));
   ctx.globalAlpha *= clamp(master.opacity ?? 1, 0, 1);
-  player.layerOrder.forEach((layer) => drawPuppetLayer(player, ctx, layer, p, r));
+  if (isRamTank(player)) drawTankParts(player, ctx, drawPuppetImagePart);
+  else player.layerOrder.forEach((layer) => drawPuppetLayer(player, ctx, layer, p, r));
   drawDetachedAttackInteractionObject(player, ctx);
   ctx.restore();
 

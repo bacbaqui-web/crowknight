@@ -1,3 +1,4 @@
+import { prepareTankMotion, finishTankMotion } from './ram_tank_runtime.js';
 import { requestRuntimeAction } from './action_trigger_engine.js';
 import { isActionMirrorEnabled } from './action_mirror_helper.js';
 import { resetPlayerActionState } from './actor_state.js';
@@ -27,7 +28,9 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
       plane?.beforeEnemy(actor, playerActor);
       const throwing = updateSpearmanThrow(actor, playerActor, dt, world);
       if (!throwing && !(actor.player.runParryStun > 0)) runEnemyRangeAi(actor, playerActor, world);
+      const tankMotion = prepareTankMotion(actor);
       actor.player.updateNpc(dt, playerActor.player, motionWorld);
+      finishTankMotion(actor, tankMotion, dt, world);
       plane?.afterMotion(actor);
     });
 }

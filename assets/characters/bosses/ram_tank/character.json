@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "ram_tank",
+  "type": "enemy",
+  "label": "충각 전차장",
+  "name": "충각 전차장",
+  "x": 1500,
+  "folder": "bosses/ram_tank",
+  "storageFolder": "bosses/ram_tank",
+  "group": "bosses",
+  "tint": "#c4a35b",
+  "deleted": false,
+  "deletable": true,
+  "psdFileName": "enemy.psd"
+}
