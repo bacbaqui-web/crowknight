@@ -97,7 +97,13 @@ export function createCombatAudioPlayer() {
     volume = Number(slider.value) / 100;
     sync();
   });
-  controls.append(button, slider);
+  const credits = document.createElement('a');
+  credits.href = new URL('../assets/audio/combat/credits.html', import.meta.url).href;
+  credits.textContent = '음원 출처';
+  credits.target = '_blank';
+  credits.rel = 'noopener';
+  credits.style.cssText = 'color:#b6dbae;font-size:11px';
+  controls.append(button, slider, credits);
   document.body.append(controls);
   sync();
   function play(name, position = null) {

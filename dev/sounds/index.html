@@ -40,15 +40,18 @@
       color: #b6dbae;
     }
   </style>
-  <h1>Crow Knight 효과음 미리 듣기 · 새 버전</h1>
-  <p>버튼을 누르면 게임에서 사용하는 효과음이 재생됩니다. 위치를 바꾸면 거리와 좌우 방향에 따라 소리가 달라집니다.</p>
+  <h1>Crow Knight 효과음 미리 듣기 · 무료 전투 음원 적용</h1>
+  <p>
+    칼 휘두르기·명중·방패 방어·발걸음·폭발에 무료 게임용 음원을 적용했습니다. 버튼을 누르면 게임에서 사용하는 효과음이
+    재생됩니다. 위치를 바꾸면 거리와 좌우 방향에 따라 소리가 달라집니다.
+  </p>
   <label
     >소리 위치 <input id="position" aria-label="소리 위치" type="range" min="-1200" max="1200" value="0" />
     <output id="positionValue">중앙</output></label
   >
   <p id="status">효과음 불러오는 중…</p>
   <div id="sounds"></div>
-  <p><a href="../../">게임으로 돌아가기</a> · <a href="../../assets/audio/combat/v2/README.md">음원 출처</a></p>
+  <p><a href="../../">게임으로 돌아가기</a> · <a href="../../assets/audio/combat/credits.html">음원 출처</a></p>
   <script type="module">
     import { createCombatAudioPlayer } from '../../src/combat_audio_player.js';
     const audio = createCombatAudioPlayer();
