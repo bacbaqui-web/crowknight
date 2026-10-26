@@ -154,8 +154,13 @@ export function orientCrescentAtHitbox(ribbon, region, facing = 1) {
   const all = [...rotated.outer, ...rotated.inner];
   const centerX = (Math.min(...all.map((p) => p.x)) + Math.max(...all.map((p) => p.x))) / 2;
   const centerY = (Math.min(...all.map((p) => p.y)) + Math.max(...all.map((p) => p.y))) / 2;
-  const targetX = origin.x + aim.x * region.quarterBoxLength;
-  const targetY = origin.y + (origin.depth + aim.z * region.quarterBoxLength) * slope;
+  const projectedLength = Math.hypot(aim.x, aim.z * slope);
+  const forward = { x: aim.x / projectedLength, y: (aim.z * slope) / projectedLength };
+  const frontExtent = Math.max(...all.map((p) => (p.x - centerX) * forward.x + (p.y - centerY) * forward.y));
+  // Keep the leading edge inside the strike tip, rather than centering the crescent on the boundary.
+  const distance = region.quarterBoxLength * projectedLength * 0.85 - frontExtent;
+  const targetX = origin.x + forward.x * distance;
+  const targetY = origin.y + origin.depth * slope + forward.y * distance;
   const place = (p) => ({
     x: targetX + p.x - centerX,
     y: targetY + p.y - centerY - origin.depth * slope,

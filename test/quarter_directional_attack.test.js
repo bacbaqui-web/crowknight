@@ -321,11 +321,12 @@ test('crescent rotates and translates rigidly for all aim directions and facings
       const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
       const placed = orientCrescentAtHitbox(original, region, facing);
       const all = [...placed.outer, ...placed.inner];
-      const centerX = (Math.min(...all.map((p) => p.x)) + Math.max(...all.map((p) => p.x))) / 2;
-      const centerY = (Math.min(...all.map((p) => p.y)) + Math.max(...all.map((p) => p.y))) / 2;
       const origin = region.quarterBoxOrigin;
-      assert.ok(Math.abs(centerX - origin.x - aim.x * region.quarterBoxLength) < 1e-8);
-      assert.ok(Math.abs(centerY - origin.y - aim.z * region.quarterBoxLength * slope) < 1e-8);
+      const projectedLength = Math.hypot(aim.x, aim.z * slope);
+      const front = Math.max(
+        ...all.map((p) => ((p.x - origin.x) * aim.x + (p.y - origin.y) * aim.z * slope) / projectedLength)
+      );
+      assert.ok(Math.abs(front - region.quarterBoxLength * projectedLength * 0.85) < 1e-8);
       const normal = { x: placed.outer[1].x - placed.inner[1].x, y: placed.outer[1].y - placed.inner[1].y };
       assert.ok(normal.x * aim.x + normal.y * aim.z * slope > 0);
       assert.ok(Math.abs(normal.x * aim.z * slope - normal.y * aim.x) < 1e-8);
