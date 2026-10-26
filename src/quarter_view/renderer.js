@@ -1,3 +1,4 @@
+import { drawMageRainAtmosphere } from '../mage_rain_effect.js';
 import { createBossCompass } from './boss_compass.js';
 import { createSceneryRenderer } from './scenery_renderer.js';
 import { createDamageNumbers } from './damage_numbers.js';
@@ -127,6 +128,7 @@ export function createQuarterRenderer({ ctx, world }) {
       drawEntity();
       restore();
     };
+    drawMageRainAtmosphere(ctx, actors, world, projectEntity);
     healthDrops.draw(ctx, project);
     experience.draw(ctx, project);
     drawProjectiles(ctx, effectAssets, project);

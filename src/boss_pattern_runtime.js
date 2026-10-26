@@ -1,3 +1,4 @@
+import { MAGE_RAIN } from './mage_rain_effect.js';
 import { updateTankPattern } from './tank_pattern_helper.js';
 import { requestRuntimeAction } from './action_trigger_engine.js';
 import { resetPlayerActionState } from './actor_state.js';
@@ -45,7 +46,7 @@ export function updateBossPattern(actor, target, world, dt) {
       if (actor.id === 'fire_mage' && s.mode === 'fireball') emit('fireball');
     }
     if (s.mode === 'rain') {
-      while (s.drops < 24 && s.time >= 0.8 + s.drops * 0.16) {
+      while (s.drops < 24 && s.time >= MAGE_RAIN.firstDrop + s.drops * 0.16) {
         const i = s.drops++,
           angle = i * 2.399963;
         const radius = i % 6 === 0 ? 0 : 100 + ((i * 73) % 520);
@@ -55,7 +56,7 @@ export function updateBossPattern(actor, target, world, dt) {
         });
       }
     }
-    if (s.time >= (s.mode === 'rain' ? 5.4 : s.mode === 'punch' ? 0.8 : 2.4)) {
+    if (s.time >= (s.mode === 'rain' ? MAGE_RAIN.duration : s.mode === 'punch' ? 0.8 : 2.4)) {
       s.phase = 'walk';
       s.cooldown = s.mode === 'punch' ? 0.7 : 1.2;
       s.time = 0;

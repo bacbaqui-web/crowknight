@@ -29,6 +29,7 @@ export function drawBossHazard(ctx, h, project = null) {
   at(h, () => {
     ctx.save();
     ctx.translate(h.x, h.y);
+    if(fire) {ctx.shadowColor='#ff3c13';ctx.shadowBlur=22;}
     if (h.phase === 'blast' && kind !== 'punch') {
       ctx.globalAlpha *= Math.max(0, 1 - h.phaseTime / 0.4);
       ctx.fillStyle = fire ? '#ff4b16' : '#ffb341';

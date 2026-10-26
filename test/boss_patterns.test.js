@@ -201,3 +201,16 @@ test('boss shatter splits each visible part into four independently moving fragm
   assert.deepEqual(p.deathRagdoll.parts[0].crop,[0,0,50,40]);
   assert.ok(new Set(p.deathRagdoll.parts.map(x=>x.vx)).size>1);
 });
+
+test('fire rain charges and launches before emitting any hazards, atmosphere ends on death', async () => {
+  const {MAGE_RAIN,mageRainIntensity}=await import('../src/mage_rain_effect.js');
+  const a=actor('fire_mage');
+  updateBossPattern(a,target,world,0);
+  a.bossPattern.phase='cast';a.bossPattern.mode='rain';a.bossPattern.time=0;
+  updateBossPattern(a,target,world,MAGE_RAIN.firstDrop-.01);
+  assert.equal(a.bossPattern.queue.length,0);
+  assert.equal(mageRainIntensity(a),1);
+  updateBossPattern(a,target,world,.02);
+  assert.equal(a.bossPattern.queue[0].bossHazard,'rain');
+  a.player.dead=true;assert.equal(mageRainIntensity(a),0);
+});
