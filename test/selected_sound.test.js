@@ -6,15 +6,21 @@ import { createHash } from 'node:crypto';
 import { COMBAT_SOUNDS } from '../src/combat_sound_catalog.js';
 
 test('five sound families use attributed selected assets at natural speed with intact decays', () => {
-  const keys = ['clubHit', 'swordHit', 'footstep'];
+  const keys = ['swordHit', 'footstep'];
   const files = new Set(keys.flatMap((key) => COMBAT_SOUNDS[key].files));
   const sources = JSON.parse(readFileSync(new URL('../assets/audio/combat/selected/sources.json', import.meta.url)));
-  assert.equal(files.size, 10);
+  assert.equal(files.size, 8);
   assert.deepEqual(
     files,
     new Set(
       sources
-        .filter((s) => !s.file.includes('explosion') && !s.file.includes('swing-') && !s.file.includes('shield-'))
+        .filter(
+          (s) =>
+            !s.file.includes('explosion') &&
+            !s.file.includes('swing-') &&
+            !s.file.includes('shield-') &&
+            !s.file.includes('blunt-hit-')
+        )
         .map((s) => s.file)
     )
   );
@@ -50,7 +56,7 @@ test('approved club swings and explosion retain the exact Pixabay originals', ()
   }
   assert.deepEqual(
     sources.map((s) => s.selectedCandidate),
-    [2, 3, 10, 14, 14, 15]
+    [2, 3, 10, 14, 14, 15, 21]
   );
   for (const item of sources) {
     const bytes = readFileSync(new URL('../assets/audio/combat/' + item.file, import.meta.url));
@@ -83,4 +89,9 @@ test('block and parry use the selected shortsword shield while hero club stays d
     assert.deepEqual(COMBAT_SOUNDS[key].files, ['pixabay/shield-block-shortsword.mp3']);
   assert.deepEqual(COMBAT_SOUNDS.clubSwing.files, ['pixabay/club-swing-1.mp3', 'pixabay/club-swing-2.mp3']);
   assert.ok(COMBAT_SOUNDS.clubSwing.files.every((file) => !COMBAT_SOUNDS.swordSwing.files.includes(file)));
+});
+
+test('hero hit uses blunt impact independently of enemy blade hit', () => {
+  assert.deepEqual(COMBAT_SOUNDS.clubHit.files, ['pixabay/club-hit-blunt.mp3']);
+  assert.ok(COMBAT_SOUNDS.swordHit.files.every((file) => file.startsWith('selected/blade-hit-')));
 });

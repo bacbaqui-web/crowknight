@@ -1,3 +1,8 @@
+## 2026-10-27 — 주인공 몽둥이 명중음 수정
+
+- 사용자 후속 확인: 칼처럼 들리는 시점은 휘두르기가 아니라 적 명중입니다. 기존 clubHit 소스가 Hove의 칼-목재 충돌음인 것을 확인해 후보 21번 Punch Knuckle Blunt Medium(Khoamthanh/Pixabay) 원본으로 시험 교체했습니다. clubSwing 2·3번과 적의 swordHit는 유지합니다.
+- 방패 15번 적용과 함께 오디오 관련 테스트 14개, 해당 JS 린트/포맷 통과. 실제 Q 공격은 clubSwing이며 실제 피해 처리 테스트가 clubHit를 호출하는지 검증합니다. 사용자 청감 확인은 별도입니다.
+
 ## 2026-10-27 — 방패 15번 적용 및 주인공 공격음 조사
 
 - SectionSound Shield Block Shortsword(후보 15)를 일반 방어·패링에 적용했습니다. 원본 MP3와 기존 이벤트별 음량 유지, 출처·해시 기록.

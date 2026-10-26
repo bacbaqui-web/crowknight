@@ -26,8 +26,9 @@
     "category": "명중",
     "url": "https://pixabay.com/sound-effects/film-special-effects-punch-knuckle-blunt-medium-503895/",
     "src": "https://cdn.pixabay.com/audio/2026/03/17/audio_4d48e16429.mp3",
-    "status": "new",
-    "approved": false
+    "status": "approved",
+    "approved": true,
+    "note": "✓ 몽둥이 명중에 시험 적용 · 날카로운 기존 충돌음 교체"
   },
   {
     "id": 22,
