@@ -1,5 +1,5 @@
 import { groundPoint, QUARTER_PROJECTION, depthOf } from './camera.js';
-import { createScenerySprite } from './scenery_art.js';
+import { createScenerySprite, sceneryVariant, SCENERY_FRAME } from './scenery_art.js';
 
 export function createSceneryRenderer(ctx, world) {
   const sprites = new Map();
@@ -18,7 +18,7 @@ export function createSceneryRenderer(ctx, world) {
     });
   }
   function draw(object, view, hero) {
-    const variant = object.type === 'tree' ? object.variant || 0 : 0;
+    const variant = sceneryVariant(object.type, object.variant || 0);
     const key = `${object.type}:${variant}`;
     let sprite = sprites.get(key);
     if (!sprite) {
@@ -34,7 +34,13 @@ export function createSceneryRenderer(ctx, world) {
       object.z - depthOf(hero) < 700
     )
       ctx.globalAlpha = 0.48;
-    ctx.drawImage(sprite, p.x - 150 * view.zoom, p.y - 460 * view.zoom, 300 * view.zoom, 520 * view.zoom);
+    ctx.drawImage(
+      sprite,
+      p.x - SCENERY_FRAME.anchorX * view.zoom,
+      p.y - SCENERY_FRAME.anchorY * view.zoom,
+      SCENERY_FRAME.width * view.zoom,
+      SCENERY_FRAME.height * view.zoom
+    );
     ctx.restore();
   }
   return { visible, draw };

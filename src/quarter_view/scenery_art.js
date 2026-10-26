@@ -1,38 +1,83 @@
 const images = new Map();
 let loading;
+const asset = (name) => new globalThis.URL(`../../assets/quarter-forest/${name}.webp`, import.meta.url).href;
 export const SCENERY_ASSETS = Object.freeze({
-  tree: new globalThis.URL('../../assets/quarter-forest/tree-flat-v2.webp', import.meta.url).href,
-  rock: new globalThis.URL('../../assets/quarter-forest/rock-flat-v2.webp', import.meta.url).href,
-  hut: new globalThis.URL('../../assets/quarter-forest/ruin-flat-v2.webp', import.meta.url).href,
+  tree: asset('tree-flat-v2'),
+  fork: asset('tree-fork-v3'),
+  bent: asset('tree-bent-v3'),
+  bush: asset('bush-v3'),
+  rock: asset('rock-flat-v2'),
+  stones: asset('stones-v3'),
+  hut: asset('ruin-flat-v2'),
+  pillar: asset('pillar-v3'),
 });
+export const SCENERY_FRAME = Object.freeze({ width: 420, height: 450, anchorX: 210, anchorY: 390 });
+const variants = { tree: ['tree', 'fork', 'bent'], rock: ['rock', 'stones'], hut: ['hut', 'pillar'] };
+export function sceneryVariant(type, variant = 0) {
+  return variant % variants[type].length;
+}
+export function fitSceneryBounds(bounds, maxWidth, maxHeight) {
+  const scale = Math.min(maxWidth / bounds.width, maxHeight / bounds.height);
+  return { width: bounds.width * scale, height: bounds.height * scale };
+}
+function opaqueBounds(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0);
+  const { data } = ctx.getImageData(0, 0, image.width, image.height);
+  let left = image.width,
+    top = image.height,
+    right = 0,
+    bottom = 0;
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      if (data[(y * image.width + x) * 4 + 3] < 16) continue;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x + 1);
+      bottom = Math.max(bottom, y + 1);
+    }
+  }
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
 export function preloadSceneryArt() {
   return (loading ||= Promise.all(
     Object.entries(SCENERY_ASSETS).map(async ([type, url]) => {
       const image = new Image();
       image.src = url;
       await image.decode();
-      images.set(type, image);
+      images.set(type, { image, bounds: opaqueBounds(image) });
     })
   ));
 }
-// Rasterize scaled / tinted variants once; moving the camera only blits cached surfaces.
+function stamp(ctx, key, x, y, maxWidth, maxHeight) {
+  const entry = images.get(key);
+  if (!entry) return;
+  const b = entry.bounds;
+  const size = fitSceneryBounds(b, maxWidth, maxHeight);
+  ctx.drawImage(entry.image, b.x, b.y, b.width, b.height, x - size.width / 2, y - size.height, size.width, size.height);
+}
+// Alpha bounds, scale and ground-contact decorations are baked once per variant.
 export function createScenerySprite(type, createSurface = () => document.createElement('canvas'), variant = 0) {
   const canvas = createSurface();
-  canvas.width = 300;
-  canvas.height = 520;
+  canvas.width = SCENERY_FRAME.width;
+  canvas.height = SCENERY_FRAME.height;
   const ctx = canvas.getContext('2d');
-  ctx.translate(150, 460);
-  const image = images.get(type);
-  if (!image) return canvas;
-  ctx.fillStyle = '#525d3920';
+  ctx.translate(SCENERY_FRAME.anchorX, SCENERY_FRAME.anchorY);
+  const n = sceneryVariant(type, variant);
+  ctx.fillStyle = '#59664b24';
   ctx.beginPath();
-  ctx.ellipse(8, 8, type === 'tree' ? 40 : 70, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, type === 'tree' ? 36 : 75, type === 'tree' ? 13 : 24, -0.12, 0, Math.PI * 2);
   ctx.fill();
   if (type === 'tree') {
-    ctx.filter = ['none', 'brightness(.72)', 'brightness(1.16) saturate(.7)'][variant % 3];
-    if (variant === 1) ctx.scale(-1, 1);
-    ctx.drawImage(image, -88, -405, 176, 415);
-  } else if (type === 'rock') ctx.drawImage(image, -73, -72, 146, 88);
-  else ctx.drawImage(image, -110, -115, 220, 135);
+    stamp(ctx, 'bush', n === 1 ? -30 : 26, -4, 95, 42);
+    stamp(ctx, variants.tree[n], 0, 3, 300, 330);
+    stamp(ctx, 'bush', n === 2 ? 26 : -18, 9, 68, 28);
+  } else {
+    stamp(ctx, variants[type][n], 0, 5, type === 'rock' ? 155 : 270, type === 'rock' ? 90 : 140);
+    stamp(ctx, 'bush', n === 0 ? -57 : 58, 9, 55, 26);
+  }
   return canvas;
 }

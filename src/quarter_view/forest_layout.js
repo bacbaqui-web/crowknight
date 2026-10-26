@@ -9,7 +9,9 @@ export function forestGround(x, z) {
   const cx = wrap(x - 480),
     cz = wrap(z);
   const clearingDistance = Math.hypot(cx, cz * 0.9);
-  const edge = Math.min(roadDistance - 88, clearingDistance - 310);
+  const roadWidth = 88 + 15 * Math.sin(x * K * 3) * Math.cos(z * K * 2);
+  const clearingEdge = clearingDistance - 310 + 25 * Math.sin(x * K * 7) * Math.cos(z * K * 5);
+  const edge = Math.min(roadDistance - roadWidth, clearingEdge);
   return { edge, roadDistance, clearingDistance };
 }
 export function forestHash(x, z) {
