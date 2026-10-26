@@ -28,6 +28,7 @@ export function preparePlaneMotion(actor, direction, keys = null, pressed = null
   actor.quarterMotionStart = {
     x: player.x,
     z: depthOf(actor),
+    time: player.animTime,
     facing: player.facing || 1,
     serial: player.attackSerial,
     direction,
@@ -73,6 +74,23 @@ export function finishPlaneMotion(actor, world = null) {
   const projectedX = start.x + travel * axis.x;
   player.x = projectedX;
   actor.quarterDepth = start.z + travel * axis.z;
+  if (
+    actor.quarterAirControl &&
+    !player.onGround &&
+    !actor.quarterImpulse &&
+    !(player.hurtTime > 0) &&
+    player.actionSettings?.[player.actionKey]?.group !== 'attack'
+  ) {
+    const dt = Math.max(0, Math.min(0.05, player.animTime - start.time));
+    const desired = start.direction || { x: 0, z: 0 };
+    const previous = actor.quarterAirVelocity || { x: 0, z: 0 };
+    const blend = 1 - Math.exp(-dt / 0.065);
+    const vx = previous.x + (desired.x * 300 - previous.x) * blend;
+    const vz = previous.z + (desired.z * 300 - previous.z) * blend;
+    actor.quarterAirVelocity = { x: vx, z: vz };
+    player.x = start.x + vx * dt;
+    actor.quarterDepth = start.z + vz * dt;
+  } else actor.quarterAirVelocity = null;
   constrainGroundPosition(actor, world);
   const shift = player.x - rawX;
   const targetMove = player.customActionTargetMove;

@@ -1,3 +1,4 @@
+import { createTerrainNavigation, terrainBlocksProjectile } from './terrain_navigation.js';
 import { createEnvironment } from './environment.js';
 import { createSurroundingSpawner, outsideSpawnArea } from './bounds.js';
 import { createPerformanceView } from './performance_view.js';
@@ -18,6 +19,7 @@ export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
   const spawnAround = createSurroundingSpawner(world);
   const environment = createEnvironment();
+  const navigate = createTerrainNavigation(environment, world);
   // Native x is a temporary movement scalar; apply world bounds only after ground projection.
   const motionWorld = Object.assign(Object.create(world), { minX: -Infinity, maxX: Infinity });
   let paused = false,
@@ -90,6 +92,7 @@ export function createQuarterRuntime({ ctx, world }) {
   world.quarterView = {
     unbounded: true,
     environment,
+    blocksProjectile: (p) => terrainBlocksProjectile(p, environment, world),
     showDamage: renderer.showDamage,
     motionWorld,
     prepareAttackRegions: renderer.prepareAttackRegions,
@@ -98,7 +101,9 @@ export function createQuarterRuntime({ ctx, world }) {
     },
     beforePlayer(actor, keys, pressed) {
       environment.before(actor, world, motionWorld);
-      actor.quarterMoveSpeed = 1.15;
+      actor.quarterMoveSpeed = 1.32;
+      actor.quarterAirControl = true;
+      actor.player.quarterJumpScale = 0.8;
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
       controlledActor = actor;
@@ -108,7 +113,7 @@ export function createQuarterRuntime({ ctx, world }) {
       environment.before(actor, world, motionWorld);
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
-      const direction = enemyPlaneDirection(actor, target);
+      const direction = navigate(actor, target, enemyPlaneDirection(actor, target));
       preparePlaneMotion(actor, direction);
     },
     afterMotion(actor) {

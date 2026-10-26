@@ -24,6 +24,7 @@ export function applyCustomActionVelocityModifier(player, dt) {
   const mirrorSign = actionMoveMirrorSign(settings, player.facing);
   const curveRate = Math.abs(rawFrameDelta) > 0.000001 ? frameDelta / rawFrameDelta : 0;
   const base = upgradeVelocity(player, settings, Number(velocity.x || 0), Number(velocity.y || 0));
+  if (settings.group === 'movement' && base.y < 0) base.y *= player.quarterJumpScale ?? 1;
   const x = base.x * mirrorSign * curveRate;
   const y = base.y * curveRate;
   const mode = velocity.mode === 'add' ? 'add' : 'set';
@@ -105,7 +106,8 @@ function startTargetMove(player, state, targetMove, settings) {
   state.startX = Number(player.x || 0);
   state.startY = Number(player.y || 0);
   const move = { x: Number(targetMove.x || 0), y: Number(targetMove.y || 0) };
-  if (settings.group === 'movement' && move.y < 0) move.y *= (player.runUpgrades?.jump || 1) * progressionEffects(player).jump;
+  if (settings.group === 'movement' && move.y < 0)
+    move.y *= (player.runUpgrades?.jump || 1) * progressionEffects(player).jump * (player.quarterJumpScale ?? 1);
   state.targetX = shadowX + move.x * mirrorSign;
   state.targetY = shadowY + move.y;
   state.elapsedFrames = 0;

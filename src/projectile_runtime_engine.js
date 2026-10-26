@@ -48,7 +48,10 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
     }
   }
   actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor, world));
-  projectilePool.forEach((projectile) => advanceProjectile(projectile, dt));
+  projectilePool.forEach((projectile) => {
+    advanceProjectile(projectile, dt);
+    if (world?.quarterView?.blocksProjectile?.(projectile)) projectile.active = false;
+  });
   projectilePool = projectilePool.filter(
     (projectile) => projectile.active && !projectileOutOfBounds(projectile, world)
   );
@@ -187,6 +190,7 @@ function projectileReaction(actor, settings) {
 function advanceProjectile(projectile, dt) {
   projectile.previousX = projectile.x;
   projectile.previousY = projectile.y;
+  projectile.previousDepth = projectile.quarterDepth;
   if (projectile.mageFire) {
     advanceMageFire(projectile, dt);
     return;
