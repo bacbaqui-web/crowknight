@@ -14,7 +14,7 @@ export function createGroundTexture(size = 1024) {
       const dirt = Math.max(0, Math.min(1, (18 - edge + (patch - 0.5) * 20) / 42));
       const light =
         Math.sin(((wx * Math.PI * 2) / FOREST_PERIOD) * 3) * 3 + Math.cos(((wz * Math.PI * 2) / FOREST_PERIOD) * 4) * 3;
-      let color = [43, 61, 46].map((c, i) => c * (1 - dirt) + [103, 91, 65][i] * dirt + light + (grain - 0.5) * 9);
+      let color = [56, 99, 101].map((c, i) => c * (1 - dirt) + [139, 132, 94][i] * dirt + light + (grain - 0.5) * 13);
       // Broken stone paving around the old crossroads, with soil-filled seams and missing stones.
       const row = Math.floor(wz / 38),
         col = Math.floor((wx + (row % 2) * 26) / 52);
@@ -22,16 +22,20 @@ export function createGroundTexture(size = 1024) {
       if (clearingDistance < 250 && stone > 0.32) {
         const px = (wx + (row % 2) * 26) % 52,
           pz = wz % 38;
-        if (px > 4 && px < 48 && pz > 4 && pz < 34) {
+        if (px > 4 + grain * 3 && px < 48 - grain * 3 && pz > 4 + grain * 3 && pz < 34 - grain * 3) {
           const shade = stone * 18 + (pz < 7 ? 9 : 0) - (px > 44 || pz > 30 ? 12 : 0);
-          color = [84 + shade, 89 + shade, 73 + shade];
-        } else color = [58, 65, 49];
+          color = [113 + shade, 128 + shade, 114 + shade];
+        } else color = [105, 112, 84];
       }
       // Leaf litter, tiny pebbles and grass are baked once, never drawn as per-frame objects.
       if (grain > 0.977) {
-        color = dirt > 0.65 ? [127, 116, 86] : [85, 96, 57];
+        color = dirt > 0.65 ? [154, 146, 109] : [100, 150, 151];
       }
-      if (grain < 0.012 && dirt < 0.65) color = [27, 44, 34];
+      if (grain < 0.012 && dirt < 0.65) color = [40, 79, 84];
+      const tuftX = wx % 42,
+        tuftZ = wz % 38;
+      if (dirt < 0.3 && patch > 0.48 && tuftZ > 12 && tuftZ < 25 && Math.abs(tuftX - 19 - (tuftZ - 12) * 0.3) < 1.8)
+        color = [92, 140, 143];
       const i = (y * size + x) * 4;
       pixels[i] = color[0];
       pixels[i + 1] = color[1];
