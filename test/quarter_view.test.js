@@ -33,7 +33,7 @@ function close(a, b, label) {
   assert.ok(Math.abs(a - b) < 1e-7, `${label}: ${a} != ${b}`);
 }
 
-test('low camera angle is preserved with a constant orthographic scale and invertible projection', () => {
+test('raised camera angle is preserved with a constant orthographic scale and invertible projection', () => {
   const view = { width: 1280, height: 760, x: 480, depth: 0, zoom: 1 };
   for (const depth of [-480, -100, 0, 150, 480]) {
     const p = groundPoint(830, depth, view),
@@ -42,7 +42,8 @@ test('low camera angle is preserved with a constant orthographic scale and inver
     close(back.depth, depth, 'depth');
     assert.equal(p.scale, view.zoom);
   }
-  assert.ok(groundPoint(480, 100, view).y - groundPoint(480, 0, view).y < 40);
+  const depthSpacing = groundPoint(480, 100, view).y - groundPoint(480, 0, view).y;
+  assert.ok(depthSpacing > 40 && depthSpacing < 50);
   for (const zoom of [0.6, 1, 1.4])
     for (const cameraDepth of [-300, 0, 300]) {
       const camera = { ...view, zoom, depth: cameraDepth };

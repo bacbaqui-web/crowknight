@@ -1,7 +1,7 @@
-const SLOPE = Math.sin((18 * Math.PI) / 180);
+const SLOPE = Math.sin((26 * Math.PI) / 180);
 export const QUARTER_PROJECTION = Object.freeze({ slope: SLOPE });
 
-// Keep the existing low camera angle with a constant orthographic scale.
+// Use a higher quarter-view camera angle with a constant orthographic scale.
 export function groundPoint(x, depth, view) {
   return {
     x: view.width / 2 + (x - view.x) * view.zoom,
