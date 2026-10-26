@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createEnvironment } from '../src/quarter_view/environment.js';
-import { GROUND_TRANSITIONS, GROUND_PATTERNS } from '../src/quarter_view/ground_patterns.js';
+import { DUAL_LAYERS } from '../src/quarter_view/dual_grid.js';
+import { GROUND_PATTERNS } from '../src/quarter_view/ground_patterns.js';
 
 test('forest mixes all tree silhouettes and adds nonblocking verge cover', () => {
   const env = createEnvironment();
@@ -16,8 +17,8 @@ test('forest mixes all tree silhouettes and adds nonblocking verge cover', () =>
     assert.equal(new Set(peers.map((p) => p.variant)).size, peers.length);
   }
 });
-test('terrain catalog separates eight materials and sixteen boundary patterns', () => {
+test('terrain catalog separates eight materials and five corner-rule sets', () => {
   assert.equal(GROUND_PATTERNS.length, 8);
-  assert.equal(GROUND_TRANSITIONS.length, 16);
+  assert.equal(DUAL_LAYERS.length * 16, 80);
   assert.equal(new Set(GROUND_PATTERNS.map((p) => p.id)).size, 8);
 });

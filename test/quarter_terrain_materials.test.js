@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { forestTerrain, forestWater, FOREST_PERIOD } from '../src/quarter_view/forest_layout.js';
+import { dualWater } from '../src/quarter_view/dual_grid.js';
 import { materialColor } from '../src/quarter_view/ground_patterns.js';
 import { createEnvironment } from '../src/quarter_view/environment.js';
 test('plaza, road, bare earth, meadow and pond are distinct continuous regions', () => {
@@ -27,7 +28,7 @@ test('pond has water, mud, sand and grass banks and no scenery inside', () => {
   }
   for (const type of ['water', 'mud', 'sand', 'grass']) assert.ok(kinds.has(type));
   const env = createEnvironment();
-  assert.ok(env.nearby(1210, -470, 1000, 1000, true).every((o) => !forestWater(o.x, o.z)));
+  assert.ok(env.nearby(1210, -470, 1000, 1000, true).every((o) => !dualWater(o.x, o.z)));
 });
 test('fallback palette preserves readable green grass, brown earth and blue water', () => {
   const grass = materialColor('grass', 0, 0),

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>풀·흙·길·타일·물 — 지형 24종</title>
+    <title>풀·흙·길·타일·물 — Dual-grid 연결 타일</title>
     <style>
       body {
         margin: 24px;
@@ -24,7 +24,7 @@
       }
       main {
         display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
       }
       figure {
@@ -33,7 +33,7 @@
         border-radius: 8px;
         overflow: hidden;
       }
-      figure canvas {
+      section canvas {
         width: 100%;
         display: block;
       }
@@ -43,14 +43,17 @@
       }
       @media (max-width: 800px) {
         main {
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
     <h1>풀밭 · 흙 · 타일 · 길 · 물</h1>
-    <p>기본 지형 8종 + 연결 패턴 16종. 실제 게임과 같은 재질·경계 합성으로 표시합니다.</p>
+    <p>
+      주변 네 칸으로 연결 형태를 선택합니다. 5개 지형 연결 세트 × 16조합 = 80타일. 실제 게임과 같은 경계 규칙을
+      사용합니다.
+    </p>
     <p><a href="../../quarter-view.html">게임 플레이</a></p>
     <p id="status">재질 로딩 중…</p>
     <canvas
@@ -59,7 +62,7 @@
       height="600"
       aria-label="풀밭과 흙길, 돌길, 폐허 타일, 연못이 이어진 실제 지형 미리보기"
     ></canvas>
-    <h2>24종 재질·연결 패턴</h2>
+    <h2>연결 타일 5세트 · 각 16조합</h2>
     <main id="patterns"></main>
     <script type="module" src="./preview.js"></script>
   </body>

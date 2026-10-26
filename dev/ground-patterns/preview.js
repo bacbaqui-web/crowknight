@@ -1,9 +1,5 @@
-import {
-  GROUND_PATTERNS,
-  GROUND_TRANSITIONS,
-  preloadGroundPatterns,
-  terrainColor,
-} from '../../src/quarter_view/ground_patterns.js';
+import { preloadGroundPatterns, terrainColor, transitionColor } from '../../src/quarter_view/ground_patterns.js';
+import { DUAL_LAYERS } from '../../src/quarter_view/dual_grid.js';
 await preloadGroundPatterns();
 function paint(canvas, colorAt) {
   const ctx = canvas.getContext('2d'),
@@ -20,22 +16,34 @@ function paint(canvas, colorAt) {
   ctx.putImageData(image, 0, 0);
 }
 paint(document.querySelector('#map'), (x, y) => terrainColor(x * 2 - 180, y * 2 - 700));
-const catalog = [...GROUND_PATTERNS.map((p) => [p.id, p.id, p.label]), ...GROUND_TRANSITIONS];
-for (const [i, [a, b, label]] of catalog.entries()) {
-  const figure = document.createElement('figure'),
-    canvas = document.createElement('canvas'),
-    caption = document.createElement('figcaption');
-  canvas.width = canvas.height = 160;
-  canvas.setAttribute('aria-label', label);
-  paint(canvas, (x, y) =>
-    terrainColor(x * 2, y * 2, {
-      a,
-      b,
-      mix: a === b ? 0 : Math.max(0, Math.min(1, (x - 64 + Math.sin(y / 16) * 9) / 32)),
-    })
-  );
-  caption.textContent = `${i + 1}. ${label}`;
-  figure.append(canvas, caption);
-  document.querySelector('#patterns').append(figure);
+const labels = ['풀 ↔ 흙', '풀 ↔ 물가', '흙 ↔ 돌길', '흙 ↔ 폐허', '물가 ↔ 물'];
+for (const [i, layer] of DUAL_LAYERS.entries()) {
+  const section = document.createElement('section'),
+    title = document.createElement('h2'),
+    atlas = document.createElement('canvas'),
+    link = document.createElement('a');
+  title.textContent = labels[i] + ' · 코너 조합 16종';
+  atlas.width = atlas.height = 512;
+  atlas.setAttribute('aria-label', title.textContent);
+  paint(atlas, (x, y) => {
+    const cx = Math.floor(x / 128),
+      cz = Math.floor(y / 128),
+      mask = cz * 4 + cx;
+    return transitionColor(
+      layer.base,
+      layer.id,
+      mask,
+      (x % 128) / 127,
+      (y % 128) / 127,
+      ((x % 128) * 800) / 127,
+      ((y % 128) * 800) / 127
+    );
+  });
+  link.textContent = '16타일 PNG 다운로드';
+  link.download = 'dual-' + layer.id + '-16.png';
+  link.href = atlas.toDataURL('image/png');
+  section.append(title, atlas, link);
+  document.querySelector('#patterns').append(section);
 }
-document.querySelector('#status').textContent = '24종 준비 완료 · 위 지도는 시작 공터와 오른쪽 위 연못 주변입니다.';
+document.querySelector('#status').textContent =
+  'Dual-grid 5세트 · 80개 연결 타일 준비 완료. NW=1, NE=2, SW=4, SE=8 순서의 비트 조합입니다.';

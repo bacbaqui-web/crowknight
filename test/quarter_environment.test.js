@@ -1,7 +1,7 @@
 import { URL } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createEnvironment } from '../src/quarter_view/environment.js';
+import { createEnvironment, SCENERY_TYPES } from '../src/quarter_view/environment.js';
 const world = { floorY: 430 };
 function actor(x = 480, z = 0, y = 430) {
   return { quarterDepth: z, player: { x, y, vy: 0, onGround: true } };
@@ -41,10 +41,10 @@ test('jump over side then descend onto rock, stand, and walk off', () => {
   env.after(a, world);
   assert.equal(a.player.x, 670);
   env.before(a, world, motion);
-  assert.equal(motion.floorY, 386);
+  assert.equal(motion.floorY, world.floorY - SCENERY_TYPES.rock.height);
   a.player.y = 390;
   env.after(a, world);
-  assert.equal(a.player.y, 386);
+  assert.equal(a.player.y, world.floorY - SCENERY_TYPES.rock.height);
   assert.equal(a.player.onGround, true);
   env.before(a, world, motion);
   env.after(a, world);
@@ -63,7 +63,7 @@ test('roof is a landing surface and trees remain blocking while airborne', () =>
   env.before(a, world, {});
   a.player.y = 350;
   env.after(a, world);
-  assert.equal(a.player.y, 348);
+  assert.equal(a.player.y, world.floorY - SCENERY_TYPES.hut.height);
   assert.equal(a.quarterPlatform.type, 'hut');
   const b = actor(500, -300, 280);
   env.before(b, world, {});
@@ -81,8 +81,8 @@ test('native actor physics lands and remains stable on both platform heights', a
   const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
   const def = saved.characters.find((a) => a.id === 'player_01');
   for (const [x, z, height] of [
-    [670, 0, 44],
-    [220, 240, 82],
+    [670, 0, SCENERY_TYPES.rock.height],
+    [220, 240, SCENERY_TYPES.hut.height],
   ]) {
     const env = createEnvironment(),
       p = new PuppetPlayer(x, 250, {});

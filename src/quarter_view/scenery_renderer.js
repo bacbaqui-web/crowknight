@@ -9,13 +9,15 @@ export function createSceneryRenderer(ctx, world) {
     const objects = environment.nearby(
       view.x,
       view.depth,
-      view.width / view.zoom / 2 + 180,
+      view.width / view.zoom / 2 + 220,
       view.height / (2 * view.zoom * QUARTER_PROJECTION.slope) + 350,
       true
     );
     return objects.filter((o) => {
       const p = groundPoint(o.x, o.z, view);
-      return p.x > -180 && p.x < view.width + 180 && p.y > -60 && p.y - o.height * view.zoom < view.height;
+      return (
+        p.x > -220 && p.x < view.width + 220 && p.y > -60 && p.y - SCENERY_FRAME.anchorY * 1.2 * view.zoom < view.height
+      );
     });
   }
   function draw(object, view, hero) {
@@ -35,12 +37,13 @@ export function createSceneryRenderer(ctx, world) {
       object.z - depthOf(hero) < 700
     )
       ctx.globalAlpha = 0.48;
+    const scale = view.zoom * 1.2;
     ctx.drawImage(
       sprite,
-      p.x - SCENERY_FRAME.anchorX * view.zoom,
-      p.y - SCENERY_FRAME.anchorY * view.zoom,
-      SCENERY_FRAME.width * view.zoom,
-      SCENERY_FRAME.height * view.zoom
+      p.x - SCENERY_FRAME.anchorX * scale,
+      p.y - SCENERY_FRAME.anchorY * scale,
+      SCENERY_FRAME.width * scale,
+      SCENERY_FRAME.height * scale
     );
     ctx.restore();
   }

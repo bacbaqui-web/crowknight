@@ -1,12 +1,13 @@
-import { forestGround, forestHash, forestWater } from './forest_layout.js';
+import { dualWater } from './dual_grid.js';
+import { forestGround, forestHash } from './forest_layout.js';
 import { stunTankOnTerrain } from '../boss_pattern_runtime.js';
 import { depthOf } from './camera.js';
 
 const CELL = 560;
 export const SCENERY_TYPES = Object.freeze({
-  rock: { w: 120, d: 100, height: 44, climbable: true },
-  hut: { w: 170, d: 140, height: 82, climbable: true },
-  tree: { w: 42, d: 44, height: 330, climbable: false },
+  rock: { w: 144, d: 120, height: 52.8, climbable: true },
+  hut: { w: 204, d: 168, height: 98.4, climbable: true },
+  tree: { w: 50.4, d: 52.8, height: 396, climbable: false },
 });
 export function createEnvironment() {
   let originX = 480;
@@ -32,7 +33,7 @@ export function createEnvironment() {
         const pz = z * CELL + (forestHash(x + 71, z * 13 + i) - 0.5) * 380;
         const terrain = forestGround(px, pz);
         // Keep the road and clearing walkable, including the obstacle's footprint.
-        if (terrain.edge < 130 || forestWater(px, pz)) continue;
+        if (terrain.edge < 130 || dualWater(px, pz)) continue;
         if (i >= 2 && terrain.edge < 200) continue;
         const type =
           terrain.edge < 230 ? (seed < 0.28 ? 'hut' : 'rock') : seed < 0.1 ? 'hut' : seed < 0.3 ? 'rock' : 'tree';
@@ -56,7 +57,7 @@ export function createEnvironment() {
       if (o.type !== 'tree') addCover(o.x + o.w * 0.65, o.z - 25, i + 20);
     }
     function addCover(px, pz, i) {
-      if (forestWater(px, pz)) return;
+      if (dualWater(px, pz)) return;
       objects.push({
         type: 'bush',
         x: px,
