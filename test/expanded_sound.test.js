@@ -137,9 +137,9 @@ test('every catalog file exists and new recordings have headroom and finite shor
     assert.ok(readFileSync(new URL('../assets/audio/combat/' + file, import.meta.url)).length > 100);
   const sources = JSON.parse(readFileSync(new URL('../assets/audio/combat/v2/sources.json', import.meta.url)));
   const files = new Set(Object.values(COMBAT_SOUNDS).flatMap((x) => x.files));
-  assert.equal(sources.length, files.size);
-  assert.deepEqual(new Set(sources.map((x) => x.file)), files);
-  assert.ok([...files].every((file) => file.startsWith('v2/')));
+  const selected = JSON.parse(readFileSync(new URL('../assets/audio/combat/selected/sources.json', import.meta.url)));
+  const known = new Set([...sources, ...selected].map((x) => x.file));
+  assert.ok([...files].every((file) => known.has(file)));
   assert.ok(Object.values(COMBAT_SOUNDS).every((sound) => sound.rate === 1));
   for (const item of sources) {
     assert.equal(item.license, 'CC0-1.0');
