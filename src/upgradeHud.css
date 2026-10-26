@@ -310,3 +310,6 @@
 .skill-choice.path-choice .upgrade-choice-card {padding:26px 18px;border-radius:12px;min-height:230px}
 @media(max-width:760px){.skill-choice .upgrade-choice-panel{padding:18px 10px}.skill-tree-board{margin:0}.skill-choice h2{font-size:19px}.skill-tree-subtitle{font-size:11px}}
 @media(prefers-reduced-motion:no-preference){.skill-choice:not([hidden]) .upgrade-choice-panel{animation:boss-choice-appear .3s ease-out both}}
+
+.skill-tree-node.inspected,.skill-tree-node:focus-visible {outline:2px solid var(--node-color);outline-offset:4px;filter:brightness(1.2)}
+.skill-tree-node.locked,.skill-tree-node.learned {cursor:help}
