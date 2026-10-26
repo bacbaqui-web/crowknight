@@ -1,3 +1,4 @@
+import { createBossCompass } from './boss_compass.js';
 import { createSceneryRenderer } from './scenery_renderer.js';
 import { createDamageNumbers } from './damage_numbers.js';
 import { directionalAttackRegions } from './directional_attack.js';
@@ -18,6 +19,7 @@ import { formulaScreenZoom } from '../zoom_formula_runtime_helper.js';
 
 export function createQuarterRenderer({ ctx, world }) {
   let view;
+  const drawBossCompass = createBossCompass(ctx.canvas.parentElement);
   const damageNumbers = createDamageNumbers(ctx, world);
   const followJump = createJumpCameraFollow();
   const nativeTrail = createNativeWeaponTrail(ctx, world);
@@ -133,6 +135,7 @@ export function createQuarterRenderer({ ctx, world }) {
     hitboxes.draw(actors, playerActor, view);
     damageNumbers.draw(view, playerActor.player.animTime);
     ctx.restore();
+    drawBossCompass(actors, view, world.floorY);
   }
   return {
     draw,
@@ -147,6 +150,7 @@ export function createQuarterRenderer({ ctx, world }) {
       return alignEffectRegions(actor, raw, readEffectFrame, loadedEffects);
     },
     getEffectAssets: () => loadedEffects,
+    getCameraView: () => view,
     resetDebugHistory: hitboxes.reset,
     getRenderStats: () => drawGround.stats,
     resetEffectCache() {

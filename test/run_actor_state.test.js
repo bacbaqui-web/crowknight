@@ -124,7 +124,7 @@ test('Actor별 maxAlive를 적용하고 0인 Actor는 생성하지 않는다', (
 
   assert.deepEqual(
     enemies.map((actor) => actor.runtimeInstanceId),
-    ['mob-a#1', 'mob-a#2', 'boss-a#1', 'boss-a#2', 'boss-a#3']
+    ['mob-a#1', 'mob-a#2', 'boss-a#1']
   );
 });
 

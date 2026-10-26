@@ -304,3 +304,29 @@ test('distant quarter-view enemies wait the normal interval then spawn by the cu
   assert.equal(enemy.respawning, false);
   assert.equal(enemy.player.x, 20800);
 });
+
+test('boss pool remains single and does not recycle a living off-screen boss', () => {
+  const playerActor = createPlayerActor();
+  const bosses = ['boss-a', 'boss-b', 'boss-c'].map((id) => createEnemy({ id, group: 'bosses' }));
+  const world = {
+    floorY: 500,
+    quarterView: {
+      shouldRecycleEnemy: () => true,
+      respawn: (a) => {
+        a.quarterDepth = 900;
+      },
+    },
+  };
+  maintainEnemyFlow({ actors: [playerActor, ...bosses], playerActor, world });
+  assert.equal(aliveCount(bosses), 1);
+  const current = bosses.find((a) => !a.player.dead);
+  current.hp = 20;
+  current.player.x = 100000;
+  maintainEnemyFlow({ actors: [playerActor, ...bosses], playerActor, world, dt: 20 });
+  assert.equal(current.player.dead, false);
+  assert.equal(current.hp, 20);
+  assert.equal(current.player.x, 100000);
+  current.player.dead = true;
+  maintainEnemyFlow({ actors: [playerActor, ...bosses], playerActor, world });
+  assert.equal(aliveCount(bosses), 1);
+});

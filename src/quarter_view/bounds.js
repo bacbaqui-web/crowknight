@@ -1,4 +1,4 @@
-import { depthOf, normalizeDirection } from './camera.js';
+import { depthOf, normalizeDirection, QUARTER_PROJECTION } from './camera.js';
 
 export function constrainGroundPosition(actor, world = null) {
   if (world?.quarterView?.unbounded) {
@@ -19,9 +19,24 @@ export function createSurroundingSpawner(world, random = Math.random) {
       b = Number(rule.cameraOffsetMax ?? 960);
     const min = Math.max(240, Math.min(a, b)),
       max = Math.max(min, a, b);
-    const radius = min + random() * (max - min);
+    let radius = min + random() * (max - min);
     const angle = ((sector + (random() - 0.5) * 0.8) * Math.PI) / 4;
     sector = (sector + 3) % 8;
+    const view = world?.quarterView?.getCameraView?.();
+    if (world?.viewW && world?.viewH) {
+      const zoom = view?.zoom || 1;
+      // Include the sprite above its feet, and the camera's horizontal/jump offset.
+      const margin = 220;
+      const horizontal = (world.viewW / 2 + margin) / zoom + 110;
+      const vertical =
+        (world.viewH * 0.58 + margin) / (QUARTER_PROJECTION.slope * zoom) +
+        Math.max(0, (world.floorY || 0) - (target.player.y || world.floorY || 0)) / QUARTER_PROJECTION.slope;
+      const edge = Math.min(
+        horizontal / Math.max(0.001, Math.abs(Math.cos(angle))),
+        vertical / Math.max(0.001, Math.abs(Math.sin(angle)))
+      );
+      radius = Math.max(radius, edge + 50);
+    }
     const dx = Math.cos(angle) * radius,
       dz = Math.sin(angle) * radius;
     actor.player.x = target.player.x + dx;
@@ -37,5 +52,13 @@ export function createSurroundingSpawner(world, random = Math.random) {
 export function outsideSpawnArea(actor, target, world) {
   const rule = world?.enemyRules?.spawnRule || {};
   const radius = Math.max(240, Number(rule.cameraOffsetMin ?? 740), Number(rule.cameraOffsetMax ?? 960));
-  return Math.hypot(actor.player.x - target.player.x, depthOf(actor) - depthOf(target)) > Math.max(2200, radius * 2.5);
+  return (
+    Math.hypot(actor.player.x - target.player.x, depthOf(actor) - depthOf(target)) >
+    Math.max(
+      2200,
+      radius * 2.5,
+      (world.viewW || 0) / (world.quarterView?.getCameraView?.()?.zoom || 1) + 800,
+      (world.viewH || 0) / (QUARTER_PROJECTION.slope * (world.quarterView?.getCameraView?.()?.zoom || 1)) + 800
+    )
+  );
 }

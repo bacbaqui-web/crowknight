@@ -1,3 +1,4 @@
+import { isBoss, maintainBossEncounter } from './boss_encounter_flow.js';
 import { updateBossPattern, finishBossMotion } from './boss_pattern_runtime.js';
 import { prepareTankMotion, finishTankMotion } from './ram_tank_runtime.js';
 import { requestRuntimeAction } from './action_trigger_engine.js';
@@ -129,7 +130,12 @@ function startEnemyAiActionCooldown(actor, action) {
 
 export function maintainEnemyFlow({ actors = [], playerActor = null, world = null, dt = 0 } = {}) {
   const enemyActors = actors.filter((actor) => shouldNpcFacePlayer(actor, playerActor));
-  const byActorId = groupEnemyActorsById(enemyActors);
+  maintainBossEncounter(enemyActors.filter(isBoss), {
+    hide: hideEnemyActor,
+    respawn: (actor) => respawnEnemyActor(actor, playerActor, world),
+    eligible: (actor) => resolveEnemyActorSpawnRule(world, actor.id).maxAlive > 0,
+  });
+  const byActorId = groupEnemyActorsById(enemyActors.filter((actor) => !isBoss(actor)));
 
   byActorId.forEach((actorGroup, actorId) => {
     const rule = resolveEnemyActorSpawnRule(world, actorId);
@@ -147,6 +153,9 @@ export function maintainEnemyFlow({ actors = [], playerActor = null, world = nul
 }
 
 function hideEnemyActor(actor) {
+  actor.bossPattern = null;
+  actor.mageFireRuntime = null;
+  actor.player.tankCharge = null;
   actor.respawning = true;
   actor.enemyRespawnTimer = null;
   actor.hitCancelFlashTime = 0;
@@ -196,6 +205,11 @@ export function resolveEnemyActorSpawnRule(world, actorId) {
 
 function respawnEnemyActor(actor, playerActor, world) {
   resetSpearmanThrow(actor);
+  actor.bossPattern = null;
+  actor.mageFireRuntime = null;
+  actor.projectileRuntime = null;
+  actor.quarterPlatform = null;
+  actor.quarterTerrainStart = null;
   syncActorHealthCapacity(actor, true);
   actor.hp = actor.maxHp;
   actor.respawning = false;

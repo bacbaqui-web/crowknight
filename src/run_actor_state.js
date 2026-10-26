@@ -26,7 +26,8 @@ export function createRunActorState({ actors = [], world = null, createRuntimePl
     runtimeEnemyActors = baseActors()
       .filter((actor) => actor !== playerActor && !isPlayerCharacter(actor))
       .flatMap((actor) => {
-        const maxAlive = resolveEnemyActorSpawnRule(world, actor.id).maxAlive;
+        const limit = resolveEnemyActorSpawnRule(world, actor.id).maxAlive;
+        const maxAlive = normalizeCharacterGroup(actor.group, '') === 'bosses' ? Math.min(1, limit) : limit;
         return Array.from({ length: maxAlive }, (_, index) => createRuntimeEnemyClone(actor, index));
       });
     return [...runtimeEnemyActors];

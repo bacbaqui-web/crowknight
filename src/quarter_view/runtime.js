@@ -132,6 +132,7 @@ export function createQuarterRuntime({ ctx, world }) {
     projectileRegion: groundProjectileRegion,
     applyKnockback: (attacker, target, region) => applyQuarterKnockback(attacker, target, region, world),
     respawn: spawnAround,
+    getCameraView: renderer.getCameraView,
     shouldRecycleEnemy: (actor, target) => outsideSpawnArea(actor, target, world),
     projectEntity: renderer.projectEntity,
   };
