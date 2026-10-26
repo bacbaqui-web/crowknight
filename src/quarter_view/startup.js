@@ -1,3 +1,4 @@
+import { preloadGroundPatterns } from './ground_patterns.js';
 import { preloadSceneryArt } from './scenery_art.js';
 const { navigator, URL } = window;
 
@@ -37,7 +38,7 @@ if ('serviceWorker' in navigator) {
     // Keep the existing game available when the browser cannot install a worker.
   }
 }
-await preloadSceneryArt();
+await Promise.all([preloadSceneryArt(), preloadGroundPatterns()]);
 const entry = new URL('../main.js', import.meta.url);
 entry.searchParams.set('__source', Date.now().toString(36));
 await import(entry.href);

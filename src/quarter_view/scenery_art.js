@@ -78,7 +78,9 @@ export function createScenerySprite(type, createSurface = () => document.createE
   ctx.beginPath();
   ctx.ellipse(0, 0, type === 'tree' ? 36 : 75, type === 'tree' ? 13 : 24, -0.12, 0, Math.PI * 2);
   ctx.fill();
-  if (type === 'tree') {
+  if (type === 'bush') {
+    stamp(ctx, variants.bush[n], 0, 4, 105, 42);
+  } else if (type === 'tree') {
     stamp(ctx, groundCover, n === 1 ? -30 : 26, -4, 95, 42);
     stamp(ctx, variants.tree[n], 0, 3, 300, 330);
     stamp(ctx, groundCover, n === 2 ? 26 : -18, 9, 68, 28);
