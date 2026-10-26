@@ -74,6 +74,20 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
   ctx.scale(1, compactHud ? 0.65 : 1);
   drawHealthMeter(ctx, actor, 0, 0, width);
   ctx.restore();
+  if (actor.group === 'bosses') {
+    ctx.save();
+    ctx.fillStyle = '#fff0cf';
+    ctx.strokeStyle = '#24191b';
+    ctx.lineWidth = 3;
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const iconX = hud.hpBar.x - width / 2 - 13;
+    const iconY = hud.hpBar.y + (compactHud ? 3 : 4);
+    ctx.strokeText('☠', iconX, iconY);
+    ctx.fillText('☠', iconX, iconY);
+    ctx.restore();
+  }
   if (actor.experience) {
     const { level, xp, threshold } = actor.experience;
     const left = hud.hpBar.x - width / 2,

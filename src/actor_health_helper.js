@@ -10,7 +10,11 @@ export function baseHealth(tuning = {}) {
 }
 
 export function recordHealthDamage(actor) {
-  if (actor.player) { actor.player.runParryPoints = 0; actor.player.runPlunge = null; actor.player.runBlinkPending = false; }
+  if (actor.player) {
+    actor.player.runParryPoints = 0;
+    actor.player.runPlunge = null;
+    actor.player.runBlinkPending = false;
+  }
   actor.healthTrail = { hp: Math.max(actor.hp, actor.healthTrail?.hp || 0), delay: 0.45 };
 }
 
@@ -37,9 +41,10 @@ export function drawHealthMeter(ctx, actor, x, y, width) {
   const ratio = (hp) => clamp(hp / max, 0, 1);
   ctx.fillStyle = 'rgba(0,0,0,.65)';
   ctx.fillRect(left, y, width, height);
-  ctx.fillStyle = actor.group === 'mobs' || actor.group === 'bosses' ? '#facc15' : '#ef4444';
+  const enemy = actor.group === 'mobs' || actor.group === 'bosses';
+  ctx.fillStyle = enemy ? '#991b1b' : '#ef4444';
   ctx.fillRect(left, y, width * ratio(actor.healthTrail?.hp ?? actor.hp), height);
-  ctx.fillStyle = actor.tint;
+  ctx.fillStyle = enemy ? '#ef4444' : actor.tint;
   ctx.fillRect(left, y, width * ratio(actor.hp), height);
   ctx.strokeStyle = 'rgba(0,0,0,.65)';
   ctx.lineWidth = 1;
