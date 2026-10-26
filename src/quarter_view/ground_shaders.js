@@ -13,11 +13,7 @@ out vec4 color;
 void main() {
   float z=uView.y+(uSize.y-gl_FragCoord.y-uSize.y*.58)/(uView.z*uSlope);
   float x=uView.x+(gl_FragCoord.x-uSize.x*.5)/uView.z;
-  vec2 grid=vec2(x/(uTileSize.x*.5)+z/uTileSize.y,x/(uTileSize.x*.5)-z/uTileSize.y);
-  vec2 uv=vec2(z<0.?-x:x,abs(z))/uTileSize;
-  vec3 tile=texture(uTile,uv).rgb;
-  vec2 distanceToEdge=abs(fract(grid)-vec2(.5))/max(fwidth(grid),vec2(.000001));
-  float edge=1.-smoothstep(0.,.75,min(distanceToEdge.x,distanceToEdge.y));
-  color=vec4(mix(tile,vec3(113.,130.,106.)/255.,edge*(37./255.)),1.);
+  vec2 uv=vec2(x,z)/uTileSize;
+  color=vec4(texture(uTile,uv).rgb,1.);
 }
 `;

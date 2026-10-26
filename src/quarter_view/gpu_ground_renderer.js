@@ -88,7 +88,12 @@ export function createGpuGroundRenderer(ctx, world, createSurface) {
       if (canvas.height !== world.viewH) canvas.height = world.viewH;
       gl.viewport(0, 0, world.viewW, world.viewH);
       gl.uniform2f(state.size, world.viewW, world.viewH);
-      gl.uniform3f(state.view, ((view.x % 200) + 200) % 200, view.depth, view.zoom);
+      gl.uniform3f(
+        state.view,
+        ((view.x % GROUND_TILE_SIZE.x) + GROUND_TILE_SIZE.x) % GROUND_TILE_SIZE.x,
+        view.depth,
+        view.zoom
+      );
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       previous = key;
     }

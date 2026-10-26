@@ -1,3 +1,4 @@
+import { createEnvironment } from './environment.js';
 import { createSurroundingSpawner, outsideSpawnArea } from './bounds.js';
 import { createPerformanceView } from './performance_view.js';
 import { createEffectEditorView } from './effect_editor_view.js';
@@ -16,6 +17,7 @@ const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', K
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
   const spawnAround = createSurroundingSpawner(world);
+  const environment = createEnvironment();
   // Native x is a temporary movement scalar; apply world bounds only after ground projection.
   const motionWorld = Object.assign(Object.create(world), { minX: -Infinity, maxX: Infinity });
   let paused = false,
@@ -87,6 +89,7 @@ export function createQuarterRuntime({ ctx, world }) {
   });
   world.quarterView = {
     unbounded: true,
+    environment,
     showDamage: renderer.showDamage,
     motionWorld,
     prepareAttackRegions: renderer.prepareAttackRegions,
@@ -94,6 +97,7 @@ export function createQuarterRuntime({ ctx, world }) {
       captureAttackRegions(actor, raw, flat);
     },
     beforePlayer(actor, keys, pressed) {
+      environment.before(actor, world, motionWorld);
       actor.quarterMoveSpeed = 1.15;
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
@@ -101,6 +105,7 @@ export function createQuarterRuntime({ ctx, world }) {
       return preparePlaneMotion(actor, movementInput(keys), keys, pressed);
     },
     beforeEnemy(actor, target) {
+      environment.before(actor, world, motionWorld);
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
       const direction = enemyPlaneDirection(actor, target);
@@ -108,6 +113,7 @@ export function createQuarterRuntime({ ctx, world }) {
     },
     afterMotion(actor) {
       finishPlaneMotion(actor, world);
+      environment.after(actor, world);
       if (actor !== controlledActor) syncEnemyWeaponFacing(actor);
       actor.quarterFloorY = world.floorY;
       actor.player.quarterDepth = depthOf(actor);
@@ -162,6 +168,8 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterDepth = index === 0 ? 0 : ((index % 5) - 2) * 85;
         actor.player.quarterDepth = actor.quarterDepth;
         actor.quarterAim = { x: actor.player.facing || 1, z: 0 };
+        actor.quarterPlatform = null;
+        actor.quarterTerrainStart = null;
         actor.quarterImpulse = null;
         actor.quarterImpulseSerial = null;
         actor.quarterInputDirection = null;
@@ -173,6 +181,7 @@ export function createQuarterRuntime({ ctx, world }) {
         actor.quarterAttackSerial = null;
       });
       const hero = actors.find((actor) => actor.group === 'players') || actors[0];
+      if (hero) environment.reset(hero.player.x);
       if (hero)
         actors.forEach((actor) => {
           if (actor !== hero) spawnAround(actor, hero);

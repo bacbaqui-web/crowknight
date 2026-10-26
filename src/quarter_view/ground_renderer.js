@@ -1,3 +1,4 @@
+import { createGroundTexture, GROUND_TILE_SIZE } from './ground_texture.js';
 import { createGpuGroundRenderer } from './gpu_ground_renderer.js';
 import { createGroundOverlay } from './ground_overlay.js';
 import { groundPoint, QUARTER_PROJECTION } from './camera.js';
@@ -31,13 +32,48 @@ export function visibleGroundTiles(view, center) {
   }
   return tiles;
 }
-function createGroundPainter(ctx, world) {
+function createGroundPainter(ctx, world, createSurface) {
+  const tile = createSurface(),
+    data = createGroundTexture();
+  tile.width = data.width;
+  tile.height = data.height;
+  const tileContext = tile.getContext('2d');
+  const image = tileContext.createImageData?.(data.width, data.height);
+  if (image) {
+    image.data.set(data.pixels);
+    tileContext.putImageData(image, 0, 0);
+  }
   const overlay = createGroundOverlay(ctx, world);
   function path(tile) {
     tile.points.forEach((p, index) => (index ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.closePath();
   }
   return (hero, view) => {
+    if (image) {
+      const halfX = view.width / (2 * view.zoom);
+      const halfZ = view.height / (view.zoom * QUARTER_PROJECTION.slope);
+      for (
+        let z = Math.floor((view.depth - halfZ) / GROUND_TILE_SIZE.z);
+        z <= Math.ceil((view.depth + halfZ) / GROUND_TILE_SIZE.z);
+        z++
+      )
+        for (
+          let x = Math.floor((view.x - halfX) / GROUND_TILE_SIZE.x);
+          x <= Math.ceil((view.x + halfX) / GROUND_TILE_SIZE.x);
+          x++
+        ) {
+          const p = groundPoint(x * GROUND_TILE_SIZE.x, z * GROUND_TILE_SIZE.z, view);
+          ctx.drawImage(
+            tile,
+            p.x,
+            p.y,
+            GROUND_TILE_SIZE.x * view.zoom + 0.5,
+            GROUND_TILE_SIZE.z * QUARTER_PROJECTION.slope * view.zoom + 0.5
+          );
+        }
+      overlay(hero, view);
+      return;
+    }
     ctx.fillStyle = '#17251f';
     ctx.fillRect(0, 0, world.viewW, world.viewH);
     const center = Math.floor(hero.player.x / 100) * 100;
@@ -45,12 +81,12 @@ function createGroundPainter(ctx, world) {
     for (const parity of [false, true]) {
       ctx.beginPath();
       tiles.filter((tile) => tile.parity === parity).forEach(path);
-      ctx.fillStyle = parity ? '#293d31' : '#2d4135';
+      ctx.fillStyle = parity ? '#3c4e30' : '#445635';
       ctx.fill();
     }
     ctx.beginPath();
     tiles.forEach(path);
-    ctx.strokeStyle = '#71826a25';
+    ctx.strokeStyle = '#71826a08';
     ctx.lineWidth = 1;
     ctx.stroke();
     overlay(hero, view);
@@ -60,7 +96,7 @@ function createGroundPainter(ctx, world) {
 // Camera shake is applied by the caller, so a stationary camera can reuse this exact image.
 export function createCanvasGroundRenderer(ctx, world, createSurface = () => document.createElement('canvas')) {
   const surface = createSurface();
-  const paint = createGroundPainter(surface.getContext('2d', { alpha: false }), world);
+  const paint = createGroundPainter(surface.getContext('2d', { alpha: false }), world, createSurface);
   let previous = null;
   const stats = { groundHits: 0, groundBuilds: 0 };
   const draw = (hero, view) => {

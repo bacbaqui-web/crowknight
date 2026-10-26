@@ -1,3 +1,4 @@
+import { createSceneryRenderer } from './scenery_renderer.js';
 import { createDamageNumbers } from './damage_numbers.js';
 import { directionalAttackRegions } from './directional_attack.js';
 import { createNativeWeaponTrail } from './native_weapon_trail.js';
@@ -40,6 +41,7 @@ export function createQuarterRenderer({ ctx, world }) {
     return () => ctx.restore();
   }
   const drawGround = createGroundRenderer(ctx, world);
+  const scenery = createSceneryRenderer(ctx, world);
   let loadedEffects;
   function draw({ actors, playerActor, particleEffects, experience, healthDrops, effectAssets, screenZoom }) {
     if (loadedEffects !== effectAssets) {
@@ -58,10 +60,22 @@ export function createQuarterRenderer({ ctx, world }) {
     ctx.translate(shake.x, shake.y);
     drawGround(playerActor, view);
     particleEffects.drawDust();
-    [...actors]
+    const items = actors
       .filter((actor) => !actor.respawning)
-      .sort((a, b) => depthOf(a) - depthOf(b))
-      .forEach((actor) => {
+      .map((actor) => ({
+        actor,
+        depth: actor.quarterPlatform
+          ? Math.max(depthOf(actor), actor.quarterPlatform.z + actor.quarterPlatform.d / 2 + 1)
+          : depthOf(actor),
+      }));
+    items.push(...scenery.visible(view).map((object) => ({ object, depth: object.z + object.d / 2 })));
+    items
+      .sort((a, b) => a.depth - b.depth)
+      .forEach(({ actor, object }) => {
+        if (object) {
+          scenery.draw(object, view, playerActor);
+          return;
+        }
         // Picking handles are only consumed by the editor, never by quarter-view combat.
         const captureEditRegions = actor.player.captureEditRegions;
         actor.player.captureEditRegions = false;
@@ -78,11 +92,18 @@ export function createQuarterRenderer({ ctx, world }) {
               () => {
                 const restore = projectEntity(actor);
                 try {
-                  drawActor(ctx, world, actor, {
-                    selectedActor: null,
-                    activeEditPartKey: () => null,
-                    activeEditPartKeys: () => [],
-                  });
+                  drawActor(
+                    ctx,
+                    actor.quarterPlatform
+                      ? Object.assign(Object.create(world), { floorY: world.floorY - actor.quarterPlatform.height })
+                      : world,
+                    actor,
+                    {
+                      selectedActor: null,
+                      activeEditPartKey: () => null,
+                      activeEditPartKeys: () => [],
+                    }
+                  );
                 } finally {
                   restore();
                 }
