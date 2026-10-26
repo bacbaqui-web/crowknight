@@ -146,10 +146,11 @@ export function orientCrescentAtHitbox(ribbon, region, facing = 1) {
   });
   const nativeAngle =
     Math.hypot(normal.x, normal.y) > 0.001 ? Math.atan2(normal.y, normal.x) : facing < 0 ? Math.PI : 0;
-  const angle = Math.atan2(aim.z * slope, aim.x) - nativeAngle;
+  const verticalScale = region.quarterHeightRange ? 1 : slope;
+  const angle = Math.atan2((aim.z * slope) / verticalScale, aim.x) - nativeAngle;
   const c = Math.cos(angle),
     s = Math.sin(angle);
-  const rotate = (p) => ({ x: p.x * c - p.y * s, y: p.x * s + p.y * c });
+  const rotate = (p) => ({ x: p.x * c - p.y * s, y: (p.x * s + p.y * c) * verticalScale });
   const rotated = { outer: outer.map(rotate), inner: inner.map(rotate) };
   const all = [...rotated.outer, ...rotated.inner];
   const centerX = (Math.min(...all.map((p) => p.x)) + Math.max(...all.map((p) => p.x))) / 2;

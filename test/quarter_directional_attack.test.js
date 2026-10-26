@@ -96,14 +96,14 @@ test('visual trail follows native weapon coordinates regardless of aim and has a
   assert.equal(trail.samples(a).length, 0);
 });
 
-test('sector has a 120 degree opening and depth reach is 90 percent of horizontal reach', () => {
+test('sector has a 120 degree opening and all directions have equal reach', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   const right = directionalAttackRegions(a, raw)[0];
   a.quarterAim = { x: 0, z: 1 };
   const down = directionalAttackRegions(a, raw)[0];
   assert.ok(Math.abs(right.h - 2 * right.quarterBoxLength * Math.sin((60 * Math.PI) / 180)) < 1e-8);
-  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 0.9) < 1e-8);
+  assert.ok(Math.abs(down.quarterBoxLength / right.quarterBoxLength - 1) < 1e-8);
 });
 
 test('live box follows attack displacement after capture without moving its old snapshot', async () => {
@@ -253,14 +253,14 @@ test('unbounded ground permits all directions and draws tiles far beyond the old
   }
 });
 
-test('all eight arrow directions center the 120 degree fan and use 100/90/90 percent reach', () => {
+test('all eight arrow directions center the 120 degree fan and use 100 percent reach', () => {
   const a = actor();
   a.quarterAim = { x: 1, z: 0 };
   const base = directionalAttackRegions(a, raw)[0].quarterBoxLength;
   for (const aim of EFFECT_DIRECTIONS) {
     a.quarterAim = aim;
     const fan = directionalAttackRegions(a, raw)[0];
-    const expected = aim.z === 0 ? 1 : Math.abs(aim.x) < 1e-8 ? 0.9 : 0.95;
+    const expected = 1;
     assert.ok(Math.abs(fan.quarterBoxLength / base - expected) < 1e-8);
     const origin = fan.points[0];
     for (const [index, degrees] of [
@@ -285,7 +285,7 @@ test('base reach grows 15 percent and authored combo actions stack once with upg
   a.player.customActions = [1, 2, 3].map((n) => ({ key: `custom${n}`, name: n === 1 ? '공격' : `공격${n}` }));
   for (const aim of EFFECT_DIRECTIONS) {
     a.quarterAim = aim;
-    const directionScale = 1 - 0.1 * aim.z ** 2;
+    const directionScale = 1;
     for (let n = 1; n <= 3; n++) {
       a.player.actionKey = `custom${n}`;
       a.player.runUpgrades = { reach: 1.5 };
@@ -296,7 +296,7 @@ test('base reach grows 15 percent and authored combo actions stack once with upg
   }
 });
 
-test('crescent rotates and translates rigidly for all aim directions and facings', async () => {
+test('ground crescent uses hitbox projection for all aim directions and facings', async () => {
   const {
     QUARTER_PROJECTION: { slope },
   } = await import('../src/quarter_view/camera.js');
@@ -337,7 +337,7 @@ test('crescent rotates and translates rigidly for all aim directions and facings
             p.y + p.depth * slope - original.outer[1].y - original.outer[1].depth * slope
           );
           const q = placed[boundary][i];
-          assert.ok(Math.abs(Math.hypot(q.x - placed.outer[1].x, q.y - placed.outer[1].y) - distance) < 1e-8);
+          assert.ok(Math.abs(Math.hypot(q.x - placed.outer[1].x, (q.y - placed.outer[1].y) / slope) - distance) < 1e-8);
         });
     }
   assert.deepEqual(original, saved);

@@ -21,7 +21,6 @@ export function directionalAttackRegions(actor, regions) {
   const strike = /^(?:attack|공격)\s*([123])?$/.exec(actionName || player.actionKey || '');
   const comboScale = strike ? 1 + (Number(strike[1] || 1) - 1) * 0.05 : 1;
   const sizeScale = 1.15 * comboScale;
-  const depthReach = 1 - 0.1 * direction.z ** 2;
   return regions.map((region) => {
     if (![ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)) return region;
     // Native regions already contain the reach multiplier. Recover their authored extent before measuring it.
@@ -36,8 +35,7 @@ export function directionalAttackRegions(actor, regions) {
         )
       ) *
       reach *
-      sizeScale *
-      depthReach;
+      sizeScale;
     // A convex 120-degree sector uses the same polygon for display and collision.
     const points = [{ x: originX, y: depthOf(actor) }];
     for (let step = 0; step <= 16; step++) {
@@ -64,7 +62,7 @@ export function directionalAttackRegions(actor, regions) {
       quarterElevation: elevation,
       quarterHeightRange: attackPlane(actor) === 'height' ? [elevation - 30, elevation + 30] : null,
       quarterBoxLength: length,
-      quarterDirectionScale: depthReach * sizeScale,
+      quarterDirectionScale: sizeScale,
       quarterBoxOrigin: { x: originX, depth: depthOf(actor), y: elevation },
       quarterBoxAim: direction,
     };
