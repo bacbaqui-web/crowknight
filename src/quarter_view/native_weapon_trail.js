@@ -1,6 +1,6 @@
 import { weaponContactRegion, isProjectileAttack } from './weapon_contact.js';
 import { regionPoints } from '../interaction_swept_region_helper.js';
-import { depthOf, QUARTER_PROJECTION } from './camera.js';
+import { depthOf } from './camera.js';
 import { screenPoint } from './attack_geometry.js';
 
 // Visual only: native weapon corners are projected exactly like the unchanged character sprite.
@@ -8,7 +8,7 @@ export function createNativeWeaponTrail(ctx, world) {
   let entries = new WeakMap();
   const lifetime = 0.24,
     limit = 48;
-  function capture(actor, raw, hitRegions = []) {
+  function capture(actor, raw) {
     if (actor.player.dead || actor.respawning) {
       entries.delete(actor);
       return;
@@ -24,26 +24,14 @@ export function createNativeWeaponTrail(ctx, world) {
     if (entry.samples.at(-1)?.time === now) return;
     const contact = weaponContactRegion(actor, raw[0]);
     if (!contact.quarterWeaponContact) return;
-    const pose = directionalTrailPose(actor, regionPoints(contact), contact.quarterWeaponAnchor, hitRegions[0]);
-    const points = pose.points.map((p) => ({ ...p, depth: depthOf(actor) }));
-    const desired = hitRegions[0]?.quarterDirectionalBox
-      ? { x: 0, y: 0 }
-      : trailHitboxOffset(actor, points, hitRegions);
-    const old = entry.offset || desired;
-    entry.offset = { x: old.x + (desired.x - old.x) * 0.25, y: old.y + (desired.y - old.y) * 0.25 };
-    const offset = entry.offset;
     entry.samples.push({
       time: now,
-      points: points.map((p) => ({ ...p, x: p.x + offset.x, y: p.y + offset.y })),
-      anchor: {
-        x: pose.anchor.x + offset.x,
-        y: pose.anchor.y + offset.y,
-        depth: depthOf(actor),
-      },
+      points: regionPoints(contact).map((p) => ({ ...p, depth: depthOf(actor) })),
+      anchor: { ...contact.quarterWeaponAnchor, depth: depthOf(actor) },
     });
     entry.lastActive = now;
     if (entry.samples.length > limit) entry.samples.splice(1, 1);
-    entry.ribbon = placeCrescentAtHitbox(crescentRibbon(entry.samples), hitRegions[0]);
+    entry.ribbon = crescentRibbon(entry.samples);
   }
 
   function draw(actor, view) {
@@ -114,11 +102,11 @@ export function crescentRibbon(samples) {
   arc.forEach((p, i) => {
     const taper = Math.pow(Math.sin((Math.PI * distances[i]) / total), 0.8);
     const thickness = 2 * Math.min(26, p.radius * 0.22) * taper;
-    // The whole ribbon sits outside the blade tip, with a clear 12–24px lead.
-    const radius = p.radius + Math.max(12, Math.min(24, p.radius * 0.18));
+    // Keep the outer edge on the blade tip and taper the crescent inward.
+    const radius = p.radius;
     const point = (r) => ({ x: p.x + Math.cos(p.angle) * r, y: p.y + Math.sin(p.angle) * r, depth: p.depth });
-    outer.push(point(radius + thickness));
-    inner.push(point(radius));
+    outer.push(point(radius));
+    inner.push(point(Math.max(0, radius - thickness)));
   });
   return { outer, inner };
 }
@@ -141,61 +129,4 @@ function smoothBoundary(ctx, points, start) {
       c.y
     );
   }
-}
-
-// Bias the native arc toward the strike's reach without rotating or stretching it onto the hitbox.
-export function trailHitboxOffset(actor, points, regions) {
-  const region = regions[0];
-  if (!region) return { x: 0, y: 0 };
-  const slope = QUARTER_PROJECTION.slope;
-  const tip = { x: (points[1].x + points[2].x) / 2, y: (points[1].y + points[2].y) / 2 + depthOf(actor) * slope };
-  let target;
-  if (region.quarterDirectionalBox) {
-    const origin = region.quarterBoxOrigin,
-      aim = region.quarterBoxAim;
-    target = {
-      x: origin.x + aim.x * region.quarterBoxLength,
-      y: origin.y + (origin.depth + aim.z * region.quarterBoxLength) * slope,
-    };
-  } else if (region.quarterNativeWeapon) {
-    const origin = { x: actor.player.x, y: actor.player.y - 55 + depthOf(actor) * slope };
-    target = regionPoints(region).reduce((best, p) =>
-      Math.hypot(p.x - origin.x, p.y - origin.y) > Math.hypot(best.x - origin.x, best.y - origin.y) ? p : best
-    );
-  } else return { x: 0, y: 0 };
-  const influence = region.quarterDirectionalBox ? 0.45 : 0.25;
-  const dx = (target.x - tip.x) * influence,
-    dy = (target.y - tip.y) * influence;
-  const scale = Math.min(1, (region.quarterDirectionalBox ? 48 : 32) / Math.max(0.001, Math.hypot(dx, dy)));
-  return { x: dx * scale, y: dy * scale };
-}
-
-// Rotate and uniformly size the native swing to match directional reach; preserve its curve and timing.
-export function directionalTrailPose(actor, points, anchor, region) {
-  if (!region?.quarterDirectionalBox) return { points, anchor };
-  const aim = region.quarterBoxAim;
-  const angle = Math.atan2(aim.z * QUARTER_PROJECTION.slope, aim.x) - (actor.player.facing < 0 ? Math.PI : 0);
-  const c = Math.cos(angle),
-    s = Math.sin(angle),
-    origin = region.quarterBoxOrigin;
-  const rotate = (p) => {
-    const scale = region.quarterDirectionScale ?? 1;
-    const x = (p.x - origin.x) * scale,
-      y = (p.y - origin.y) * scale;
-    return { x: origin.x + x * c - y * s, y: origin.y + x * s + y * c };
-  };
-  return { points: points.map(rotate), anchor: rotate(anchor) };
-}
-
-// Translate the original weapon crescent as one piece; collision geometry only determines placement.
-export function placeCrescentAtHitbox(ribbon, region) {
-  if (!region?.quarterDirectionalBox || !ribbon.outer.length) return ribbon;
-  const origin = region.quarterBoxOrigin,
-    aim = region.quarterBoxAim;
-  const middle = ribbon.outer[Math.floor(ribbon.outer.length / 2)];
-  const dx = origin.x + aim.x * region.quarterBoxLength - middle.x;
-  const dy =
-    origin.y + (origin.depth + aim.z * region.quarterBoxLength - middle.depth) * QUARTER_PROJECTION.slope - middle.y;
-  const move = (p) => ({ ...p, x: p.x + dx, y: p.y + dy });
-  return { outer: ribbon.outer.map(move), inner: ribbon.inner.map(move) };
 }

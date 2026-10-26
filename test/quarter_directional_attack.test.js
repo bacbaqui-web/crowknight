@@ -6,13 +6,7 @@ import { ATTACK_INTERACTION_OBJECT_KEY } from '../src/interaction_object_model_d
 import { scaleUpgradeAttackRegions } from '../src/run_upgrade_effect_helper.js';
 import { interactionRegionsOverlap } from '../src/interaction_overlap_helper.js';
 import { combatTargetRegions } from '../src/quarter_view/spatial.js';
-import {
-  createNativeWeaponTrail,
-  crescentRibbon,
-  trailHitboxOffset,
-  directionalTrailPose,
-  placeCrescentAtHitbox,
-} from '../src/quarter_view/native_weapon_trail.js';
+import { createNativeWeaponTrail, crescentRibbon } from '../src/quarter_view/native_weapon_trail.js';
 const raw = [
   { key: ATTACK_INTERACTION_OBJECT_KEY, x: 30, y: -90, w: 100, h: 30, reaction: { damage: 17, hitMode: 'trace' } },
 ];
@@ -88,13 +82,13 @@ test('visual trail follows native weapon coordinates regardless of aim and has a
   const trail = createNativeWeaponTrail({}, { floorY: 0 });
   for (let i = 0; i < 40; i++) {
     a.player.animTime = i / 120;
-    trail.capture(a, raw);
+    trail.capture(a, raw, directionalAttackRegions(a, raw));
   }
   const samples = trail.samples(a);
   assert.ok(samples.length <= 48);
   assert.deepEqual(samples.at(-1).points[1], { x: 130, y: -70, depth: 80 });
   a.player.dead = true;
-  trail.capture(a, raw);
+  trail.capture(a, raw, directionalAttackRegions(a, raw));
   assert.equal(trail.samples(a).length, 0);
 });
 
@@ -144,7 +138,7 @@ test('whole swing stays visible together and fades together after attack stops',
   const trail = createNativeWeaponTrail(ctx, { floorY: 0 });
   for (let i = 0; i < 60; i++) {
     a.player.animTime = i / 120;
-    trail.capture(a, raw);
+    trail.capture(a, raw, directionalAttackRegions(a, raw));
   }
   assert.equal(trail.samples(a)[0].time, 0);
   assert.ok(trail.samples(a).length <= 48);
@@ -158,7 +152,7 @@ test('whole swing stays visible together and fades together after attack stops',
   assert.equal(fills, 1);
 });
 
-test('crescent follows sparse rotation smoothly, tapers at both tips and leads the weapon', () => {
+test('crescent follows sparse rotation smoothly, tapers at both tips and stays on the weapon tip', () => {
   const samples = [0, Math.PI / 3, (Math.PI * 2) / 3].map((angle) => {
     const tip = { x: Math.cos(angle) * 100, y: Math.sin(angle) * 100 };
     return { anchor: { x: 0, y: 0, depth: 10 }, points: [{}, tip, tip] };
@@ -166,7 +160,7 @@ test('crescent follows sparse rotation smoothly, tapers at both tips and leads t
   const ribbon = crescentRibbon(samples);
   assert.ok(ribbon.outer.length > 15);
   for (let i = 0; i < ribbon.outer.length; i++) {
-    assert.ok(Math.hypot(ribbon.inner[i].x, ribbon.inner[i].y) > 110);
+    assert.ok(Math.abs(Math.hypot(ribbon.outer[i].x, ribbon.outer[i].y) - 100) < 1e-8);
     assert.equal(ribbon.outer[i].depth, 10);
   }
   const width = (i) => Math.hypot(ribbon.outer[i].x - ribbon.inner[i].x, ribbon.outer[i].y - ribbon.inner[i].y);
@@ -237,41 +231,6 @@ test('arrow collision and overlay match its rendered rotated rectangle for every
   }
 });
 
-test('trail hitbox influence is partial, capped and follows the depth direction', () => {
-  const a = actor();
-  a.quarterAim = { x: 0, z: 1 };
-  const region = directionalAttackRegions(a, raw)[0];
-  const points = [{}, { x: 0, y: -70 }, { x: 0, y: -70 }];
-  const offset = trailHitboxOffset(a, points, [region]);
-  assert.equal(offset.x, 0);
-  assert.ok(offset.y > 0 && offset.y < 48);
-  const huge = { ...region, quarterBoxLength: 10000 };
-  const capped = trailHitboxOffset(a, points, [huge]);
-  assert.ok(Math.abs(Math.hypot(capped.x, capped.y) - 48) < 1e-8);
-  assert.deepEqual(trailHitboxOffset(a, points, []), { x: 0, y: 0 });
-});
-
-test('up and down rotate and uniformly scale the weapon arc', () => {
-  const a = actor();
-  const points = [
-    { x: 50, y: -70 },
-    { x: 120, y: -70 },
-    { x: 120, y: -60 },
-    { x: 50, y: -60 },
-  ];
-  for (const z of [-1, 1]) {
-    a.quarterAim = { x: 0, z };
-    const region = directionalAttackRegions(a, raw)[0];
-    const pose = directionalTrailPose(a, points, { x: 50, y: -70 }, region);
-    assert.ok(Math.abs(pose.points[1].x) < 1e-8);
-    assert.ok((pose.points[1].y + 70) * z > 50);
-    assert.ok(
-      Math.abs(Math.hypot(pose.points[1].x - pose.points[0].x, pose.points[1].y - pose.points[0].y) - 70 * 0.9 * 1.15) <
-        1e-8
-    );
-  }
-});
-
 test('unbounded ground permits all directions and draws tiles far beyond the old depth limits', async () => {
   const { constrainGroundPosition } = await import('../src/quarter_view/bounds.js');
   const { visibleGroundTiles } = await import('../src/quarter_view/ground_renderer.js');
@@ -331,47 +290,4 @@ test('base reach grows 15 percent and authored combo actions stack once with upg
       assert.ok(Math.abs(hit.quarterBoxLength / base - directionScale * (1 + (n - 1) * 0.05) * 1.8) < 1e-8);
     }
   }
-});
-
-test('hitbox placement translates the native crescent without changing its shape', async () => {
-  const { QUARTER_PROJECTION } = await import('../src/quarter_view/camera.js');
-  const samples = [0, Math.PI / 3, (Math.PI * 2) / 3].map((angle) => ({
-    anchor: { x: 20, y: -70, depth: 30 },
-    points: [
-      {},
-      { x: 20 + 100 * Math.cos(angle), y: -70 + 100 * Math.sin(angle) },
-      { x: 20 + 100 * Math.cos(angle), y: -70 + 100 * Math.sin(angle) },
-    ],
-  }));
-  const original = crescentRibbon(samples);
-  for (const aim of EFFECT_DIRECTIONS) {
-    const a = actor();
-    a.quarterAim = aim;
-    a.quarterDepth = 30;
-    a.player.actionKey = 'attack3';
-    a.player.runUpgrades = { reach: 1.5 };
-    const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
-    const placed = placeCrescentAtHitbox(original, region);
-    const dx = placed.outer[0].x - original.outer[0].x;
-    const dy = placed.outer[0].y - original.outer[0].y;
-    for (const boundary of ['outer', 'inner']) {
-      assert.equal(placed[boundary].length, original[boundary].length);
-      placed[boundary].forEach((p, i) => {
-        assert.ok(Math.abs(p.x - original[boundary][i].x - dx) < 1e-8);
-        assert.ok(Math.abs(p.y - original[boundary][i].y - dy) < 1e-8);
-        assert.equal(p.depth, original[boundary][i].depth);
-      });
-    }
-    const middle = placed.outer[Math.floor(placed.outer.length / 2)];
-    assert.ok(Math.abs(middle.x - region.quarterBoxOrigin.x - aim.x * region.quarterBoxLength) < 1e-8);
-    assert.ok(
-      Math.abs(
-        middle.y +
-          middle.depth * QUARTER_PROJECTION.slope -
-          (region.quarterBoxOrigin.y + (30 + aim.z * region.quarterBoxLength) * QUARTER_PROJECTION.slope)
-      ) < 1e-8
-    );
-  }
-  assert.equal(placeCrescentAtHitbox(original, {}), original);
-  assert.deepEqual(placeCrescentAtHitbox({ outer: [], inner: [] }, {}), { outer: [], inner: [] });
 });
