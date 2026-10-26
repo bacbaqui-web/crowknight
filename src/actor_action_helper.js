@@ -104,6 +104,14 @@ function advanceActorClock(player, dt) {
 
 function applyWorldPhysics(player, dt, world, keys = null) {
   if (!world) return;
+  if (player.trapRootTime > 0 && player.trapAnchor) {
+    player.x = player.trapAnchor.x;
+    player.y = player.trapAnchor.y;
+    player.vx = 0;
+    player.vy = 0;
+    player.onGround = true;
+    return;
+  }
   const physics = normalizeRuntimeWorldPhysics(world.worldPhysics);
   const frameDelta = timelineFrameDelta(dt);
   const floorY = Number.isFinite(world.floorY) ? world.floorY : player.floorY;

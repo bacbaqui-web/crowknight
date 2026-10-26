@@ -1,3 +1,4 @@
+import { drawTrapRoot } from './trap_renderer.js';
 import { drawBalloonDefeat } from './balloon_bomber_renderer.js';
 import { isRamTank } from './ram_tank_runtime.js';
 import { drawTankParts } from './ram_tank_renderer.js';
@@ -36,6 +37,7 @@ export function drawPuppetPlayer(player, ctx) {
   if (drawBalloonDefeat(player, ctx, drawPuppetLayer)) return;
   if (drawDeathRagdoll(player, ctx)) return;
 
+  drawTrapRoot(ctx, player);
   const p = player.getPose();
   const r = player.rig;
   const master = player.getPartOffset('master');

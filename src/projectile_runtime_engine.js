@@ -1,3 +1,5 @@
+import { collectTraps, advanceTrap } from './trapper_runtime.js';
+import { drawTrap } from './trap_renderer.js';
 import { advanceBossHazard } from './boss_hazard_runtime.js';
 import { drawBossHazard } from './boss_hazard_renderer.js';
 import { collectBalloonBombs } from './balloon_bomber_runtime.js';
@@ -38,6 +40,11 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
   mageActors = actors.filter((actor) => actor.id === 'fire_mage');
   warningActors = actors.filter((actor) => actor.spearmanThrow?.aim);
   for (const actor of actors) {
+    for (const trap of collectTraps(actor, world, projectilePool)) {
+      trap.id = nextProjectileId++;
+      trap.key = `trap:${trap.id}`;
+      projectilePool.push(trap);
+    }
     for (const hazard of actor.bossPattern?.queue?.splice(0) || []) {
       hazard.id = nextProjectileId++;
       hazard.key = `boss:${hazard.id}`;
@@ -63,7 +70,7 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
   actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor, world));
   projectilePool.forEach((projectile) => {
     advanceProjectile(projectile, dt, playerActor);
-    if (world?.quarterView?.blocksProjectile?.(projectile)) projectile.active = false;
+    if (!projectile.ratTrap && world?.quarterView?.blocksProjectile?.(projectile)) projectile.active = false;
   });
   projectilePool = projectilePool.filter(
     (projectile) => projectile.active && !projectileOutOfBounds(projectile, world)
@@ -88,17 +95,19 @@ export function drawProjectiles(ctx, effectAssets, project = null) {
       : drawProjectileLandingMarker(ctx, projectile)
   );
   projectilePool.forEach((projectile) =>
-    projectile.bossHazard
-      ? drawBossHazard(ctx, projectile, project)
-      : projectile.mageFire
-        ? drawMageFire(ctx, projectile, effectAssets, project)
-        : projectile.powderBomb
-          ? drawPowderBomb(ctx, projectile, project)
-          : projectile.linearSpear
-            ? drawLinearSpear(ctx, projectile, project)
-            : project
-              ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
-              : drawProjectile(ctx, projectile, effectAssets)
+    projectile.ratTrap
+      ? drawTrap(ctx, projectile, project)
+      : projectile.bossHazard
+        ? drawBossHazard(ctx, projectile, project)
+        : projectile.mageFire
+          ? drawMageFire(ctx, projectile, effectAssets, project)
+          : projectile.powderBomb
+            ? drawPowderBomb(ctx, projectile, project)
+            : projectile.linearSpear
+              ? drawLinearSpear(ctx, projectile, project)
+              : project
+                ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
+                : drawProjectile(ctx, projectile, effectAssets)
   );
 }
 
@@ -207,6 +216,7 @@ function advanceProjectile(projectile, dt, target) {
   projectile.previousX = projectile.x;
   projectile.previousY = projectile.y;
   projectile.previousDepth = projectile.quarterDepth;
+  if (advanceTrap(projectile, dt)) return;
   if (advanceBossHazard(projectile, dt, target)) return;
   if (projectile.mageFire) {
     advanceMageFire(projectile, dt);
@@ -277,7 +287,7 @@ function drawProjectile(ctx, projectile, effectAssets) {
 }
 
 function drawProjectileLandingMarker(ctx, projectile) {
-  if (projectile.linearSpear || projectile.powderBomb || projectile.mageFire) return;
+  if (projectile.ratTrap || projectile.linearSpear || projectile.powderBomb || projectile.mageFire) return;
   const progress = Math.max(0, Math.min(1, projectile.elapsedFrames / Math.max(1, projectile.flightFrames)));
   const pulse = 0.5 + Math.sin(progress * Math.PI * 8) * 0.5;
   const alpha = 0.32 + pulse * 0.42;
