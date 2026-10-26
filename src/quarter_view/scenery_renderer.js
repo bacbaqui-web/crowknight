@@ -10,7 +10,8 @@ export function createSceneryRenderer(ctx, world) {
       view.x,
       view.depth,
       view.width / view.zoom / 2 + 180,
-      view.height / (2 * view.zoom * QUARTER_PROJECTION.slope) + 350
+      view.height / (2 * view.zoom * QUARTER_PROJECTION.slope) + 350,
+      true
     );
     return objects.filter((o) => {
       const p = groundPoint(o.x, o.z, view);
