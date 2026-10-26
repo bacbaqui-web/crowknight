@@ -13,8 +13,8 @@ export function upgradeEffects(counts = {}) {
     knockback: 1 + count('forceful-strike') * 0.2,
     resistance: reduction('rooted-stance', 0.15),
     stagger: reduction('unyielding-will', 0.1),
-    windup: reduction('swift-preparation', 0.1),
-    recovery: reduction('seamless-finish', 0.1),
+    windup: 1,
+    recovery: 1 / (1 + count('rapid-combo') * 0.1),
     jump: 1 + count('leaping-feather') * 0.1,
   };
 }
@@ -77,5 +77,9 @@ export function upgradeVelocity(player, settings, x, y) {
     player.customActionKey === player.runSkillActions?.doubleJump
       ? 1 + Math.max(0, (player.runSkills?.doubleJump || 1) - 1) * 0.1
       : 1;
-  return { x: x * (player.runUpgrades?.speed || 1) * effects.speed * (player.customActionKey === player.runSkillActions?.sprint ? 1 + Math.max(0, (player.runSkills?.sprint || 1) - 1) * 0.1 : 1), y: y < 0 ? y * Math.sqrt((player.runUpgrades?.jump || 1) * skillJump * effects.jump) : y };
+  const action = player.actions?.find((entry) => entry.key === player.customActionKey);
+  const walking = action?.trigger?.type === 'single' &&
+    action.trigger.keys?.some((key) => ['ArrowRight', 'ArrowLeft'].includes(key));
+  const windstep = walking ? 1 + Math.max(0, player.runSkills?.sprint || 0) * 0.1 : 1;
+  return { x: x * (player.runUpgrades?.speed || 1) * effects.speed * windstep, y: y < 0 ? y * Math.sqrt((player.runUpgrades?.jump || 1) * skillJump * effects.jump) : y };
 }

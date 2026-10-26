@@ -1,3 +1,4 @@
+import { blendGroundPatterns } from './ground_patterns.js';
 import { FOREST_PERIOD, forestGround, forestHash } from './forest_layout.js';
 export const GROUND_TILE_SIZE = { x: FOREST_PERIOD, z: FOREST_PERIOD };
 let cached;
@@ -71,6 +72,7 @@ export function createGroundTexture(size = 1024) {
       pixels[i + 3] = 255;
     }
   }
+  blendGroundPatterns(pixels, size);
   cached = { width: size, height: size, pixels };
   return cached;
 }

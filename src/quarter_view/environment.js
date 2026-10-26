@@ -19,12 +19,13 @@ export function createEnvironment() {
       objects.push(
         make('rock', originX + 190, 0, 'start-rock'),
         make('hut', originX - 260, 240, 'start-hut'),
-        make('tree', originX + 100, -300, 'start-tree'),
-        make('tree', originX - 65, -500, 'start-tree-left', 1),
-        make('tree', originX + 235, -530, 'start-tree-right')
+        make('tree', originX + 100, -300, 'start-tree', 3),
+        make('tree', originX - 65, -500, 'start-tree-left', 5),
+        make('tree', originX + 235, -530, 'start-tree-right', 7)
       );
     } else {
-      const density = 2 + Math.floor(forestHash(x + 301, z - 71) * 4);
+      const density = 4 + Math.floor(forestHash(x + 301, z - 71) * 3);
+      let treeIndex = (((x * 4 + z * 7) % 9) + 9) % 9;
       for (let i = 0; i < density; i++) {
         const seed = forestHash(x * 7 + i, z);
         const px = originX + x * CELL + (forestHash(x * 11 + i, z + 81) - 0.5) * 380;
@@ -33,12 +34,39 @@ export function createEnvironment() {
         // Keep the road and clearing walkable, including the obstacle's footprint.
         if (terrain.edge < 130) continue;
         if (i >= 2 && terrain.edge < 200) continue;
-        const type = seed < 0.08 ? 'hut' : seed < 0.28 ? 'rock' : 'tree';
+        const type =
+          terrain.edge < 230 ? (seed < 0.28 ? 'hut' : 'rock') : seed < 0.1 ? 'hut' : seed < 0.3 ? 'rock' : 'tree';
         const object = make(type, px, pz, `${key}:${i}`);
+        if (type === 'tree') object.variant = treeIndex++ % 9;
         if (objects.some((o) => Math.hypot(o.x - px, o.z - pz) < (o.type === 'tree' && type === 'tree' ? 100 : 170)))
           continue;
         objects.push(object);
       }
+    }
+    // Low ground cover follows the verge and gathers at existing scenery bases.
+    const anchors = objects.slice();
+    for (let i = 0; i < 10; i++) {
+      const px = originX + x * CELL + (forestHash(x * 19 + i, z + 901) - 0.5) * CELL;
+      const pz = z * CELL + (forestHash(x + 411, z * 17 + i) - 0.5) * CELL;
+      const edge = forestGround(px, pz).edge;
+      if (edge > -18 && edge < 200) addCover(px, pz, i);
+    }
+    for (const [i, o] of anchors.entries()) {
+      addCover(o.x - o.w * 0.6 - 25, o.z + 15, i + 10);
+      if (o.type !== 'tree') addCover(o.x + o.w * 0.65, o.z - 25, i + 20);
+    }
+    function addCover(px, pz, i) {
+      objects.push({
+        type: 'bush',
+        x: px,
+        z: pz,
+        w: 0,
+        d: 0,
+        height: 42,
+        decorative: true,
+        id: `${key}:cover:${i}`,
+        variant: (((x * 3 + z * 5 + i) % 6) + 6) % 6,
+      });
     }
     cache.set(key, objects);
     if (cache.size > 100) cache.delete(cache.keys().next().value);
@@ -54,7 +82,7 @@ export function createEnvironment() {
       variant,
     };
   }
-  function nearby(x, z, radiusX = 300, radiusZ = radiusX) {
+  function nearby(x, z, radiusX = 300, radiusZ = radiusX, includeDecor = false) {
     const result = [];
     for (let cz = Math.floor((z - radiusZ) / CELL) - 1; cz <= Math.ceil((z + radiusZ) / CELL) + 1; cz++)
       for (
@@ -63,7 +91,12 @@ export function createEnvironment() {
         cx++
       )
         for (const object of cell(cx, cz))
-          if (Math.abs(object.x - x) < radiusX + 180 && Math.abs(object.z - z) < radiusZ + 180) result.push(object);
+          if (
+            (includeDecor || !object.decorative) &&
+            Math.abs(object.x - x) < radiusX + 180 &&
+            Math.abs(object.z - z) < radiusZ + 180
+          )
+            result.push(object);
     return result;
   }
   const inside = (o, x, z, pad = 0) => Math.abs(x - o.x) < o.w / 2 + pad && Math.abs(z - o.z) < o.d / 2 + pad;

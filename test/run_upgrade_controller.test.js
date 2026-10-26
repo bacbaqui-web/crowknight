@@ -39,14 +39,14 @@ function setup() {
 
 test('무작위 2장은 중복이 없고 모든 카드를 첫/둘째 위치에 제시할 수 있다', () => {
   const ids = new Set();
-  for (let first = 0; first < 10; first += 1)
-    for (let second = 0; second < 9; second += 1) {
-      const samples = [(first + 0.5) / 10, (second + 0.5) / 9];
+  for (let first = 0; first < UPGRADE_CARDS.length; first += 1)
+    for (let second = 0; second < UPGRADE_CARDS.length - 1; second += 1) {
+      const samples = [(first + 0.5) / UPGRADE_CARDS.length, (second + 0.5) / (UPGRADE_CARDS.length - 1)];
       const pair = randomUpgradePair(() => samples.shift());
       assert.equal(new Set(pair).size, 2);
       pair.forEach((id) => ids.add(id));
     }
-  assert.equal(ids.size, 10);
+  assert.equal(ids.size, 9);
 });
 test('동시에 보스 두 명 처치하면 한 번씩 순서대로 선택하고 중복 클릭은 적용하지 않는다', () => {
   const { controller, player, enemy, shows } = setup();
@@ -83,7 +83,7 @@ test('사망/중단은 선택 대기와 runtime 효과를 없애고 다음 판 �
   controller.reset();
   assert.deepEqual(controller.getSnapshot(), { player: {}, enemy: {} });
 });
-test('10개 효과는 기본값 기준 합산이며 감소는 80%에서 멈춘다', () => {
+test('9개 효과는 기본값 기준 합산이며 감소는 80%에서 멈춘다', () => {
   const counts = Object.fromEntries(UPGRADE_CARDS.map((card) => [card.id, 3]));
   const effects = upgradeEffects(counts);
   assert.deepEqual(effects, {
@@ -94,11 +94,11 @@ test('10개 효과는 기본값 기준 합산이며 감소는 80%에서 멈춘�
     knockback: 1.6,
     resistance: 0.55,
     stagger: 0.7,
-    windup: 0.7,
-    recovery: 0.7,
+    windup: 1,
+    recovery: 1 / 1.3,
     jump: 1.3,
   });
-  assert.equal(upgradeEffects({ 'swift-preparation': 100 }).windup, 0.2);
+  assert.equal(upgradeEffects({ 'rapid-combo': 100 }).recovery, 1 / 11);
   assert.equal(
     upgradeEffectLabel(
       UPGRADE_CARDS.find((card) => card.id === 'rooted-stance'),
@@ -171,16 +171,16 @@ test('실제 피해와 밀어내기는 공격자 강화와 대상 저항을 함�
   applyKnockback(attacker, target, { reaction: { knockback: 10 } }, {});
   assert.equal(target.player.vx, 8.4);
 });
-test('준비/후딜레이만 단축하고 타격 구간을 건너도 구간별 시간 계산을 유지한다', () => {
+test('후딜레이만 단축하고 타격 구간을 건너도 구간별 시간 계산을 유지한다', () => {
   const player = {
     customActionKey: 'attack',
     customActionDuration: 1,
     customActionElapsed: 0.1,
     actionSettings: { attack: { group: 'attack' } },
     runUpgradeAttackWindow: { start: 0.2, end: 0.6 },
-    runUpgrades: upgradeEffects({ 'swift-preparation': 5, 'seamless-finish': 5 }),
+    runUpgrades: upgradeEffects({ 'rapid-combo': 10 }),
   };
-  assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.15) < 1e-9);
+  assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.1) < 1e-9);
   player.customActionElapsed = 0.3;
   assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.1) < 1e-9);
   player.customActionElapsed = 0.7;
@@ -198,11 +198,11 @@ test('반복 공격의 다음 주기에서도 준비와 타격 구간을 구분�
     customActionElapsed: 1.1,
     actionSettings: { attack: { group: 'attack' } },
     runUpgradeAttackWindow: { start: 0.2, end: 0.6 },
-    runUpgrades: upgradeEffects({ 'swift-preparation': 5, 'seamless-finish': 5 }),
+    runUpgrades: upgradeEffects({ 'rapid-combo': 10 }),
   };
-  assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.15) < 1e-9);
+  assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.1) < 1e-9);
   player.customActionElapsed = 0.95;
-  assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.2) < 1e-7);
+  assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.125) < 1e-7);
 });
 
 test('공격 판정의 실제 활성 프레임에서 준비와 후딜레이 경계를 구한다', () => {
