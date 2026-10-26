@@ -291,7 +291,7 @@ test('base reach grows 15 percent and authored combo actions stack once with upg
       a.player.runUpgrades = { reach: 1.5 };
       a.player.runSkills = { reach: 2 };
       const hit = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
-      assert.ok(Math.abs(hit.quarterBoxLength / base - directionScale * (1 + (n - 1) * 0.05) * 1.8) < 1e-8);
+      assert.ok(Math.abs(hit.quarterBoxLength / base - directionScale * (1 + (n - 1) * 0.03) * 1.8) < 1e-8);
     }
   }
 });

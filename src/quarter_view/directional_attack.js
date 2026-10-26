@@ -19,7 +19,7 @@ export function directionalAttackRegions(actor, regions) {
   const halfAngle = (60 * Math.PI) / 180;
   const actionName = player.customActions?.find((action) => action.key === player.actionKey)?.name;
   const strike = /^(?:attack|공격)\s*([123])?$/.exec(actionName || player.actionKey || '');
-  const comboScale = strike ? 1 + (Number(strike[1] || 1) - 1) * 0.05 : 1;
+  const comboScale = strike ? 1 + (Number(strike[1] || 1) - 1) * 0.03 : 1;
   const sizeScale = 1.15 * comboScale;
   return regions.map((region) => {
     if (![ATTACK_INTERACTION_OBJECT_KEY, GUARD_INTERACTION_OBJECT_KEY].includes(region.key)) return region;
