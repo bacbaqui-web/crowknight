@@ -313,3 +313,16 @@
 
 .skill-tree-node.inspected,.skill-tree-node:focus-visible {outline:2px solid var(--node-color);outline-offset:4px;filter:brightness(1.2)}
 .skill-tree-node.locked,.skill-tree-node.learned {cursor:help}
+
+.pause-status {z-index:60}
+.pause-status-header {display:flex;justify-content:space-between;gap:16px;align-items:center}
+.pause-status-header button {background:#253748;color:#e7edf7;border:1px solid #5c7187;border-radius:8px;padding:9px 14px;cursor:pointer}
+.pause-upgrade-columns {display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px;text-align:left}
+.pause-upgrade-columns section,.pause-skill-list {border:1px solid #ffffff20;border-radius:10px;padding:14px;background:#ffffff04}
+.pause-skill-list {margin-top:16px;text-align:left}
+.pause-status h3 {margin:0 0 12px;font-size:15px;color:var(--tree-accent)}
+.pause-status p,.pause-upgrade-row {font-size:12px;line-height:1.7;color:#c3cede}
+.pause-upgrade-columns section:last-child h3 {color:#ff9b98}
+.pause-upgrade-row {display:flex;align-items:center;gap:10px;margin:10px 0}
+.pause-upgrade-row img {width:26px;height:26px}
+@media(max-width:600px){.pause-upgrade-columns{grid-template-columns:1fr}.pause-status-header{align-items:flex-start}.pause-status-header button{white-space:nowrap}}

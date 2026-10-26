@@ -153,7 +153,7 @@ export function createHitboxView({
       panel.setAttribute('aria-label', `공격 판정 ${modeLabel} 궤적`);
       trajectoryCanvas?.setAttribute('aria-label', `실제 공격의 ${modeLabel} 궤적`);
     }
-    legend.textContent = `주황: 내 공격 · 빨강: 적 · 보라: 투사체 · 설정된 공격 면\n현재 공격 ${active}개 · 점선: 최근 1초\n하늘색: 궤적 · 도식 번호 순서 · P: 정지/재개`;
+    legend.textContent = `주황: 내 공격 · 빨강: 적 · 보라: 투사체 · 설정된 공격 면\n현재 공격 ${active}개 · 점선: 최근 1초\n하늘색: 궤적 · 도식 번호 순서 · Tab: 성장 기록/재개`;
   }
   return { draw, reset: history.reset };
 }
