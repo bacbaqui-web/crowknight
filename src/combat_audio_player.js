@@ -123,7 +123,7 @@ export function createCombatAudioPlayer() {
       gain = context.createGain(),
       pan = context.createStereoPanner();
     source.buffer = buffer;
-    source.playbackRate.value = sound.rate * (0.97 + Math.random() * 0.06);
+    source.playbackRate.value = sound.rate;
     gain.gain.value = sound.gain * spatial.gain;
     pan.pan.value = spatial.pan;
     source.connect(gain);

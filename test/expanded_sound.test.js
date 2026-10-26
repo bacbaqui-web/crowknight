@@ -135,8 +135,12 @@ test('death and restart do not replay stale phases; projectile history resets in
 test('every catalog file exists and new recordings have headroom and finite short duration', () => {
   for (const file of new Set(Object.values(COMBAT_SOUNDS).flatMap((x) => x.files)))
     assert.ok(readFileSync(new URL('../assets/audio/combat/' + file, import.meta.url)).length > 100);
-  const sources = JSON.parse(readFileSync(new URL('../assets/audio/combat/expanded-sources.json', import.meta.url)));
-  assert.equal(sources.length, 22);
+  const sources = JSON.parse(readFileSync(new URL('../assets/audio/combat/v2/sources.json', import.meta.url)));
+  const files = new Set(Object.values(COMBAT_SOUNDS).flatMap((x) => x.files));
+  assert.equal(sources.length, files.size);
+  assert.deepEqual(new Set(sources.map((x) => x.file)), files);
+  assert.ok([...files].every((file) => file.startsWith('v2/')));
+  assert.ok(Object.values(COMBAT_SOUNDS).every((sound) => sound.rate === 1));
   for (const item of sources) {
     assert.equal(item.license, 'CC0-1.0');
     assert.ok(item.duration > 0 && item.duration <= 2.1);

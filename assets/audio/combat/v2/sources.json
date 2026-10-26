@@ -1,0 +1,1171 @@
+[
+  {
+    "file": "v2/experiencePickup.wav",
+    "license": "CC0-1.0",
+    "duration": 0.16,
+    "lowpass": 2200,
+    "decay": 8,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/bookPlace1.ogg",
+        "sha256": "26f3ce60fbde85b678b0ad7f6624d80535fe540d88232ad1e38e47a96662d977",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "96cfa909942aea02f208ed537de38870591b305f42033c6c82d933f3af848b87"
+  },
+  {
+    "file": "v2/healthPickup.wav",
+    "license": "CC0-1.0",
+    "duration": 0.4,
+    "lowpass": 3500,
+    "decay": 3,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/handleSmallLeather.ogg",
+        "sha256": "ae3cbf695aa0a8b98b5a80a835be5a3ccbd5446a24db2235cd4c3cd6fc92ed96",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "kenney-rpg/Audio/cloth2.ogg",
+        "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.3,
+        "delay": 0.08
+      }
+    ],
+    "sha256": "7778bf51fcc56a8676edd08771a508939f588a5406bbf5387236abff6fd3c5e2"
+  },
+  {
+    "file": "v2/clubSwing.wav",
+    "license": "CC0-1.0",
+    "duration": 0.45,
+    "lowpass": 6500,
+    "decay": 2,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "textures2/Axe Swing.wav",
+        "sha256": "a27039c0778934e71e01b943cba04aa4cb788fd94e5e771b68374326494f38a4",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "342f5c9f1f5e94a643f7edb916e983441508563b26dfb04ae9007c47567af1f2"
+  },
+  {
+    "file": "v2/swordSwing.wav",
+    "license": "CC0-1.0",
+    "duration": 0.38,
+    "lowpass": 8000,
+    "decay": 2,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "textures2/Sabre Swing.wav",
+        "sha256": "bf6edd6317805e5579c58fc6ed5c52df917e6a3ebdb0b11cd7027684adaf4d04",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "b81aa414d2712f009189576f681b00883124d2a6147618e7c9584eb336732933"
+  },
+  {
+    "file": "v2/bossSwing.wav",
+    "license": "CC0-1.0",
+    "duration": 0.6,
+    "lowpass": 4200,
+    "decay": 2,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "textures2/Spear Swing.wav",
+        "sha256": "a6faa99aa8d9a020b14f3ea27e422921c9fc336ff4d5870a14bf24a94bc0d016",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "kenney-rpg/Audio/cloth2.ogg",
+        "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.25,
+        "delay": 0
+      }
+    ],
+    "sha256": "354a6af860d6a22bb5a309023f14951d78069276dec0720eb436fdff473f5d9a"
+  },
+  {
+    "file": "v2/clubHit.wav",
+    "license": "CC0-1.0",
+    "duration": 0.3,
+    "lowpass": 4000,
+    "decay": 8,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.65,
+        "delay": 0
+      }
+    ],
+    "sha256": "1da6a348461d2f8e2148b572ef28f42f15187160f47486f9256f09af061e415c"
+  },
+  {
+    "file": "v2/swordHit.wav",
+    "license": "CC0-1.0",
+    "duration": 0.26,
+    "lowpass": 6500,
+    "decay": 10,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Dagger Axe Blade on Blade.wav",
+        "sha256": "4e60ddc8d9d937ef2cccf1ea26f17d2b7157442f9cf071a58616e128f6850240",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.55,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "24ebd15559216a0d829ce951796192cfc546993dd78c38b628f53021833ccad0"
+  },
+  {
+    "file": "v2/bossHit.wav",
+    "license": "CC0-1.0",
+    "duration": 0.48,
+    "lowpass": 3200,
+    "decay": 6,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.65,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.8,
+        "delay": 0
+      }
+    ],
+    "sha256": "6110e434fd6dd2096588c5af285d2b41ae52cd133df0258d3b2a9b1cfc970e29"
+  },
+  {
+    "file": "v2/guardRaise.wav",
+    "license": "CC0-1.0",
+    "duration": 0.23,
+    "lowpass": 4500,
+    "decay": 8,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "rpg/RPG Sound Pack/inventory/armor-light.wav",
+        "sha256": "1600329c7607eede7a441f66152f0626dd84e4b13f84ccd07887d020ba1c6b9e",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "kenney-rpg/Audio/cloth2.ogg",
+        "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.5,
+        "delay": 0
+      }
+    ],
+    "sha256": "dd20759b1ebbf05c225be80bd9de8f9904bbe1e63d0f1a401fe5ad9b83042f6b"
+  },
+  {
+    "file": "v2/block.wav",
+    "license": "CC0-1.0",
+    "duration": 0.28,
+    "lowpass": 5500,
+    "decay": 12,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Axe Sabre Haft on Hilt.wav",
+        "sha256": "c6bf9a60adc3bcd292e22f5f0b4f49600442316679daecfce8ce9d60f2e721c8",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.3,
+        "delay": 0
+      }
+    ],
+    "sha256": "042e4df988115a2d38ac6998877fbaa0bff43b4e25ac4a25e446c6ae16ec12ba"
+  },
+  {
+    "file": "v2/parry.wav",
+    "license": "CC0-1.0",
+    "duration": 0.23,
+    "lowpass": 7500,
+    "decay": 15,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Axe Katana Blade on Blade.wav",
+        "sha256": "b49802948f32a82a3fcc3431448341cf0ea94ecc4a0b8c8c196b1340f79c6606",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.35,
+        "delay": 0
+      }
+    ],
+    "sha256": "018c724b6e265f49c0b49ace694c5cc18905fa038c6253cc00df01a590cc35cd"
+  },
+  {
+    "file": "v2/armorStep.wav",
+    "license": "CC0-1.0",
+    "duration": 0.18,
+    "lowpass": 4200,
+    "decay": 10,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail1.wav",
+        "sha256": "44d4d6b0cda8138c9d5545ba4f434f53b7817ba32d98ddfdf5bff6ae7acdefdf",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "8211e1e34964d2ee8590f18a2df9c38dbc2b21d8af41feaf5a22dae9c9737993"
+  },
+  {
+    "file": "v2/jump.wav",
+    "license": "CC0-1.0",
+    "duration": 0.25,
+    "lowpass": 5000,
+    "decay": 4,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/cloth3.ogg",
+        "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "53c04e373de32f305ac2ec003128c86daeaf1c402e4070a9efe108d335f57537"
+  },
+  {
+    "file": "v2/roll.wav",
+    "license": "CC0-1.0",
+    "duration": 0.55,
+    "lowpass": 4200,
+    "decay": 3,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/cloth4.ogg",
+        "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.35,
+        "delay": 0.15
+      }
+    ],
+    "sha256": "d90ac237ca71793bd05fa9ae7758a87bb49e66ca678f4169defb44217dc38268"
+  },
+  {
+    "file": "v2/bowRelease.wav",
+    "license": "CC0-1.0",
+    "duration": 0.45,
+    "lowpass": 7500,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapons/English Longbow Shoot.wav",
+        "sha256": "c25684ccdab3eb13f17a0ffa637fbd175659d092665f16c0bce8510d46c4fbee",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "5a43e61e06d53332a5da9102e130ff9cbad9d24332f2daa42b9c18f2737e160d"
+  },
+  {
+    "file": "v2/spearThrow.wav",
+    "license": "CC0-1.0",
+    "duration": 0.48,
+    "lowpass": 6500,
+    "decay": 3,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "textures2/Spear Swing.wav",
+        "sha256": "a6faa99aa8d9a020b14f3ea27e422921c9fc336ff4d5870a14bf24a94bc0d016",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "f3beec9d961f29ef3dd96e307245da632ede23e21b8f41b4668a5811a8d74cd4"
+  },
+  {
+    "file": "v2/bombThrow.wav",
+    "license": "CC0-1.0",
+    "duration": 0.3,
+    "lowpass": 4500,
+    "decay": 4,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/clothBelt.ogg",
+        "sha256": "f29560a2aea95bbfeb643e1e8f56ec2b6f7e32f32ce4e140645a36db81de3253",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "d5a03d4e2dafe1e1b61b2130bb3d7ee5e8cc52045877bc5eca6ae344c27f09b0"
+  },
+  {
+    "file": "v2/bombLand.wav",
+    "license": "CC0-1.0",
+    "duration": 0.28,
+    "lowpass": 3200,
+    "decay": 10,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.6,
+        "delay": 0
+      }
+    ],
+    "sha256": "c4d5a3accd8c6d7d876677306a61ffddcc3cdcae2aae7fa6328f6fd3aa9eb695"
+  },
+  {
+    "file": "v2/explosion-1.wav",
+    "license": "CC0-1.0",
+    "duration": 1.1,
+    "lowpass": 5500,
+    "decay": 4,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "dull.flac",
+        "sha256": "a463ff6b4cc37321f646ddbe9ff326aef244dea33d3951bc2a833a27cc611bf9",
+        "author": "qubodup",
+        "url": "https://opengameart.org/content/dull-explosion",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.7,
+        "delay": 0
+      },
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 0.4,
+        "delay": 0.04
+      }
+    ],
+    "sha256": "5a12f829f61f55adc849077c2cd16f0a8bf985c9bd62268cded938ff27b53682"
+  },
+  {
+    "file": "v2/explosion-2.wav",
+    "license": "CC0-1.0",
+    "duration": 0.9,
+    "lowpass": 4200,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "dull.flac",
+        "sha256": "a463ff6b4cc37321f646ddbe9ff326aef244dea33d3951bc2a833a27cc611bf9",
+        "author": "qubodup",
+        "url": "https://opengameart.org/content/dull-explosion",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.9,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.4,
+        "delay": 0.03
+      },
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 0.3,
+        "delay": 0.08
+      }
+    ],
+    "sha256": "f674224fcbea1a9a7d5960ae388ae44d6e2c4891def2f8173710100ff40d6933"
+  },
+  {
+    "file": "v2/bigExplosion.wav",
+    "license": "CC0-1.0",
+    "duration": 1.6,
+    "lowpass": 3800,
+    "decay": 3,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "dull.flac",
+        "sha256": "a463ff6b4cc37321f646ddbe9ff326aef244dea33d3951bc2a833a27cc611bf9",
+        "author": "qubodup",
+        "url": "https://opengameart.org/content/dull-explosion",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.9,
+        "delay": 0
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.55,
+        "delay": 0.05
+      },
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 0.6,
+        "delay": 0.08
+      }
+    ],
+    "sha256": "ad7de3b9278fc4c1ec0d4978bd8f4874a66de8915b17a1eb7d9ec53eb7e4449d"
+  },
+  {
+    "file": "v2/fuse.wav",
+    "license": "CC0-1.0",
+    "duration": 0.75,
+    "lowpass": 6500,
+    "decay": 0,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "24422f1df81d5878773050a9c20429325c074cc98b60b1722734d32d4315f56f"
+  },
+  {
+    "file": "v2/fireCast.wav",
+    "license": "CC0-1.0",
+    "duration": 0.55,
+    "lowpass": 6000,
+    "decay": 2,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "textures2/Axe Swing.wav",
+        "sha256": "a27039c0778934e71e01b943cba04aa4cb788fd94e5e771b68374326494f38a4",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 0.6,
+        "delay": 0
+      }
+    ],
+    "sha256": "812b6840bac72f4d2e4c5487e67e358492cd7180245f05d659952d424925332f"
+  },
+  {
+    "file": "v2/fireBurn.wav",
+    "license": "CC0-1.0",
+    "duration": 0.95,
+    "lowpass": 4800,
+    "decay": 0,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "daf7dd4553cc22da2aa3c7fd1ec9cfb932bfe84e06b5a3b34492ca9838c4bbe1"
+  },
+  {
+    "file": "v2/magicCharge.wav",
+    "license": "CC0-1.0",
+    "duration": 0.85,
+    "lowpass": 4200,
+    "decay": 0,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "textures2/Spear Swing.wav",
+        "sha256": "a6faa99aa8d9a020b14f3ea27e422921c9fc336ff4d5870a14bf24a94bc0d016",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 0.35,
+        "delay": 0.18
+      }
+    ],
+    "sha256": "cf79742f5aa67cfa9200e9edf3ae60b63e9f4fa31847ce63a7aaa0b9cac4f88b"
+  },
+  {
+    "file": "v2/tankRumble.wav",
+    "license": "CC0-1.0",
+    "duration": 0.65,
+    "lowpass": 2400,
+    "decay": 1,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.5,
+        "delay": 0
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.7,
+        "delay": 0
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.5,
+        "delay": 0.17
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.4,
+        "delay": 0.3
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.4,
+        "delay": 0.43
+      }
+    ],
+    "sha256": "d9b3b9a72ae1d62c9c3db1f53e307f0de58d42f3d0ac0faeabf2a18bd4a59626"
+  },
+  {
+    "file": "v2/tankCharge.wav",
+    "license": "CC0-1.0",
+    "duration": 0.6,
+    "lowpass": 3200,
+    "decay": 1,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.6,
+        "delay": 0
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.8,
+        "delay": 0.12
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.6,
+        "delay": 0.25
+      },
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.5,
+        "delay": 0.38
+      }
+    ],
+    "sha256": "2c94c03d6816af7fa53d6e84c5b7567b820f217339ef529fa68930aeee1979a1"
+  },
+  {
+    "file": "v2/tankCrash.wav",
+    "license": "CC0-1.0",
+    "duration": 0.65,
+    "lowpass": 4200,
+    "decay": 6,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Axe Blade and Haft.wav",
+        "sha256": "b442c6748f5769057f63f88ef16480718694bcc324a912639ec69b6e05a1ea75",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.3,
+        "delay": 0.06
+      }
+    ],
+    "sha256": "a4a2c19116efd533f6c74c472b0091210d0f391db5e25af7e3ba3a5f1258bcf5"
+  },
+  {
+    "file": "v2/balloonPop.wav",
+    "license": "CC0-1.0",
+    "duration": 0.22,
+    "lowpass": 8500,
+    "decay": 9,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "balloon.flac",
+        "sha256": "4f15708bd01e1e20a92055381c1fc66d179f222d90f6963aee016ae1062f7f29",
+        "author": "Gniffelbaf / AntumDeluge",
+        "url": "https://opengameart.org/content/balloon-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "eed52ccbbe195fa6730c07d2703f1e0956fc08997335c91b1c1c740c82c1f751"
+  },
+  {
+    "file": "v2/bodyFall.wav",
+    "license": "CC0-1.0",
+    "duration": 0.45,
+    "lowpass": 3000,
+    "decay": 7,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "kenney-rpg/Audio/dropLeather.ogg",
+        "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.6,
+        "delay": 0
+      }
+    ],
+    "sha256": "479fcfb45940da85504946875ba7bd1a44bb6b04b264b4e8a982cc7978fe3aac"
+  },
+  {
+    "file": "v2/trapSet.wav",
+    "license": "CC0-1.0",
+    "duration": 0.3,
+    "lowpass": 4000,
+    "decay": 7,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapons/Crossbow Place Bolt.wav",
+        "sha256": "24b8d06db71d2f3b9acac0e4cf53c0561f2a6f41758da3ac74434f3cb69d0460",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.25,
+        "delay": 0
+      }
+    ],
+    "sha256": "e23ef3ad9bad28437cc8230f053cbdf8cba3057b3029b61ed08ebd3d4f2cb29d"
+  },
+  {
+    "file": "v2/trapArm.wav",
+    "license": "CC0-1.0",
+    "duration": 0.18,
+    "lowpass": 6500,
+    "decay": 14,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapons/Crossbow Lever Trigger.wav",
+        "sha256": "607b6398e35d14d9c9633d047fa0dbf7e8e5a3ffee13bdeddc8dba41320c960a",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "acfee745d22f860f0726ab864a914521cae1f20eceaaf45abfa61b5039a2fc5d"
+  },
+  {
+    "file": "v2/trapSnap.wav",
+    "license": "CC0-1.0",
+    "duration": 0.24,
+    "lowpass": 7000,
+    "decay": 12,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapons/Crossbow Lever Trigger.wav",
+        "sha256": "607b6398e35d14d9c9633d047fa0dbf7e8e5a3ffee13bdeddc8dba41320c960a",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "weapon-impacts/Dagger Axe Blade on Blade.wav",
+        "sha256": "4e60ddc8d9d937ef2cccf1ea26f17d2b7157442f9cf071a58616e128f6850240",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 0.6,
+        "delay": 0.012
+      }
+    ],
+    "sha256": "0ff9eced3b7553c6a645951c58077992d9ae5f76ece2d85a2840163edfce7c44"
+  },
+  {
+    "file": "v2/trapBreak.wav",
+    "license": "CC0-1.0",
+    "duration": 0.4,
+    "lowpass": 5500,
+    "decay": 9,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Axe Blade and Haft.wav",
+        "sha256": "b442c6748f5769057f63f88ef16480718694bcc324a912639ec69b6e05a1ea75",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.35,
+        "delay": 0.04
+      }
+    ],
+    "sha256": "a80bbc9e5afe23e47c8bb0aca0ba02a6ec091d374ab45f074df14c9aea904007"
+  },
+  {
+    "file": "v2/enemyDeath.wav",
+    "license": "CC0-1.0",
+    "duration": 0.55,
+    "lowpass": 3200,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/armor-light.wav",
+        "sha256": "1600329c7607eede7a441f66152f0626dd84e4b13f84ccd07887d020ba1c6b9e",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.4,
+        "delay": 0.03
+      }
+    ],
+    "sha256": "92b853d007be69dd00165fc35e6b27406ba3224b5a1ee06e14df3bead89bbee5"
+  },
+  {
+    "file": "v2/bossDeath.wav",
+    "license": "CC0-1.0",
+    "duration": 0.85,
+    "lowpass": 3500,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.45,
+        "delay": 0.08
+      }
+    ],
+    "sha256": "c73691566cdb22e3bba1fb791572569ac6c0d40daa4f319fc06758992b99c71b"
+  },
+  {
+    "file": "v2/playerDeath.wav",
+    "license": "CC0-1.0",
+    "duration": 0.7,
+    "lowpass": 3000,
+    "decay": 4,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/dropLeather.ogg",
+        "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.8,
+        "delay": 0.04
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.25,
+        "delay": 0.08
+      }
+    ],
+    "sha256": "179241d3e2638b00fb416cc215b2de162cf78aab2bb13533440506d24377d509"
+  },
+  {
+    "file": "v2/bossArrival.wav",
+    "license": "CC0-1.0",
+    "duration": 0.55,
+    "lowpass": 2800,
+    "decay": 7,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapon-impacts/Mace Spear Haft.wav",
+        "sha256": "61104a0c4c06667ba47a0efaae9657f57455b7138420fdb5ac02afaca203cb9f",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.75,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.35,
+        "delay": 0.06
+      }
+    ],
+    "sha256": "4075f1af56dd5df3a558ef5a4a489d6e255015c75c010453303792bc9727dab3"
+  },
+  {
+    "file": "v2/footstep-1.wav",
+    "license": "CC0-1.0",
+    "duration": 0.26,
+    "lowpass": 4200,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/footstep_grass_001.ogg",
+        "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "49375a0184c33078581ef1e0ef03bbbd4c3ee62d29101bc19b82e2eb7c89ab3b"
+  },
+  {
+    "file": "v2/footstep-2.wav",
+    "license": "CC0-1.0",
+    "duration": 0.26,
+    "lowpass": 4200,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/footstep_grass_002.ogg",
+        "sha256": "73a520139f5be716a403bfe9c80e0e94d1e61d8e9de04a354b336392164b53dc",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "0d40c9c65918763881e33a3f8b99e8eb93297b3b359f9d7485d464288e30320f"
+  },
+  {
+    "file": "v2/footstep-3.wav",
+    "license": "CC0-1.0",
+    "duration": 0.26,
+    "lowpass": 4200,
+    "decay": 5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/footstep_grass_003.ogg",
+        "sha256": "0546e1d8ab2def714425701a18bd34c5ee2794b12e858e5b595aabcf38a34137",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "sha256": "8a35075cf0a9ad15435558a9941c623a41fca303d066c8cfc53143274fc0248c"
+  },
+  {
+    "file": "v2/land-1.wav",
+    "license": "CC0-1.0",
+    "duration": 0.38,
+    "lowpass": 3200,
+    "decay": 6,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactSoft_heavy_001.ogg",
+        "sha256": "4d0096364ba9e46119d2ff6df493fdc101bd2e1efae061da5e5f77a53b3fdcb6",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/footstep_grass_002.ogg",
+        "sha256": "73a520139f5be716a403bfe9c80e0e94d1e61d8e9de04a354b336392164b53dc",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.4,
+        "delay": 0
+      }
+    ],
+    "sha256": "fec708d4e83541925d9c470ad01f60f772521e611bcef3fd67fb2537668e6cab"
+  },
+  {
+    "file": "v2/land-2.wav",
+    "license": "CC0-1.0",
+    "duration": 0.38,
+    "lowpass": 3200,
+    "decay": 6,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactSoft_heavy_002.ogg",
+        "sha256": "d130ae541951243d3f6ed963d0057450a445ffe117fbf9a084d34eb1635cb563",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/footstep_grass_003.ogg",
+        "sha256": "0546e1d8ab2def714425701a18bd34c5ee2794b12e858e5b595aabcf38a34137",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.4,
+        "delay": 0
+      }
+    ],
+    "sha256": "0a74f03831855402df3d87242f198e1717fd4211b919562ae07d283d1ebc8653"
+  }
+]
