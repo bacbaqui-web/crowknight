@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>
+    덫 사냥꾼 시연</title
+  ><style>
+    body {
+      margin: 0;
+      background: #e1dfd5;
+      color: #252923;
+      font: 16px sans-serif;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      max-width: 100%;
+      height: auto;
+      background: #d0d2bd;
+    }
+    button {
+      padding: 9px 18px;
+    }
+    p {
+      margin: 14px;
+    }
+  </style>
+  <p>덫 사냥꾼 · ← → 이동 / Space 점프 / Q 공격 <button id="reset">다시 시작</button></p>
+  <p id="status"></p>
+  <canvas width="1000" height="540"></canvas>
+  <script type="module">
+    import { PuppetPlayer } from '../../src/actor_runtime_engine.js';
+    import { CHARACTER_ASSET_PATHS, loadCharacterAssets } from '../../src/asset_loader_helper.js';
+    import { mergeTuning } from '../../src/project_data_normalizer_helper.js';
+    import { DEFAULT_PLAYER_TUNING } from '../../src/player_default_tuning_data.js';
+    import { updateBattleActorMotion } from '../../src/enemy_runtime_engine.js';
+    import { resolveProjectileCombat } from '../../src/combat_engine.js';
+    import {
+      updateProjectileRuntime,
+      drawProjectiles,
+      activeProjectiles,
+      resetProjectileRuntime,
+    } from '../../src/projectile_runtime_engine.js';
+    import { resetPlayerActionState } from '../../src/actor_state.js';
+    const data = await fetch('../../data/draft.json').then((r) => r.json());
+    async function make(id, x, folder) {
+      const d = data.actors[id],
+        sources = Object.fromEntries(
+          Object.entries(CHARACTER_ASSET_PATHS)
+            .filter(([k]) => d.assets.__parts?.includes(k) ?? !['backpack', 'collar', 'flame'].includes(k))
+            .map(([k, v]) => [k, '../../assets/characters/' + folder + '/' + v])
+        );
+      const assets = await loadCharacterAssets(folder, '', { ...sources, __parts: d.assets.__parts });
+      const player = new PuppetPlayer(x, 430, assets);
+      player.applyTuning(mergeTuning(DEFAULT_PLAYER_TUNING, d.tuning));
+      player.captureEditRegions = false;
+      return {
+        id,
+        player,
+        group: id === 'trapper' ? 'mobs' : 'players',
+        hp: 100,
+        maxHp: 100,
+        invulnTime: 0,
+        hurtCooldown: 0,
+        hitStun: 0,
+        lastHitSerials: {},
+        quarterDepth: 0,
+      };
+    }
+    const target = await make('player_01', 350, 'players/player_01'),
+      enemy = await make('trapper', 570, 'mobs/trapper');
+    const actors = [target, enemy],
+      world = { floorY: 430, minX: 30, maxX: 970 },
+      keys = new Set(),
+      pressed = new Set(),
+      ctx = document.querySelector('canvas').getContext('2d');
+    function reset() {
+      resetProjectileRuntime();
+      for (const a of actors) {
+        resetPlayerActionState(a.player);
+        a.hp = 100;
+        a.invulnTime = 0;
+        a.player.y = 430;
+        a.player.x = a === target ? 350 : 570;
+        a.player.vx = 0;
+        a.player.vy = 0;
+        a.player.onGround = true;
+      }
+      keys.clear();
+      pressed.clear();
+    }
+    document.querySelector('#reset').onclick = reset;
+    addEventListener('keydown', (e) => {
+      if (['ArrowLeft', 'ArrowRight', 'Space', 'KeyQ', 'ShiftLeft'].includes(e.code)) {
+        e.preventDefault();
+        if (!keys.has(e.code)) pressed.add(e.code);
+        keys.add(e.code);
+      }
+    });
+    addEventListener('keyup', (e) => keys.delete(e.code));
+    addEventListener('blur', () => {
+      keys.clear();
+      pressed.clear();
+    });
+    function render() {
+      ctx.clearRect(0, 0, 1000, 540);
+      ctx.strokeStyle = '#7b816c';
+      ctx.beginPath();
+      ctx.moveTo(0, 430);
+      ctx.lineTo(1000, 430);
+      ctx.stroke();
+      drawProjectiles(ctx, {});
+      actors.forEach((a) => a.player.draw(ctx));
+      document.querySelector('#status').textContent =
+        `체력 ${Math.ceil(target.hp)} · 이동 불가 ${Math.max(0, target.player.trapRootTime || 0).toFixed(1)}초 · 덫 ${activeProjectiles().filter((t) => t.ratTrap && t.phase === 'armed').length}개`;
+    }
+    function step(dt) {
+      updateBattleActorMotion({ actors, playerActor: target, keys, pressed, world, dt });
+      pressed.clear();
+      updateProjectileRuntime({ actors, playerActor: target, world, dt });
+      resolveProjectileCombat({
+        projectiles: activeProjectiles(),
+        actors,
+        playerActor: target,
+        world,
+        onPlayerDeath() {
+          target.player.dead = true;
+        },
+      });
+      render();
+    }
+    window.trapperPreview = { actors, target, enemy, world, keys, pressed, step, render, reset, activeProjectiles };
+    reset();
+    let last = performance.now();
+    function tick(now) {
+      const dt = Math.min(0.04, (now - last) / 1000);
+      last = now;
+      if (!window.manualPreview) step(dt);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  </script>
+</html>

@@ -1,3 +1,5 @@
+import { resolveTrapCombat } from './trap_combat.js';
+import { enforceTrapRoot, updateTrapTimers } from './trapper_runtime.js';
 import { reflectBarrel } from './boss_hazard_runtime.js';
 import { canHitBalloon, isBalloonBomber } from './balloon_bomber_runtime.js';
 import { resolveMovementSkills } from './movement_skill_combat.js';
@@ -187,6 +189,7 @@ export function resolveCombat({
     });
   });
 
+  actors.forEach(enforceTrapRoot);
   actors.forEach((actor) =>
     syncPreviousAttackRegions(actor, attacks.get(actor) ?? cachedInteractionRegions(regionCache, actor, 'attack'))
   );
@@ -205,6 +208,14 @@ export function resolveProjectileCombat({
   const regionCache = createInteractionRegionFrameCache();
   projectiles.forEach((projectile) => {
     if (!projectile?.active || !projectile.owner) return;
+    if (projectile.ratTrap) {
+      resolveTrapCombat(
+        projectile,
+        { playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath },
+        playerActor ? cachedInteractionRegions(regionCache, playerActor, 'attack') : []
+      );
+      return;
+    }
     if (
       projectile.bossHazard === 'barrel' &&
       !projectile.reflected &&
@@ -338,6 +349,7 @@ export function syncPreviousAttackRegions(actor, attackRegions = []) {
 export function updateActorCombatTimers(actors, dt) {
   actors.forEach((actor) => {
     updateHealthTrail(actor, dt);
+    updateTrapTimers(actor.player, dt);
     actor.player.groundFireHurtTime = Math.max(0, (actor.player.groundFireHurtTime || 0) - dt);
     actor.player.runParryStun = Math.max(0, (actor.player.runParryStun || 0) - dt);
     if (actor.player.runParryPulse) actor.player.runParryPulse.time = Math.max(0, actor.player.runParryPulse.time - dt);

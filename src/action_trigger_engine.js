@@ -453,6 +453,7 @@ function normalizedFacing(facing) {
 }
 
 function canRunActionCondition(player, key) {
+  if (player.trapRootTime > 0 && actionRuntimeSettings(player, key).group === 'movement') return false;
   if (!canUseRunSkill(player, key)) return false;
   if (player.runSkills && key === player.runSkillActions?.roll && player.customActionKey === key && player.isCustomActionActive) return true;
   const condition = normalizeActionCondition(actionRuntimeSettings(player, key).condition);

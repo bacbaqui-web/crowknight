@@ -17,6 +17,7 @@ export function applyInteractionDamage({
   attackRegion,
   damage: rawDamage,
   allowParry = true,
+  preserveAction = false,
   guarded = false,
   invincibleTime = 0,
   comboStep,
@@ -78,7 +79,7 @@ export function applyInteractionDamage({
     });
   }
   if (target.hp > 0) {
-    if (!blocking && target.player.actionKey !== 'tankCharge' && !target.player.bossStunned)
+    if (!preserveAction && !blocking && target.player.actionKey !== 'tankCharge' && !target.player.bossStunned)
       requestHurtAction(target, attacker);
     return false;
   }

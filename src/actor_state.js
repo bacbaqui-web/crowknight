@@ -2,6 +2,10 @@ import { resetMovementSkills } from './movement_skill_helper.js';
 export function resetPlayerActionState(player) {
   player.dead = false;
   player.balloonState = null;
+  player.trapperState = null;
+  player.trapRootTime = 0;
+  player.trapImmunity = 0;
+  player.trapAnchor = null;
   player.groundFireHurtTime = 0;
   player.tankCharge = null;
   player.bossStunned = false;
