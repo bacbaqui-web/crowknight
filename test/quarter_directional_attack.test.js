@@ -11,7 +11,7 @@ import {
   crescentRibbon,
   trailHitboxOffset,
   directionalTrailPose,
-  sectorEdgeRibbon,
+  placeCrescentAtHitbox,
 } from '../src/quarter_view/native_weapon_trail.js';
 const raw = [
   { key: ATTACK_INTERACTION_OBJECT_KEY, x: 30, y: -90, w: 100, h: 30, reaction: { damage: 17, hitMode: 'trace' } },
@@ -333,26 +333,45 @@ test('base reach grows 15 percent and authored combo actions stack once with upg
   }
 });
 
-test('crescent outer edge follows the actual sector boundary in all directions and scales', () => {
+test('hitbox placement translates the native crescent without changing its shape', async () => {
+  const { QUARTER_PROJECTION } = await import('../src/quarter_view/camera.js');
   const samples = [0, Math.PI / 3, (Math.PI * 2) / 3].map((angle) => ({
-    anchor: { x: 0, y: 0 },
-    points: [{}, { x: 100 * Math.cos(angle), y: 100 * Math.sin(angle) }],
+    anchor: { x: 20, y: -70, depth: 30 },
+    points: [
+      {},
+      { x: 20 + 100 * Math.cos(angle), y: -70 + 100 * Math.sin(angle) },
+      { x: 20 + 100 * Math.cos(angle), y: -70 + 100 * Math.sin(angle) },
+    ],
   }));
+  const original = crescentRibbon(samples);
   for (const aim of EFFECT_DIRECTIONS) {
     const a = actor();
     a.quarterAim = aim;
+    a.quarterDepth = 30;
     a.player.actionKey = 'attack3';
     a.player.runUpgrades = { reach: 1.5 };
     const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
-    for (const facing of [-1, 1]) {
-      const ribbon = sectorEdgeRibbon(samples, region, facing);
-      assert.equal(ribbon.outer.length, 33);
-      for (const p of ribbon.outer) {
-        const distance = Math.hypot(p.x - region.quarterBoxOrigin.x, p.depth - region.quarterBoxOrigin.depth);
-        assert.ok(distance <= region.quarterBoxLength + 1e-8);
-        assert.ok(distance > region.quarterBoxLength * 0.997);
-      }
-      assert.deepEqual(ribbon.inner[0], ribbon.outer[0]);
+    const placed = placeCrescentAtHitbox(original, region);
+    const dx = placed.outer[0].x - original.outer[0].x;
+    const dy = placed.outer[0].y - original.outer[0].y;
+    for (const boundary of ['outer', 'inner']) {
+      assert.equal(placed[boundary].length, original[boundary].length);
+      placed[boundary].forEach((p, i) => {
+        assert.ok(Math.abs(p.x - original[boundary][i].x - dx) < 1e-8);
+        assert.ok(Math.abs(p.y - original[boundary][i].y - dy) < 1e-8);
+        assert.equal(p.depth, original[boundary][i].depth);
+      });
     }
+    const middle = placed.outer[Math.floor(placed.outer.length / 2)];
+    assert.ok(Math.abs(middle.x - region.quarterBoxOrigin.x - aim.x * region.quarterBoxLength) < 1e-8);
+    assert.ok(
+      Math.abs(
+        middle.y +
+          middle.depth * QUARTER_PROJECTION.slope -
+          (region.quarterBoxOrigin.y + (30 + aim.z * region.quarterBoxLength) * QUARTER_PROJECTION.slope)
+      ) < 1e-8
+    );
   }
+  assert.equal(placeCrescentAtHitbox(original, {}), original);
+  assert.deepEqual(placeCrescentAtHitbox({ outer: [], inner: [] }, {}), { outer: [], inner: [] });
 });
