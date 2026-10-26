@@ -85,6 +85,7 @@ export function applyInteractionDamage({
   }
 
   if (target === playerActor) {
+    world?.combatSounds?.event?.('playerDeath', target);
     onPlayerDeath();
     return true;
   }

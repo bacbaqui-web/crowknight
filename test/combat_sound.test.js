@@ -7,7 +7,8 @@ test('실제 공격 판정 시작에 종류별 휘두르기를 내고 같은 판
   const calls = [];
   const sounds = createCombatSoundController((name) => calls.push(name));
   const actors = ['players', 'mobs', 'bosses'].map((group) => ({
-    group, player: { attackSerial: 1, attackInteractionRegions: [{}], customActionKey: 'attack' },
+    group,
+    player: { attackSerial: 1, attackInteractionRegions: [{}], customActionKey: 'attack' },
   }));
   sounds.update(actors);
   sounds.update(actors);
@@ -45,5 +46,5 @@ test('실제 피해와 방어/패링을 구분하고 회피에는 타격음을 �
   hit();
   hit();
   assert.deepEqual(calls, ['clubHit', 'parry', 'block']);
-  assert.equal(target.hp, 80);
+  assert.equal(target.hp, 76); // Existing guard behavior absorbs 80% of the second hit.
 });

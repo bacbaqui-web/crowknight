@@ -316,14 +316,22 @@ function update(dt) {
   beginRuntimeDebugFrame();
   const gameActors = runActorState.getActiveActors({ runActive: runLifecycle.hasActiveRunActors() });
   const playerActor = runActorState.getPlayer();
+  combatAudio.setListener(playerActor);
+  combatAudio.setPaused(controlGuideOpen || quarter?.isPaused() || runUpgrades.isPaused() || experience.isPaused());
   captureActorMotionStart(gameActors);
 
   if (controlGuideOpen || quarter?.isPaused()) return;
   if (runLifecycle.isRunActive()) {
     runUpgrades.update(dt);
-    if (runUpgrades.isPaused()) return;
+    if (runUpgrades.isPaused()) {
+      combatAudio.setPaused(true);
+      return;
+    }
     if (!runUpgrades.isPending()) experience.update(0, world);
-    if (experience.isPaused()) return;
+    if (experience.isPaused()) {
+      combatAudio.setPaused(true);
+      return;
+    }
   }
 
   if (runLifecycle.isDeathPending()) {
@@ -370,7 +378,6 @@ function update(dt) {
     dt,
   });
   updateProjectileRuntime({ actors: gameActors, playerActor, world, dt });
-  combatSounds.update(gameActors);
 
   resolveCombat({
     parryRelease: pressed.has('KeyR'),
@@ -405,6 +412,7 @@ function update(dt) {
     },
   });
 
+  combatSounds.update(gameActors, activeProjectiles());
   if (runLifecycle.isRunActive()) {
     healthDrops.update(dt, playerActor, world);
     if (!runUpgrades.isPending()) experience.update(dt, world);

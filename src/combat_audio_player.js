@@ -1,36 +1,49 @@
-const FILES = {
-  tankRumble: ['club-hit.wav', 0.12, 0.28],
-  experiencePickup: ['experience-soft.wav', 0.32, 0.92],
-  healthPickup: ['health-pickup.wav', 0.4, 1],
-  clubSwing: ['club-swing.wav', 0.33, 0.92],
-  swordSwing: ['sword-swing.wav', 0.26, 1.08],
-  bossSwing: ['club-swing.wav', 0.44, 0.68],
-  clubHit: ['club-hit.wav', 0.55, 0.9],
-  swordHit: ['sword-hit.wav', 0.35, 1],
-  bossHit: ['club-hit.wav', 0.65, 0.72],
-  guardRaise: ['guard-raise.wav', 0.16, 1.15],
-  block: ['shield-block.wav', 0.4, 0.93],
-  parry: ['shield-block.wav', 0.48, 1.28],
-};
+import { COMBAT_SOUNDS, soundPlacement } from './combat_sound_catalog.js';
 
 export function createCombatAudioPlayer() {
   const { fetch, URL, console } = window;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass)
-    return { play() {}, reset() {}, unlock: async () => {}, loading: Promise.resolve(), loadedCount: () => 0 };
+    return {
+      play() {},
+      reset() {},
+      setPaused() {},
+      setListener() {},
+      unlock: async () => {},
+      loading: Promise.resolve(),
+      loadedCount: () => 0,
+    };
   const context = new AudioContextClass();
-  const master = context.createGain();
-  master.gain.value = 0.7;
-  const limiter = context.createDynamicsCompressor();
+  const master = context.createGain(),
+    limiter = context.createDynamicsCompressor();
+  limiter.threshold.value = -10;
+  limiter.knee.value = 12;
+  limiter.ratio.value = 8;
+  limiter.attack.value = 0.003;
+  limiter.release.value = 0.18;
   master.connect(limiter);
   limiter.connect(context.destination);
-  const buffers = new Map();
-  const voices = new Set();
-  const lastPlayed = new Map();
-  let muted = false;
-  let ready = false;
+  const buffers = new Map(),
+    voices = new Set(),
+    lastPlayed = new Map();
+  let muted = false,
+    paused = false,
+    ready = false,
+    listener = null,
+    volume = 0.65,
+    played = 0;
+  try {
+    const saved = JSON.parse(window.localStorage.getItem('crowKnight.sound') || 'null');
+    if (saved) {
+      muted = saved.muted === true;
+      volume = Math.max(0, Math.min(1, Number.isFinite(Number(saved.volume)) ? Number(saved.volume) : 0.65));
+    }
+  } catch {
+    /* Sound stays available when storage is blocked. */
+  }
+  master.gain.value = muted ? 0 : volume;
   const loading = Promise.all(
-    [...new Set(Object.values(FILES).map(([file]) => file))].map(async (file) => {
+    [...new Set(Object.values(COMBAT_SOUNDS).flatMap((s) => s.files))].map(async (file) => {
       try {
         const response = await fetch(new URL(`../assets/audio/combat/${file}`, import.meta.url));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -47,50 +60,114 @@ export function createCombatAudioPlayer() {
   }
   window.addEventListener('pointerdown', unlock, { capture: true });
   window.addEventListener('keydown', unlock, { capture: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) reset();
+  });
+  const controls = document.createElement('div');
+  controls.style.cssText =
+    'position:fixed;right:12px;bottom:12px;z-index:20;display:flex;align-items:center;gap:8px;background:#182331;color:#fff;border:1px solid #758391;border-radius:8px;padding:7px';
   const button = document.createElement('button');
   button.type = 'button';
   button.id = 'combatSoundToggle';
-  button.style.cssText =
-    'position:fixed;right:12px;bottom:12px;z-index:20;background:#182331;color:#fff;border:1px solid #758391;border-radius:8px;padding:8px;cursor:pointer';
-  function syncButton() {
+  button.style.cssText = 'background:transparent;color:inherit;border:0;cursor:pointer';
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '100';
+  slider.value = String(Math.round(volume * 100));
+  slider.setAttribute('aria-label', '효과음 음량');
+  slider.style.width = '75px';
+  function sync() {
     button.textContent = muted ? '소리 꺼짐' : '소리 켜짐';
     button.setAttribute('aria-label', muted ? '효과음 켜기' : '효과음 끄기');
     button.setAttribute('aria-pressed', String(!muted));
+    master.gain.setTargetAtTime(muted ? 0 : volume, context.currentTime, 0.015);
+    try {
+      window.localStorage.setItem('crowKnight.sound', JSON.stringify({ muted, volume }));
+    } catch {
+      /* Optional preference. */
+    }
   }
   button.addEventListener('click', () => {
     muted = !muted;
-    master.gain.setValueAtTime(muted ? 0 : 0.7, context.currentTime);
-    syncButton();
+    if (muted) reset();
+    sync();
   });
-  syncButton();
-  document.body.append(button);
-  function play(name) {
-    const sound = FILES[name];
-    if (!ready || muted || !sound || context.state !== 'running' || document.hidden) return;
-    const [file, volume, rate] = sound;
-    const buffer = buffers.get(file);
-    if (!buffer || voices.size >= 20) return;
+  slider.addEventListener('input', () => {
+    volume = Number(slider.value) / 100;
+    sync();
+  });
+  controls.append(button, slider);
+  document.body.append(controls);
+  sync();
+  function play(name, position = null) {
+    const sound = COMBAT_SOUNDS[name];
+    if (!ready || muted || paused || !sound || volume === 0 || context.state !== 'running' || document.hidden)
+      return false;
+    const spatial = soundPlacement(position, listener);
+    if (spatial.gain < 0.03) return false;
     const now = context.currentTime;
-    if (now - (lastPlayed.get(name) ?? -Infinity) < 0.045) return;
+    if (now - (lastPlayed.get(name) ?? -Infinity) < sound.cooldown) return false;
+    const file = sound.files[Math.floor(Math.random() * sound.files.length)],
+      buffer = buffers.get(file);
+    if (!buffer) return false;
+    if ([...voices].filter((v) => v.name === name).length >= 4) return false;
+    if (voices.size >= 24) {
+      const victim = [...voices].find((v) => v.priority < sound.priority);
+      if (!victim) return false;
+      voices.delete(victim);
+      victim.source.stop();
+    }
     lastPlayed.set(name, now);
-    const source = context.createBufferSource();
-    const gain = context.createGain();
+    const source = context.createBufferSource(),
+      gain = context.createGain(),
+      pan = context.createStereoPanner();
     source.buffer = buffer;
-    source.playbackRate.value = rate * (0.96 + Math.random() * 0.08);
-    gain.gain.value = volume;
+    source.playbackRate.value = sound.rate * (0.97 + Math.random() * 0.06);
+    gain.gain.value = sound.gain * spatial.gain;
+    pan.pan.value = spatial.pan;
     source.connect(gain);
-    gain.connect(master);
-    voices.add(source);
+    gain.connect(pan);
+    pan.connect(master);
+    const voice = { source, name, priority: sound.priority };
+    voices.add(voice);
     source.onended = () => {
-      voices.delete(source);
+      voices.delete(voice);
       source.disconnect();
       gain.disconnect();
+      pan.disconnect();
     };
     source.start();
+    played++;
+    return true;
   }
   function reset() {
-    for (const source of voices) source.stop();
+    for (const v of voices) v.source.stop();
+    voices.clear();
     lastPlayed.clear();
   }
-  return { play, reset, loading, unlock, loadedCount: () => buffers.size };
+  function setPaused(value) {
+    if (value && !paused) reset();
+    paused = Boolean(value);
+  }
+  return {
+    play,
+    reset,
+    loading,
+    unlock,
+    setPaused,
+    setListener(value) {
+      listener = value;
+    },
+    loadedCount: () => buffers.size,
+    diagnostics: () => ({
+      loaded: buffers.size,
+      voices: voices.size,
+      played,
+      paused,
+      muted,
+      volume,
+      state: context.state,
+    }),
+  };
 }
