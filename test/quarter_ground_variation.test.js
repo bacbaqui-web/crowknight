@@ -19,3 +19,16 @@ test('terrain crops have no mirrored seam or short repeat and wrap at the world 
     right = sample(200 + 0.00001, 71);
   assert.ok(left.every((c, i) => Math.abs(c - right[i]) < 1.1));
 });
+
+test('brush contrast survives inside patches instead of averaging four unrelated colors', () => {
+  const pixels = new Uint8Array(256 * 256 * 4);
+  for (let y = 0; y < 256; y++)
+    for (let x = 0; x < 256; x++) {
+      const value = (Math.floor(x / 3) + Math.floor(y / 3)) % 2 ? 255 : 0;
+      pixels.fill(value, (y * 256 + x) * 4, (y * 256 + x) * 4 + 4);
+    }
+  for (const x of [20, 40, 60, 140, 160, 180]) {
+    const c = materialSample(pixels, x, 40)[0];
+    assert.ok(c < 2 || c > 253, `brush contrast lost at ${x}: ${c}`);
+  }
+});

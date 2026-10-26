@@ -7,6 +7,7 @@ export const SCENERY_ASSETS = Object.freeze({
   fork: asset('tree-fork-v3'),
   bent: asset('tree-bent-v3'),
   bush: asset('bush-v3'),
+  boulder: asset('boulder-v5'),
   rock: asset('rock-flat-v2'),
   stones: asset('stones-v3'),
   hut: asset('ruin-flat-v2'),
@@ -14,7 +15,13 @@ export const SCENERY_ASSETS = Object.freeze({
   ...Object.fromEntries(FOREST_ASSET_CATALOG.map((entry) => [entry.id, asset(entry.file.replace('.webp', ''))])),
 });
 export const SCENERY_FRAME = Object.freeze({ width: 420, height: 450, anchorX: 210, anchorY: 390 });
-const variants = { tree: ['tree', 'fork', 'bent'], rock: ['rock', 'stones'], hut: ['hut', 'pillar'], bush: ['bush'] };
+const variants = {
+  tree: ['tree', 'fork', 'bent'],
+  rock: ['rock', 'stones'],
+  hut: ['hut', 'pillar'],
+  bush: ['bush'],
+  boulder: ['boulder'],
+};
 for (const entry of FOREST_ASSET_CATALOG) variants[entry.type].push(entry.id);
 export const SCENERY_VARIANT_COUNTS = Object.freeze(
   Object.fromEntries(Object.entries(variants).map(([type, list]) => [type, list.length]))
@@ -84,6 +91,8 @@ export function createScenerySprite(type, createSurface = () => document.createE
     stamp(ctx, groundCover, n === 1 ? -30 : 26, -4, 95, 42);
     stamp(ctx, variants.tree[n], 0, 3, 300, 330);
     stamp(ctx, groundCover, n === 2 ? 26 : -18, 9, 68, 28);
+  } else if (type === 'boulder') {
+    stamp(ctx, 'boulder', 0, 5, 215, 150);
   } else {
     stamp(ctx, variants[type][n], 0, 5, type === 'rock' ? 155 : 270, type === 'rock' ? 90 : 140);
     stamp(ctx, groundCover, n === 0 ? -57 : 58, 9, 55, 26);

@@ -9,7 +9,7 @@ function actor(x = 480, z = 0, y = 430) {
 test('deterministic infinite chunks have bounded cache and clear spawn', () => {
   const env = createEnvironment();
   const first = env.nearby(480, 0);
-  assert.ok(first.some((o) => o.type === 'hut'));
+  assert.ok(first.some((o) => o.type === 'boulder'));
   assert.ok(first.some((o) => o.type === 'tree'));
   for (let i = 0; i < 500; i++) env.nearby(i * 1000, -i * 1000);
   assert.ok(env.cacheSize <= 100);
@@ -31,24 +31,24 @@ test('ground movement cannot tunnel through a rock and can slide along its face'
 });
 test('jump over side then descend onto rock, stand, and walk off', () => {
   const env = createEnvironment(),
-    a = actor(580, 0, 350),
+    a = actor(580, 0, 300),
     motion = {};
   a.player.onGround = false;
   env.before(a, world, motion);
   a.player.x = 670;
-  a.player.y = 365;
+  a.player.y = 320;
   a.player.vy = 4;
   env.after(a, world);
   assert.equal(a.player.x, 670);
   env.before(a, world, motion);
-  assert.equal(motion.floorY, world.floorY - SCENERY_TYPES.rock.height);
+  assert.equal(motion.floorY, world.floorY - SCENERY_TYPES.boulder.height);
   a.player.y = 390;
   env.after(a, world);
-  assert.equal(a.player.y, world.floorY - SCENERY_TYPES.rock.height);
+  assert.equal(a.player.y, world.floorY - SCENERY_TYPES.boulder.height);
   assert.equal(a.player.onGround, true);
   env.before(a, world, motion);
   env.after(a, world);
-  assert.equal(a.quarterPlatform.type, 'rock');
+  assert.equal(a.quarterPlatform.type, 'boulder');
   env.before(a, world, motion);
   a.player.x = 790;
   env.after(a, world);
@@ -57,7 +57,7 @@ test('jump over side then descend onto rock, stand, and walk off', () => {
 });
 test('roof is a landing surface and trees remain blocking while airborne', () => {
   const env = createEnvironment(),
-    a = actor(220, 240, 330);
+    a = actor(140, 500, 330);
   a.player.onGround = false;
   a.player.vy = 5;
   env.before(a, world, {});
@@ -81,8 +81,8 @@ test('native actor physics lands and remains stable on both platform heights', a
   const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
   const def = saved.characters.find((a) => a.id === 'player_01');
   for (const [x, z, height] of [
-    [670, 0, SCENERY_TYPES.rock.height],
-    [220, 240, SCENERY_TYPES.hut.height],
+    [670, 0, SCENERY_TYPES.boulder.height],
+    [140, 500, SCENERY_TYPES.hut.height],
   ]) {
     const env = createEnvironment(),
       p = new PuppetPlayer(x, 250, {});
@@ -110,4 +110,23 @@ test('native actor physics lands and remains stable on both platform heights', a
     assert.equal(p.onGround, true);
     assert.equal(a.quarterPlatform.height, height);
   }
+});
+
+test('low stones and steps are ground decoration, separate from climbable boulders', () => {
+  const env = createEnvironment();
+  const all = env.nearby(480, 0, 700, 700, true);
+  const solid = env.nearby(480, 0, 700, 700);
+  for (const id of ['start-stones', 'start-hut']) {
+    const floor = all.find((o) => o.id === id);
+    assert.equal(floor.groundDecoration, true);
+    assert.equal(floor.height, 0);
+    assert.ok(!solid.some((o) => o.id === id));
+    const a = actor(floor.x - 100, floor.z);
+    env.before(a, world, {});
+    a.player.x = floor.x;
+    env.after(a, world);
+    assert.ok(Math.abs(a.player.x - floor.x) < 1e-8);
+    assert.equal(a.player.y, world.floorY);
+  }
+  assert.ok(solid.some((o) => o.type === 'boulder' && o.climbable && o.height > 60));
 });

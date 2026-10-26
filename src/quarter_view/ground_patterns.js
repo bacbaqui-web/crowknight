@@ -28,7 +28,7 @@ export function preloadGroundPatterns() {
     })
   ));
 }
-// Overlapping, independently offset crops avoid both mirror symmetry and short repeats.
+// Select one crop across most of each patch; crossfade only narrow patch seams.
 const PATCH = 200;
 const smooth = (v) => v * v * (3 - 2 * v);
 export function materialSample(data, x, z) {
@@ -39,19 +39,21 @@ export function materialSample(data, x, z) {
   const u = smooth(gx - cx),
     v = smooth(gz - cz);
   const color = [0, 0, 0];
+  let totalWeight = 0;
   for (let dz = 0; dz < 2; dz++)
     for (let dx = 0; dx < 2; dx++) {
       const ix = (((cx + dx) % 16) + 16) % 16;
       const iz = (((cz + dz) % 16) + 16) % 16;
-      const ox = 64 + forestHash(ix + 19, iz + 61) * 127;
-      const oz = 64 + forestHash(ix + 71, iz + 29) * 127;
-      const tx = Math.floor(ox + (gx - cx - dx) * 60);
-      const tz = Math.floor(oz + (gz - cz - dz) * 60);
+      const ox = 100 + forestHash(ix + 19, iz + 61) * 55;
+      const oz = 100 + forestHash(ix + 71, iz + 29) * 55;
+      const tx = Math.floor(ox + (gx - cx - dx) * 100);
+      const tz = Math.floor(oz + (gz - cz - dz) * 100);
       const p = (tz * SIZE + tx) * 4;
-      const weight = (dx ? u : 1 - u) * (dz ? v : 1 - v);
+      const weight = Math.pow((dx ? u : 1 - u) * (dz ? v : 1 - v), 16);
+      totalWeight += weight;
       for (let c = 0; c < 3; c++) color[c] += data[p + c] * weight;
     }
-  return color;
+  return color.map((c) => c / totalWeight);
 }
 export function materialColor(id, x, z) {
   const def = definitions[id],
