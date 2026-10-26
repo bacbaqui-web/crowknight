@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "trapper",
+  "type": "enemy",
+  "label": "덫 사냥꾼",
+  "name": "덫 사냥꾼",
+  "x": 1850,
+  "folder": "mobs/trapper",
+  "storageFolder": "mobs/trapper",
+  "group": "mobs",
+  "tint": "#b49a5b",
+  "deleted": false,
+  "deletable": true,
+  "psdFileName": "enemy.psd"
+}

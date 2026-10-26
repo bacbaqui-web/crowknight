@@ -1,27 +1,53 @@
+import { actorSoundEvents } from './actor_sound_events.js';
+import { createProjectileSoundEvents } from './projectile_sound_events.js';
 export function createCombatSoundController(play) {
   let states = new WeakMap();
-  function update(actors) {
+  const projectiles = createProjectileSoundEvents(play);
+  function update(actors, shots = []) {
     for (const actor of actors) {
       const player = actor.player;
-      if (!player || player.dead || actor.respawning) continue;
-      const previous = states.get(player) || {};
-      const rumble = Math.floor((player.animTime || 0) / 0.18);
-      if(actor.id === 'ram_tank' && player.actionKey === 'tankDrive' && previous.rumble !== rumble) play('tankRumble', player);
-      const attacking = player.attackInteractionRegions.length > 0;
+      if (!player || actor.respawning) continue;
+      let previous = states.get(player) || {};
+      if (player.animTime < previous.time) previous = {};
+      const next = actorSoundEvents(actor, previous, play);
+      if (player.dead) {
+        states.set(player, next);
+        continue;
+      }
+      const attacking = (player.attackInteractionRegions?.length || 0) > 0;
       const serial = player.attackSerial;
       if (attacking && (!previous.attacking || previous.serial !== serial)) {
         play(actor.group === 'players' ? 'clubSwing' : actor.group === 'bosses' ? 'bossSwing' : 'swordSwing', player);
       }
-      const guarding = player.customActionKey === player.runSkillActions?.guard ||
+      const guarding =
+        player.customActionKey === player.runSkillActions?.guard ||
         player.actions?.some((action) => action.key === player.customActionKey && action.name === '방어');
       if (guarding && !previous.guarding && player.isCustomActionActive) play('guardRaise', player);
-      states.set(player, { rumble, attacking, serial, guarding: guarding && player.isCustomActionActive });
+      states.set(player, { ...next, attacking, serial, guarding: guarding && player.isCustomActionActive });
     }
+    projectiles.update(shots);
   }
   function contact(kind, attacker, target) {
-    play(kind === 'hit'
-      ? attacker.group === 'players' ? 'clubHit' : attacker.group === 'bosses' ? 'bossHit' : 'swordHit'
-      : kind === 'parry' ? 'parry' : 'block', target.player);
+    play(
+      kind === 'hit'
+        ? attacker.group === 'players'
+          ? 'clubHit'
+          : attacker.group === 'bosses'
+            ? 'bossHit'
+            : 'swordHit'
+        : kind === 'parry'
+          ? 'parry'
+          : 'block',
+      target
+    );
   }
-  return { update, contact, reset: () => { states = new WeakMap(); } };
+  return {
+    update,
+    contact,
+    event: play,
+    reset: () => {
+      states = new WeakMap();
+      projectiles.reset();
+    },
+  };
 }

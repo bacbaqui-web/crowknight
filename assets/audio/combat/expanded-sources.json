@@ -1,0 +1,456 @@
+[
+  {
+    "file": "foot-dirt-1.wav",
+    "license": "CC0-1.0",
+    "duration": 0.34997732426303857,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/footstep_grass_000.ogg",
+        "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "foot-dirt-2.wav",
+    "license": "CC0-1.0",
+    "duration": 0.34997732426303857,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/footstep_grass_001.ogg",
+        "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "foot-dirt-3.wav",
+    "license": "CC0-1.0",
+    "duration": 0.34997732426303857,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/footstep_grass_002.ogg",
+        "sha256": "73a520139f5be716a403bfe9c80e0e94d1e61d8e9de04a354b336392164b53dc",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "armor-jingle.wav",
+    "license": "CC0-1.0",
+    "duration": 0.5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail1.wav",
+        "sha256": "44d4d6b0cda8138c9d5545ba4f434f53b7817ba32d98ddfdf5bff6ae7acdefdf",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "cloth-move.wav",
+    "license": "CC0-1.0",
+    "duration": 0.55,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/cloth1.ogg",
+        "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "cloth-roll.wav",
+    "license": "CC0-1.0",
+    "duration": 0.4183219954648526,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/cloth4.ogg",
+        "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_medium_000.ogg",
+        "sha256": "7d3ba0bb5e60a11b5d3e558c141303dcf494256675fbf753c0d252d2cf0481e3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.45,
+        "delay": 0.12
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "land-1.wav",
+    "license": "CC0-1.0",
+    "duration": 0.5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactSoft_heavy_000.ogg",
+        "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/footstep_grass_000.ogg",
+        "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.4,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "land-2.wav",
+    "license": "CC0-1.0",
+    "duration": 0.5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactSoft_heavy_001.ogg",
+        "sha256": "4d0096364ba9e46119d2ff6df493fdc101bd2e1efae061da5e5f77a53b3fdcb6",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/footstep_grass_001.ogg",
+        "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.4,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "metal-drop.wav",
+    "license": "CC0-1.0",
+    "duration": 0.6999773242630386,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/metalPot1.ogg",
+        "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "metal-set.wav",
+    "license": "CC0-1.0",
+    "duration": 0.27160997732426306,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/metalLatch.ogg",
+        "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "metal-click.wav",
+    "license": "CC0-1.0",
+    "duration": 0.4,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/metalClick.ogg",
+        "sha256": "9851a69d0c613e13bceef08060ecc4148f098ef487927cbebe270d642398a3b3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "metal-crash.wav",
+    "license": "CC0-1.0",
+    "duration": 0.7937868480725624,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "impact/Audio/impactMetal_heavy_002.ogg",
+        "sha256": "b914c8f1eb7c0f34bb165d7c77f4be0351f6be0660c13c53e65424e262e2c093",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.5,
+        "delay": 0.06
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "trap-snap.wav",
+    "license": "CC0-1.0",
+    "duration": 0.27160997732426306,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/metalLatch.ogg",
+        "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.8,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactMetal_medium_002.ogg",
+        "sha256": "7e89ce2ca0dbda95ea2b78d4b50791cab35c10d20e9f5ccd45dd0b00e99ff548",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0.025
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "tank-rattle.wav",
+    "license": "CC0-1.0",
+    "duration": 0.8,
+    "rate": 0.8,
+    "sources": [
+      {
+        "original": "kenney-rpg/Audio/creak2.ogg",
+        "sha256": "8a990afdc03aebb91d528f5385e2f95582dbfa8e2c12c71098ab01be9142294a",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.6,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/inventory/chainmail2.wav",
+        "sha256": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "kenney-rpg/Audio/metalPot3.ogg",
+        "sha256": "d306e5b848f6843332d0ca19f8f7dfe5796aeb56d8273902b085df463273f1dc",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "gain": 0.25,
+        "delay": 0.12
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "armor-fall.wav",
+    "license": "CC0-1.0",
+    "duration": 0.5812698412698413,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "rpg/RPG Sound Pack/inventory/armor-light.wav",
+        "sha256": "1600329c7607eede7a441f66152f0626dd84e4b13f84ccd07887d020ba1c6b9e",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 0.6,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactSoft_heavy_003.ogg",
+        "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 1,
+        "delay": 0.04
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "fire-crackle.wav",
+    "license": "CC0-1.0",
+    "duration": 0.9,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "fire-cast.wav",
+    "license": "CC0-1.0",
+    "duration": 0.6999773242630386,
+    "rate": 0.9,
+    "sources": [
+      {
+        "original": "fire.wav",
+        "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+        "author": "AntumDeluge",
+        "url": "https://opengameart.org/content/fire-crackling",
+        "gain": 0.6,
+        "delay": 0
+      },
+      {
+        "original": "rpg/RPG Sound Pack/battle/swing2.wav",
+        "sha256": "2e4064e294d136e06c40cc562df969493907e6873f39895ca86b4a6b2e034c6e",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "magic-charge.wav",
+    "license": "CC0-1.0",
+    "duration": 0.8404761904761905,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "rpg/RPG Sound Pack/battle/magic1.wav",
+        "sha256": "cadea162f3fe91c27666ab2a0516fa3bf156997d92d4f8145919126bca7b1e8a",
+        "author": "artisticdude",
+        "url": "https://opengameart.org/content/rpg-sound-pack",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "balloon-pop.wav",
+    "license": "CC0-1.0",
+    "duration": 0.5,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "balloon.flac",
+        "sha256": "4f15708bd01e1e20a92055381c1fc66d179f222d90f6963aee016ae1062f7f29",
+        "author": "Gniffelbaf / AntumDeluge",
+        "url": "https://opengameart.org/content/balloon-sounds",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "explosion-1.wav",
+    "license": "CC0-1.0",
+    "duration": 2.1,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "explosion.ogg",
+        "sha256": "5fb4f29c68513ba69c8e4e4a0820596f609827435615a713b5a8487266f37401",
+        "author": "EZduzziteh",
+        "url": "https://opengameart.org/content/explosions-4",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "explosion-2.wav",
+    "license": "CC0-1.0",
+    "duration": 1.3999773242630384,
+    "rate": 1.15,
+    "sources": [
+      {
+        "original": "explosion.ogg",
+        "sha256": "5fb4f29c68513ba69c8e4e4a0820596f609827435615a713b5a8487266f37401",
+        "author": "EZduzziteh",
+        "url": "https://opengameart.org/content/explosions-4",
+        "gain": 1,
+        "delay": 0
+      },
+      {
+        "original": "impact/Audio/impactWood_heavy_001.ogg",
+        "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+        "author": "Kenney",
+        "url": "https://kenney.nl/assets/impact-sounds",
+        "gain": 0.45,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  },
+  {
+    "file": "bow-release.wav",
+    "license": "CC0-1.0",
+    "duration": 0.6999773242630386,
+    "rate": 1,
+    "sources": [
+      {
+        "original": "weapons/English Longbow Shoot.wav",
+        "sha256": "c25684ccdab3eb13f17a0ffa637fbd175659d092665f16c0bce8510d46c4fbee",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "gain": 1,
+        "delay": 0
+      }
+    ],
+    "processing": "mono 44.1kHz; HP40/LP15000; leading silence trim; layer mix; peak -2.5dBFS; short edge fades"
+  }
+]

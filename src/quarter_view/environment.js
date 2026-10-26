@@ -6,7 +6,7 @@ const CELL = 560;
 export const SCENERY_TYPES = Object.freeze({
   rock: { w: 120, d: 100, height: 44, climbable: true },
   hut: { w: 170, d: 140, height: 82, climbable: true },
-  tree: { w: 42, d: 44, height: 405, climbable: false },
+  tree: { w: 42, d: 44, height: 330, climbable: false },
 });
 export function createEnvironment() {
   let originX = 480;
@@ -20,11 +20,12 @@ export function createEnvironment() {
         make('rock', originX + 190, 0, 'start-rock'),
         make('hut', originX - 260, 240, 'start-hut'),
         make('tree', originX + 100, -300, 'start-tree'),
-        make('tree', originX - 65, -500, 'start-tree-left'),
+        make('tree', originX - 65, -500, 'start-tree-left', 1),
         make('tree', originX + 235, -530, 'start-tree-right')
       );
     } else {
-      for (let i = 0; i < 5; i++) {
+      const density = 2 + Math.floor(forestHash(x + 301, z - 71) * 4);
+      for (let i = 0; i < density; i++) {
         const seed = forestHash(x * 7 + i, z);
         const px = originX + x * CELL + (forestHash(x * 11 + i, z + 81) - 0.5) * 380;
         const pz = z * CELL + (forestHash(x + 71, z * 13 + i) - 0.5) * 380;
@@ -32,7 +33,7 @@ export function createEnvironment() {
         // Keep the road and clearing walkable, including the obstacle's footprint.
         if (terrain.edge < 130) continue;
         if (i >= 2 && terrain.edge < 200) continue;
-        const type = i > 0 ? 'tree' : seed < 0.1 ? 'hut' : seed < 0.35 ? 'rock' : 'tree';
+        const type = seed < 0.08 ? 'hut' : seed < 0.28 ? 'rock' : 'tree';
         const object = make(type, px, pz, `${key}:${i}`);
         if (objects.some((o) => Math.hypot(o.x - px, o.z - pz) < (o.type === 'tree' && type === 'tree' ? 100 : 170)))
           continue;
@@ -43,14 +44,14 @@ export function createEnvironment() {
     if (cache.size > 100) cache.delete(cache.keys().next().value);
     return objects;
   }
-  function make(type, x, z, id) {
+  function make(type, x, z, id, variant = Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 3)) {
     return {
       ...SCENERY_TYPES[type],
       type,
       x,
       z,
       id,
-      variant: Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 3),
+      variant,
     };
   }
   function nearby(x, z, radiusX = 300, radiusZ = radiusX) {
