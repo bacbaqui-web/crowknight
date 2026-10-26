@@ -1,12 +1,52 @@
 [
   {
+    "id": 23,
+    "title": "Fist Punch or kick",
+    "author": "rcroller (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-fist-punch-or-kick-7171/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_420245a900.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 24,
+    "title": "Punch 2",
+    "author": "JakeEaton (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-2-37333/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/10/audio_d2cdbf44ba.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 25,
+    "title": "Impact Thud",
+    "author": "DRAGON-STUDIO",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-impact-thud-372473/",
+    "src": "https://cdn.pixabay.com/audio/2025/07/09/audio_835365b1c0.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 26,
+    "title": "Combat Impact",
+    "author": "Universfield",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-combat-impact-352458/",
+    "src": "https://cdn.pixabay.com/audio/2025/05/31/audio_9345bfe4b3.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
     "id": 19,
     "title": "shield guard",
     "author": "nekoninja (Freesound)",
     "category": "방패 방어",
     "url": "https://pixabay.com/sound-effects/film-special-effects-shield-guard-6963/",
     "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_9f712797d5.mp3",
-    "status": "new",
+    "status": "previous",
     "approved": false
   },
   {
@@ -16,7 +56,7 @@
     "category": "방패 방어",
     "url": "https://pixabay.com/es/sound-effects/pel%C3%ADculas-y-efectos-especiales-metal-impact-6212/",
     "src": "https://cdn.pixabay.com/audio/2021/08/04/audio_3c2e15a1e8.mp3",
-    "status": "new",
+    "status": "previous",
     "approved": false
   },
   {
@@ -26,8 +66,10 @@
     "category": "명중",
     "url": "https://pixabay.com/sound-effects/film-special-effects-punch-knuckle-blunt-medium-503895/",
     "src": "https://cdn.pixabay.com/audio/2026/03/17/audio_4d48e16429.mp3",
-    "status": "new",
-    "approved": false
+    "status": "approved",
+    "approved": true,
+    "note": "현재 게임의 몽둥이 명중음 · 비교 기준",
+    "compare": true
   },
   {
     "id": 22,
@@ -36,7 +78,7 @@
     "category": "명중",
     "url": "https://pixabay.com/pt/sound-effects/filme-e-efeitos-especiais-hit-flesh-01-266311/",
     "src": "https://cdn.pixabay.com/audio/2024/11/19/audio_f1256606d8.mp3",
-    "status": "new",
+    "status": "previous",
     "approved": false
   },
   {
@@ -89,8 +131,8 @@
     "category": "방패 방어",
     "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
     "src": "https://cdn.pixabay.com/audio/2023/03/25/audio_b0c7773b14.mp3",
-    "approved": false,
-    "status": "previous"
+    "approved": true,
+    "status": "approved"
   },
   {
     "id": 16,
