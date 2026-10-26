@@ -91,7 +91,7 @@ export function createGpuGroundRenderer(ctx, world, createSurface) {
       gl.uniform3f(
         state.view,
         ((view.x % GROUND_TILE_SIZE.x) + GROUND_TILE_SIZE.x) % GROUND_TILE_SIZE.x,
-        view.depth,
+        ((view.depth % GROUND_TILE_SIZE.z) + GROUND_TILE_SIZE.z) % GROUND_TILE_SIZE.z,
         view.zoom
       );
       gl.drawArrays(gl.TRIANGLES, 0, 3);

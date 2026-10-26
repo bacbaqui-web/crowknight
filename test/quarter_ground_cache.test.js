@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGroundRenderer } from '../src/quarter_view/ground_renderer.js';
-import { createGroundTexture } from '../src/quarter_view/ground_texture.js';
+import { createGroundTexture, GROUND_TILE_SIZE } from '../src/quarter_view/ground_texture.js';
 
 function fixture() {
   const calls = { uploads: 0, draws: 0, blits: 0, view: null };
@@ -70,14 +70,14 @@ function fixture() {
 
 test('grass and dirt texture is deterministic, varied and opaque', () => {
   const texture = createGroundTexture();
-  assert.equal(texture.pixels.length, 256 * 256 * 4);
+  assert.equal(texture.pixels.length, 1024 * 1024 * 4);
   const colors = new Set();
   for (let i = 0; i < texture.pixels.length; i += 4) {
     colors.add([...texture.pixels.slice(i, i + 3)].join(','));
     assert.equal(texture.pixels[i + 3], 255);
   }
   assert.ok(colors.size > 100);
-  assert.deepEqual(createGroundTexture().pixels, texture.pixels);
+  assert.equal(createGroundTexture(), texture);
 });
 
 test('moving, depth, zoom and viewport changes reuse one GPU texture; a stationary view reuses its projection', () => {
@@ -103,7 +103,11 @@ test('moving, depth, zoom and viewport changes reuse one GPU texture; a stationa
   assert.equal(calls.blits, 301);
   view.x = 1000000000590;
   draw(hero, view);
-  assert.deepEqual(calls.view, [590, view.depth, view.zoom]);
+  assert.deepEqual(calls.view, [
+    590,
+    ((view.depth % GROUND_TILE_SIZE.z) + GROUND_TILE_SIZE.z) % GROUND_TILE_SIZE.z,
+    view.zoom,
+  ]);
   assert.deepEqual({ ...draw.stats }, { groundHits: 302, groundBuilds: 1 });
 });
 
