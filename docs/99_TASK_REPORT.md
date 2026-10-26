@@ -1912,3 +1912,10 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 - 선택 대기 중 상태창 중첩 차단. 설정 편집용 일시정지에는 성장 기록을 덮어씌우지 않음.
 - 숫자키/트리 탐색/강화 상태 관련 7개 테스트 통과, 문법 확인. 실제 쿼터뷰 PLAY→Tab→상태창/시간 정지→Tab 재개 확인 및 스크린샷 저장. ESLint/Prettier 미실행.
 - 큰 main.js에는 연결만 추가하고 화면은 pause_status_view.js로 분리. 큰 main.js는 반복 읽기 비용이 있어 계속 분리 검토 대상.
+
+
+## Tab 성장 기록 한 화면 배치
+- 스킬트리를 왼쪽, 내 강화와 적 강화를 오른쪽 두 열로 배치하고 중복 기술 목록을 제거했습니다.
+- 화면 높이에 맞춰 트리 크기를 조절하고 강화 아이콘 경로를 모듈 기준으로 처리했습니다.
+- 1280×720 브라우저에서 양쪽 강화 10개씩과 트리 전체 표시를 확인했습니다. 전용 확인 페이지: dev/pause-status/index.html.
+- ESLint/Prettier 및 전체 테스트는 실행하지 않았습니다.

@@ -1,0 +1,6 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>성장 기록 전체 항목 확인</title><link rel="stylesheet" href="../../src/upgradeHud.css"><style>body{margin:0;background:#15202b;color:white;font-family:sans-serif}.stage-wrap{height:100vh}</style><div class="stage-wrap"></div><script type="module">
+import {createPauseStatusView} from '../../src/pause_status_view.js';
+import {UPGRADE_CARDS} from '../../src/upgrade_card_data.js';
+const all=Object.fromEntries(UPGRADE_CARDS.map(c=>[c.id,3]));
+createPauseStatusView(document.querySelector('.stage-wrap'),()=>{}).show({level:10,xp:100,banked:0,pathId:'attack',ranks:{fourthStrike:3,chargeAttack:3,power:2}},{player:all,enemy:all},{hp:85,maxHp:120});
+</script></html>
