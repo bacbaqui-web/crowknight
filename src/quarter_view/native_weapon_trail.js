@@ -167,5 +167,40 @@ export function orientCrescentAtHitbox(ribbon, region, facing = 1) {
     y: targetY + p.y - front.y,
     depth: origin.depth,
   });
-  return { outer: rotated.outer.map(place), inner: rotated.inner.map(place) };
+  const placed = { outer: rotated.outer.map(place), inner: rotated.inner.map(place) };
+  return region.quarterTrailSectorFit ? fitCrescentToSector(placed, region) : placed;
+}
+
+// Widen the third swing toward the sector while retaining the native ribbon thickness and taper.
+export function fitCrescentToSector(ribbon, region) {
+  const aim = region.quarterBoxAim,
+    origin = region.quarterBoxOrigin;
+  const slope = QUARTER_PROJECTION.slope,
+    radius = region.quarterBoxLength;
+  const local = (p) => {
+    const x = p.x - origin.x,
+      z = (p.y - origin.y) / slope;
+    return { forward: x * aim.x + z * aim.z, side: -x * aim.z + z * aim.x };
+  };
+  const outer = ribbon.outer.map(local),
+    inner = ribbon.inner.map(local);
+  const min = Math.min(...outer.map((p) => p.side)),
+    max = Math.max(...outer.map((p) => p.side));
+  if (max - min < 1) return ribbon;
+  const halfWidth = radius * Math.sin(Math.PI / 3) * 0.95;
+  const project = (forward, side) => ({
+    x: origin.x + aim.x * forward - aim.z * side,
+    y: origin.y + (aim.z * forward + aim.x * side) * slope,
+    depth: origin.depth,
+  });
+  const result = { outer: [], inner: [] };
+  outer.forEach((p, i) => {
+    const side = (((p.side - min) / (max - min)) * 2 - 1) * halfWidth;
+    const forward = Math.sqrt(Math.max(0, radius * radius - side * side));
+    const thickness = Math.min(radius * 0.3, Math.hypot(p.forward - inner[i].forward, p.side - inner[i].side));
+    const inset = 1 - thickness / radius;
+    result.outer.push(project(forward, side));
+    result.inner.push(project(forward * inset, side * inset));
+  });
+  return result;
 }

@@ -63,6 +63,7 @@ export function directionalAttackRegions(actor, regions) {
       quarterHeightRange: attackPlane(actor) === 'height' ? [elevation - 30, elevation + 30] : null,
       quarterBoxLength: length,
       quarterTrailScale: reach * comboScale,
+      quarterTrailSectorFit: Number(strike?.[1]) === 3 && attackPlane(actor) !== 'height',
       quarterDirectionScale: sizeScale,
       quarterBoxOrigin: { x: originX, depth: depthOf(actor), y: elevation },
       quarterBoxAim: direction,

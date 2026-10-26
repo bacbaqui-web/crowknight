@@ -371,10 +371,38 @@ test('combo and reach upgrades scale crescent dimensions once and keep the leadi
     a.player.runUpgrades = { reach: 1.5 };
     a.player.runSkills = { reach: 2 };
     const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
-    const placed = orientCrescentAtHitbox(ribbon, region);
+    const placed = orientCrescentAtHitbox(ribbon, { ...region, quarterTrailSectorFit: false });
     const width = (r) => Math.max(...r.outer.map((p) => p.x)) - Math.min(...r.outer.map((p) => p.x));
     assert.ok(Math.abs(width(placed) / width(base) - 1.8 * (1 + (n - 1) * 0.03)) < 1e-8);
     assert.ok(Math.abs(placed.outer[1].x - region.quarterBoxOrigin.x - region.quarterBoxLength) < 1e-8);
     assert.ok(Math.abs(placed.outer[1].y - region.quarterBoxOrigin.y) < 1e-8);
+  }
+});
+
+test('third swing fills the sector width and follows its radius with upgraded reach', async () => {
+  const { fitCrescentToSector } = await import('../src/quarter_view/native_weapon_trail.js');
+  const {
+    QUARTER_PROJECTION: { slope },
+  } = await import('../src/quarter_view/camera.js');
+  for (const aim of EFFECT_DIRECTIONS) {
+    const a = actor();
+    a.quarterAim = aim;
+    a.player.actionKey = 'attack3';
+    a.player.runUpgrades = { reach: 1.5 };
+    const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
+    assert.equal(region.quarterTrailSectorFit, true);
+    const point = (f, s) => ({
+      x: aim.x * f - aim.z * s,
+      y: region.quarterBoxOrigin.y + (aim.z * f + aim.x * s) * slope,
+      depth: 0,
+    });
+    const fitted = fitCrescentToSector(
+      { outer: [point(90, -40), point(100, 0), point(90, 40)], inner: [point(90, -40), point(80, 0), point(90, 40)] },
+      region
+    );
+    for (const p of fitted.outer)
+      assert.ok(Math.abs(Math.hypot(p.x, (p.y - region.quarterBoxOrigin.y) / slope) - region.quarterBoxLength) < 1e-8);
+    assert.deepEqual(fitted.outer[0], fitted.inner[0]);
+    assert.ok(Math.abs(fitted.outer[1].x - aim.x * region.quarterBoxLength) < 1e-8);
   }
 });
