@@ -6,17 +6,7 @@ import { createHash } from 'node:crypto';
 import { COMBAT_SOUNDS } from '../src/combat_sound_catalog.js';
 
 test('five sound families use attributed selected assets at natural speed with intact decays', () => {
-  const keys = [
-    'clubSwing',
-    'swordSwing',
-    'clubHit',
-    'swordHit',
-    'block',
-    'parry',
-    'footstep',
-    'explosion',
-    'bigExplosion',
-  ];
+  const keys = ['swordSwing', 'clubHit', 'swordHit', 'block', 'parry', 'footstep', 'explosion', 'bigExplosion'];
   const files = new Set(keys.flatMap((key) => COMBAT_SOUNDS[key].files));
   const sources = JSON.parse(readFileSync(new URL('../assets/audio/combat/selected/sources.json', import.meta.url)));
   assert.equal(files.size, 16);
@@ -38,4 +28,23 @@ test('five sound families use attributed selected assets at natural speed with i
   // Other families are intentionally unchanged in this listening trial.
   for (const key of ['magicCharge', 'tankRumble', 'trapSnap', 'healthPickup'])
     assert.ok(COMBAT_SOUNDS[key].files.every((file) => file.startsWith('v2/')));
+});
+
+test('approved club swings retain the exact Pixabay originals', () => {
+  const sources = JSON.parse(readFileSync(new URL('../assets/audio/combat/pixabay/sources.json', import.meta.url)));
+  assert.deepEqual(
+    COMBAT_SOUNDS.clubSwing.files,
+    sources.map((s) => s.file)
+  );
+  assert.equal(COMBAT_SOUNDS.clubSwing.rate, 1);
+  assert.deepEqual(
+    sources.map((s) => s.selectedCandidate),
+    [2, 3]
+  );
+  for (const item of sources) {
+    const bytes = readFileSync(new URL('../assets/audio/combat/' + item.file, import.meta.url));
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), item.sha256);
+    assert.ok(bytes.length > 1000);
+    assert.equal(item.author, 'floraphonic');
+  }
 });
