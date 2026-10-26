@@ -1830,3 +1830,9 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 - 현재 선택 가능한 기술만 버튼으로 제공하고 DOM 순서를 숫자키 선택 순서와 일치. 현재 기술 강화 및 좌우 분기 규칙 유지. 하단 기술 설명, 작은 화면 가로 스크롤, 키보드 포커스 표시.
 - 키보드/트리 테스트 5개 통과, 모듈 문법 확인. 실제 브라우저에서 계열 선택 및 숫자 2로 응격 습득→다음 분기 표시와 연결선 스크린샷 확인. ESLint/Prettier 미실행.
 - 트리 UI를 skill_tree_choice_view.js로 분리. 현재 3단계 트리 기준이며 더 깊은 트리 확장 시 높이 자동 계산 검토.
+
+## 2026-10-27 · 쿼터뷰 기본 게임 지정
+
+- 공개 index 진입을 quarter-view.html로 연결. 쿼리/해시 보존, index.html?side=1은 보조 횡스크롤 진입 유지.
+- 쿼터뷰 시험장 명칭 제거 및 자동 달리기 안내 갱신, 불필요한 Shift 터치 버튼 제거. 스킬트리는 main.js의 공용 경험치 UI로 쿼터뷰에도 동일 적용됨 확인.
+- AGENTS.md에 쿼터뷰 우선 구현/확인 규칙 기록. 브라우저 index→쿼터뷰 실제 이동과 PLAY 화면/안내 확인. 경로/문서 변경으로 전체 테스트 및 ESLint/Prettier 생략. 신규 리팩토링 필요 없음.
