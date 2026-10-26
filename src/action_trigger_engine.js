@@ -1,3 +1,4 @@
+import { movementSkillTrigger } from './movement_skill_helper.js';
 import { canUseRunSkill, startRunSkill } from './skill_runtime_helper.js';
 import { upgradeActionDelta } from './run_upgrade_timing_helper.js';
 import { normalizeActionTrigger } from './action_trigger_data.js';
@@ -236,10 +237,10 @@ function findStateReturnCustomActionMatch(player, actions, keys) {
 
 function customActionsByTriggerPriority(player, actions = []) {
   return [...actions]
-    .filter((action) => action?.key && action.runtimeMode !== 'legacy')
+    .filter((action) => action?.key && action.runtimeMode !== 'legacy' && movementSkillTrigger(player, action) !== null)
     .map((action) => ({
       ...action,
-      trigger: normalizeActionTrigger(action.trigger),
+      trigger: normalizeActionTrigger(movementSkillTrigger(player, action)),
       linkPriority: actionLinkPriority(player, action.key),
     }))
     .filter((action) => action.linkPriority >= 0)
