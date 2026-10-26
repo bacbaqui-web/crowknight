@@ -1,12 +1,73 @@
 [
   {
+    "id": 13,
+    "title": "Sword Air Swing 2",
+    "author": "u_xg7ssi08yr",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-air-swing-2-437695/",
+    "src": "https://cdn.pixabay.com/audio/2025/11/16/audio_df9e9bb9db.mp3",
+    "approved": false,
+    "status": "new"
+  },
+  {
+    "id": 14,
+    "title": "Sword Swipes",
+    "author": "deleted_user_6479820 (Freesound)",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_3dd9debba1.mp3",
+    "approved": false,
+    "status": "new"
+  },
+  {
+    "id": 15,
+    "title": "Shield Block Shortsword",
+    "author": "SectionSound",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
+    "src": "https://cdn.pixabay.com/audio/2023/03/25/audio_b0c7773b14.mp3",
+    "approved": false,
+    "status": "new"
+  },
+  {
+    "id": 16,
+    "title": "Sword block combo",
+    "author": "ethanchase7744 (Freesound)",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-block-combo-100358/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/24/audio_650301389b.mp3",
+    "approved": false,
+    "status": "new"
+  },
+  {
+    "id": 17,
+    "title": "Hit Swing Sword Small 2",
+    "author": "Eponn (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-hit-swing-sword-small-2-95566/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/19/audio_6944ac0f4e.mp3",
+    "approved": false,
+    "status": "new"
+  },
+  {
+    "id": 18,
+    "title": "hard punch",
+    "author": "animationIsaac (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-hard-punch-90179/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/15/audio_7143375ab8.mp3",
+    "approved": false,
+    "status": "new"
+  },
+  {
     "title": "Sword Slash and Swing",
     "author": "DavidDumaisAudio",
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/",
     "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_f5a8065509.mp3",
     "category": "칼 휘두르기",
     "id": 1,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Swing Whoosh 1",
@@ -15,7 +76,8 @@
     "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_429c1a01f1.mp3",
     "category": "몽둥이 휘두르기",
     "id": 2,
-    "approved": true
+    "approved": true,
+    "status": "approved"
   },
   {
     "title": "Swing Whoosh 4",
@@ -24,7 +86,8 @@
     "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_3163472c7d.mp3",
     "category": "몽둥이 휘두르기",
     "id": 3,
-    "approved": true
+    "approved": true,
+    "status": "approved"
   },
   {
     "title": "Swing Whoosh 5",
@@ -33,7 +96,8 @@
     "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_c93e2ad962.mp3",
     "category": "휘두르기",
     "id": 4,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Sword Slice",
@@ -42,7 +106,8 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
     "src": "https://cdn.pixabay.com/audio/2025/08/23/audio_4c7ad7fc88.mp3",
     "id": 5,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Sword Slash With Metal Shield Impact",
@@ -51,7 +116,8 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-with-metal-shield-impact-185433/",
     "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_17bc9d439c.mp3",
     "id": 6,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Sword Slash With Metallic Impact",
@@ -60,7 +126,8 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-with-metallic-impact-185435/",
     "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_5341835895.mp3",
     "id": 7,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Footsteps Grass 1",
@@ -69,7 +136,8 @@
     "url": "https://pixabay.com/sound-effects/nature-footsteps-grass-1-6810/",
     "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_fd7851ba55.mp3",
     "id": 8,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Grass Field Walking Sound",
@@ -78,7 +146,8 @@
     "url": "https://pixabay.com/sound-effects/nature-grass-field-walking-sound-354514/",
     "src": "https://cdn.pixabay.com/audio/2025/06/04/audio_62343f1d93.mp3",
     "id": 9,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Medium Explosion",
@@ -87,7 +156,8 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-medium-explosion-40472/",
     "src": "https://cdn.pixabay.com/audio/2022/03/10/audio_174242f3f4.mp3",
     "id": 10,
-    "approved": false
+    "approved": true,
+    "status": "approved"
   },
   {
     "title": "Loud Explosion",
@@ -96,7 +166,8 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-loud-explosion-425457/",
     "src": "https://cdn.pixabay.com/audio/2025/10/24/audio_47a15da0f9.mp3",
     "id": 11,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   },
   {
     "title": "Punch Impact Hit",
@@ -105,6 +176,7 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-punch-impact-hit-567196/",
     "src": "https://cdn.pixabay.com/audio/2026/07/14/audio_aba33aba5f.mp3",
     "id": 12,
-    "approved": false
+    "approved": false,
+    "status": "previous"
   }
 ]

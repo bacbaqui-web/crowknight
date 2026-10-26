@@ -22,5 +22,17 @@
     "sha256": "894e913fe750c4c914097b992881dc5783537f2254fc4d22b401a7f6e0c29be2",
     "processing": "Unmodified original MP3; natural playback rate; game gain 0.26",
     "selectedCandidate": 3
+  },
+  {
+    "file": "pixabay/explosion-medium.mp3",
+    "title": "Medium Explosion",
+    "author": "JuveriSetila (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-medium-explosion-40472/",
+    "downloadUrl": "https://cdn.pixabay.com/audio/2022/03/10/audio_174242f3f4.mp3",
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "sha256": "62394a4fb8554b89e4fa830caf9b84bc2b6a0e0a42f9acc3180531b1a46ce32e",
+    "processing": "Unmodified original MP3; natural playback rate; existing normal/large explosion gains",
+    "selectedCandidate": 10
   }
 ]
