@@ -95,10 +95,10 @@ test('9개 효과는 기본값 기준 합산이며 감소는 80%에서 멈춘다
     resistance: 0.55,
     stagger: 0.7,
     windup: 1,
-    recovery: 1 / 1.3,
+    recovery: 1 / 1.6,
     jump: 1.3,
   });
-  assert.equal(upgradeEffects({ 'rapid-combo': 100 }).recovery, 1 / 11);
+  assert.equal(upgradeEffects({ 'rapid-combo': 100 }).recovery, 1 / 21);
   assert.equal(
     upgradeEffectLabel(
       UPGRADE_CARDS.find((card) => card.id === 'rooted-stance'),
@@ -178,7 +178,7 @@ test('후딜레이만 단축하고 타격 구간을 건너도 구간별 시간 �
     customActionElapsed: 0.1,
     actionSettings: { attack: { group: 'attack' } },
     runUpgradeAttackWindow: { start: 0.2, end: 0.6 },
-    runUpgrades: upgradeEffects({ 'rapid-combo': 10 }),
+    runUpgrades: upgradeEffects({ 'rapid-combo': 5 }),
   };
   assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.1) < 1e-9);
   player.customActionElapsed = 0.3;
@@ -198,7 +198,7 @@ test('반복 공격의 다음 주기에서도 준비와 타격 구간을 구분�
     customActionElapsed: 1.1,
     actionSettings: { attack: { group: 'attack' } },
     runUpgradeAttackWindow: { start: 0.2, end: 0.6 },
-    runUpgrades: upgradeEffects({ 'rapid-combo': 10 }),
+    runUpgrades: upgradeEffects({ 'rapid-combo': 5 }),
   };
   assert.ok(Math.abs(upgradeActionDelta(player, 0.1) - 0.1) < 1e-9);
   player.customActionElapsed = 0.95;

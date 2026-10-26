@@ -60,7 +60,7 @@ export const UPGRADE_CARDS = Object.freeze(
       id: 'rapid-combo',
       name: '빠른 연격',
       stat: '공격 속도',
-      amount: 10,
+      amount: 20,
       unit: '%',
       icon: './assets/icons/upgrades/seamless-finish.svg',
     },

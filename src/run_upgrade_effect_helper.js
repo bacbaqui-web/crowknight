@@ -14,7 +14,7 @@ export function upgradeEffects(counts = {}) {
     resistance: reduction('rooted-stance', 0.15),
     stagger: reduction('unyielding-will', 0.1),
     windup: 1,
-    recovery: 1 / (1 + count('rapid-combo') * 0.1),
+    recovery: 1 / (1 + count('rapid-combo') * 0.2),
     jump: 1 + count('leaping-feather') * 0.1,
   };
 }
