@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+  <meta charset="utf-8" /><title>풍선 폭격병 동작 확인</title
+  ><style>
+    body {
+      margin: 0;
+      background: #242934;
+      color: #eee;
+      font: 16px sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+    p {
+      text-align: center;
+    }
+    button {
+      padding: 10px;
+      margin: 4px;
+    }
+  </style>
+  <p>
+    풍선 폭격병 · 실제 게임 렌더러 <button id="idle">공중 투하</button><button id="walk">이동</button
+    ><button id="cast">풍선 파괴</button>
+  </p>
+  <canvas width="1100" height="650"></canvas>
+  <script type="module">
+    import { PuppetPlayer } from '../../src/actor_runtime_engine.js';
+    import { CHARACTER_ASSET_PATHS, loadCharacterAssets } from '../../src/asset_loader_helper.js';
+    import {
+      updateProjectileRuntime,
+      drawProjectiles,
+      activeProjectiles,
+      resetProjectileRuntime,
+    } from '../../src/projectile_runtime_engine.js';
+    import { popBalloon } from '../../src/balloon_bomber_runtime.js';
+    import { resetPlayerActionState } from '../../src/actor_state.js';
+    import { mergeTuning } from '../../src/project_data_normalizer_helper.js';
+    import { DEFAULT_PLAYER_TUNING } from '../../src/player_default_tuning_data.js';
+    const data = await fetch('../../data/draft.json').then((r) => r.json());
+    const def = data.actors.balloon_bomber;
+    const sources = Object.fromEntries(
+      Object.entries(CHARACTER_ASSET_PATHS)
+        .filter(([k]) => def.assets.__parts.includes(k))
+        .map(([k, v]) => [k, '../../assets/characters/mobs/balloon_bomber/' + v])
+    );
+    const assets = await loadCharacterAssets('mobs/balloon_bomber', '', { ...sources, __parts: def.assets.__parts });
+    const effects = {};
+    const player = new PuppetPlayer(490, 590, assets);
+    player.applyTuning(mergeTuning(DEFAULT_PLAYER_TUNING, def.tuning));
+    player.captureEditRegions = false;
+    const actor = { id: 'balloon_bomber', player, group: 'mobs', hp: 20 },
+      target = { id: 'target', player: { x: 490, y: 590 } };
+    const world = { floorY: 590, gravity: 1800, minX: 0, maxX: 1100 };
+    const ctx = document.querySelector('canvas').getContext('2d');
+
+    function choose(action) {
+      if (action === 'pop') {
+        popBalloon(actor, () => {});
+        return;
+      }
+      resetPlayerActionState(player);
+      actor.hp = 20;
+      player.x = 490;
+      resetProjectileRuntime();
+      target.player.x = action === 'move' ? 750 : 490;
+    }
+    for (const [id, action] of [
+      ['idle', 'idle'],
+      ['walk', 'move'],
+      ['cast', 'pop'],
+    ])
+      document.querySelector('#' + id).onclick = () => choose(action);
+    function render() {
+      ctx.clearRect(0, 0, 1100, 650);
+      ctx.strokeStyle = '#656c79';
+      ctx.beginPath();
+      ctx.moveTo(0, 590);
+      ctx.lineTo(1100, 590);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.beginPath();
+      ctx.ellipse(player.x, 590, 38, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      player.draw(ctx);
+      drawProjectiles(ctx, effects);
+    }
+    window.bomberPreview = {
+      player,
+      actor,
+      target,
+      world,
+      choose,
+      render,
+      activeProjectiles,
+      step(dt) {
+        player.updateNpc(dt, target.player, world);
+        updateProjectileRuntime({ actors: [actor], playerActor: target, world, dt });
+        render();
+      },
+    };
+    let last = performance.now();
+    function tick(now) {
+      const dt = Math.min(0.04, (now - last) / 1000);
+      last = now;
+      if (!window.manualPreview) {
+        bomberPreview.step(dt);
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    render();
+  </script>
+</html>

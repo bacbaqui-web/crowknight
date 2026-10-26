@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "balloon_bomber",
+  "type": "enemy",
+  "label": "풍선 폭격병",
+  "name": "풍선 폭격병",
+  "x": 1700,
+  "folder": "mobs/balloon_bomber",
+  "storageFolder": "mobs/balloon_bomber",
+  "group": "mobs",
+  "tint": "#a29264",
+  "deleted": false,
+  "deletable": true,
+  "psdFileName": "enemy.psd"
+}
