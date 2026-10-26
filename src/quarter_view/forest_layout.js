@@ -27,7 +27,11 @@ export function forestTerrain(x, z) {
   z = ((z % FOREST_PERIOD) + FOREST_PERIOD) % FOREST_PERIOD;
   const ground = forestGround(x, z);
   const wave = 9 * Math.sin(x * K * 19) * Math.cos(z * K * 17);
-  const pond = (Math.hypot(wrap(x - 1210) / 430, wrap(z + 470) / 300) - 1) * 300 + wave;
+  const pond =
+    (Math.hypot(wrap(x - 1210) / 430, wrap(z + 470) / 300) - 1) * 300 +
+    35 * Math.sin(x * K * 4 + z * K * 3) +
+    22 * Math.cos(x * K * 7 - z * K * 5) +
+    wave;
   const plaza = Math.max(Math.abs(wrap(x - 220)) - 220, Math.abs(wrap(z - 240)) - 180) + wave * 0.35;
   const vertical = Math.abs(wrap(x - 480 - 180 * Math.sin(z * K))) - 62;
   const soil = (Math.hypot(wrap(x - 2350) / 340, wrap(z - 1750) / 260) - 1) * 260 + wave;
