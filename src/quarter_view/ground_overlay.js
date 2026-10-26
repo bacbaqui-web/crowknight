@@ -17,9 +17,9 @@ export function createGroundOverlay(ctx, world) {
     if (shadeHeight !== world.viewH) {
       shadeHeight = world.viewH;
       shade = ctx.createLinearGradient(0, 0, 0, shadeHeight);
-      shade.addColorStop(0, '#19444988');
+      shade.addColorStop(0, '#94b3a222');
       shade.addColorStop(0.48, '#427b7e00');
-      shade.addColorStop(1, '#163e4333');
+      shade.addColorStop(1, '#455e4820');
     }
     ctx.fillStyle = shade;
     ctx.fillRect(0, 0, world.viewW, world.viewH);
