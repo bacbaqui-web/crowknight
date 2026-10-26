@@ -14,7 +14,7 @@ const stopAll = (except = null) => {
   }
 };
 function matchesFilter(card, filter) {
-  if (filter === '새 후보') return card.dataset.status === 'new';
+  if (filter === '새 후보') return card.dataset.status === 'new' || card.dataset.compare === 'true';
   if (filter === '적용한 소리') return card.dataset.status === 'approved';
   if (filter === '이전 후보') return card.dataset.status === 'previous';
   return card.dataset.status === 'new' && card.dataset.category === filter;
@@ -41,6 +41,7 @@ async function init() {
     const card = document.createElement('article');
     card.dataset.category = item.category;
     card.dataset.status = item.status;
+    card.dataset.compare = String(Boolean(item.compare));
     card.hidden = !matchesFilter(card, activeFilter);
     const label = document.createElement('span');
     label.className = 'num';
