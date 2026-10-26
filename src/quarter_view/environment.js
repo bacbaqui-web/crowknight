@@ -44,7 +44,7 @@ export function createEnvironment() {
     if (cache.size > 100) cache.delete(cache.keys().next().value);
     return objects;
   }
-  function make(type, x, z, id, variant = Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 3)) {
+  function make(type, x, z, id, variant = Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 256)) {
     return {
       ...SCENERY_TYPES[type],
       type,

@@ -1,3 +1,4 @@
+import { FOREST_ASSET_CATALOG } from './scenery_catalog.js';
 const images = new Map();
 let loading;
 const asset = (name) => new globalThis.URL(`../../assets/quarter-forest/${name}.webp`, import.meta.url).href;
@@ -10,9 +11,14 @@ export const SCENERY_ASSETS = Object.freeze({
   stones: asset('stones-v3'),
   hut: asset('ruin-flat-v2'),
   pillar: asset('pillar-v3'),
+  ...Object.fromEntries(FOREST_ASSET_CATALOG.map((entry) => [entry.id, asset(entry.file.replace('.webp', ''))])),
 });
 export const SCENERY_FRAME = Object.freeze({ width: 420, height: 450, anchorX: 210, anchorY: 390 });
-const variants = { tree: ['tree', 'fork', 'bent'], rock: ['rock', 'stones'], hut: ['hut', 'pillar'] };
+const variants = { tree: ['tree', 'fork', 'bent'], rock: ['rock', 'stones'], hut: ['hut', 'pillar'], bush: ['bush'] };
+for (const entry of FOREST_ASSET_CATALOG) variants[entry.type].push(entry.id);
+export const SCENERY_VARIANT_COUNTS = Object.freeze(
+  Object.fromEntries(Object.entries(variants).map(([type, list]) => [type, list.length]))
+);
 export function sceneryVariant(type, variant = 0) {
   return variant % variants[type].length;
 }
@@ -67,17 +73,18 @@ export function createScenerySprite(type, createSurface = () => document.createE
   const ctx = canvas.getContext('2d');
   ctx.translate(SCENERY_FRAME.anchorX, SCENERY_FRAME.anchorY);
   const n = sceneryVariant(type, variant);
+  const groundCover = variants.bush[n % variants.bush.length];
   ctx.fillStyle = '#59664b24';
   ctx.beginPath();
   ctx.ellipse(0, 0, type === 'tree' ? 36 : 75, type === 'tree' ? 13 : 24, -0.12, 0, Math.PI * 2);
   ctx.fill();
   if (type === 'tree') {
-    stamp(ctx, 'bush', n === 1 ? -30 : 26, -4, 95, 42);
+    stamp(ctx, groundCover, n === 1 ? -30 : 26, -4, 95, 42);
     stamp(ctx, variants.tree[n], 0, 3, 300, 330);
-    stamp(ctx, 'bush', n === 2 ? 26 : -18, 9, 68, 28);
+    stamp(ctx, groundCover, n === 2 ? 26 : -18, 9, 68, 28);
   } else {
     stamp(ctx, variants[type][n], 0, 5, type === 'rock' ? 155 : 270, type === 'rock' ? 90 : 140);
-    stamp(ctx, 'bush', n === 0 ? -57 : 58, 9, 55, 26);
+    stamp(ctx, groundCover, n === 0 ? -57 : 58, 9, 55, 26);
   }
   return canvas;
 }
