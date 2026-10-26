@@ -83,3 +83,20 @@ test('air input accelerates, reverses and brakes in world depth without changing
   assert.ok(Math.abs(actor.quarterAirVelocity.z) < 1);
   assert.equal(actor.player.y, 300);
 });
+
+test('air steering preserves authored roll displacement with or without held direction', () => {
+  for (const direction of [null, {x:1,z:0}]) {
+    const actor = {
+      quarterDepth: 0, quarterAim: {x:1,z:0}, quarterAirControl: true,
+      quarterAirVelocity: {x:0,z:100},
+      quarterMotionStart: {x:0,z:0,time:0,facing:1,serial:1,direction},
+      player: {x:40,y:420,animTime:1/60,facing:1,vx:80,onGround:false,
+        attackSerial:1,actionKey:'roll',customActionKey:'roll',
+        runSkillActions:{roll:'roll'},actionSettings:{roll:{group:'special'}}},
+    };
+    finishPlaneMotion(actor, {quarterView:{unbounded:true}});
+    assert.equal(actor.player.x,40);
+    assert.equal(actor.quarterDepth,0);
+    assert.equal(actor.quarterAirVelocity,null);
+  }
+});

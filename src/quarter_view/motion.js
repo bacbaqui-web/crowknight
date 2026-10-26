@@ -1,3 +1,4 @@
+import { isRollAction } from '../movement_skill_helper.js';
 import { depthOf, normalizeDirection } from './camera.js';
 import { constrainGroundPosition } from './bounds.js';
 import { prepareQuarterFacing } from './facing.js';
@@ -76,6 +77,7 @@ export function finishPlaneMotion(actor, world = null) {
   actor.quarterDepth = start.z + travel * axis.z;
   if (
     actor.quarterAirControl &&
+    !isRollAction(player) &&
     !player.onGround &&
     !actor.quarterImpulse &&
     !(player.hurtTime > 0) &&
