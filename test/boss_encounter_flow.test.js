@@ -101,3 +101,37 @@ test('skull follows all eight edges and disappears when boss enters view or dies
   a.player.dead = true;
   assert.equal(bossEdgeMarker(a, view, 500), null);
 });
+
+test('boss replacement preserves moving death fragments through their fade, including the same boss draw', async () => {
+  const { startDeathRagdoll, updateDeathRagdoll, drawDeathRagdoll, isDeathRagdollVisible } = await import('../src/death_ragdoll_engine.js');
+  const a = boss('tank');
+  a.player.assets = { body: { width: 100, height: 100 } };
+  let spawns = 0;
+  const hooks = {
+    eligible: () => true, random: () => 0,
+    hide(actor) { actor.respawning = true; actor.player.dead = true; actor.player.deathRagdoll = null; },
+    respawn(actor) { spawns++; actor.respawning = false; actor.player.dead = false; actor.player.deathRagdoll = null; },
+  };
+  maintainBossEncounter([a], hooks);
+  startDeathRagdoll(a.player, { shatter: true }, { floorY: 500 });
+  a.player.dead = true;
+  const fragments = a.player.deathRagdoll;
+  assert.equal(fragments.parts.length, 4);
+  const initialX = fragments.parts[0].x;
+  for (let frame = 0; frame < 170; frame++) {
+    updateDeathRagdoll(a.player, 1 / 60, { floorY: 500 });
+    maintainBossEncounter([a], hooks);
+    assert.equal(a.respawning, false);
+    assert.equal(a.player.deathRagdoll, fragments);
+    assert.equal(spawns, 1);
+  }
+  assert.notEqual(fragments.parts[0].x, initialX);
+  let draws = 0;
+  drawDeathRagdoll(a.player, { globalAlpha: 1, save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, drawImage() { draws++; } });
+  assert.equal(draws, 4);
+  updateDeathRagdoll(a.player, .1, { floorY: 500 });
+  assert.equal(isDeathRagdollVisible(a.player), false);
+  maintainBossEncounter([a], hooks);
+  assert.equal(spawns, 2);
+  assert.equal(a.player.dead, false);
+});

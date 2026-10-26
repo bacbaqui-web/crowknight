@@ -1,0 +1,13 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>구르기 스태미나 확인</title><style>body{background:#17242b;color:#eee;font:16px sans-serif;margin:40px}canvas{display:block;width:100%;max-width:800px;height:auto}</style><h1>구르기 스태미나</h1><p>체력 → 경험치 → 초록 스태미나 · 밝은 초록은 사용 가능, 어두운 초록은 회복 중</p><canvas width="800" height="300"></canvas><script type="module">
+import {drawRollStamina} from '../../src/movement_skill_helper.js';
+const ctx=document.querySelector('canvas').getContext('2d');
+const samples=[['준비 완료',0,0,0],['구르기 직후',0,1,.8],['절반 회복',0,1,.4],['연속 구르기 3회 중 2회 남음',2,1,.4]];
+for(let i=0;i<samples.length;i++){
+ const [label,rank,spent,recovery]=samples[i],y=45+i*65;
+ ctx.fillStyle='#eee';ctx.font='14px sans-serif';ctx.fillText(label,20,y+5);
+ ctx.fillStyle='#df5656';ctx.fillRect(400,y,240,8);
+ ctx.fillStyle='#20272e';ctx.fillRect(400,y+11,240,3);
+ ctx.fillStyle='#eee';ctx.fillRect(400,y+11,160,3);
+ drawRollStamina(ctx,{runSkills:{rollChain:rank},runRollSpent:spent,runRollRecovery:recovery},520,y+17,240);
+}
+</script></html>

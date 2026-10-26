@@ -1,3 +1,4 @@
+import { createPauseStatusView } from './pause_status_view.js';
 import { prepareMovementPose } from './movement_skill_helper.js';
 import { withRuntimeReadCache } from './runtime_read_cache.js';
 import { createCombatAudioPlayer } from './combat_audio_player.js';
@@ -285,9 +286,12 @@ bindKeyboardControls({
   keys,
   pressed,
   handleShortcut: (event) =>
-    runUpgrades.isPaused() || experience.isPaused() || tuningPanel.handleKeyboardShortcut(event),
+    quarter?.isPaused() || runUpgrades.isPaused() || experience.isPaused() || tuningPanel.handleKeyboardShortcut(event),
 });
+const pauseStatus = quarter ? createPauseStatusView(document.querySelector('.stage-wrap'), () => document.querySelector('#quarterPause').click()) : null;
 quarter?.bindPause({
+  isBlocked: () => experience.isPaused() || runUpgrades.isPaused(),
+  onStatus: (open) => open ? pauseStatus.show(experience.snapshot(), runUpgrades.getSnapshot(), runActorState.getPlayer()) : pauseStatus.hide(),
   isActive: runLifecycle.isRunActive,
   clearInput: () => {
     keys.clear();

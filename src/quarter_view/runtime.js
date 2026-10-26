@@ -137,11 +137,13 @@ export function createQuarterRuntime({ ctx, world }) {
     shouldRecycleEnemy: (actor, target) => outsideSpawnArea(actor, target, world),
     projectEntity: renderer.projectEntity,
   };
+  let showStatus=false, onPauseStatus=()=>{};
   function syncPause() {
     frameMeter.reset();
     dirty = true;
-    document.querySelector('#quarterPause').textContent = paused ? '계속하기 · P' : '일시정지 · P';
-    document.querySelector('#quarterPaused').hidden = !paused;
+    document.querySelector('#quarterPause').textContent = paused ? '계속하기 · Tab' : '스킬·강화 · Tab';
+    document.querySelector('#quarterPaused').hidden = !paused || showStatus;
+    onPauseStatus(paused && showStatus);
   }
   return {
     prepareInput: (actor, keys) => prepareQuarterFacing(actor, movementInput(keys)),
@@ -202,31 +204,34 @@ export function createQuarterRuntime({ ctx, world }) {
         document.querySelector('#quarterAttackSettings').open || document.querySelector('#quarterEffectEditor').open;
       syncPause();
     },
-    bindPause({ isActive, clearInput }) {
-      const toggle = () => {
-        if (!isActive()) return;
+    bindPause({ isActive, clearInput, isBlocked = () => false, onStatus = () => {} }) {
+      onPauseStatus=onStatus;
+      const toggle = (status = true) => {
+        if (!isActive() || (!paused && isBlocked())) return;
+        showStatus=status;
         paused = !paused;
         clearInput();
         controlledActor?.quarterPendingInputs?.clear();
         syncPause();
       };
       pauseForSettings = () => {
-        if (isActive() && !paused) toggle();
+        if (isActive() && !paused) toggle(false);
       };
-      document.querySelector('#quarterPause').addEventListener('click', toggle);
+      document.querySelector('#quarterPause').addEventListener('click', () => toggle());
       addEventListener('keydown', (event) => {
         if (event.metaKey || event.ctrlKey) controlledActor?.quarterPendingInputs?.clear();
         if (
-          event.code === 'KeyP' &&
-          !event.repeat &&
+          event.code === 'Tab' &&
           !event.metaKey &&
           !event.ctrlKey &&
           !event.target.closest?.('input, textarea, select')
         ) {
+          if(!isActive() || (!paused && isBlocked())) return;
           event.preventDefault();
-          toggle();
+          event.stopImmediatePropagation();
+          if(!event.repeat) toggle();
         }
-      });
+      }, true);
       const pauseOnBlur = () => {
         if (isActive() && !paused) toggle();
       };

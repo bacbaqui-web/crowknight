@@ -34,7 +34,7 @@ test('기본 구르기 1회와 강화당 추가 횟수, 마지막 동작 후 쿨
  const a=fixture(),p=a.player,key=p.runSkillActions.roll;
  assert.equal(canUseRunSkill(p,key),true);startRunSkill(p,key);assert.equal(canUseRunSkill(p,key),false);
  p.customActionKey=key;p.customActionTime=1;updateRunSkills(p,2);assert.equal(rollRemaining(p),0);
- p.customActionTime=0;updateRunSkills(p,1);assert.equal(rollRemaining(p),0);updateRunSkills(p,.21);assert.equal(rollRemaining(p),1);
+ p.customActionTime=0;updateRunSkills(p,.79);assert.equal(rollRemaining(p),0);updateRunSkills(p,.02);assert.equal(rollRemaining(p),1);
  p.runSkills.rollChain=2;resetMovementSkills(p);
  for(let i=0;i<3;i++){assert.equal(canUseRunSkill(p,key),true);startRunSkill(p,key);}assert.equal(canUseRunSkill(p,key),false);
  resetMovementSkills(p);assert.equal(rollRemaining(p),3);
@@ -72,4 +72,18 @@ test('이동 모션 초기화는 사용자가 수정한 모션과 기존 공격�
  const a=fixture(),key=a.tuning.skillActions.plunge;a.tuning.actionOffsets[key].marker='authored';
  const before=JSON.stringify(a.tuning.actionOffsets[a.tuning.skillActions.fourthStrike]);prepareSkillActions(a.tuning);
  assert.equal(a.tuning.actionOffsets[key].marker,'authored');assert.equal(JSON.stringify(a.tuning.actionOffsets[a.tuning.skillActions.fourthStrike]),before);
+});
+
+test('stamina draws for defense too, previews refill, and becomes usable only at 0.8 seconds', async () => {
+ const {drawRollStamina,updateMovementSkills}=await import('../src/movement_skill_helper.js');
+ const p={runSkills:{parry:1},runRollSpent:1,runRollRecovery:.8};
+ const fills=[];
+ const ctx={save(){},restore(){},fillRect(x,y,w,h){fills.push({color:this.fillStyle,w});}};
+ updateMovementSkills(p,.4);drawRollStamina(ctx,p,50,10,100);
+ assert.equal(rollRemaining(p),0);
+ assert.equal(fills.find(f=>f.color==='#286b48').w,50);
+ assert.equal(fills.find(f=>f.color==='#69e69a').w,0);
+ updateMovementSkills(p,.4);fills.length=0;drawRollStamina(ctx,p,50,10,100);
+ assert.equal(rollRemaining(p),1);
+ assert.equal(fills.find(f=>f.color==='#69e69a').w,100);
 });

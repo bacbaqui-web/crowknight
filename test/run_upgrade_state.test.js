@@ -38,5 +38,5 @@ test('누적 횟수와 기본값 기준 퍼센트를 유지한다', () => {
   assert.equal(upgradeEffectLabel(byId('sharp-blade'), 3), '공격 피해 +30%');
   assert.equal(upgradeEffectLabel(byId('steel-feathers'), 2), '최대 체력 +20%');
   assert.equal(upgradeEffectLabel(byId('crow-footsteps'), 3), '이동 속도 +30%');
-  assert.equal(upgradeEffectLabel(byId('seamless-finish'), 2), '공격 후딜레이 -20%');
+  assert.equal(upgradeEffectLabel(byId('rapid-combo'), 2), '공격 속도 +20%');
 });

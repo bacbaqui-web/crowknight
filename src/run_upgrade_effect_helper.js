@@ -13,8 +13,8 @@ export function upgradeEffects(counts = {}) {
     knockback: 1 + count('forceful-strike') * 0.2,
     resistance: reduction('rooted-stance', 0.15),
     stagger: reduction('unyielding-will', 0.1),
-    windup: reduction('swift-preparation', 0.1),
-    recovery: reduction('seamless-finish', 0.1),
+    windup: 1,
+    recovery: 1 / (1 + count('rapid-combo') * 0.1),
     jump: 1 + count('leaping-feather') * 0.1,
   };
 }
