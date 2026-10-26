@@ -28,27 +28,45 @@ export function preloadGroundPatterns() {
     })
   ));
 }
-// Mirrored repeat keeps opposite source-image edges from forming visible seams.
-const mirror = (v) => {
-  const phase = ((v % (SIZE * 2)) + SIZE * 2) % (SIZE * 2);
-  return Math.min(SIZE - 1, Math.floor(phase < SIZE ? phase : SIZE * 2 - phase));
-};
+// Overlapping, independently offset crops avoid both mirror symmetry and short repeats.
+const PATCH = 200;
+const smooth = (v) => v * v * (3 - 2 * v);
+export function materialSample(data, x, z) {
+  const gx = x / PATCH,
+    gz = z / PATCH;
+  const cx = Math.floor(gx),
+    cz = Math.floor(gz);
+  const u = smooth(gx - cx),
+    v = smooth(gz - cz);
+  const color = [0, 0, 0];
+  for (let dz = 0; dz < 2; dz++)
+    for (let dx = 0; dx < 2; dx++) {
+      const ix = (((cx + dx) % 16) + 16) % 16;
+      const iz = (((cz + dz) % 16) + 16) % 16;
+      const ox = 64 + forestHash(ix + 19, iz + 61) * 127;
+      const oz = 64 + forestHash(ix + 71, iz + 29) * 127;
+      const tx = Math.floor(ox + (gx - cx - dx) * 60);
+      const tz = Math.floor(oz + (gz - cz - dz) * 60);
+      const p = (tz * SIZE + tx) * 4;
+      const weight = (dx ? u : 1 - u) * (dz ? v : 1 - v);
+      for (let c = 0; c < 3; c++) color[c] += data[p + c] * weight;
+    }
+  return color;
+}
 export function materialColor(id, x, z) {
   const def = definitions[id],
     data = samples.get(id);
-  const tx = mirror((x * SIZE) / 400),
-    tz = mirror((z * SIZE) / 400);
-  const p = (tz * SIZE + tx) * 4;
   const noise = (forestHash(Math.floor(x / 3), Math.floor(z / 3)) - 0.5) * 7;
   if (!data) return def.color.map((c) => c + noise);
+  const color = materialSample(data, x, z);
   if (['mud', 'gravel'].includes(id)) {
-    const light = (data[p] + data[p + 1] + data[p + 2]) / 3 - 112;
+    const light = (color[0] + color[1] + color[2]) / 3 - 112;
     return def.color.map((c) => c + light * 0.48);
   }
-  return [data[p], data[p + 1], data[p + 2]];
+  return color;
 }
 export function transitionColor(a, b, mask, u, v, x, z, variant = 0) {
-  const cover = dualCoverage(mask, u, v, variant, b === 'water' ? 0.008 : 0.025);
+  const cover = dualCoverage(mask, u, v, variant, b === 'water' ? 0.008 : 0.09);
   const bg = materialColor(a, x, z),
     fg = materialColor(b, x, z);
   return bg.map((c, i) => c * (1 - cover) + fg[i] * cover);
@@ -58,7 +76,7 @@ export function terrainColor(x, z) {
   let color = materialColor('grass', x, z);
   for (let i = 0; i < DUAL_LAYERS.length; i++) {
     const layer = DUAL_LAYERS[i];
-    const cover = dualCoverage(cell.masks[i], cell.u, cell.v, cell.variant, layer.id === 'water' ? 0.008 : 0.025);
+    const cover = dualCoverage(cell.masks[i], cell.u, cell.v, cell.variant, layer.id === 'water' ? 0.008 : 0.09);
     if (cover <= 0) continue;
     const fg = materialColor(layer.id, x, z);
     color = color.map((c, j) => c * (1 - cover) + fg[j] * cover);

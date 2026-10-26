@@ -36,9 +36,12 @@ export function dualCoverage(mask, u, v, variant = 0, fringe = 0.025) {
     se = mask & 8 ? 1 : 0;
   const field = (nw * (1 - x) + ne * x) * (1 - z) + (sw * (1 - x) + se * x) * z;
   const interior = Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
-  const brush = Math.sin(u * Math.PI * 16) * Math.cos(v * Math.PI * 12) * fringe;
+  const brush =
+    (Math.sin(u * Math.PI * 16) * Math.cos(v * Math.PI * 12) * 0.35 +
+      Math.sin((u * 7 + v * 5) * Math.PI * 2 + variant) * interior) *
+    fringe;
   const bend = Math.sin((u + v) * Math.PI * 4 + variant) * interior * 0.045;
-  return clamp((field - 0.5 + brush + bend) / 0.045 + 0.5);
+  return clamp((field - 0.5 + brush + bend) / (fringe > 0.03 ? 0.23 : 0.045) + 0.5);
 }
 let layout;
 export function dualLayout() {

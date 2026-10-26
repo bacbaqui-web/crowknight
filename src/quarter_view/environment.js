@@ -5,9 +5,9 @@ import { depthOf } from './camera.js';
 
 const CELL = 560;
 export const SCENERY_TYPES = Object.freeze({
-  rock: { w: 120, d: 100, height: 44, climbable: true },
-  hut: { w: 170, d: 140, height: 82, climbable: true },
-  tree: { w: 42, d: 44, height: 330, climbable: false },
+  rock: { w: 144, d: 120, height: 52.8, climbable: true },
+  hut: { w: 204, d: 168, height: 98.4, climbable: true },
+  tree: { w: 50.4, d: 52.8, height: 396, climbable: false },
 });
 export function createEnvironment() {
   let originX = 480;
