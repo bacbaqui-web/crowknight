@@ -34,7 +34,7 @@ export function createSceneryRenderer(ctx, world) {
       object.z - depthOf(hero) < 700
     )
       ctx.globalAlpha = 0.48;
-    ctx.drawImage(sprite, p.x - 150 * view.zoom, p.y - 300 * view.zoom, 300 * view.zoom, 360 * view.zoom);
+    ctx.drawImage(sprite, p.x - 150 * view.zoom, p.y - 460 * view.zoom, 300 * view.zoom, 520 * view.zoom);
     ctx.restore();
   }
   return { visible, draw };
