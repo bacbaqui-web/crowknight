@@ -94,6 +94,8 @@ export function finishPlaneMotion(actor, world = null) {
     actor.quarterDepth = start.z + vz * dt;
   } else actor.quarterAirVelocity = null;
   constrainGroundPosition(actor, world);
+  const elapsed = player.animTime - start.time;
+  if (elapsed > 0) player.groundPoseSpeed = Math.hypot(player.x - start.x, depthOf(actor) - start.z) / elapsed;
   const shift = player.x - rawX;
   const targetMove = player.customActionTargetMove;
   if (targetMove) {

@@ -1,3 +1,4 @@
+import { movementPoseOffset } from './movement_pose_helper.js';
 import { evaluateActionOffset } from './action_offset_evaluator.js';
 import { scaleUpgradeAttackRegions } from './run_upgrade_effect_helper.js';
 import { clamp, clone, deg } from './common_helper.js';
@@ -374,7 +375,7 @@ export class PuppetPlayer {
     if (this.renderPartOffsets?.has(key)) return this.renderPartOffsets.get(key);
     const value = this.actionOffsets?.[this.actionKey]?.[key];
     const resolved = this.resolveInteractionActionLevelOffset(key, this.resolveActionOffset(value), value);
-    const offset = this.resolveActionBlendOffset(key, resolved);
+    const offset = this.resolveActionBlendOffset(key, movementPoseOffset(this, key, resolved));
     this.renderPartOffsets?.set(key, offset);
     return offset;
   }
