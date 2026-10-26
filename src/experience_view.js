@@ -31,7 +31,7 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
   modal.addEventListener('keydown', (event) => {
     if (modal.hidden) return;
     if (event.key !== 'Tab') return;
-    const buttons = [...cards.querySelectorAll('button')];
+    const buttons = [...cards.querySelectorAll('.skill-tree-node, .upgrade-choice-card')];
     const index = buttons.indexOf(document.activeElement);
     event.preventDefault();
     buttons[(index + (event.shiftKey ? buttons.length - 1 : 1)) % buttons.length]?.focus();
@@ -53,7 +53,7 @@ export function createExperienceView(root = document.querySelector('.stage-wrap'
         ? `레벨업 · ${SKILL_PATHS.find((path) => path.id === pathId)?.name} 계열 기술 습득과 강화`
         : '첫 레벨업 · 이번 판의 길을 선택하세요';
       modal.classList.toggle('path-choice', !pathId);
-      subtitle.textContent=pathId?'아래에서 위로 이어지는 성장의 길 · 빛나는 기술을 선택하세요':'공격 · 방어 · 이동 — 이번 전투에서 이어갈 계열을 선택하세요';
+      subtitle.textContent=pathId?'방향키 / 마우스로 기술 확인 · Enter / 숫자키로 선택':'공격 · 방어 · 이동 — 이번 전투에서 이어갈 계열을 선택하세요';
       panel.style.setProperty('--tree-accent',SKILL_PATHS.find(p=>p.id===pathId)?.color || '#d9c79a');
       cards.classList.toggle('skill-tree-content',Boolean(pathId));
       cards.replaceChildren();
