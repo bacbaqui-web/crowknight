@@ -1,5 +1,5 @@
 export const MOVEMENT_SKILLS = [
-  {id:'sprint',name:'바람걸음',detail:'기본 이동이 달리기로 변경 · 강화마다 달리기 속도 +10%',icon:'crow-footsteps'},
+  {id:'sprint',name:'바람걸음',detail:'기본 이동 속도 +10% · 강화마다 +10%',icon:'crow-footsteps'},
   {id:'rollChain',name:'연속 구르기',detail:'W 연속 사용 +1회 · 강화마다 +1회(최대 4회) · 마지막 동작 이후 0.8초 쉬면 전부 회복',icon:'seamless-finish'},
   {id:'plunge',name:'까마귀 강하',detail:'공중 F로 내려찍기 · 높이 100=45 / 200=80 피해 · 기본 피해 최대100 · 강화마다 피해 +20%',icon:'forceful-strike'},
   {id:'glide',name:'펼쳐진 날개',detail:'하강 중 Space 유지로 활강 · 강화마다 낙하 속도 감소',icon:'leaping-feather'},
@@ -100,15 +100,8 @@ export function prepareMovementPose(player, keys, requestAction) {
   if(!gliding && player.customActionKey===key) {player.customActionKey=null;player.customActionTime=0;}
 }
 
-// Change runtime input only; preserve the authored walking and running motions.
+// Windstep enhances normal movement without switching to the authored sprint speed.
 export function movementSkillTrigger(player, action) {
-  if (!player.runSkills?.sprint) return action.trigger;
-  if (action.key === player.runSkillActions?.sprint) {
-    return {type:'single',keys:['ArrowRight'],triggerMode:'pressLoop',repeatWhileHeld:true};
-  }
-  const trigger = action.trigger;
-  if (trigger?.type === 'single' && trigger.keys?.length === 1 &&
-      ['ArrowRight', 'ArrowLeft'].includes(trigger.keys[0]) &&
-      player.actionSettings?.[action.key]?.group === 'movement') return null;
-  return trigger;
+  if (player.runSkills && action.key === player.runSkillActions?.sprint) return null;
+  return action.trigger;
 }

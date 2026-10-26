@@ -15,16 +15,20 @@ function fixture(){
  const player=new PuppetPlayer(100,430,{});player.applyTuning(tuning);player.runSkillActions=tuning.skillActions;player.runSkills={};
  return {player,tuning,hp:100,maxHp:100};
 }
-test('이동 계열 습득 후 좌우 기본 이동이 달리기로 바뀌고 Shift 단독으로는 뛰지 않는다',()=>{
+test('바람걸음은 기존 이동 모션에서 첫 랭크 10%, 두 번째 20%만 증가하며 질주로 전환하지 않는다',()=>{
  for (const direction of ['ArrowRight','ArrowLeft']) {
   const {player:p}=fixture();
   updateActionTriggerRuntime(p,0,new Set([direction]),new Set([direction]));
   assert.notEqual(p.customActionKey,p.runSkillActions.sprint);
-  p.customActionKey=null;p.customActionTime=0;p.runSkills.sprint=2;
+  const walkingKey=p.customActionKey;
+  p.customActionKey=null;p.customActionTime=0;p.runSkills.sprint=1;
   updateActionTriggerRuntime(p,0,new Set([direction]),new Set([direction]));
-  assert.equal(p.customActionKey,p.runSkillActions.sprint);
+  assert.equal(p.customActionKey,walkingKey);
   assert.equal(p.facing,direction==='ArrowRight'?1:-1);
   assert.equal(upgradeVelocity(p,{group:'movement'},10,0).x,11);
+  p.runSkills.sprint=2;assert.equal(upgradeVelocity(p,{group:'movement'},10,0).x,12);
+  p.customActionKey=p.runSkillActions.roll;
+  assert.equal(upgradeVelocity(p,{group:'movement'},10,0).x,10);
  }
  const {player:p}=fixture();p.runSkills.sprint=1;
  updateActionTriggerRuntime(p,0,new Set(['ShiftLeft']),new Set(['ShiftLeft']));
