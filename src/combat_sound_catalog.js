@@ -10,7 +10,7 @@ export const COMBAT_SOUNDS = {
   experiencePickup: sound('v2/experiencePickup.wav', 0.32, 1),
   healthPickup: sound('v2/healthPickup.wav', 0.4, 1),
   clubSwing: sound(['pixabay/club-swing-1.mp3', 'pixabay/club-swing-2.mp3'], 0.26),
-  swordSwing: sound(['selected/swing-1.wav', 'selected/swing-2.wav'], 0.24),
+  swordSwing: sound(['pixabay/sword-swipe-4.wav', 'pixabay/sword-swipe-5.wav'], 0.24),
   bossSwing: sound('v2/bossSwing.wav', 0.44, 1),
   clubHit: sound(['selected/blunt-hit-1.wav', 'selected/blunt-hit-2.wav'], 0.44),
   swordHit: sound(['selected/blade-hit-1.wav', 'selected/blade-hit-2.wav'], 0.46),

@@ -23,7 +23,7 @@ async function init() {
   const response = await window.fetch('./candidates.json');
   if (!response.ok) throw new Error('후보 목록을 불러오지 못했습니다.');
   const candidates = await response.json();
-  for (const category of ['새 후보', '칼 휘두르기', '방패 방어', '명중', '적용한 소리', '이전 후보']) {
+  for (const category of ['새 후보', '방패 방어', '명중', '적용한 소리', '이전 후보']) {
     const button = document.createElement('button');
     button.textContent = category;
     button.type = 'button';
@@ -53,13 +53,15 @@ async function init() {
     author.textContent = item.author;
     const note = document.createElement('p');
     note.className = `note ${item.approved ? 'approved' : 'muted'}`;
-    note.textContent = item.approved
-      ? `✓ ${item.category} 적용`
-      : item.category === '발걸음'
-        ? '이전 발걸음 후보 · 기존 게임 소스 유지로 결정'
-        : item.status === 'previous'
-          ? '이전 후보 · 이번 선택에서 보류'
-          : '새 후보 · 아직 게임에 적용하지 않음';
+    note.textContent =
+      item.note ||
+      (item.approved
+        ? `✓ ${item.category} 적용`
+        : item.category === '발걸음'
+          ? '이전 발걸음 후보 · 기존 게임 소스 유지로 결정'
+          : item.status === 'previous'
+            ? '이전 후보 · 이번 선택에서 보류'
+            : '새 후보 · 아직 게임에 적용하지 않음');
     const audio = document.createElement('audio');
     audio.controls = true;
     audio.preload = 'metadata';

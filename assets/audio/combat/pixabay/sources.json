@@ -34,5 +34,37 @@
     "sha256": "62394a4fb8554b89e4fa830caf9b84bc2b6a0e0a42f9acc3180531b1a46ce32e",
     "processing": "Unmodified original MP3; natural playback rate; existing normal/large explosion gains",
     "selectedCandidate": 10
+  },
+  {
+    "file": "pixabay/sword-swipe-4.wav",
+    "title": "Sword Swipes — swipe 4",
+    "author": "deleted_user_6479820 (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "sha256": "72577a7374c7570e22df8bf1cc4d409f2a0a5e62d1f8834d31eb5238e54cbcc8",
+    "sourceFile": "pixabay/originals/sword-swipes-7174.mp3",
+    "sourceSha256": "68a7390a925b3d87b7adb37fbbd3efa6c066e22dcfaf4a91c4a50a93ba0573fd",
+    "selectedCandidate": 14,
+    "swipe": 4,
+    "trimStart": 3.49,
+    "trimEnd": 3.82,
+    "processing": "PCM16 WAV; original stereo 24kHz, pitch and gain retained; trim only"
+  },
+  {
+    "file": "pixabay/sword-swipe-5.wav",
+    "title": "Sword Swipes — swipe 5",
+    "author": "deleted_user_6479820 (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "sha256": "2b7b7335abc495878b8e6bbf2a949e5c1e6b2b890fc3cd8f0cb48a15d800ef38",
+    "sourceFile": "pixabay/originals/sword-swipes-7174.mp3",
+    "sourceSha256": "68a7390a925b3d87b7adb37fbbd3efa6c066e22dcfaf4a91c4a50a93ba0573fd",
+    "selectedCandidate": 14,
+    "swipe": 5,
+    "trimStart": 4.07,
+    "trimEnd": 4.55,
+    "processing": "PCM16 WAV; original stereo 24kHz, pitch and gain retained; trim only"
   }
 ]

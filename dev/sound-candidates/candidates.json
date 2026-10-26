@@ -1,5 +1,67 @@
 [
   {
+    "id": 19,
+    "title": "shield guard",
+    "author": "nekoninja (Freesound)",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-shield-guard-6963/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_9f712797d5.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 20,
+    "title": "Metal Impact",
+    "author": "Rickplayer (Freesound)",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/es/sound-effects/pel%C3%ADculas-y-efectos-especiales-metal-impact-6212/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/04/audio_3c2e15a1e8.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 21,
+    "title": "Punch Knuckle Blunt Medium",
+    "author": "Khoamthanh",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-knuckle-blunt-medium-503895/",
+    "src": "https://cdn.pixabay.com/audio/2026/03/17/audio_4d48e16429.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 22,
+    "title": "Hit Flesh 01",
+    "author": "u_xjrmmgxfru",
+    "category": "명중",
+    "url": "https://pixabay.com/pt/sound-effects/filme-e-efeitos-especiais-hit-flesh-01-266311/",
+    "src": "https://cdn.pixabay.com/audio/2024/11/19/audio_f1256606d8.mp3",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": "14-4",
+    "title": "Sword Swipes · 4번째 추출",
+    "author": "deleted_user_6479820 (Freesound)",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "src": "../../assets/audio/combat/pixabay/sword-swipe-4.wav",
+    "status": "approved",
+    "approved": true,
+    "note": "✓ 칼 휘두르기 적용 · 원본 3.49~3.82초"
+  },
+  {
+    "id": "14-5",
+    "title": "Sword Swipes · 5번째 추출",
+    "author": "deleted_user_6479820 (Freesound)",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "src": "../../assets/audio/combat/pixabay/sword-swipe-5.wav",
+    "status": "approved",
+    "approved": true,
+    "note": "✓ 칼 휘두르기 적용 · 원본 4.07~4.55초"
+  },
+  {
     "id": 13,
     "title": "Sword Air Swing 2",
     "author": "u_xg7ssi08yr",
@@ -7,7 +69,7 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-air-swing-2-437695/",
     "src": "https://cdn.pixabay.com/audio/2025/11/16/audio_df9e9bb9db.mp3",
     "approved": false,
-    "status": "new"
+    "status": "previous"
   },
   {
     "id": 14,
@@ -17,7 +79,8 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
     "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_3dd9debba1.mp3",
     "approved": false,
-    "status": "new"
+    "status": "previous",
+    "note": "원본 · 네 번째와 다섯 번째 구간만 칼 휘두르기로 적용"
   },
   {
     "id": 15,
@@ -27,7 +90,7 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
     "src": "https://cdn.pixabay.com/audio/2023/03/25/audio_b0c7773b14.mp3",
     "approved": false,
-    "status": "new"
+    "status": "previous"
   },
   {
     "id": 16,
@@ -37,7 +100,7 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-sword-block-combo-100358/",
     "src": "https://cdn.pixabay.com/audio/2022/03/24/audio_650301389b.mp3",
     "approved": false,
-    "status": "new"
+    "status": "previous"
   },
   {
     "id": 17,
@@ -47,7 +110,7 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-hit-swing-sword-small-2-95566/",
     "src": "https://cdn.pixabay.com/audio/2022/03/19/audio_6944ac0f4e.mp3",
     "approved": false,
-    "status": "new"
+    "status": "previous"
   },
   {
     "id": 18,
@@ -57,7 +120,7 @@
     "url": "https://pixabay.com/sound-effects/film-special-effects-hard-punch-90179/",
     "src": "https://cdn.pixabay.com/audio/2022/03/15/audio_7143375ab8.mp3",
     "approved": false,
-    "status": "new"
+    "status": "previous"
   },
   {
     "title": "Sword Slash and Swing",
