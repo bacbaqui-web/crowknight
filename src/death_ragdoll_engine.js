@@ -5,6 +5,7 @@ const DEATH_RAGDOLL_GRAVITY_SCALE = 0.82;
 const DEATH_RAGDOLL_FRICTION = 0.993;
 const DEATH_RAGDOLL_BOUNCE = 0.24;
 const DEATH_RAGDOLL_LIFE = 2.4;
+const DEATH_RAGDOLL_FADE = 0.45;
 const DEATH_RAGDOLL_PARTS = [
   { key: 'cape', asset: 'cape', x: -4, y: -50, weight: 0.95, spin: 0.8 },
   { key: 'lowerLegL', asset: 'lowerLegL', x: -24, y: 8, weight: 0.64, spin: -1.2 },
@@ -63,10 +64,16 @@ export function updateDeathRagdoll(player, dt, world = null) {
   return true;
 }
 
+export function isDeathRagdollVisible(player) {
+  const ragdoll = player?.deathRagdoll;
+  return Boolean(ragdoll?.active && ragdoll.parts.length &&
+    ragdoll.elapsed < DEATH_RAGDOLL_LIFE + DEATH_RAGDOLL_FADE);
+}
+
 export function drawDeathRagdoll(player, ctx) {
   const ragdoll = player?.deathRagdoll;
   if (!ragdoll?.active) return false;
-  const alpha = clamp(1 - Math.max(0, ragdoll.elapsed - DEATH_RAGDOLL_LIFE) / 0.45, 0, 1);
+  const alpha = clamp(1 - Math.max(0, ragdoll.elapsed - DEATH_RAGDOLL_LIFE) / DEATH_RAGDOLL_FADE, 0, 1);
   ragdoll.parts.forEach((part) => {
     if (!part.image || alpha <= 0) return;
     ctx.save();

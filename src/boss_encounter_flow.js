@@ -1,3 +1,4 @@
+import { isDeathRagdollVisible } from './death_ragdoll_engine.js';
 import { normalizeCharacterGroup } from './character_group_data.js';
 
 const encounters = new WeakMap();
@@ -14,6 +15,8 @@ export function maintainBossEncounter(bosses, { hide, respawn, eligible, random 
     bosses.forEach(hide);
   }
   if (state.current && !state.current.player.dead && !state.current.respawning) return;
+  // Keep the defeated boss drawable until its fragments finish fading.
+  if (state.current?.player.dead && isDeathRagdollVisible(state.current.player)) return;
   bosses.forEach(hide);
   if (!pool.length) {
     state.current = null;
