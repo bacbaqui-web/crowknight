@@ -6,6 +6,17 @@ export function drawTankParts(player, ctx, drawPart) {
     const wheel = ['upperLegL', 'upperLegR', 'lowerLegL'].includes(key);
     drawPart(player, ctx, player.assets[key], player.rig[key], 0, 0, wheel ? player.tankWheelAngle || 0 : 0, key);
   }
+  if (player.bossStunned) {
+    ctx.save();
+    ctx.fillStyle = '#ffe580';
+    for (let i = 0; i < 3; i++) {
+      const a = player.animTime * 5 + (i * Math.PI * 2) / 3;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * 40, -185 + Math.sin(a) * 10, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
   const state = player.tankCharge;
   if (!state || player.actionKey !== 'tankCharge') return;
   const phase = tankPhase(player.customActionElapsed || 0);

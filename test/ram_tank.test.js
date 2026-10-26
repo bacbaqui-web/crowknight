@@ -85,7 +85,7 @@ test('integrated travel and braking are frame-rate independent and mirrored', ()
       const a = actor();
       start(a, facing);
       advance(a, 3.5, dt);
-      assert.ok(Math.abs(a.player.x - 200 - facing * 682.5) < 0.00001);
+      assert.ok(Math.abs(a.player.x - 200 - facing * (RAM_TANK.speed * 1.05)) < 0.00001);
       assert.equal(a.player.actionKey, 'idle');
       assert.equal(a.player.vx, 0);
     }
@@ -127,8 +127,8 @@ test('quarter-view diagonal charge keeps its initial aim when target moves', () 
     tick(a, 1 / 60, w);
     finishPlaneMotion(a, w);
   }
-  assert.ok(Math.abs(a.player.x - (200 + 682.5 * 0.6)) < 0.001);
-  assert.ok(Math.abs(a.quarterDepth - 682.5 * 0.8) < 0.001);
+  assert.ok(Math.abs(a.player.x - (200 + RAM_TANK.speed * 1.05 * 0.6)) < 0.001);
+  assert.ok(Math.abs(a.quarterDepth - RAM_TANK.speed * 1.05 * 0.8) < 0.001);
 });
 test('full range AI starts charge, locks side facing, and waits for cooldown before repeat', () => {
   const a = actor();
@@ -151,7 +151,7 @@ test('full range AI starts charge, locks side facing, and waits for cooldown bef
     }
   }
   assert.ok(starts.length >= 2);
-  assert.ok(starts[1] - starts[0] >= 5.9);
+  assert.ok(starts[1] - starts[0] >= 4.9);
 });
 test('collision deals one hit per charge and recovery is harmless', () => {
   const a = actor();

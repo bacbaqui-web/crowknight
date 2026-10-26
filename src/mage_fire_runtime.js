@@ -19,6 +19,10 @@ export const MAGE_FIRE = Object.freeze({
 export function collectMageFire(actor, target, world, dt = 0) {
   const player = actor?.player;
   if (actor?.id !== 'fire_mage') return [];
+  if (actor.bossPattern && actor.bossPattern.mode !== 'line') {
+    actor.mageFireRuntime = null;
+    return [];
+  }
   if (
     !player ||
     player.dead ||

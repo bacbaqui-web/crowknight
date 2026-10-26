@@ -1,3 +1,4 @@
+import { reflectBarrel } from './boss_hazard_runtime.js';
 import { resolveMovementSkills } from './movement_skill_combat.js';
 import { resolveParryRelease } from './parry_release_controller.js';
 import { updateHealthTrail } from './actor_health_helper.js';
@@ -36,7 +37,8 @@ export function resolveCombat({
   onEnemyDeath,
 }) {
   resolveMovementSkills({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath });
-  if (parryRelease) resolveParryRelease({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath });
+  if (parryRelease)
+    resolveParryRelease({ actors, playerActor, world, particleEffects, onPlayerDeath, onPlayerKill, onEnemyDeath });
   const regionCache = createInteractionRegionFrameCache();
   resolveCollisionInteractions(actors, regionCache, world);
   resolveCollisionHurtInteractions({
@@ -107,9 +109,21 @@ export function resolveCombat({
 
       if (guardBlockAttackRegion) {
         if (target.player.runSkills) {
-          applyInteractionDamage({ attacker, target, attackRegion: guardBlockAttackRegion, damage: 20, guarded: true,
-            invincibleTime: targetHurtInvincibleTime(targetHurtRegions), comboStep, playerActor, world, particleEffects,
-            onPlayerDeath, onPlayerKill, onEnemyDeath });
+          applyInteractionDamage({
+            attacker,
+            target,
+            attackRegion: guardBlockAttackRegion,
+            damage: 20,
+            guarded: true,
+            invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
+            comboStep,
+            playerActor,
+            world,
+            particleEffects,
+            onPlayerDeath,
+            onPlayerKill,
+            onEnemyDeath,
+          });
           return;
         }
         world?.combatSounds?.contact('block', attacker, target);
@@ -190,6 +204,20 @@ export function resolveProjectileCombat({
   const regionCache = createInteractionRegionFrameCache();
   projectiles.forEach((projectile) => {
     if (!projectile?.active || !projectile.owner) return;
+    if (
+      projectile.bossHazard === 'barrel' &&
+      !projectile.reflected &&
+      projectile.phase !== 'blast' &&
+      playerActor &&
+      !playerActor.player.dead
+    ) {
+      const native = cachedInteractionRegions(regionCache, playerActor, 'attack');
+      const prepared = world?.quarterView?.prepareAttackRegions?.(playerActor, native) ?? native;
+      const attacks = world?.quarterView?.attackRegions?.(playerActor, prepared) ?? prepared;
+      const raw = { ...projectileAttackRegion(projectile), active: true, role: 'hurt' };
+      const barrel = world?.quarterView?.projectileRegion?.({ ...projectile, radius: 30 }, raw) ?? raw;
+      if (overlappingAttackRegion(playerActor, attacks, [barrel])) reflectBarrel(projectile, playerActor);
+    }
     const rawAttackRegion = projectileAttackRegion(projectile);
     if (!rawAttackRegion.active) return;
     const attackRegion = world?.quarterView?.projectileRegion?.(projectile, rawAttackRegion) ?? rawAttackRegion;

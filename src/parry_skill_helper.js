@@ -9,7 +9,7 @@ export function parryColor(player) {
 
 export function stunParriedEnemy(actor, seconds) {
   const p = actor.player;
-  if (p.dead) return;
+  if (p.dead || (actor.id === 'ram_tank' && p.actionKey === 'tankCharge')) return;
   seconds = actor.group === 'bosses' ? Math.min(0.6, seconds * 0.5) : Math.min(1.5, seconds);
   p.runParryStun = Math.max(p.runParryStun || 0, seconds);
   p.hurtTime = Math.max(p.hurtTime || 0, seconds);

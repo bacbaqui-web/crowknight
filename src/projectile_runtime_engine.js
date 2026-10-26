@@ -1,3 +1,5 @@
+import { advanceBossHazard } from './boss_hazard_runtime.js';
+import { drawBossHazard } from './boss_hazard_renderer.js';
 import { drawTankWarnings } from './ram_tank_renderer.js';
 import { collectMageFire, advanceMageFire, mageFireAttackRegion } from './mage_fire_runtime.js';
 import { drawMageFire, drawMageWarnings } from './mage_fire_renderer.js';
@@ -35,6 +37,11 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
   mageActors = actors.filter((actor) => actor.id === 'fire_mage');
   warningActors = actors.filter((actor) => actor.spearmanThrow?.aim);
   for (const actor of actors) {
+    for (const hazard of actor.bossPattern?.queue?.splice(0) || []) {
+      hazard.id = nextProjectileId++;
+      hazard.key = `boss:${hazard.id}`;
+      projectilePool.push(hazard);
+    }
     for (const fire of collectMageFire(actor, playerActor, world, dt)) {
       fire.id = nextProjectileId++;
       fire.key = `${actor.runtimeInstanceId || actor.id}:fire:${fire.id}`;
@@ -49,7 +56,7 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
   }
   actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor, world));
   projectilePool.forEach((projectile) => {
-    advanceProjectile(projectile, dt);
+    advanceProjectile(projectile, dt, playerActor);
     if (world?.quarterView?.blocksProjectile?.(projectile)) projectile.active = false;
   });
   projectilePool = projectilePool.filter(
@@ -75,15 +82,17 @@ export function drawProjectiles(ctx, effectAssets, project = null) {
       : drawProjectileLandingMarker(ctx, projectile)
   );
   projectilePool.forEach((projectile) =>
-    projectile.mageFire
-      ? drawMageFire(ctx, projectile, effectAssets, project)
-      : projectile.powderBomb
-        ? drawPowderBomb(ctx, projectile, project)
-        : projectile.linearSpear
-          ? drawLinearSpear(ctx, projectile, project)
-          : project
-            ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
-            : drawProjectile(ctx, projectile, effectAssets)
+    projectile.bossHazard
+      ? drawBossHazard(ctx, projectile, project)
+      : projectile.mageFire
+        ? drawMageFire(ctx, projectile, effectAssets, project)
+        : projectile.powderBomb
+          ? drawPowderBomb(ctx, projectile, project)
+          : projectile.linearSpear
+            ? drawLinearSpear(ctx, projectile, project)
+            : project
+              ? project(projectile, () => drawProjectile(ctx, projectile, effectAssets))
+              : drawProjectile(ctx, projectile, effectAssets)
   );
 }
 
@@ -91,6 +100,7 @@ function spawnActorProjectileIfNeeded(actor, playerActor, world) {
   if (!actor?.player || actor.player.dead || actor.respawning || actor === playerActor) return;
   const player = actor.player;
   const actionKey = player.actionKey;
+  if (actor.id === 'powder_chief' && actor.bossPattern) return;
   const settings = player.actionSettings?.[actionKey] || {};
   const formula = actionFormula(settings, 'projectile');
   if (!formula?.enabled) {
@@ -187,10 +197,11 @@ function projectileReaction(actor, settings) {
   });
 }
 
-function advanceProjectile(projectile, dt) {
+function advanceProjectile(projectile, dt, target) {
   projectile.previousX = projectile.x;
   projectile.previousY = projectile.y;
   projectile.previousDepth = projectile.quarterDepth;
+  if (advanceBossHazard(projectile, dt, target)) return;
   if (projectile.mageFire) {
     advanceMageFire(projectile, dt);
     return;

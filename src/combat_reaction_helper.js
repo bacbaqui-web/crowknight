@@ -67,7 +67,8 @@ export function applyInteractionDamage({
     });
   }
   if (target.hp > 0) {
-    if (!blocking) requestHurtAction(target, attacker);
+    if (!blocking && target.player.actionKey !== 'tankCharge' && !target.player.bossStunned)
+      requestHurtAction(target, attacker);
     return false;
   }
 
@@ -96,6 +97,7 @@ export function applyHitReaction(attacker, target, attackRegion, comboStep, part
     (target.player.runSkills && target.player.customActionKey === target.player.runSkillActions.guard)
   )
     return;
+  if (target.player.actionKey === 'tankCharge' || target.player.bossStunned) return;
   applyKnockback(attacker, target, attackRegion, world);
   particleEffects.triggerHitImpact(attacker, target, comboStep);
 }

@@ -1,3 +1,4 @@
+import { prepareBossTuning } from './boss_tuning_helper.js';
 import { prepareSkillActions } from './skill_runtime_helper.js';
 import { PuppetPlayer } from './actor_runtime_engine.js';
 import { defaultTuningFor } from './actor_tuning_helper.js';
@@ -25,6 +26,7 @@ export async function createActorFromDef(def, savedActor = null, world) {
   const assetSources = savedActor?.assets || {};
   const assets = await loadCharacterAssets(def.folder, '', assetSources);
   const tuning = mergeTuning(defaultTuningFor(def), savedActor?.tuning);
+  prepareBossTuning(def.id, tuning);
   if (isPlayerCharacter(def)) prepareSkillActions(tuning);
   const actor = {
     ...def,

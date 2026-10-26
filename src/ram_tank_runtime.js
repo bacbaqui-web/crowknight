@@ -1,4 +1,4 @@
-export const RAM_TANK = Object.freeze({ warning: 1, charge: 0.9, brake: 0.3, recovery: 1.2, speed: 650 });
+export const RAM_TANK = Object.freeze({ warning: 1, charge: 0.9, brake: 0.3, recovery: 1.2, speed: 850 });
 export const TANK_PART_ORDER = [
   'shield',
   'lowerLegR',
@@ -35,13 +35,7 @@ export function prepareTankMotion(actor) {
   const player = actor?.player;
   if (!isRamTank(player)) return null;
   const start = { x: player.x, time: player.customActionElapsed || 0, serial: player.attackSerial };
-  if (
-    player.dead ||
-    actor.respawning ||
-    player.actionKey !== 'tankCharge' ||
-    actor.hitStun > 0 ||
-    player.runParryStun > 0
-  ) {
+  if (player.dead || actor.respawning || player.actionKey !== 'tankCharge') {
     player.tankCharge = null;
     return start;
   }

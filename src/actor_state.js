@@ -3,6 +3,7 @@ export function resetPlayerActionState(player) {
   player.dead = false;
   player.groundFireHurtTime = 0;
   player.tankCharge = null;
+  player.bossStunned = false;
   player.tankWheelAngle = 0;
   resetMovementSkills(player);
   player.runParryStun = 0;

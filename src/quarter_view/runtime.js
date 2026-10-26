@@ -111,6 +111,7 @@ export function createQuarterRuntime({ ctx, world }) {
     },
     beforeEnemy(actor, target) {
       environment.before(actor, world, motionWorld);
+      if (actor.id === 'ram_tank') actor.quarterMoveSpeed = 1.6;
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
       const direction = navigate(actor, target, enemyPlaneDirection(actor, target));

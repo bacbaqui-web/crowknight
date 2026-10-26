@@ -1,3 +1,4 @@
+import { stunTankOnTerrain } from '../boss_pattern_runtime.js';
 import { depthOf } from './camera.js';
 
 const CELL = 560;
@@ -84,6 +85,7 @@ export function createEnvironment() {
       if (!blocks.some((o) => inside(o, x + dx, z, 14))) x += dx;
       if (!blocks.some((o) => inside(o, x, z + dz, 14))) z += dz;
     }
+    if (Math.hypot(endX - x, endZ - z) > 1 && actor.bossPattern) stunTankOnTerrain(actor);
     p.x = x;
     actor.quarterDepth = z;
     // Resolve spawn/knockback overlaps with the nearest face, without trapping the actor.
