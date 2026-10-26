@@ -246,3 +246,19 @@ test('charged attacks requested before the motion update use the latest horizont
     assert.deepEqual(actor.quarterAim, { x: direction, z: 0 });
   }
 });
+
+test('rapid combo reaches the next authored Q attack sooner without losing buffered input', async () => {
+  const { upgradeEffects } = await import('../src/run_upgrade_effect_helper.js');
+  function followupFrame(count) {
+    const { actor, step } = fixture();
+    actor.player.runUpgrades = upgradeEffects({ 'rapid-combo': count });
+    step(['KeyQ']);
+    for (let frame = 1; frame < 120; frame++) {
+      step(frame % 2 === 0 ? ['KeyQ'] : []);
+      if (actor.player.customActionKey === 'customAction4_2') return frame;
+    }
+    assert.fail('second attack did not start');
+  }
+  const base = followupFrame(0), faster = followupFrame(10);
+  assert.ok(faster < base, `base ${base}, upgraded ${faster}`);
+});

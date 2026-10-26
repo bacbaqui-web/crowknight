@@ -1,3 +1,4 @@
+import { drawRollStamina } from './movement_skill_helper.js';
 import { chargeAttackScale } from './charge_attack_helper.js';
 import { drawHealthMeter } from './actor_health_helper.js';
 import { defaultEffectSize } from './animation_frame_data.js';
@@ -105,6 +106,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
       top + 4
     );
   }
+  drawRollStamina(ctx, actor.player, hud.hpBar.x, hud.hpBar.y + (compactHud ? 14 : 17), width);
   ctx.fillStyle = actor.hurtCooldown > 0 ? '#fff' : actor.tint;
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'center';
