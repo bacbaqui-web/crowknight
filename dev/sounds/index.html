@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>
+    Crow Knight 효과음
+  </title>
+  <style>
+    body {
+      font: 16px system-ui;
+      background: #172126;
+      color: #e1e9e3;
+      max-width: 850px;
+      margin: 36px auto;
+      padding: 0 20px 100px;
+    }
+    h1 {
+      font-size: 25px;
+    }
+    button {
+      background: #34473e;
+      color: #fff;
+      border: 1px solid #7f9c8a;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+    }
+    #sounds {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 9px;
+    }
+    p {
+      line-height: 1.7;
+      color: #bdcfc2;
+    }
+    label {
+      display: block;
+      margin: 20px 0;
+    }
+    a {
+      color: #b6dbae;
+    }
+  </style>
+  <h1>Crow Knight 효과음 미리 듣기</h1>
+  <p>버튼을 누르면 게임에서 사용하는 효과음이 재생됩니다. 위치를 바꾸면 거리와 좌우 방향에 따라 소리가 달라집니다.</p>
+  <label
+    >소리 위치 <input id="position" aria-label="소리 위치" type="range" min="-1200" max="1200" value="0" />
+    <output id="positionValue">중앙</output></label
+  >
+  <p id="status">효과음 불러오는 중…</p>
+  <div id="sounds"></div>
+  <p><a href="../../">게임으로 돌아가기</a> · <a href="../../assets/audio/combat/EXPANDED-SOURCES.md">음원 출처</a></p>
+  <script type="module">
+    import { createCombatAudioPlayer } from '../../src/combat_audio_player.js';
+    const audio = createCombatAudioPlayer();
+    audio.setListener({ x: 0, quarterDepth: 0 });
+    const labels = {
+      footstep: '흙·풀 발걸음',
+      armorStep: '갑옷 마찰',
+      jump: '점프',
+      roll: '구르기',
+      land: '착지',
+      clubSwing: '몽둥이 휘두르기',
+      swordSwing: '칼 휘두르기',
+      clubHit: '몽둥이 타격',
+      swordHit: '칼 타격',
+      block: '방패 방어',
+      parry: '패링',
+      bowRelease: '활시위 발사',
+      spearThrow: '투창',
+      bombThrow: '폭탄 투척',
+      bombLand: '폭탄 착지',
+      fuse: '도화선',
+      explosion: '폭발',
+      bigExplosion: '대형 폭발',
+      fireCast: '불꽃 발사',
+      fireBurn: '불 타는 소리',
+      magicCharge: '마법 준비',
+      tankRumble: '전차 이동',
+      tankCharge: '전차 돌진',
+      tankCrash: '전차 충돌',
+      balloonPop: '풍선 파열',
+      bodyFall: '추락 충돌',
+      trapSet: '쥐덫 설치',
+      trapArm: '쥐덫 장전',
+      trapSnap: '쥐덫 작동',
+      trapBreak: '쥐덫 파괴',
+      enemyDeath: '적 쓰러짐',
+      bossDeath: '보스 파괴',
+      playerDeath: '플레이어 쓰러짐',
+      experiencePickup: '경험치 획득',
+      healthPickup: '체력 획득',
+    };
+    const position = document.querySelector('#position');
+    position.oninput = () =>
+      (document.querySelector('#positionValue').textContent =
+        position.value === '0'
+          ? '중앙'
+          : `${Number(position.value) < 0 ? '왼쪽' : '오른쪽'} ${Math.abs(Number(position.value))}`);
+    for (const [key, label] of Object.entries(labels)) {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.dataset.sound = key;
+      b.onclick = async () => {
+        await audio.unlock();
+        await audio.loading;
+        audio.play(key, { x: Number(position.value), quarterDepth: 0 });
+      };
+      document.querySelector('#sounds').append(b);
+    }
+    await audio.loading;
+    document.querySelector('#status').textContent = `${audio.loadedCount()}개 음원 준비 완료`;
+    window.soundPreview = audio;
+  </script>
+</html>

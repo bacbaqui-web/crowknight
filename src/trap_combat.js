@@ -19,7 +19,6 @@ export function resolveTrapCombat(trap, options, nativeAttacks) {
     };
     if (overlappingAttackRegion(actor, attacks, [region])) {
       closeTrap(trap, 'broken');
-      world?.combatSounds?.contact('block', actor, trap.owner);
       return;
     }
   }
