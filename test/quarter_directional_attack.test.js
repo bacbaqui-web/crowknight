@@ -326,7 +326,7 @@ test('ground crescent uses hitbox projection for all aim directions and facings'
       const front = Math.max(
         ...all.map((p) => ((p.x - origin.x) * aim.x + (p.y - origin.y) * aim.z * slope) / projectedLength)
       );
-      assert.ok(Math.abs(front - region.quarterBoxLength * projectedLength * 0.85) < 1e-8);
+      assert.ok(Math.abs(front - region.quarterBoxLength * projectedLength) < 1e-8);
       const normal = { x: placed.outer[1].x - placed.inner[1].x, y: placed.outer[1].y - placed.inner[1].y };
       assert.ok(normal.x * aim.x + normal.y * aim.z * slope > 0);
       assert.ok(Math.abs(normal.x * aim.z * slope - normal.y * aim.x) < 1e-8);
@@ -337,9 +337,44 @@ test('ground crescent uses hitbox projection for all aim directions and facings'
             p.y + p.depth * slope - original.outer[1].y - original.outer[1].depth * slope
           );
           const q = placed[boundary][i];
-          assert.ok(Math.abs(Math.hypot(q.x - placed.outer[1].x, (q.y - placed.outer[1].y) / slope) - distance) < 1e-8);
+          assert.ok(
+            Math.abs(
+              Math.hypot(q.x - placed.outer[1].x, (q.y - placed.outer[1].y) / slope) -
+                distance * region.quarterTrailScale
+            ) < 1e-8
+          );
         });
     }
   assert.deepEqual(original, saved);
   assert.equal(orientCrescentAtHitbox(original, {}), original);
+});
+
+test('combo and reach upgrades scale crescent dimensions once and keep the leading point on the hitbox tip', () => {
+  const ribbon = {
+    outer: [
+      { x: 0, y: -30, depth: 0 },
+      { x: 30, y: 0, depth: 0 },
+      { x: 0, y: 30, depth: 0 },
+    ],
+    inner: [
+      { x: 0, y: -30, depth: 0 },
+      { x: 20, y: 0, depth: 0 },
+      { x: 0, y: 30, depth: 0 },
+    ],
+  };
+  const a = actor();
+  a.quarterAim = { x: 1, z: 0 };
+  const baseRegion = directionalAttackRegions(a, raw)[0];
+  const base = orientCrescentAtHitbox(ribbon, baseRegion);
+  for (let n = 1; n <= 3; n++) {
+    a.player.actionKey = `attack${n}`;
+    a.player.runUpgrades = { reach: 1.5 };
+    a.player.runSkills = { reach: 2 };
+    const region = directionalAttackRegions(a, scaleUpgradeAttackRegions(a.player, raw))[0];
+    const placed = orientCrescentAtHitbox(ribbon, region);
+    const width = (r) => Math.max(...r.outer.map((p) => p.x)) - Math.min(...r.outer.map((p) => p.x));
+    assert.ok(Math.abs(width(placed) / width(base) - 1.8 * (1 + (n - 1) * 0.03)) < 1e-8);
+    assert.ok(Math.abs(placed.outer[1].x - region.quarterBoxOrigin.x - region.quarterBoxLength) < 1e-8);
+    assert.ok(Math.abs(placed.outer[1].y - region.quarterBoxOrigin.y) < 1e-8);
+  }
 });

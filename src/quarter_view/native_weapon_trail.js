@@ -150,21 +150,21 @@ export function orientCrescentAtHitbox(ribbon, region, facing = 1) {
   const angle = Math.atan2((aim.z * slope) / verticalScale, aim.x) - nativeAngle;
   const c = Math.cos(angle),
     s = Math.sin(angle);
-  const rotate = (p) => ({ x: p.x * c - p.y * s, y: (p.x * s + p.y * c) * verticalScale });
+  const size = region.quarterTrailScale ?? 1;
+  const rotate = (p) => ({ x: (p.x * c - p.y * s) * size, y: (p.x * s + p.y * c) * verticalScale * size });
   const rotated = { outer: outer.map(rotate), inner: inner.map(rotate) };
   const all = [...rotated.outer, ...rotated.inner];
-  const centerX = (Math.min(...all.map((p) => p.x)) + Math.max(...all.map((p) => p.x))) / 2;
-  const centerY = (Math.min(...all.map((p) => p.y)) + Math.max(...all.map((p) => p.y))) / 2;
   const projectedLength = Math.hypot(aim.x, aim.z * slope);
   const forward = { x: aim.x / projectedLength, y: (aim.z * slope) / projectedLength };
-  const frontExtent = Math.max(...all.map((p) => (p.x - centerX) * forward.x + (p.y - centerY) * forward.y));
-  // Keep the leading edge inside the strike tip, rather than centering the crescent on the boundary.
-  const distance = region.quarterBoxLength * projectedLength * 0.85 - frontExtent;
-  const targetX = origin.x + forward.x * distance;
-  const targetY = origin.y + origin.depth * slope + forward.y * distance;
+  const front = all.reduce((best, p) =>
+    p.x * forward.x + p.y * forward.y > best.x * forward.x + best.y * forward.y ? p : best
+  );
+  // Align the actual leading point with the arrow's hitbox tip, including upgraded reach.
+  const targetX = origin.x + aim.x * region.quarterBoxLength;
+  const targetY = origin.y + aim.z * region.quarterBoxLength * slope;
   const place = (p) => ({
-    x: targetX + p.x - centerX,
-    y: targetY + p.y - centerY - origin.depth * slope,
+    x: targetX + p.x - front.x,
+    y: targetY + p.y - front.y,
     depth: origin.depth,
   });
   return { outer: rotated.outer.map(place), inner: rotated.inner.map(place) };
