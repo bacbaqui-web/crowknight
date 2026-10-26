@@ -1,7 +1,9 @@
+import { drawFlameSmoke } from './fire_burst_renderer.js';
 // Render broad overlapping strips so each flame lobe bends instead of scaling as a rigid sticker.
 // Time comes from the simulation clock, so pause freezes flames as well as combat.
 export function drawFlameSprite(ctx, image, x, y, width, height, time, seed = 0) {
   if (!image) return;
+  drawFlameSmoke(ctx,x,y,width,height,time,seed);
   const sourceW = image.naturalWidth || image.width;
   const sourceH = image.naturalHeight || image.height;
   const slices = 14;
@@ -25,12 +27,12 @@ export function drawFlameSprite(ctx, image, x, y, width, height, time, seed = 0)
   ctx.save();
   ctx.fillStyle = '#ffcc59';
   const opacity = ctx.globalAlpha;
-  for (let i = 0; i < 3; i++) {
-    const phase = (((time * 0.65 + i / 3 + seed * 0.13) % 1) + 1) % 1;
+  for (let i = 0; i < 7; i++) {
+    const phase = (((time * 0.65 + i / 7 + seed * 0.13) % 1) + 1) % 1;
     ctx.globalAlpha = opacity * (1 - phase);
     ctx.beginPath();
     ctx.ellipse(
-      x + width * (0.25 + i * 0.22) + Math.sin(time * 3 + i) * width * 0.08,
+      x + width * (0.25 + i * 0.08) + Math.sin(time * 3 + i) * width * 0.08,
       y + height * (0.6 - phase * 0.85),
       1.5,
       2.5,

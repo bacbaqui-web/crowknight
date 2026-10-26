@@ -1,3 +1,4 @@
+import { drawFireBurst } from './fire_burst_renderer.js';
 import { QUARTER_PROJECTION } from './quarter_view/camera.js';
 import { ACTION_FPS } from './game_config_data.js';
 
@@ -91,16 +92,7 @@ export function drawPowderBomb(ctx, projectile, project = null) {
     ctx.save();
     ctx.translate(projectile.x, projectile.y);
     if (projectile.phase === 'blast') {
-      const fade = 1 - Math.min(1, projectile.phaseTime / POWDER_BOMB.blast);
-      ctx.globalAlpha *= Math.max(0.15, fade);
-      ctx.fillStyle = '#f17b2e';
-      ctx.beginPath();
-      ctx.ellipse(0, -projectile.radius / 2, projectile.radius, projectile.radius / 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffe5a0';
-      ctx.beginPath();
-      ctx.ellipse(0, -projectile.radius / 2, projectile.radius * 0.65, projectile.radius * 0.35, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawFireBurst(ctx,projectile.radius,projectile.phaseTime);
     } else {
       ctx.translate(0, -17);
       ctx.rotate(projectile.phase === 'flight' ? projectile.angle : 0);

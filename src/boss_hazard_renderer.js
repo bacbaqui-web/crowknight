@@ -1,3 +1,4 @@
+import { drawFireBurst } from './fire_burst_renderer.js';
 import { drawFlameSprite } from './flame_effect_renderer.js';
 import { QUARTER_PROJECTION } from './quarter_view/camera.js';
 export function drawBossHazard(ctx, h, project = null) {
@@ -31,14 +32,7 @@ export function drawBossHazard(ctx, h, project = null) {
     ctx.translate(h.x, h.y);
     if(fire) {ctx.shadowColor='#ff3c13';ctx.shadowBlur=22;}
     if (h.phase === 'blast' && kind !== 'punch') {
-      ctx.globalAlpha *= Math.max(0, 1 - h.phaseTime / 0.4);
-      ctx.fillStyle = fire ? '#ff4b16' : '#ffb341';
-      ctx.strokeStyle = '#ffe3a0';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.ellipse(0, -15, h.radius, h.radius * (project ? QUARTER_PROJECTION.slope : 0.5), 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      drawFireBurst(ctx,h.radius,h.phaseTime,project ? QUARTER_PROJECTION.slope : .5);
     } else if (kind === 'punch') {
       ctx.fillStyle = '#b8ab7a';
       ctx.strokeStyle = '#242720';

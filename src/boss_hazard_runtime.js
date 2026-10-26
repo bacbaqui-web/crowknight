@@ -57,7 +57,8 @@ export function advanceBossHazard(h, dt, target) {
     t = Math.min(1, h.age / h.fuse);
   if (h.phase === 'blast') {
     h.phaseTime += dt;
-    if (h.phaseTime > 0.4) h.active = false;
+    if (h.phaseTime > 0.4) h.damageSpent = true;
+    if (h.phaseTime > (kind === 'punch' ? 0.4 : 1.2)) h.active = false;
     return true;
   }
   if (kind === 'roller' || kind === 'barrel') {

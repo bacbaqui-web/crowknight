@@ -191,7 +191,8 @@ test('missiles rise first, fall onto fixed marked locations and explode once', (
   advanceBossHazard(h,.5,null);assert.equal(h.x,0);assert.ok(h.y<h.startY);
   advanceBossHazard(h,1,null);assert.ok(h.x>0 && h.x<450);assert.equal(h.phase,'flight');
   advanceBossHazard(h,1,null);assert.equal(h.phase,'blast');assert.equal(h.x,450);assert.equal(h.quarterDepth,220);
-  advanceBossHazard(h,.5,null);assert.equal(h.active,false);
+  advanceBossHazard(h,.5,null);assert.equal(h.damageSpent,true);assert.equal(h.active,true);
+  advanceBossHazard(h,.8,null);assert.equal(h.active,false);
 });
 test('boss shatter splits each visible part into four independently moving fragments', async () => {
   const {startDeathRagdoll}=await import('../src/death_ragdoll_engine.js');
