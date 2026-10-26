@@ -1,4 +1,5 @@
 const FILES = {
+  tankRumble: ['club-hit.wav', 0.12, 0.28],
   experiencePickup: ['experience-soft.wav', 0.32, 0.92],
   healthPickup: ['health-pickup.wav', 0.4, 1],
   clubSwing: ['club-swing.wav', 0.33, 0.92],

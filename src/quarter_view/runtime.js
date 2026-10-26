@@ -1,3 +1,4 @@
+import { tankPatrolDirection } from '../tank_pattern_helper.js';
 import { createTerrainNavigation, terrainBlocksProjectile } from './terrain_navigation.js';
 import { createEnvironment } from './environment.js';
 import { createSurroundingSpawner, outsideSpawnArea } from './bounds.js';
@@ -101,7 +102,7 @@ export function createQuarterRuntime({ ctx, world }) {
     },
     beforePlayer(actor, keys, pressed) {
       environment.before(actor, world, motionWorld);
-      actor.quarterMoveSpeed = 1.32;
+      actor.quarterMoveSpeed = 1.584;
       actor.quarterAirControl = true;
       actor.player.quarterJumpScale = 0.8;
       actor.quarterDirectionalTest = testMode;
@@ -114,7 +115,7 @@ export function createQuarterRuntime({ ctx, world }) {
       if (actor.id === 'ram_tank') actor.quarterMoveSpeed = 1.6;
       actor.quarterDirectionalTest = testMode;
       effectEditor.attachActor(actor);
-      const direction = navigate(actor, target, enemyPlaneDirection(actor, target));
+      const direction = navigate(actor, target, tankPatrolDirection(actor, target, enemyPlaneDirection(actor, target)));
       preparePlaneMotion(actor, direction);
     },
     afterMotion(actor) {

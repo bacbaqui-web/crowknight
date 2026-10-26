@@ -5,7 +5,7 @@ export function drawBossHazard(ctx, h, project = null) {
     kind = h.bossHazard;
   const fire = kind === 'rain' || kind === 'fireball',
     t = Math.min(1, h.age / h.fuse);
-  if (h.phase !== 'blast' && ['giant', 'rain', 'mine'].includes(kind))
+  if (h.phase !== 'blast' && ['giant', 'rain', 'mine', 'missile'].includes(kind))
     at({ ...h, x: h.targetX, y: h.targetY, quarterDepth: h.targetDepth }, () => {
       ctx.save();
       ctx.translate(h.targetX, h.targetY);
@@ -46,6 +46,12 @@ export function drawBossHazard(ctx, h, project = null) {
       ctx.arc(0, -30, 23, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+    } else if (kind === 'missile') {
+      ctx.rotate(t < 0.35 ? 0 : Math.PI);
+      ctx.fillStyle='#d5d9ce';ctx.strokeStyle='#403d31';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(0,-34);ctx.lineTo(9,-12);ctx.lineTo(9,12);ctx.lineTo(-9,12);ctx.lineTo(-9,-12);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#c85434';ctx.fillRect(-8,-10,16,7);
+      ctx.fillStyle='#ffba4f';ctx.beginPath();ctx.moveTo(-6,12);ctx.lineTo(0,32+Math.sin(h.age*65)*8);ctx.lineTo(6,12);ctx.fill();
     } else if (fire) {
       drawFlameSprite(ctx, h.owner.player.assets.flame, -25, -50, 50, 65, h.age, h.id || 0);
     } else {

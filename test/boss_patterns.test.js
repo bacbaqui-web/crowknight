@@ -173,3 +173,31 @@ test('only a player attack overlapping the barrel reflects it', async () => {
   resolveProjectileCombat({ projectiles: [h], actors: [], playerActor: hero, world: w });
   assert.equal(h.reflected, true);
 });
+
+test('tank patrol drops mines then cycles charge and twelve rising missiles', () => {
+  const a=actor('ram_tank'), hazards=[], modes=new Set();
+  for(let i=0;i<2400;i++) {
+    updateBossPattern(a,target,world,1/60);
+    a.player.updateNpc(1/60,target.player,world);
+    hazards.push(...a.bossPattern.queue.splice(0));
+    modes.add(a.player.actionKey);
+  }
+  assert.ok(modes.has('tankCharge'));
+  assert.ok(hazards.some(h=>h.bossHazard==='mine'));
+  assert.ok(hazards.filter(h=>h.bossHazard==='missile').length>=12);
+});
+test('missiles rise first, fall onto fixed marked locations and explode once', () => {
+  const h=makeBossHazard(actor('ram_tank'),target,world,'missile',{x:450,z:220});
+  advanceBossHazard(h,.5,null);assert.equal(h.x,0);assert.ok(h.y<h.startY);
+  advanceBossHazard(h,1,null);assert.ok(h.x>0 && h.x<450);assert.equal(h.phase,'flight');
+  advanceBossHazard(h,1,null);assert.equal(h.phase,'blast');assert.equal(h.x,450);assert.equal(h.quarterDepth,220);
+  advanceBossHazard(h,.5,null);assert.equal(h.active,false);
+});
+test('boss shatter splits each visible part into four independently moving fragments', async () => {
+  const {startDeathRagdoll}=await import('../src/death_ragdoll_engine.js');
+  const p={x:0,y:500,facing:1,transform:{scale:1},assets:{body:{width:100,height:80}},rig:{body:{w:100,h:80}},getPartOffset:()=>({})};
+  startDeathRagdoll(p,{shatter:true},world);
+  assert.equal(p.deathRagdoll.parts.length,4);
+  assert.deepEqual(p.deathRagdoll.parts[0].crop,[0,0,50,40]);
+  assert.ok(new Set(p.deathRagdoll.parts.map(x=>x.vx)).size>1);
+});

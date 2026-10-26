@@ -79,7 +79,8 @@ export function applyInteractionDamage({
 
   if (attacker === playerActor) onPlayerKill(target);
   onEnemyDeath?.(target);
-  startDeathRagdoll(target.player, deathRagdollImpulse(attacker, target, attackRegion), world);
+  startDeathRagdoll(target.player, { ...deathRagdollImpulse(attacker, target, attackRegion), shatter: target.group === 'bosses' }, world);
+  if(target.group === 'bosses') particleEffects?.shakeScreen?.({magnitude: 9,duration:0.4,direction:'random',decay:true});
   particleEffects?.triggerHitImpact(attacker, target, comboStep, true);
   target.respawning = false;
   target.enemyRespawnTimer = null;

@@ -5,6 +5,8 @@ export function createCombatSoundController(play) {
       const player = actor.player;
       if (!player || player.dead || actor.respawning) continue;
       const previous = states.get(player) || {};
+      const rumble = Math.floor((player.animTime || 0) / 0.18);
+      if(actor.id === 'ram_tank' && player.actionKey === 'tankDrive' && previous.rumble !== rumble) play('tankRumble', player);
       const attacking = player.attackInteractionRegions.length > 0;
       const serial = player.attackSerial;
       if (attacking && (!previous.attacking || previous.serial !== serial)) {
@@ -13,7 +15,7 @@ export function createCombatSoundController(play) {
       const guarding = player.customActionKey === player.runSkillActions?.guard ||
         player.actions?.some((action) => action.key === player.customActionKey && action.name === '방어');
       if (guarding && !previous.guarding && player.isCustomActionActive) play('guardRaise', player);
-      states.set(player, { attacking, serial, guarding: guarding && player.isCustomActionActive });
+      states.set(player, { rumble, attacking, serial, guarding: guarding && player.isCustomActionActive });
     }
   }
   function contact(kind, attacker, target) {

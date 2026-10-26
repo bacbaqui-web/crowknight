@@ -33,6 +33,7 @@ export function startDeathRagdoll(player, impulse = {}, world = null) {
     floorY,
     parts: createDeathRagdollParts(player, vector, scale),
   };
+  if (impulse.shatter) player.deathRagdoll.parts = shatterParts(player.deathRagdoll.parts);
 }
 
 export function updateDeathRagdoll(player, dt, world = null) {
@@ -73,7 +74,8 @@ export function drawDeathRagdoll(player, ctx) {
     ctx.translate(part.x, part.y);
     ctx.rotate(part.rot);
     ctx.scale(part.facing, 1);
-    ctx.drawImage(part.image, -part.w / 2, -part.h / 2, part.w, part.h);
+    if(part.crop) ctx.drawImage(part.image, ...part.crop, -part.w/2, -part.h/2, part.w, part.h);
+    else ctx.drawImage(part.image, -part.w / 2, -part.h / 2, part.w, part.h);
     ctx.restore();
   });
   return true;
@@ -188,4 +190,15 @@ function normalizeDeathImpulse(player, impulse = {}) {
 
 function randomRange(min, max) {
   return min + Math.random() * (max - min);
+}
+
+function shatterParts(parts) {
+  return parts.flatMap(part => Array.from({length:4}, (_,i) => {
+    const col=i%2,row=Math.floor(i/2),angle=(i/4)*Math.PI*2+Math.random()*.6;
+    return {...part,w:part.w/2,h:part.h/2,
+      x:part.x+(col-.5)*part.w/2,y:part.y+(row-.5)*part.h/2,
+      vx:part.vx*1.3+Math.cos(angle)*210,vy:part.vy-180+Math.sin(angle)*180,
+      rotSpeed:part.rotSpeed*1.7,
+      crop:[col*part.image.width/2,row*part.image.height/2,part.image.width/2,part.image.height/2]};
+  }));
 }

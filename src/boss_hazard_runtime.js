@@ -9,7 +9,7 @@ export function makeBossHazard(actor, target, world, kind, options = {}) {
   const dx = tx - x,
     dz = tz - z,
     length = Math.hypot(dx, dz) || 1;
-  const radius = { roller: 75, giant: 155, barrel: 125, mine: 80, fireball: 70, rain: 65, punch: 45 }[kind];
+  const radius = { roller: 75, giant: 155, barrel: 125, mine: 80, fireball: 70, rain: 65, missile: 85, punch: 45 }[kind];
   return {
     bossHazard: kind,
     powderBomb: true,
@@ -34,7 +34,7 @@ export function makeBossHazard(actor, target, world, kind, options = {}) {
     radius,
     damage: kind === 'barrel' ? 65 : kind === 'giant' ? 35 : kind === 'punch' ? 15 : 20,
     fuse:
-      kind === 'barrel'
+      kind === 'missile' ? 2.4 : kind === 'barrel'
         ? 5
         : kind === 'roller'
           ? 3
@@ -75,6 +75,11 @@ export function advanceBossHazard(h, dt, target) {
       kind === 'giant'
         ? h.startY + (h.targetY - h.startY) * t - 650 * Math.sin(t * Math.PI)
         : h.targetY - 650 * (1 - t * t);
+  } else if (kind === 'missile') {
+    const falling = Math.max(0, (t - 0.35) / 0.65);
+    h.x = h.startX + (h.targetX - h.startX) * falling;
+    h.quarterDepth = h.startDepth + (h.targetDepth - h.startDepth) * falling;
+    h.y = t < 0.35 ? h.startY - 750 * t / 0.35 : h.targetY - 800 * (1 - falling * falling);
   } else if (kind === 'fireball') {
     h.x = h.startX + (h.targetX - h.startX) * t;
     h.quarterDepth = h.startDepth + (h.targetDepth - h.startDepth) * t;

@@ -1,3 +1,4 @@
+import { updateTankPattern } from './tank_pattern_helper.js';
 import { requestRuntimeAction } from './action_trigger_engine.js';
 import { resetPlayerActionState } from './actor_state.js';
 import { makeBossHazard } from './boss_hazard_runtime.js';
@@ -12,7 +13,7 @@ export function updateBossPattern(actor, target, world, dt) {
   }
   let s = actor.bossPattern;
   if (!s || p.animTime < s.clock)
-    s = actor.bossPattern = { clock: p.animTime, time: 0, cooldown: 1, index: 0, phase: 'walk', queue: [], drops: 0 };
+    s = actor.bossPattern = { clock: p.animTime, time: 0, cooldown: actor.id === 'ram_tank' ? 4 : 1, index: 0, phase: 'walk', queue: [], drops: 0 };
   s.clock = p.animTime;
   if (s.phase === 'walk' && !p.isCustomActionActive)
     requestRuntimeAction(
@@ -35,6 +36,7 @@ export function updateBossPattern(actor, target, world, dt) {
     }
     return true;
   }
+  if (actor.id === 'ram_tank') { updateTankPattern(actor, target, world, dt, emit); return true; }
   if (s.phase === 'cast') {
     if (s.mode === 'rain' && !p.isCustomActionActive) requestRuntimeAction(p, 'mageFire', p.facing);
     if (!s.emitted && s.time >= (s.mode === 'punch' ? 0.28 : 0.8)) {
@@ -60,20 +62,7 @@ export function updateBossPattern(actor, target, world, dt) {
     }
     return true;
   }
-  if (actor.id === 'ram_tank') {
-    if (p.actionKey === 'tankCharge') {
-      if (p.customActionElapsed < 2.2) return true;
-      resetPlayerActionState(p);
-      requestRuntimeAction(p, 'tankDrive', p.facing);
-    }
-    s.dropTime = (s.dropTime || 0) + dt;
-    if (s.dropTime >= 1.5) {
-      emit('mine', { x: p.x, z: actor.quarterDepth || 0 });
-      s.dropTime = 0;
-    }
-    if (distance < 650 && s.cooldown <= 0 && requestRuntimeAction(p, 'tankCharge', p.facing)) s.cooldown = 5;
-    return true;
-  }
+
   if (
     s.cooldown > 0 ||
     p.hurtTime > 0 ||

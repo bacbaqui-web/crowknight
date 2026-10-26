@@ -2,10 +2,13 @@ import { RAM_TANK, TANK_PART_ORDER, tankPhase, tankChargeDistance } from './ram_
 import { projectedSpearPoint } from './spearman_throw_renderer.js';
 
 export function drawTankParts(player, ctx, drawPart) {
+  ctx.save();
+  if(player.actionKey==='tankDrive' && !player.dead) ctx.translate(0,Math.sin(player.animTime*42)*1.8);
   for (const key of TANK_PART_ORDER) {
     const wheel = ['upperLegL', 'upperLegR', 'lowerLegL'].includes(key);
     drawPart(player, ctx, player.assets[key], player.rig[key], 0, 0, wheel ? player.tankWheelAngle || 0 : 0, key);
   }
+  ctx.restore();
   if (player.bossStunned) {
     ctx.save();
     ctx.fillStyle = '#ffe580';
