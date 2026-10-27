@@ -9,14 +9,13 @@ const boss = { id: 'ram_tank', player: { x: 0, y: 500 } };
 function target(x, y = 500) {
   return { quarterDepth: 0, player: { x, y, onGround: y === 500 } };
 }
-test('mine persists for ten minutes, then contact detonates and expires once', () => {
+test('mine detonates automatically at three seconds and expires once', () => {
   const mine = makeBossHazard(boss, target(1000), world, 'mine', { x: 0, z: 0 });
-  advanceBossHazard(mine, 600, target(1000));
+  assert.equal(mine.fuse, 3);
+  advanceBossHazard(mine, 2.99, target(1000));
   assert.equal(mine.active, true);
   assert.notEqual(mine.phase, 'blast');
-  advanceBossHazard(mine, 0.016, target(0, 400));
-  assert.notEqual(mine.phase, 'blast');
-  advanceBossHazard(mine, 0.016, target(0));
+  advanceBossHazard(mine, 0.01, target(1000));
   assert.equal(mine.phase, 'blast');
   advanceBossHazard(mine, 1.3, target(0));
   assert.equal(mine.active, false);
@@ -38,4 +37,12 @@ test('tank patrol and charge are twice the former speeds', () => {
   prepareBossTuning('ram_tank', tuning);
   assert.equal(tuning.actionSettings.tankDrive.formulas[0].x, 14);
   assert.equal(RAM_TANK.speed, 1700);
+});
+
+test('contact still detonates before the timer, while jumping over it does not', () => {
+  const mine = makeBossHazard(boss, target(1000), world, 'mine', { x: 0, z: 0 });
+  advanceBossHazard(mine, 0.1, target(0, 400));
+  assert.notEqual(mine.phase, 'blast');
+  advanceBossHazard(mine, 0.1, target(0));
+  assert.equal(mine.phase, 'blast');
 });

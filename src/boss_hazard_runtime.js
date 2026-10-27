@@ -43,7 +43,7 @@ export function makeBossHazard(actor, target, world, kind, options = {}) {
           : kind === 'roller'
             ? 3
             : kind === 'mine'
-              ? Infinity
+              ? 3
               : kind === 'punch'
                 ? 0.12
                 : kind === 'rain'
