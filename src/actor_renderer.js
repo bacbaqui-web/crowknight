@@ -348,6 +348,10 @@ export function drawPuppetImagePart(player, ctx, image, part, baseX, baseY, rota
   recordPuppetEditHandle(player, ctx, key, placementMatrix);
   drawPuppetImageLessChildParts(player, ctx, key, drawRect.x, drawRect.y);
   ctx.globalAlpha *= clamp((part.opacity ?? 1) * (offset.opacity ?? 1), 0, 1);
+  if (key === 'backpack' && player.actionSettings?.trapSet) {
+    ctx.translate(drawRect.x * 2 + drawRect.w, 0);
+    ctx.scale(-1, 1);
+  }
   const tintColor = player.afterimageTintColor || player.formulaTintColor;
   const tintOpacity = player.afterimageTintColor ? player.afterimageTintOpacity : player.formulaTintOpacity;
   if (tintColor) {

@@ -23,3 +23,25 @@ test('waist harness layers survive normalization and the hands do not hold suspe
   assert.ok(t.actionOffsets.balloonHover.shoulderL.keyframes.every((frame) => frame.rot === 0));
   assert.equal(t.rig.backpack.opacity, 0);
 });
+
+test('leaning torso keeps shoulders and neck connected while arms hang down', () => {
+  const r = data.actors.balloon_bomber.tuning.rig;
+  const angle = (r.body.rot * Math.PI) / 180;
+  const lean = (x, y) => ({
+    x: x * Math.cos(angle) - (y + 28) * Math.sin(angle),
+    y: -28 + x * Math.sin(angle) + (y + 28) * Math.cos(angle),
+  });
+  for (const [side, x] of [
+    ['L', -18],
+    ['R', 18],
+  ]) {
+    const shoulder = lean(x, -58);
+    assert.ok(Math.abs(r['shoulder' + side].x - shoulder.x) < 0.001);
+    assert.ok(Math.abs(r['shoulder' + side].y - shoulder.y) < 0.001);
+    assert.equal(r['shoulder' + side].rot, 0);
+  }
+  const neck = lean(0, -65),
+    headAngle = (r.head.rot * Math.PI) / 180;
+  assert.ok(Math.abs(r.head.x + 17 - 20 * Math.sin(headAngle) - neck.x) < 0.001);
+  assert.ok(Math.abs(r.head.y + 20 + 20 * Math.cos(headAngle) - neck.y) < 0.001);
+});
