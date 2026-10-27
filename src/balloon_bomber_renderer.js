@@ -54,20 +54,22 @@ export function drawBalloonHarness(ctx, belt, rope) {
   ctx.save();
   ctx.lineCap = 'round';
   if (belt) {
+    ctx.translate(0, -28);
+    ctx.rotate((50 * Math.PI) / 180);
     ctx.fillStyle = '#714c2f';
     ctx.strokeStyle = '#181b17';
     ctx.lineWidth = 2;
-    ctx.fillRect(-23, -34, 46, 7);
-    ctx.strokeRect(-23, -34, 46, 7);
+    ctx.fillRect(-23, -6, 46, 7);
+    ctx.strokeRect(-23, -6, 46, 7);
     ctx.fillStyle = '#c69b49';
-    ctx.fillRect(-4, -35, 8, 9);
+    ctx.fillRect(-4, -7, 8, 9);
   } else {
     if (rope)
       for (const side of [-1, 1]) {
         const x = side * 34,
           y = -132;
-        const dx = side * 20 - x,
-          dy = -31 - y;
+        const dx = side * 20 * Math.cos((50 * Math.PI) / 180) - x,
+          dy = -28 + side * 20 * Math.sin((50 * Math.PI) / 180) - y;
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(-Math.atan2(dx, dy));
@@ -77,9 +79,9 @@ export function drawBalloonHarness(ctx, belt, rope) {
           rope.height * 0.015,
           rope.width * 0.22,
           rope.height * 0.965,
-          -6,
+          -12,
           0,
-          12,
+          24,
           Math.hypot(dx, dy) + 5
         );
         ctx.restore();
