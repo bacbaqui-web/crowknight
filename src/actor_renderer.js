@@ -1,5 +1,5 @@
 import { drawTrapRoot } from './trap_renderer.js';
-import { drawBalloonDefeat } from './balloon_bomber_renderer.js';
+import { drawBalloonDefeat, drawBalloonHarness } from './balloon_bomber_renderer.js';
 import { isRamTank } from './ram_tank_runtime.js';
 import { drawTankParts } from './ram_tank_renderer.js';
 import { drawFlameSprite } from './flame_effect_renderer.js';
@@ -74,6 +74,8 @@ export function drawPuppetPlayer(player, ctx) {
 
 export function drawPuppetLayer(player, ctx, layer, pose, rig) {
   const layers = {
+    balloonRopes: () => drawBalloonHarness(ctx, false),
+    balloonBelt: () => drawBalloonHarness(ctx, true),
     leftLeg: () => {
       const hip = player.getPartOffset('hipL');
       const x = rig.hipL.x + hip.x;

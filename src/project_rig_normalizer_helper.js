@@ -153,7 +153,7 @@ export function normalizeRigRotations(rig, baseRig) {
 }
 
 export function normalizeLayerOrder(current, fallback) {
-  const valid = new Set([...fallback, 'backpack', 'collar', 'flame']);
+  const valid = new Set([...fallback, 'backpack', 'collar', 'flame', 'balloonRopes', 'balloonBelt']);
   const kept = (current || []).filter((layer) => valid.has(layer));
   const missing = fallback.filter((layer) => !kept.includes(layer));
   return [...kept, ...missing];

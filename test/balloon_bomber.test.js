@@ -56,7 +56,7 @@ test('normalized grunt has only balloon hurt region, no body collision or attack
   assert.equal(p.attackInteractionRegions.length, 0);
   const hurt = p.hurtInteractionRegions[0];
 
-  assert.ok(hurt.y + hurt.h < p.y - 100);
+  assert.ok(hurt.y + hurt.h < p.y - 100 * p.transform.scale);
   assert.equal(data.actors.balloon_bomber.assets.__parts.length, 15);
 });
 test('only airborne attacking player can damage balloon; standing or jumping alone cannot', () => {
