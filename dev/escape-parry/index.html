@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>순보 미끼 · 몽둥이 패링</title><style>body{background:#14212c;color:#e9f5ff;font:16px sans-serif;margin:24px}canvas{max-width:100%;background:#233847}button{padding:12px;margin:8px}</style><h1>순보 미끼 · 몽둥이 패링</h1><p>왼쪽: 원래 자리에 남은 미끼 / 가운데: 탈출한 까마귀 / 오른쪽: 패링 자세</p><button id="flash">패링 성공 섬광</button><canvas width="1000" height="430"></canvas><script type="module">
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>순보 미끼 · 몽둥이 패링</title><style>body{background:#14212c;color:#e9f5ff;font:16px sans-serif;margin:24px}canvas{max-width:100%;background:#233847}button{padding:12px;margin:8px}</style><h1>순보 미끼 · 몽둥이 패링</h1><p>왼쪽: 원래 자리에 남은 미끼 / 가운데: 탈출한 까마귀 / 오른쪽: 패링 자세</p><button id="ready">E · 패링 시작</button><button id="flash">패링 성공 섬광</button><canvas width="1000" height="430"></canvas><script type="module">
 import {loadCharacterAssets} from '../../src/asset_loader_helper.js';
 import {PuppetPlayer} from '../../src/actor_runtime_engine.js';
 import {mergeTuning} from '../../src/project_data_normalizer_helper.js';
@@ -14,6 +14,9 @@ function make(x){const tuning=mergeTuning(DEFAULT_PLAYER_TUNING,def.tuning);prep
 const hero=make(180),decoy=createBlinkDecoy(hero);hero.player.x=450;
 const guard=make(760);guard.player.customActionKey=guard.player.runSkillActions.guard;guard.player.customActionTime=1;guard.player.customActionDuration=1;guard.player.runParryTime=1;
 const ctx=document.querySelector('canvas').getContext('2d');let flash=0;
-document.querySelector('#flash').onclick=()=>flash=.25;
-let last=performance.now();function frame(now){flash=Math.max(0,flash-(now-last)/1000);last=now;guard.player.runParryFlash=flash;updateFormulaColorChanges([guard]);ctx.clearRect(0,0,1000,430);drawBlinkDecoy(ctx,decoy);for(const a of [hero,guard])drawActor(ctx,{quarterView:{},floorY:330},a,{selectedActor:null,activeEditPartKey:()=>null,activeEditPartKeys:()=>[]});requestAnimationFrame(frame);}requestAnimationFrame(frame);
+document.querySelector('#flash').onclick=()=>{flash=.25;guard.player.runParryTime=0;};
+function beginParry(){guard.player.runParryTime=1;flash=0;}
+document.querySelector('#ready').onclick=beginParry;
+addEventListener('keydown',e=>{if(e.code==='KeyE'&&!e.repeat){e.preventDefault();beginParry();}});
+let last=performance.now();function frame(now){const dt=(now-last)/1000;flash=Math.max(0,flash-dt);guard.player.runParryTime=Math.max(0,guard.player.runParryTime-dt);last=now;guard.player.runParryFlash=flash;updateFormulaColorChanges([guard]);ctx.clearRect(0,0,1000,430);drawBlinkDecoy(ctx,decoy);for(const a of [hero,guard])drawActor(ctx,{quarterView:{},floorY:330},a,{selectedActor:null,activeEditPartKey:()=>null,activeEditPartKeys:()=>[]});requestAnimationFrame(frame);}requestAnimationFrame(frame);
 </script></html>
