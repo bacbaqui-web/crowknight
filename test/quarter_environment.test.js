@@ -21,39 +21,13 @@ test('ground movement cannot tunnel through a rock and can slide along its face'
   env.before(a, world, {});
   a.player.x = 820;
   env.after(a, world);
-  assert.ok(a.player.x < 600);
+  assert.ok(a.player.x < 620);
   env.before(a, world, {});
   a.player.x += 60;
   a.quarterDepth += 40;
   env.after(a, world);
-  assert.ok(a.player.x < 600);
+  assert.ok(a.player.x < 620);
   assert.ok(a.quarterDepth > 0);
-});
-test('jump over side then descend onto rock, stand, and walk off', () => {
-  const env = createEnvironment(),
-    a = actor(580, 0, 300),
-    motion = {};
-  a.player.onGround = false;
-  env.before(a, world, motion);
-  a.player.x = 670;
-  a.player.y = 320;
-  a.player.vy = 4;
-  env.after(a, world);
-  assert.equal(a.player.x, 670);
-  env.before(a, world, motion);
-  assert.equal(motion.floorY, world.floorY - SCENERY_TYPES.boulder.height);
-  a.player.y = 390;
-  env.after(a, world);
-  assert.equal(a.player.y, world.floorY - SCENERY_TYPES.boulder.height);
-  assert.equal(a.player.onGround, true);
-  env.before(a, world, motion);
-  env.after(a, world);
-  assert.equal(a.quarterPlatform.type, 'boulder');
-  env.before(a, world, motion);
-  a.player.x = 790;
-  env.after(a, world);
-  assert.equal(a.player.onGround, false);
-  assert.equal(a.player.floorY, 430);
 });
 test('roof is a landing surface and trees remain blocking while airborne', () => {
   const env = createEnvironment(),
@@ -72,7 +46,7 @@ test('roof is a landing surface and trees remain blocking while airborne', () =>
   assert.ok(b.player.x < 546);
 });
 
-test('native actor physics lands and remains stable on both platform heights', async () => {
+test('native actor physics lands and remains stable on the roof height', async () => {
   const { readFileSync } = await import('node:fs');
   const { PuppetPlayer } = await import('../src/actor_runtime_engine.js');
   const { defaultTuningFor } = await import('../src/actor_tuning_helper.js');
@@ -80,10 +54,7 @@ test('native actor physics lands and remains stable on both platform heights', a
   const { preparePlaneMotion, finishPlaneMotion } = await import('../src/quarter_view/motion.js');
   const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
   const def = saved.characters.find((a) => a.id === 'player_01');
-  for (const [x, z, height] of [
-    [670, 0, SCENERY_TYPES.boulder.height],
-    [140, 500, SCENERY_TYPES.hut.height],
-  ]) {
+  for (const [x, z, height] of [[140, 500, SCENERY_TYPES.hut.height]]) {
     const env = createEnvironment(),
       p = new PuppetPlayer(x, 250, {});
     p.applyTuning(mergeTuning(defaultTuningFor(def), saved.actors.player_01.tuning));
@@ -112,7 +83,7 @@ test('native actor physics lands and remains stable on both platform heights', a
   }
 });
 
-test('low stones and steps are ground decoration, separate from climbable boulders', () => {
+test('low stones and steps are ground decoration, separate from solid boulders', () => {
   const env = createEnvironment();
   const all = env.nearby(480, 0, 700, 700, true);
   const solid = env.nearby(480, 0, 700, 700);
@@ -128,23 +99,31 @@ test('low stones and steps are ground decoration, separate from climbable boulde
     assert.ok(Math.abs(a.player.x - floor.x) < 1e-8);
     assert.equal(a.player.y, world.floorY);
   }
-  assert.ok(solid.some((o) => o.type === 'boulder' && o.climbable && o.height > 60));
+  assert.ok(solid.some((o) => o.type === 'boulder' && !o.climbable && o.height > 0));
 });
 
-test('boulders vary across the forest and land only inside their authored top footprint', () => {
+test('all four half-size boulders have no landing surface and allow passage behind', () => {
   const env = createEnvironment();
-  const boulders = env.nearby(2500, 2500, 4000, 4000).filter((o) => o.type === 'boulder');
-  assert.equal(new Set(boulders.map((o) => o.variant % 4)).size, 4);
-  for (const variant of [0, 1, 2, 3]) {
-    const rock = boulders.find((o) => o.variant % 4 === variant);
-    const a = actor(rock.x, rock.z, world.floorY - rock.height - 20);
-    a.player.vy = 5;
-    a.player.onGround = false;
-    env.before(a, world, {});
-    a.player.y = world.floorY - rock.height + 10;
-    env.after(a, world);
-    assert.equal(a.quarterPlatform?.id, rock.id);
-    assert.equal(a.player.y, world.floorY - rock.height);
-    assert.ok(rock.topW < rock.w && rock.topD < rock.d);
+  const rocks = env.nearby(2500, 2500, 4000, 4000).filter((o) => o.type === 'boulder');
+  assert.equal(new Set(rocks.map((o) => o.variant % 4)).size, 4);
+  for (const rock of rocks) {
+    assert.equal(rock.climbable, false);
+    assert.ok(rock.w <= 123 && rock.d <= 65);
   }
+  const rock = env.nearby(480, 0).find((o) => o.type === 'boulder');
+  const a = actor(rock.x, rock.z, 250);
+  a.player.onGround = false;
+  a.player.vy = 5;
+  const motion = {};
+  env.before(a, world, motion);
+  assert.equal(motion.floorY, 430);
+  a.player.y = 400;
+  env.after(a, world);
+  assert.equal(a.quarterPlatform, null);
+  assert.equal(a.player.floorY, 430);
+  const b = actor(rock.x - 130, rock.z - rock.d / 2 - 25);
+  env.before(b, world, {});
+  b.player.x = rock.x + 130;
+  env.after(b, world);
+  assert.ok(Math.abs(b.player.x - (rock.x + 130)) < 1e-8);
 });

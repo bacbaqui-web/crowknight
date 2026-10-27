@@ -1,4 +1,4 @@
-import { BOULDER_PROFILES } from './scenery_catalog.js';
+import { BOULDER_PROFILES, BOULDER_SCALE } from './scenery_catalog.js';
 import { groundPoint, QUARTER_PROJECTION, depthOf } from './camera.js';
 import { createScenerySprite, sceneryVariant, SCENERY_FRAME } from './scenery_art.js';
 
@@ -9,8 +9,9 @@ export function sceneryOpacity(object, hero, floorY) {
   const depth = depthOf(hero);
   if (depth >= object.z + object.d / 2) return 1;
   const profile = object.type === 'boulder' ? BOULDER_PROFILES[sceneryVariant('boulder', object.variant || 0)] : null;
-  const width = (profile?.width || (object.type === 'tree' ? 300 : 270)) * 1.2;
-  const height = (profile?.height || (object.type === 'tree' ? 330 : 140)) * 1.2;
+  const sizeScale = profile ? BOULDER_SCALE : 1;
+  const width = (profile?.width || (object.type === 'tree' ? 300 : 270)) * 1.2 * sizeScale;
+  const height = (profile?.height || (object.type === 'tree' ? 330 : 140)) * 1.2 * sizeScale;
   if (Math.abs(hero.player.x - object.x) > width / 2 + 20) return 1;
   const feet = (depth - object.z) * QUARTER_PROJECTION.slope - Math.max(0, floorY - hero.player.y);
   return feet >= -height && feet - 90 <= 8 ? 0.48 : 1;
