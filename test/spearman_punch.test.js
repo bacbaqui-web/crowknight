@@ -24,7 +24,7 @@ function release(actor, target, world = {}) {
   updateSpearmanThrow(actor, target, 0.4, world);
 }
 
-test('투창 후 근거리에서는 주먹을 선택하고 원거리/재사용 대기 중에는 접근한다', () => {
+test('투창 후에도 근거리에서는 찌르고 재사용 대기 중에는 접근한다', () => {
   const { actor, target } = fixture();
   assert.equal(actor.player.actionSettings.spearmanPunch.ai.enabled, false);
   aim(actor, target);
@@ -43,8 +43,8 @@ test('투창 후 근거리에서는 주먹을 선택하고 원거리/재사용 �
     });
     return actor.player.actionKey;
   };
-  assert.equal(update(55), 'spearmanPunch');
-  assert.notEqual(update(55), 'spearmanPunch');
+  assert.equal(update(100), 'customAction2');
+  assert.notEqual(update(100), 'customAction2');
   actor.aiActionCooldowns = {};
   assert.notEqual(update(200), 'spearmanPunch');
 });
@@ -68,13 +68,13 @@ test('주먹 판정은 뻗는 구간의 손 근처에만 존재하며 창끝 위
   }
 });
 
-test('주먹 AI는 투창 이후에만 켜지고 재등장 시 다시 꺼진다', () => {
+test('투창 후와 재등장 모두 창을 유지하고 주먹 AI를 켜지 않는다', () => {
   const { actor, target } = fixture();
   assert.equal(actor.player.actionSettings.spearmanPunch.ai.enabled, false);
   aim(actor, target);
   release(actor, target);
-  assert.equal(actor.player.actionSettings.spearmanPunch.ai.enabled, true);
-  assert.equal(actor.player.rig.weapon.opacity, 0);
+  assert.equal(actor.player.actionSettings.spearmanPunch.ai.enabled, false);
+  assert.equal(actor.player.rig.weapon.opacity, 1);
   resetSpearmanThrow(actor);
   assert.equal(actor.player.actionSettings.spearmanPunch.ai.enabled, false);
   assert.equal(actor.player.rig.weapon.opacity, 1);

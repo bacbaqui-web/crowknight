@@ -2,12 +2,19 @@ import { requestRuntimeAction } from './action_trigger_engine.js';
 import { interactionReactionFromValue } from './interaction_region_engine.js';
 import { ACTION_FPS } from './game_config_data.js';
 
-export const SPEARMAN_THROW = Object.freeze({ survival: 30, warning: 1, lockAfter: 0.6, speed: 900, range: 1300 });
+export const SPEARMAN_THROW = Object.freeze({
+  survival: 10,
+  cooldown: 10,
+  meleeRange: 170,
+  warning: 1,
+  lockAfter: 0.6,
+  speed: 900,
+  range: 1300,
+});
 const ACTION = 'spearmanThrow';
 
 export function resetSpearmanThrow(actor) {
   if (!actor?.spearmanThrow) return;
-  if (actor.spearmanThrow.thrown) actor.player.applyTuning(actor.tuning);
   actor.spearmanThrow = null;
 }
 
@@ -24,7 +31,6 @@ export function updateSpearmanThrow(actor, target, dt, world) {
   }
   const state = (actor.spearmanThrow ||= { age: 0, phase: 'waiting', thrown: false, timer: 0 });
   state.age += Math.max(0, dt);
-  if (state.thrown) return false;
   if (state.phase === 'aiming') {
     if (player.actionKey !== ACTION || player.hurtTime > 0 || actor.hitStun > 0 || player.runParryStun > 0) {
       state.phase = 'waiting';
@@ -40,14 +46,18 @@ export function updateSpearmanThrow(actor, target, dt, world) {
     player.vxInertia = 0;
     if (state.timer >= SPEARMAN_THROW.warning) {
       state.pending = createThrownSpear(actor, state.aim);
-      state.thrown = true;
-      state.phase = 'spent';
+      state.nextThrowAt = state.age + SPEARMAN_THROW.cooldown;
+      state.phase = 'waiting';
       state.aim = null;
-      disarm(actor);
     }
     return true;
   }
-  if (state.age < Math.max(SPEARMAN_THROW.survival, state.retryAt || 0)) return false;
+  if (state.age < Math.max(SPEARMAN_THROW.survival, state.nextThrowAt || 0, state.retryAt || 0)) return false;
+  const distance = Math.hypot(
+    target.player.x - player.x,
+    world?.quarterView ? (target.quarterDepth || 0) - (actor.quarterDepth || 0) : 0
+  );
+  if (distance <= SPEARMAN_THROW.meleeRange) return false;
   if (player.isCustomActionActive || !player.onGround || player.hurtTime > 0 || actor.hitStun > 0) return false;
   if (!requestRuntimeAction(player, ACTION, player.facing, 'tap')) return false;
   state.phase = 'aiming';
@@ -117,28 +127,4 @@ function createThrownSpear(actor, aim) {
     angle: Math.atan2(aim.targetY - aim.startY, aim.targetX - aim.startX),
     reaction: interactionReactionFromValue({ active: 1, attack: 1, knockback: 35, hitMode: 'box' }),
   };
-}
-
-function disarm(actor) {
-  const player = actor.player;
-  player.rig.weapon.opacity = 0;
-  player.layerOrder = player.layerOrder.filter((part) => part !== 'weapon');
-  player.actionSettings.customAction2.ai.enabled = false;
-  if (player.actionSettings.spearmanPunch?.ai) player.actionSettings.spearmanPunch.ai.enabled = true;
-  player.actionSettings.customAction1.ai.minRange = 40;
-  player.actionSettings.customAction3.ai.minRange = 120;
-  for (const action of ['idle', 'customAction1', 'customAction3']) {
-    const offsets = player.actionOffsets[action];
-    for (const part of ['upperArmL', 'upperArmR', 'lowerArmL', 'lowerArmR']) offsets[part] = {};
-    for (const side of ['L', 'R']) {
-      const swing = action === 'idle' ? 0 : side === 'L' ? 18 : -18;
-      offsets[`shoulder${side}`] = {
-        keyframes: [
-          { id: 'start', t: 0, rot: swing },
-          { id: 'middle', t: 0.5, rot: -swing },
-          { id: 'end', t: 1, rot: swing },
-        ],
-      };
-    }
-  }
 }

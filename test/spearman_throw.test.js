@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 import test from 'node:test';
+import { resetPlayerActionState } from '../src/actor_state.js';
 import { PuppetPlayer } from '../src/actor_runtime_engine.js';
 import { resetSpearmanThrow, SPEARMAN_THROW, updateSpearmanThrow } from '../src/spearman_throw_runtime.js';
 import {
@@ -28,9 +29,9 @@ function release(actor, target, world = {}) {
   updateSpearmanThrow(actor, target, 0.4, world);
 }
 
-test('생존 30초까지 기다리고 일시정지 중에는 타이머가 진행되지 않는다', () => {
+test('생존 10초까지 기다리고 일시정지 중에는 타이머가 진행되지 않는다', () => {
   const { actor, target } = fixture();
-  updateSpearmanThrow(actor, target, 29.9, {});
+  updateSpearmanThrow(actor, target, 9.9, {});
   for (let i = 0; i < 20; i++) updateSpearmanThrow(actor, target, 0, {});
   assert.equal(actor.spearmanThrow.phase, 'waiting');
   updateSpearmanThrow(actor, target, 0.11, {});
@@ -61,26 +62,27 @@ test('예고 후반 조준을 고정하고 같은 직선으로 발사하며 유�
   assert.ok(Math.abs(Math.hypot(spear.x - spear.startX, spear.y - spear.startY) - SPEARMAN_THROW.speed * 0.2) < 1e-6);
 });
 
-test('한 번 던지면 창과 찌르기를 제거하고 맨손 접근으로 전환한다', () => {
-  resetProjectileRuntime();
+test('투창 후 창을 유지하고 10초 뒤 다시 원거리 투창한다', () => {
   const { actor, target } = fixture();
-  const original = JSON.stringify(tuning);
   aim(actor, target);
   release(actor, target);
-  assert.ok(!actor.player.layerOrder.includes('weapon'));
-  assert.equal(actor.player.rig.weapon.opacity, 0);
-  assert.equal(actor.player.actionSettings.customAction2.ai.enabled, false);
-  assert.equal(actor.player.actionSettings.customAction1.ai.minRange, 40);
-  updateProjectileRuntime({ actors: [actor], playerActor: target });
-  updateSpearmanThrow(actor, target, 100, {});
-  updateProjectileRuntime({ actors: [actor], playerActor: target });
-  assert.equal(activeProjectiles().length, 1);
-  assert.equal(JSON.stringify(tuning), original);
-  resetSpearmanThrow(actor);
   assert.ok(actor.player.layerOrder.includes('weapon'));
   assert.equal(actor.player.rig.weapon.opacity, 1);
   assert.equal(actor.player.actionSettings.customAction2.ai.enabled, true);
+  resetPlayerActionState(actor.player);
+  assert.equal(updateSpearmanThrow(actor, target, 9.9, {}), false);
+  assert.equal(updateSpearmanThrow(actor, target, 0.11, {}), true);
+  release(actor, target);
+  assert.ok(actor.spearmanThrow.pending);
+  resetSpearmanThrow(actor);
   assert.equal(actor.spearmanThrow, null);
+});
+test('근접에서는 쿨타임이 지나도 찌르기를 우선한다', () => {
+  const { actor, target } = fixture();
+  target.player.x = actor.player.x + 100;
+  assert.equal(updateSpearmanThrow(actor, target, 30, {}), false);
+  target.player.x = actor.player.x + 400;
+  assert.equal(updateSpearmanThrow(actor, target, 0, {}), true);
 });
 
 test('예고 도중 사망/피격되면 발사를 취소하고 재등장은 새 생존 시간을 쓴다', () => {
