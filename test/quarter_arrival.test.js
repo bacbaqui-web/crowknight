@@ -87,3 +87,30 @@ test('landing dust and subtle shake fire once at contact, not in the air or agai
   for (let i = 0; i < 12; i++) intro.advance(0.1, null, null, effects);
   assert.equal(dust, 2);
 });
+
+test('quiet landing sound is synchronized with dust and shake and plays once per arrival', () => {
+  const world = { floorY: 430, viewW: 1280, quarterView: {} };
+  const actor = { player: { x: 480, y: 430, animTime: 0 } };
+  const intro = createArrival(world),
+    events = [];
+  const effects = {
+    update() {},
+    emitLandingDust() {
+      events.push('dust');
+    },
+    shakeScreen() {
+      events.push('shake');
+    },
+  };
+  const play = (name, source) => {
+    assert.equal(source, actor);
+    events.push(name);
+  };
+  intro.begin(actor);
+  for (let i = 0; i < 11; i++) intro.advance(0.1, null, null, effects, play);
+  assert.deepEqual(events, []);
+  intro.advance(0.1, null, null, effects, play);
+  assert.deepEqual(events, ['dust', 'shake', 'arrivalLand']);
+  for (let i = 0; i < 5; i++) intro.advance(0.1, null, null, effects, play);
+  assert.equal(events.length, 3);
+});

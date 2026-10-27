@@ -141,7 +141,9 @@ test('every catalog file exists and new recordings have headroom and finite shor
   const pixabay = JSON.parse(readFileSync(new URL('../assets/audio/combat/pixabay/sources.json', import.meta.url)));
   const known = new Set([...sources, ...selected, ...pixabay].map((x) => x.file));
   assert.ok([...files].every((file) => known.has(file)));
-  assert.ok(Object.values(COMBAT_SOUNDS).every((sound) => sound.rate === 1));
+  for (const [name, sound] of Object.entries(COMBAT_SOUNDS))
+    assert.equal(sound.rate, { parry: 0.85, arrivalLand: 0.9 }[name] ?? 1);
+  assert.ok(COMBAT_SOUNDS.arrivalLand.gain < COMBAT_SOUNDS.land.gain / 2);
   for (const item of sources) {
     assert.equal(item.license, 'CC0-1.0');
     assert.ok(item.duration > 0 && item.duration <= 2.1);
