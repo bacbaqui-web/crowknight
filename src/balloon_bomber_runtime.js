@@ -53,7 +53,7 @@ export function updateBalloonPlayer(player, dt, target, world) {
       state.impactTime = 0;
       player.dead = true;
       player.onGround = true;
-      startDeathRagdoll(player, { x: 0, y: -1, power: 0.65, shatter: true }, world);
+      startDeathRagdoll(player, { x: 0, y: -1, power: 0.65 }, world);
       const excluded = new Set(['cape', 'backpack', 'weapon', 'shield'].map((key) => player.assets[key]));
       player.deathRagdoll.parts = player.deathRagdoll.parts.filter((part) => !excluded.has(part.image));
       for (const part of player.deathRagdoll.parts) {

@@ -203,7 +203,7 @@ test('projectile runtime resets remaining bombs and respawning actors emit nothi
   assert.equal(activeProjectiles().length, 0);
 });
 
-test('ground impact starts shattering once and continues fragment physics', () => {
+test('ground impact separates intact body parts once and continues ragdoll physics', () => {
   const a = actor();
   a.player.assets.head = { width: 40, height: 40 };
   a.player.assets.body = { width: 50, height: 60 };
@@ -212,7 +212,8 @@ test('ground impact starts shattering once and continues fragment physics', () =
   step(a, 0.3);
   assert.equal(a.player.deathRagdoll, null);
   for (let i = 0; i < 90 && !a.player.dead; i++) step(a, 1 / 60);
-  assert.equal(a.player.deathRagdoll.parts.length, 8);
+  assert.equal(a.player.deathRagdoll.parts.length, 2);
+  assert.ok(a.player.deathRagdoll.parts.every((part) => !part.crop));
   const rag = a.player.deathRagdoll,
     before = rag.parts[0].y;
   step(a, 0.1);
