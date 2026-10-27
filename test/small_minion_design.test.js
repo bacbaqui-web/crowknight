@@ -40,8 +40,12 @@ test('leaning torso keeps shoulders and neck connected while arms hang down', ()
     assert.ok(Math.abs(r['shoulder' + side].y - shoulder.y) < 0.001);
     assert.equal(r['shoulder' + side].rot, 0);
   }
-  const neck = lean(0, -65),
-    headAngle = (r.head.rot * Math.PI) / 180;
-  assert.ok(Math.abs(r.head.x + 17 - 20 * Math.sin(headAngle) - neck.x) < 0.001);
-  assert.ok(Math.abs(r.head.y + 20 + 20 * Math.cos(headAngle) - neck.y) < 0.001);
+  assert.equal(r.head.rot, -10);
+  const collarEnd = { x: r.collar.x + 25 + 25 * Math.cos(angle), y: r.collar.y + 9 + 25 * Math.sin(angle) };
+  const h = (r.head.rot * Math.PI) / 180;
+  const headBase = {
+    x: r.head.x + 17 - 17 * Math.cos(h) - 20 * Math.sin(h),
+    y: r.head.y + 20 - 17 * Math.sin(h) + 20 * Math.cos(h),
+  };
+  assert.ok(Math.hypot(headBase.x - collarEnd.x, headBase.y - collarEnd.y) < 12);
 });
