@@ -270,6 +270,7 @@ export function resolveProjectileCombat({
         target,
         attackRegion,
         damage: projectile.damage ?? 20,
+        hitSound: projectile.ownerId === 'archer' ? 'arrowHit' : undefined,
         invincibleTime: targetHurtInvincibleTime(targetHurtRegions),
         comboStep: 1,
         playerActor,
