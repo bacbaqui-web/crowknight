@@ -1,9 +1,11 @@
+import { bombWarningAlpha, drawBombFlash } from './bomb_warning_renderer.js';
 import { drawFireBurst } from './fire_burst_renderer.js';
 import { drawFlameSprite } from './flame_effect_renderer.js';
 import { QUARTER_PROJECTION } from './quarter_view/camera.js';
 export function drawBossHazard(ctx, h, project = null) {
   const at = (p, draw) => (project ? project(p, draw) : draw()),
     kind = h.bossHazard;
+  const warning = h.phase === 'blast' ? 0 : bombWarningAlpha(h.age, h.fuse - h.age);
   const fire = kind === 'rain' || kind === 'fireball',
     t = Math.min(1, h.age / h.fuse);
   if (h.phase !== 'blast' && ['giant', 'rain', 'mine', 'missile'].includes(kind))
@@ -45,10 +47,10 @@ export function drawBossHazard(ctx, h, project = null) {
       ctx.fill();
       ctx.stroke();
     } else if (kind === 'mine') {
-      drawContactMine(ctx, h.age);
+      drawContactMine(ctx, h.age, warning);
     } else if (kind === 'missile') {
       ctx.rotate(t < 0.35 ? 0 : Math.PI);
-      ctx.fillStyle = '#d5d9ce';
+      ctx.fillStyle = warning ? '#ff3535' : '#d5d9ce';
       ctx.strokeStyle = '#403d31';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -81,6 +83,7 @@ export function drawBossHazard(ctx, h, project = null) {
         ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
         ctx.fill();
       }
+      drawBombFlash(ctx, h.asset, -size / 2, -size / 2, size, size, warning);
       if (h.reflected) {
         ctx.strokeStyle = '#85eaff';
         ctx.lineWidth = 3;
@@ -91,13 +94,13 @@ export function drawBossHazard(ctx, h, project = null) {
   });
 }
 
-function drawContactMine(ctx, age) {
-  ctx.fillStyle = '#756444';
+function drawContactMine(ctx, age, warning) {
+  ctx.fillStyle = warning ? '#d5312c' : '#756444';
   ctx.strokeStyle = '#242720';
   ctx.lineWidth = 3;
   ctx.fillRect(-23, -39, 46, 35);
   ctx.strokeRect(-23, -39, 46, 35);
-  ctx.fillStyle = '#a18b58';
+  ctx.fillStyle = warning ? '#ff4a3d' : '#a18b58';
   ctx.fillRect(-23, -46, 46, 9);
   ctx.strokeRect(-23, -46, 46, 9);
   ctx.fillStyle = '#3c4037';

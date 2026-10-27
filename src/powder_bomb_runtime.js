@@ -1,3 +1,4 @@
+import { bombWarningAlpha, drawBombFlash } from './bomb_warning_renderer.js';
 import { drawFireBurst } from './fire_burst_renderer.js';
 import { QUARTER_PROJECTION } from './quarter_view/camera.js';
 import { ACTION_FPS } from './game_config_data.js';
@@ -92,11 +93,14 @@ export function drawPowderBomb(ctx, projectile, project = null) {
     ctx.save();
     ctx.translate(projectile.x, projectile.y);
     if (projectile.phase === 'blast') {
-      drawFireBurst(ctx,projectile.radius,projectile.phaseTime);
+      drawFireBurst(ctx, projectile.radius, projectile.phaseTime);
     } else {
       ctx.translate(0, -17);
       ctx.rotate(projectile.phase === 'flight' ? projectile.angle : 0);
       if (projectile.asset) ctx.drawImage(projectile.asset, -14, -17, 28, 34);
+      const age = projectile.elapsedFrames / ACTION_FPS;
+      const remaining = projectile.flightFrames / ACTION_FPS + POWDER_BOMB.fuse - age;
+      drawBombFlash(ctx, projectile.asset, -14, -17, 28, 34, bombWarningAlpha(age, remaining));
       ctx.fillStyle = '#ffdf73';
       ctx.beginPath();
       ctx.arc(3, -16, 3 + Math.sin(projectile.elapsedFrames * 3), 0, Math.PI * 2);
