@@ -1,3 +1,4 @@
+import { breakContactMine } from './contact_mine_combat.js';
 import { resolveTrapCombat } from './trap_combat.js';
 import { enforceTrapRoot, updateTrapTimers } from './trapper_runtime.js';
 import { reflectBarrel } from './boss_hazard_runtime.js';
@@ -208,6 +209,15 @@ export function resolveProjectileCombat({
   const regionCache = createInteractionRegionFrameCache();
   projectiles.forEach((projectile) => {
     if (!projectile?.active || !projectile.owner) return;
+    if (projectile.bossHazard === 'mine' && projectile.phase !== 'blast') {
+      breakContactMine(
+        projectile,
+        playerActor,
+        world,
+        playerActor ? cachedInteractionRegions(regionCache, playerActor, 'attack') : []
+      );
+      return;
+    }
     if (projectile.ratTrap) {
       resolveTrapCombat(
         projectile,

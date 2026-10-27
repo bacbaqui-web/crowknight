@@ -9,7 +9,9 @@ export function makeBossHazard(actor, target, world, kind, options = {}) {
   const dx = tx - x,
     dz = tz - z,
     length = Math.hypot(dx, dz) || 1;
-  const radius = { roller: 75, giant: 155, barrel: 125, mine: 80, fireball: 70, rain: 65, missile: 85, punch: 45 }[kind];
+  const radius = { roller: 75, giant: 155, barrel: 125, mine: 80, fireball: 70, rain: 65, missile: 85, punch: 45 }[
+    kind
+  ];
   return {
     bossHazard: kind,
     powderBomb: true,
@@ -34,17 +36,19 @@ export function makeBossHazard(actor, target, world, kind, options = {}) {
     radius,
     damage: kind === 'barrel' ? 65 : kind === 'giant' ? 35 : kind === 'punch' ? 15 : 20,
     fuse:
-      kind === 'missile' ? 2.4 : kind === 'barrel'
-        ? 5
-        : kind === 'roller'
-          ? 3
-          : kind === 'mine'
-            ? 2
-            : kind === 'punch'
-              ? 0.12
-              : kind === 'rain'
-                ? 1.25
-                : 1.8,
+      kind === 'missile'
+        ? 2.4
+        : kind === 'barrel'
+          ? 5
+          : kind === 'roller'
+            ? 3
+            : kind === 'mine'
+              ? Infinity
+              : kind === 'punch'
+                ? 0.12
+                : kind === 'rain'
+                  ? 1.25
+                  : 1.8,
     asset: kind === 'mine' ? null : actor.player.assets?.[kind === 'barrel' ? 'backpack' : 'weapon'],
     hitTargets: new Set(),
     reaction: interactionReactionFromValue({ active: 1, attack: 1, knockback: 1, hitMode: 'box' }),
@@ -80,7 +84,7 @@ export function advanceBossHazard(h, dt, target) {
     const falling = Math.max(0, (t - 0.35) / 0.65);
     h.x = h.startX + (h.targetX - h.startX) * falling;
     h.quarterDepth = h.startDepth + (h.targetDepth - h.startDepth) * falling;
-    h.y = t < 0.35 ? h.startY - 750 * t / 0.35 : h.targetY - 800 * (1 - falling * falling);
+    h.y = t < 0.35 ? h.startY - (750 * t) / 0.35 : h.targetY - 800 * (1 - falling * falling);
   } else if (kind === 'fireball') {
     h.x = h.startX + (h.targetX - h.startX) * t;
     h.quarterDepth = h.startDepth + (h.targetDepth - h.startDepth) * t;
@@ -97,7 +101,7 @@ export function advanceBossHazard(h, dt, target) {
   }
   const victim = h.reflected ? h.originalOwner : target;
   const contact =
-    (kind === 'roller' || kind === 'fireball' || (kind === 'barrel' && h.reflected)) &&
+    (kind === 'mine' || kind === 'roller' || kind === 'fireball' || (kind === 'barrel' && h.reflected)) &&
     victim &&
     !victim.player.dead &&
     Math.hypot(h.x - victim.player.x, h.quarterDepth - (victim.quarterDepth || 0)) < 38 &&

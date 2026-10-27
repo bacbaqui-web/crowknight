@@ -1,6 +1,11 @@
 export function prepareBossTuning(id, tuning) {
   if (!['powder_chief', 'fire_mage', 'ram_tank'].includes(id)) return;
   tuning.transform.scale *= 0.8;
+  if (id === 'ram_tank') {
+    for (const formula of tuning.actionSettings.tankDrive.formulas) {
+      if (formula.type === 'velocity') formula.x *= 2;
+    }
+  }
   if (id !== 'powder_chief') return;
   tuning.customActions.push({
     key: 'powderPunch',
