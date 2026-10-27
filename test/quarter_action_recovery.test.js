@@ -262,3 +262,18 @@ test('rapid combo reaches the next authored Q attack sooner without losing buffe
   const base = followupFrame(0), faster = followupFrame(10);
   assert.ok(faster < base, `base ${base}, upgraded ${faster}`);
 });
+
+test('parry guard stays active through the enlarged window and expires without renewing while held', async()=>{
+ const {updateRunSkills}=await import('../src/skill_runtime_helper.js');
+ const {parryActive}=await import('../src/parry_visual_helper.js');
+ for(const rank of [1,3]){
+  const {actor,step}=fixture(),p=actor.player;
+  p.runSkills={parry:rank};p.runSkillActions=actor.tuning.skillActions;p.runGuardReady=true;
+  step(['KeyE']);p.runGuardReady=false;
+  const duration=1+(rank-1)*.25;
+  for(let i=0;i<Math.floor((duration-.1)*60);i++){updateRunSkills(p,1/60);step(['KeyE']);}
+  assert.equal(parryActive(p),true);
+  for(let i=0;i<15;i++){updateRunSkills(p,1/60);step(['KeyE']);}
+  assert.equal(parryActive(p),false);
+ }
+});

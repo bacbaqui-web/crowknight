@@ -1,3 +1,4 @@
+import { enemyTarget, updateBlinkDecoy } from './blink_decoy.js';
 import { updateTrapperAi, enforceTrapRoot } from './trapper_runtime.js';
 import { isBoss, maintainBossEncounter } from './boss_encounter_flow.js';
 import { updateBossPattern, finishBossMotion } from './boss_pattern_runtime.js';
@@ -23,21 +24,23 @@ export function updateBattleActorMotion({ actors, playerActor, keys, pressed, wo
   playerActor.player.update(dt, input.keys, input.pressed, motionWorld);
   plane?.afterMotion(playerActor);
   enforceTrapRoot(playerActor);
+  updateBlinkDecoy(playerActor, dt);
+  const target = enemyTarget(playerActor);
 
   actors
     .filter((actor) => actor !== playerActor)
     .forEach((actor) => {
       if (actor.respawning) return;
-      faceNpcActorTowardPlayer(actor, playerActor);
-      const trapping = updateTrapperAi(actor, playerActor, world, dt);
-      plane?.beforeEnemy(actor, playerActor);
+      faceNpcActorTowardPlayer(actor, target);
+      const trapping = updateTrapperAi(actor, target, world, dt);
+      plane?.beforeEnemy(actor, target);
       const bossStart = { x: actor.player.x, z: actor.quarterDepth };
-      const boss = updateBossPattern(actor, playerActor, world, dt);
-      const throwing = updateSpearmanThrow(actor, playerActor, dt, world);
+      const boss = updateBossPattern(actor, target, world, dt);
+      const throwing = updateSpearmanThrow(actor, target, dt, world);
       if (!trapping && !boss && !throwing && !(actor.player.runParryStun > 0))
-        runEnemyRangeAi(actor, playerActor, world);
+        runEnemyRangeAi(actor, target, world);
       const tankMotion = prepareTankMotion(actor);
-      actor.player.updateNpc(dt, playerActor.player, motionWorld);
+      actor.player.updateNpc(dt, target.player, motionWorld);
       finishTankMotion(actor, tankMotion, dt, world);
       finishBossMotion(actor, bossStart);
       plane?.afterMotion(actor);

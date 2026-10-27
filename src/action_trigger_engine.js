@@ -340,7 +340,8 @@ function canStartCustomAction(player) {
 function startCustomAction(player, key, facing = null, triggerMode = 'tap', pressCodes = []) {
   player.runChargedAttack = false;
   startRunSkill(player, key);
-  const duration = player.getActionDuration(key, 0.6);
+  const duration = Math.max(player.getActionDuration(key, 0.6),
+    key === player.runSkillActions?.guard ? player.runParryTime || 0 : 0);
   const requestedFacing = normalizedFacing(facing);
   player.beginCustomActionBlend?.(key, requestedFacing || player.facing);
   if (requestedFacing) player.facing = requestedFacing;
