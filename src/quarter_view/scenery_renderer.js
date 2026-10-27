@@ -1,5 +1,20 @@
+import { BOULDER_PROFILES } from './scenery_catalog.js';
 import { groundPoint, QUARTER_PROJECTION, depthOf } from './camera.js';
 import { createScenerySprite, sceneryVariant, SCENERY_FRAME } from './scenery_art.js';
+
+// Compare projected silhouette/body bounds; elevated heroes and ground decorations stay opaque.
+export function sceneryOpacity(object, hero, floorY) {
+  if (object.groundDecoration || !['tree', 'hut', 'boulder'].includes(object.type)) return 1;
+  if (hero.quarterPlatform?.id === object.id) return 1;
+  const depth = depthOf(hero);
+  if (depth >= object.z + object.d / 2) return 1;
+  const profile = object.type === 'boulder' ? BOULDER_PROFILES[sceneryVariant('boulder', object.variant || 0)] : null;
+  const width = (profile?.width || (object.type === 'tree' ? 300 : 270)) * 1.2;
+  const height = (profile?.height || (object.type === 'tree' ? 330 : 140)) * 1.2;
+  if (Math.abs(hero.player.x - object.x) > width / 2 + 20) return 1;
+  const feet = (depth - object.z) * QUARTER_PROJECTION.slope - Math.max(0, floorY - hero.player.y);
+  return feet >= -height && feet - 90 <= 8 ? 0.48 : 1;
+}
 
 export function createSceneryRenderer(ctx, world) {
   const sprites = new Map();
@@ -30,13 +45,7 @@ export function createSceneryRenderer(ctx, world) {
     }
     const p = groundPoint(object.x, object.z, view);
     ctx.save();
-    if (
-      (object.type === 'tree' || object.type === 'hut') &&
-      Math.abs(hero.player.x - object.x) < 120 &&
-      depthOf(hero) < object.z &&
-      object.z - depthOf(hero) < 700
-    )
-      ctx.globalAlpha = 0.48;
+    ctx.globalAlpha = sceneryOpacity(object, hero, world.floorY);
     const scale = view.zoom * 1.2;
     ctx.drawImage(
       sprite,

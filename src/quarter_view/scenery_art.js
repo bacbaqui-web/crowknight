@@ -3,9 +3,9 @@ const images = new Map();
 let loading;
 const asset = (name) => new globalThis.URL(`../../assets/quarter-forest/${name}.webp`, import.meta.url).href;
 export const SCENERY_ASSETS = Object.freeze({
-  tree: asset('tree-flat-v2'),
-  fork: asset('tree-fork-v3'),
-  bent: asset('tree-bent-v3'),
+  tree: asset('tree-upright-v7'),
+  fork: asset('tree-fork-v7'),
+  bent: asset('tree-bent-v7'),
   bush: asset('bush-v3'),
   ...Object.fromEntries(BOULDER_PROFILES.map((p) => [p.id, asset(p.file)])),
   rock: asset('rock-flat-v2'),

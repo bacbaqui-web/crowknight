@@ -21,7 +21,7 @@ export const FOREST_ASSET_CATALOG = Object.freeze([
     id: 'tree-04',
     type: 'tree',
     label: '넓은 가지 나무',
-    file: 'tree-04-v4.webp',
+    file: 'tree-canopy-v7.webp',
   },
   {
     id: 'tree-05',
