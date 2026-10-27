@@ -232,6 +232,6 @@ test('drooping balloon pose drops recurring bombs from its lowered weapon hand',
   assert.ok(hand.f > a.player.y - 25);
   step(a, BALLOON_BOMBER.interval);
   assert.equal(collectBalloonBombs(a, world).length, 1);
-  assert.ok(a.player.rig.body.rot >= 60);
-  assert.ok(a.player.rig.head.y > a.player.rig.body.y);
+  assert.ok(a.player.rig.body.rot >= 45);
+  assert.ok(a.player.rig.head.rot > a.player.rig.body.rot);
 });

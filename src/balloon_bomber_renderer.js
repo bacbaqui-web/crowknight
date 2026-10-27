@@ -64,8 +64,8 @@ export function drawBalloonHarness(ctx, belt, rope) {
   } else {
     if (rope)
       for (const side of [-1, 1]) {
-        const x = side * 40,
-          y = -110;
+        const x = side * 34,
+          y = -132;
         const dx = side * 20 - x,
           dy = -31 - y;
         ctx.save();
