@@ -18,7 +18,7 @@ export function createPerformanceView({
     refreshed = null,
     before = null;
   try {
-    visible = storage?.getItem(STORAGE_KEY) === '1';
+    visible = !button.hidden && storage?.getItem(STORAGE_KEY) === '1';
   } catch {
     /* Optional preference. */
   }

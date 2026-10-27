@@ -1167,5 +1167,12 @@
       }
     ],
     "sha256": "0a74f03831855402df3d87242f198e1717fd4211b919562ae07d283d1ebc8653"
+  },
+  {
+    "file": "v2/bomb-warning.wav",
+    "license": "CC0-1.0",
+    "duration": 0.055,
+    "sources": [],
+    "processing": "Original synthesized 1100 Hz sine, mono PCM16 44100 Hz; 4ms attack, 12ms release; peak 7000. No external recording."
   }
 ]

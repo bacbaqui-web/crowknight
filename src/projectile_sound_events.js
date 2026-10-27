@@ -1,3 +1,7 @@
+import { bombWarningAlpha, bombWarningCycle } from './bomb_warning_timing.js';
+import { ACTION_FPS } from './game_config_data.js';
+import { POWDER_BOMB } from './powder_bomb_runtime.js';
+
 export function createProjectileSoundEvents(play) {
   let states = new WeakMap();
   function update(projectiles = []) {
@@ -27,7 +31,17 @@ export function createProjectileSoundEvents(play) {
         if (p.phase === 'burn') play('fireBurn', p);
         if (p.phase === 'fuse') play('fuse', p);
       }
-      states.set(p, { phase: p.phase, interval });
+      let warnedCycle = before?.warnedCycle;
+      if (p.powderBomb && !['fireball', 'rain', 'punch'].includes(p.bossHazard) && p.phase !== 'blast') {
+        const age = p.bossHazard ? p.age : p.elapsedFrames / ACTION_FPS;
+        const remaining = p.bossHazard ? p.fuse - age : p.flightFrames / ACTION_FPS + POWDER_BOMB.fuse - age;
+        const cycle = Math.floor(bombWarningCycle(age, remaining));
+        if (remaining > 0 && remaining <= 1.25 && cycle !== warnedCycle && bombWarningAlpha(age, remaining)) {
+          play('bombWarning', p);
+          warnedCycle = cycle;
+        }
+      }
+      states.set(p, { phase: p.phase, interval, warnedCycle });
     }
   }
   return {

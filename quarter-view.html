@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="./src/partPicker.css" />
     <link rel="stylesheet" href="./src/style.css" />
     <link rel="stylesheet" href="./src/upgradeHud.css" />
-    <link rel="stylesheet" href="./src/quarter_view/style.css" />
+    <link rel="stylesheet" href="./src/quarter_view/style.css?v=clean-start-1" />
     <link rel="stylesheet" href="./src/quarter_view/effect_editor.css" />
   </head>
   <body class="game-home full-stage quarter-view">
@@ -24,7 +24,7 @@
         <button id="quarterHitboxes" type="button" aria-pressed="false" aria-controls="quarterHitboxLegend">
           히트박스 표시: 꺼짐
         </button>
-        <button id="quarterFps" type="button" aria-pressed="false" aria-controls="quarterPerformance">
+        <button hidden id="quarterFps" type="button" aria-pressed="false" aria-controls="quarterPerformance">
           FPS 표시: 꺼짐
         </button>
         <aside
@@ -333,6 +333,8 @@
           'dual_grid',
           'arrival',
           'arrival_visual',
+          '../bomb_warning_timing',
+          '../projectile_sound_events',
           '../bomb_warning_renderer',
           '../powder_bomb_runtime',
           '../combat_sound_catalog',

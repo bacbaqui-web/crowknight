@@ -1,10 +1,5 @@
+export { bombWarningAlpha } from './bomb_warning_timing.js';
 const redSprites = new WeakMap();
-
-export function bombWarningAlpha(age, remaining = Infinity) {
-  const urgent = Math.max(0, Math.min(1.25, 1.25 - remaining));
-  const cycles = Math.max(0, age) * 2 + (4 * urgent * urgent) / 1.25;
-  return Math.sin(cycles * Math.PI * 2) > 0 ? 0.68 : 0;
-}
 
 // Tint each loaded sprite once, preserving transparency; reuse it for every bomb and frame.
 export function drawBombFlash(ctx, asset, x, y, width, height, alpha) {
