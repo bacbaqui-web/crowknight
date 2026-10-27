@@ -56,7 +56,7 @@ test('approved club swings and explosion retain the exact Pixabay originals', ()
   }
   assert.deepEqual(
     sources.map((s) => s.selectedCandidate),
-    [2, 3, 10, 14, 14, 15, 21]
+    [2, 3, 10, 14, 14, 15, 21, 23]
   );
   for (const item of sources) {
     const bytes = readFileSync(new URL('../assets/audio/combat/' + item.file, import.meta.url));
@@ -92,6 +92,12 @@ test('block and parry use the selected shortsword shield while hero club stays d
 });
 
 test('hero hit uses blunt impact independently of enemy blade hit', () => {
-  assert.deepEqual(COMBAT_SOUNDS.clubHit.files, ['pixabay/club-hit-blunt.mp3']);
+  assert.deepEqual(COMBAT_SOUNDS.clubHit.files, ['pixabay/club-hit-fist.mp3']);
   assert.ok(COMBAT_SOUNDS.swordHit.files.every((file) => file.startsWith('selected/blade-hit-')));
+});
+
+test('arrow impact retains candidate 21 at half its former gain', () => {
+  assert.deepEqual(COMBAT_SOUNDS.arrowHit.files, ['pixabay/club-hit-blunt.mp3']);
+  assert.equal(COMBAT_SOUNDS.arrowHit.gain, 0.22);
+  assert.equal(COMBAT_SOUNDS.arrowHit.rate, 1);
 });

@@ -47,8 +47,10 @@
     "category": "명중",
     "url": "https://pixabay.com/sound-effects/film-special-effects-fist-punch-or-kick-7171/",
     "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_420245a900.mp3",
-    "status": "previous",
-    "approved": false
+    "status": "approved",
+    "approved": true,
+    "note": "게임 적용 · 몽둥이 명중음",
+    "compare": true
   },
   {
     "id": 24,
@@ -109,8 +111,8 @@
     "src": "https://cdn.pixabay.com/audio/2026/03/17/audio_4d48e16429.mp3",
     "status": "approved",
     "approved": true,
-    "note": "현재 게임의 몽둥이 명중음 · 비교 기준",
-    "compare": true
+    "note": "게임 적용 · 화살 명중음 (기존 대비 음량 50%)",
+    "compare": false
   },
   {
     "id": 22,

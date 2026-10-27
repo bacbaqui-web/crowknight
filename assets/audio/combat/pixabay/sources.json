@@ -87,7 +87,19 @@
     "licenseUrl": "https://pixabay.com/service/license-summary/",
     "sha256": "5a02d4179f58a62c7b6b2f9ba9c7cdb3ba68608de88aaffc969a1e3100631024",
     "selectedCandidate": 21,
-    "processing": "Original MP3; original playback rate; existing clubHit gain",
-    "selectionReason": "Replace sharp sword-on-wood sound after user identified club hit as the problem"
+    "processing": "Original MP3; arrowHit gain 0.22 (half of previous clubHit gain)",
+    "selectionReason": "User selected candidate 21 for quieter arrow impacts"
+  },
+  {
+    "file": "pixabay/club-hit-fist.mp3",
+    "title": "Fist Punch or kick",
+    "author": "rcroller (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-fist-punch-or-kick-7171/",
+    "downloadUrl": "https://cdn.pixabay.com/audio/2021/08/09/audio_420245a900.mp3",
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "sha256": "e0bde3519ef69ddec8abd24e0e0c9453f4f880f4d322433efc3d7a090235894f",
+    "selectedCandidate": 23,
+    "processing": "Original MP3; clubHit gain 0.44"
   }
 ]

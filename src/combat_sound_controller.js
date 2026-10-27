@@ -27,14 +27,10 @@ export function createCombatSoundController(play) {
     }
     projectiles.update(shots);
   }
-  function contact(kind, attacker, target) {
+  function contact(kind, attacker, target, hitSound) {
     play(
       kind === 'hit'
-        ? attacker.group === 'players'
-          ? 'clubHit'
-          : attacker.group === 'bosses'
-            ? 'bossHit'
-            : 'swordHit'
+        ? hitSound || (attacker.group === 'players' ? 'clubHit' : attacker.group === 'bosses' ? 'bossHit' : 'swordHit')
         : kind === 'parry'
           ? 'parry'
           : 'block',
