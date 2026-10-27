@@ -7,6 +7,7 @@ const sound = (files, gain, rate = 1, cooldown = 0.06, priority = 2) => ({
   priority,
 });
 export const COMBAT_SOUNDS = {
+  arrivalLand: sound('v2/land-1.wav', 0.15, 0.9, 0.1, 2),
   experiencePickup: sound('v2/experiencePickup.wav', 0.32, 1),
   healthPickup: sound('v2/healthPickup.wav', 0.4, 1),
   clubSwing: sound(['pixabay/club-swing-1.mp3', 'pixabay/club-swing-2.mp3'], 0.26),

@@ -10,7 +10,7 @@ export function createArrival(world) {
     p.facing = 1;
     advance(0);
   }
-  function advance(dt, keys, pressed, effects) {
+  function advance(dt, keys, pressed, effects, playSound) {
     if (!state) return false;
     effects?.update(dt);
     keys?.clear();
@@ -30,6 +30,7 @@ export function createArrival(world) {
       state.landed = true;
       effects?.emitLandingDust(p, 0, 0.55);
       effects?.shakeScreen({ magnitude: 2.8, duration: 0.14, direction: 'vertical' });
+      playSound?.('arrivalLand', actor);
     }
     p.animTime += dt;
     p.actionPreview = t < 1 ? { action: 'customAction3', t: 0.2 + t * 0.65 } : { action: 'idle', t: 0 };

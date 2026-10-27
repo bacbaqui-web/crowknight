@@ -325,7 +325,7 @@ function update(dt) {
   captureActorMotionStart(gameActors);
 
   if (controlGuideOpen || quarter?.isPaused()) return;
-  if (runLifecycle.isRunActive() && quarter?.updateArrival(dt, keys, pressed, particleEffects)) return;
+  if (runLifecycle.isRunActive() && quarter?.updateArrival(dt, keys, pressed, particleEffects, combatAudio.play)) return;
   if (runLifecycle.isRunActive()) {
     runUpgrades.update(dt);
     if (runUpgrades.isPaused()) {
