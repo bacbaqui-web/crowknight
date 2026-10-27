@@ -49,3 +49,33 @@ export function drawBalloonDefeat(player, ctx, drawLayer) {
   }
   return true;
 }
+
+export function drawBalloonHarness(ctx, belt) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  if (belt) {
+    ctx.fillStyle = '#714c2f';
+    ctx.strokeStyle = '#181b17';
+    ctx.lineWidth = 2;
+    ctx.fillRect(-23, -34, 46, 7);
+    ctx.strokeRect(-23, -34, 46, 7);
+    ctx.fillStyle = '#c69b49';
+    ctx.fillRect(-4, -35, 8, 9);
+  } else {
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * 40, -110);
+      ctx.lineTo(side * 22, -31);
+      ctx.strokeStyle = '#181b17';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.strokeStyle = '#c49b59';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(side * 22, -31, 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
