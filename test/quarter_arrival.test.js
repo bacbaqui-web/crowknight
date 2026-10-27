@@ -27,3 +27,19 @@ test('arrival owns motion and clears combat input until landing at the original 
   intro.begin(actor);
   assert.equal(intro.active, true);
 });
+
+import { arrivalPose } from '../src/quarter_view/arrival_visual.js';
+test('glide spreads wings, flares upright before contact, then folds and settles continuously', () => {
+  assert.equal(arrivalPose(0).spread, 1);
+  assert.ok(arrivalPose(1).lean > 0.5);
+  assert.equal(arrivalPose(2.15).lean, 0);
+  assert.equal(arrivalPose(2.15).spread, 1);
+  assert.ok(arrivalPose(2.3).spread < 0.6);
+  assert.ok(arrivalPose(2.3).squash < 0.92);
+  assert.deepEqual(arrivalPose(2.5), { spread: 0, lean: 0, squash: 1, flare: 1 });
+  for (const boundary of [1.55, 2.15, 2.47, 2.5]) {
+    const a = arrivalPose(boundary - 0.00001),
+      b = arrivalPose(boundary);
+    for (const key of Object.keys(a)) assert.ok(Math.abs(a[key] - b[key]) < 0.0001);
+  }
+});

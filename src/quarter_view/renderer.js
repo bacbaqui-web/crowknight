@@ -1,3 +1,4 @@
+import { drawArrival } from './arrival_visual.js';
 import { drawMageRainAtmosphere } from '../mage_rain_effect.js';
 import { createBossCompass } from './boss_compass.js';
 import { createSceneryRenderer } from './scenery_renderer.js';
@@ -101,6 +102,10 @@ export function createQuarterRenderer({ ctx, world }) {
               () => {
                 const restore = projectEntity(actor);
                 try {
+                  if (world.quarterView.arrival?.actor === actor) {
+                    drawArrival(ctx, world, actor, world.quarterView.arrival.time);
+                    return;
+                  }
                   drawActor(
                     ctx,
                     actor.quarterPlatform

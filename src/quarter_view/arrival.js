@@ -26,8 +26,7 @@ export function createArrival(world) {
     p.vx = p.vy = 0;
     p.onGround = t === 1;
     p.animTime += dt;
-    p.actionPreview =
-      t < 1 ? { action: 'customAction3', t: 0.45 + Math.sin(time * 3) * 0.025 } : { action: 'idle', t: 0 };
+    p.actionPreview = { action: 'idle', t: 0 };
     if (time >= ARRIVAL_DURATION) {
       p.x = x;
       p.y = world.floorY;
