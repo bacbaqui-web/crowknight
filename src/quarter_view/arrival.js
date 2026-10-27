@@ -10,8 +10,9 @@ export function createArrival(world) {
     p.facing = 1;
     advance(0);
   }
-  function advance(dt, keys, pressed) {
+  function advance(dt, keys, pressed, effects) {
     if (!state) return false;
+    effects?.update(dt);
     keys?.clear();
     pressed?.clear();
     state.time += Math.max(0, Math.min(0.1, dt));
@@ -25,6 +26,11 @@ export function createArrival(world) {
     p.y = world.floorY - (100 * (1 - t) + 640 * t * (1 - t));
     p.vx = p.vy = 0;
     p.onGround = t === 1;
+    if (p.onGround && !state.landed) {
+      state.landed = true;
+      effects?.emitLandingDust(p, 0, 0.55);
+      effects?.shakeScreen({ magnitude: 2.8, duration: 0.14, direction: 'vertical' });
+    }
     p.animTime += dt;
     p.actionPreview = t < 1 ? { action: 'customAction3', t: 0.2 + t * 0.65 } : { action: 'idle', t: 0 };
     if (time >= ARRIVAL_DURATION) {

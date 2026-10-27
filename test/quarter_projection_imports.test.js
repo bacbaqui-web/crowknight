@@ -21,7 +21,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 63);
+  assert.equal(Object.keys(imports).length, 64);
   for (const name of [
     'camera',
     'environment',
@@ -33,6 +33,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
     'dual_grid',
     'arrival',
     'arrival_visual',
+    '../particle_effects_engine',
     'ground_shaders',
     'gpu_ground_renderer',
     'attack_geometry',

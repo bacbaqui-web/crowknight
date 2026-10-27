@@ -62,20 +62,20 @@ export function createParticleEffects({ actors, world, ctx }) {
     }
   }
 
-  function emitLandingDust(player, previousVy = 0) {
+  function emitLandingDust(player, previousVy = 0, strength = 1) {
     const impact = clamp(Math.abs(previousVy) / 760, 0.55, 1.35);
-    const count = Math.round(8 + impact * 8);
+    const count = Math.round((8 + impact * 8) * strength);
     for (let index = 0; index < count; index += 1) {
       const side = index % 2 === 0 ? -1 : 1;
       dustParticles.push({
         ...(player.quarterDepth != null ? { quarterDepth: player.quarterDepth } : {}),
         x: player.x + side * (8 + Math.random() * 18),
         y: world.floorY - 4 + Math.random() * 6,
-        vx: side * (64 + Math.random() * 130) * impact + player.vx * 0.06,
+        vx: side * (64 + Math.random() * 130) * impact * strength + player.vx * 0.06,
         vy: -16 - Math.random() * 34 * impact,
         life: 0.34 + Math.random() * 0.12,
         maxLife: 0.46,
-        size: (6 + Math.random() * 10) * impact,
+        size: (6 + Math.random() * 10) * impact * strength,
         stretchX: 1.8 + Math.random() * 0.9,
       });
     }
@@ -337,6 +337,7 @@ export function createParticleEffects({ actors, world, ctx }) {
     drawDust,
     drawHitSparks,
     emitDust,
+    emitLandingDust,
     getScreenShakeOffset,
     reset,
     shakeScreen,
