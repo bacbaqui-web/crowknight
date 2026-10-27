@@ -1,3 +1,4 @@
+import { drawBlinkDecoy } from '../blink_decoy.js';
 import { drawMageRainAtmosphere } from '../mage_rain_effect.js';
 import { createBossCompass } from './boss_compass.js';
 import { createSceneryRenderer } from './scenery_renderer.js';
@@ -71,10 +72,13 @@ export function createQuarterRenderer({ ctx, world }) {
           ? Math.max(depthOf(actor), actor.quarterPlatform.z + actor.quarterPlatform.d / 2 + 1)
           : depthOf(actor),
       }));
+    const decoy = playerActor.player.runDecoy;
+    if (decoy?.time > 0) items.push({ decoy, depth: depthOf(decoy) });
     items.push(...scenery.visible(view).map((object) => ({ object, depth: object.z + object.d / 2 })));
     items
       .sort((a, b) => a.depth - b.depth)
-      .forEach(({ actor, object }) => {
+      .forEach(({ actor, object, decoy }) => {
+        if (decoy) { const restore = projectEntity(decoy); try { drawBlinkDecoy(ctx, decoy); } finally { restore(); } return; }
         if (object) {
           scenery.draw(object, view, playerActor);
           return;

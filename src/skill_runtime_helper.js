@@ -16,7 +16,7 @@ export const RUN_SKILLS = [
   {
     id: 'parry',
     name: '찰나의 반격',
-    detail: 'E 타이밍 방어 · 적 0.6초 스턴 · 강화마다 판정 +0.03초(최대 0.6초), 스턴 +0.25초 · 일반 방어 피해 20% · 보스 스턴 절반(최대 0.6초)',
+    detail: 'E 몽둥이 패링 · 판정 1초 · 적 0.6초 스턴 · 강화마다 판정 +0.25초, 스턴 +0.25초 · 일반 방어 피해 20% · 보스 스턴 절반(최대 0.6초)',
     icon: 'rooted-stance',
   },
   {
@@ -241,6 +241,7 @@ export function startRunSkill(player, key) {
 export function updateRunSkills(player, dt) {
   updateMovementSkills(player, dt);
   if (player.onGround) player.runAirJumpUsed = false;
+  player.runParryFlash = Math.max(0, (player.runParryFlash || 0) - dt);
   player.runParryTime = Math.max(0, (player.runParryTime || 0) - dt);
   player.runEvadeTime = Math.max(0, (player.runEvadeTime || 0) - dt);
 }

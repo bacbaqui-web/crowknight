@@ -1,6 +1,6 @@
 export function parryStats(player) {
   const rank = Math.max(1, player.runSkills?.parry || 1);
-  return { window: Math.min(0.6, 0.15 + (rank - 1) * 0.03), stun: Math.min(1.5, 0.6 + (rank - 1) * 0.25) };
+  return { window: 1 + (rank - 1) * 0.25, stun: Math.min(1.5, 0.6 + (rank - 1) * 0.25) };
 }
 
 export function parryColor(player) {
@@ -27,6 +27,7 @@ export function trySkillParry(attacker, target, world) {
   if (!p.runSkills?.parry || !p.runSkillActions?.guard ||
       p.customActionKey !== p.runSkillActions.guard || !(p.runParryTime > 0)) return false;
   p.runParryTime = 0;
+  p.runParryFlash = .25;
   p.runParryPoints = Math.min(5, (p.runParryPoints || 0) + 1);
   stunParriedEnemy(attacker, parryStats(p).stun);
   target.hitCancelFlashTime = 0.2;

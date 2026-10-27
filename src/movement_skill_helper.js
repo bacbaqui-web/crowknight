@@ -4,7 +4,7 @@ export const MOVEMENT_SKILLS = [
   {id:'plunge',name:'까마귀 강하',detail:'공중 F로 내려찍기 · 높이 100=45 / 200=80 피해 · 기본 피해 최대100 · 강화마다 피해 +20%',icon:'forceful-strike'},
   {id:'glide',name:'펼쳐진 날개',detail:'하강 중 Space 유지로 활강 · 강화마다 낙하 속도 감소',icon:'leaping-feather'},
   {id:'rollStrike',name:'가시 깃털',detail:'W 구르기 중 적마다 한 번 20 피해 · 강화마다 피해 +20%',icon:'sharp-blade'},
-  {id:'blink',name:'순보',detail:'W를 전방 180 거리 순간이동으로 변경 · 연속 구르기 횟수 공유 · 강화마다 거리 +20',icon:'swift-preparation'},
+  {id:'blink',name:'순보',detail:'W: 전방 180 이동 · 출발점에 2초간 적을 유인하는 까마귀 미끼 · 강화마다 거리 +20, 미끼 +0.5초',icon:'swift-preparation'},
 ];
 export const ROLL_RECOVERY = 0.8;
 export function rollCapacity(player) { return Math.min(4, 1 + (player.runSkills?.rollChain || 0)); }
@@ -59,6 +59,7 @@ export function applyMovementSkillPhysics(player, keys) {
   }
 }
 export function resetMovementSkills(player) {
+  player.runDecoy = null;
   player.runRollSpent = 0;player.runRollRecovery = 0;player.runRollHits = null;
   player.runRollLast = null;player.runPlunge = null;player.runBlinkPending = false;player.runMovePulse = null;
 }

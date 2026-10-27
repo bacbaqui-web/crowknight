@@ -1,3 +1,4 @@
+import { enemyTarget } from './blink_decoy.js';
 import { collectTraps, advanceTrap } from './trapper_runtime.js';
 import { drawTrap } from './trap_renderer.js';
 import { advanceBossHazard } from './boss_hazard_runtime.js';
@@ -55,7 +56,7 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
       bomb.key = `${actor.runtimeInstanceId || actor.id}:bomb:${bomb.id}`;
       projectilePool.push(bomb);
     }
-    for (const fire of collectMageFire(actor, playerActor, world, dt)) {
+    for (const fire of collectMageFire(actor, enemyTarget(playerActor), world, dt)) {
       fire.id = nextProjectileId++;
       fire.key = `${actor.runtimeInstanceId || actor.id}:fire:${fire.id}`;
       projectilePool.push(fire);
@@ -69,7 +70,7 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
   }
   actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor, world));
   projectilePool.forEach((projectile) => {
-    advanceProjectile(projectile, dt, playerActor);
+    advanceProjectile(projectile, dt, enemyTarget(playerActor));
     if (!projectile.ratTrap && world?.quarterView?.blocksProjectile?.(projectile)) projectile.active = false;
   });
   projectilePool = projectilePool.filter(
@@ -137,7 +138,7 @@ function spawnActorProjectileIfNeeded(actor, playerActor, world) {
   if (currentFrame < spawnFrame || runtime.spawned.has(spawnKey)) return;
 
   runtime.spawned.add(spawnKey);
-  spawnProjectile(actor, playerActor, formula, settings, world);
+  spawnProjectile(actor, enemyTarget(playerActor), formula, settings, world);
 }
 
 function ensureActorProjectileRuntime(actor, actionKey, elapsed) {
