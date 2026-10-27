@@ -221,3 +221,17 @@ test('ground impact separates intact body parts once and continues ragdoll physi
   assert.ok(rag.elapsed > 0);
   assert.notEqual(rag.parts[0].y, before);
 });
+
+test('drooping balloon pose drops recurring bombs from its lowered weapon hand', () => {
+  const a = actor();
+  step(a, 1.3);
+  const hand = a.player.weaponAnchorTransform();
+  const first = collectBalloonBombs(a, world)[0];
+  assert.equal(first.startX, hand.e);
+  assert.equal(first.startY, hand.f + 9);
+  assert.ok(hand.f > a.player.y - 25);
+  step(a, BALLOON_BOMBER.interval);
+  assert.equal(collectBalloonBombs(a, world).length, 1);
+  assert.ok(a.player.rig.body.rot >= 60);
+  assert.ok(a.player.rig.head.y > a.player.rig.body.y);
+});

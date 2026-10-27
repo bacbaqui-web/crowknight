@@ -50,7 +50,7 @@ export function drawBalloonDefeat(player, ctx, drawLayer) {
   return true;
 }
 
-export function drawBalloonHarness(ctx, belt) {
+export function drawBalloonHarness(ctx, belt, rope) {
   ctx.save();
   ctx.lineCap = 'round';
   if (belt) {
@@ -62,20 +62,28 @@ export function drawBalloonHarness(ctx, belt) {
     ctx.fillStyle = '#c69b49';
     ctx.fillRect(-4, -35, 8, 9);
   } else {
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(side * 40, -110);
-      ctx.lineTo(side * 22, -31);
-      ctx.strokeStyle = '#181b17';
-      ctx.lineWidth = 5;
-      ctx.stroke();
-      ctx.strokeStyle = '#c49b59';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(side * 22, -31, 3.5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    if (rope)
+      for (const side of [-1, 1]) {
+        const x = side * 40,
+          y = -110;
+        const dx = side * 20 - x,
+          dy = -31 - y;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(-Math.atan2(dx, dy));
+        ctx.drawImage(
+          rope,
+          rope.width * 0.39,
+          rope.height * 0.015,
+          rope.width * 0.22,
+          rope.height * 0.965,
+          -6,
+          0,
+          12,
+          Math.hypot(dx, dy) + 5
+        );
+        ctx.restore();
+      }
   }
   ctx.restore();
 }
