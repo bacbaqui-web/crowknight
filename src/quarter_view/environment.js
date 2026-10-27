@@ -5,6 +5,7 @@ import { depthOf } from './camera.js';
 
 const CELL = 560;
 export const SCENERY_TYPES = Object.freeze({
+  boulder: { w: 180, d: 130, height: 96, climbable: true },
   rock: { w: 144, d: 120, height: 52.8, climbable: true },
   hut: { w: 204, d: 168, height: 98.4, climbable: true },
   tree: { w: 50.4, d: 52.8, height: 396, climbable: false },
@@ -18,8 +19,10 @@ export function createEnvironment() {
     const objects = [];
     if (x === 0 && z === 0) {
       objects.push(
-        make('rock', originX + 190, 0, 'start-rock'),
-        make('hut', originX - 260, 240, 'start-hut'),
+        make('boulder', originX + 190, 0, 'start-boulder'),
+        make('rock', originX + 320, -150, 'start-stones'),
+        make('hut', originX - 260, 240, 'start-hut', 4),
+        make('hut', originX - 340, 500, 'start-wall', 2),
         make('tree', originX + 100, -300, 'start-tree', 3),
         make('tree', originX - 65, -500, 'start-tree-left', 5),
         make('tree', originX + 235, -530, 'start-tree-right', 7)
@@ -37,7 +40,7 @@ export function createEnvironment() {
         if (i >= 2 && terrain.edge < 200) continue;
         const type =
           terrain.edge < 230 ? (seed < 0.28 ? 'hut' : 'rock') : seed < 0.1 ? 'hut' : seed < 0.3 ? 'rock' : 'tree';
-        const object = make(type, px, pz, `${key}:${i}`);
+        const object = make(type === 'rock' && seed > 0.6 ? 'boulder' : type, px, pz, `${key}:${i}`);
         if (type === 'tree') object.variant = treeIndex++ % 9;
         if (objects.some((o) => Math.hypot(o.x - px, o.z - pz) < (o.type === 'tree' && type === 'tree' ? 100 : 170)))
           continue;
@@ -75,8 +78,12 @@ export function createEnvironment() {
     return objects;
   }
   function make(type, x, z, id, variant = Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 256)) {
+    const groundDecoration = type === 'rock' || (type === 'hut' && [0, 4, 5].includes(variant % 6));
     return {
       ...SCENERY_TYPES[type],
+      ...(groundDecoration
+        ? { w: 0, d: 0, height: 0, climbable: false, decorative: true, groundDecoration: true }
+        : {}),
       type,
       x,
       z,

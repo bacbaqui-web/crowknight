@@ -71,7 +71,11 @@ export function createQuarterRenderer({ ctx, world }) {
           ? Math.max(depthOf(actor), actor.quarterPlatform.z + actor.quarterPlatform.d / 2 + 1)
           : depthOf(actor),
       }));
-    items.push(...scenery.visible(view).map((object) => ({ object, depth: object.z + object.d / 2 })));
+    items.push(
+      ...scenery
+        .visible(view)
+        .map((object) => ({ object, depth: object.groundDecoration ? -Infinity : object.z + object.d / 2 }))
+    );
     items
       .sort((a, b) => a.depth - b.depth)
       .forEach(({ actor, object }) => {

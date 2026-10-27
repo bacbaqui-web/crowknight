@@ -22,7 +22,7 @@ test('wide branches and slender trunks keep their original proportions within sp
   }
 });
 test('each scenery type reaches every distinct image with bounded cache keys', () => {
-  for (const type of ['tree', 'rock', 'hut', 'bush']) {
+  for (const type of ['tree', 'rock', 'hut', 'bush', 'boulder']) {
     const count = SCENERY_VARIANT_COUNTS[type];
     const keys = Array.from({ length: 256 }, (_, n) => sceneryVariant(type, n));
     assert.equal(new Set(keys).size, count);
