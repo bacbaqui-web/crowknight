@@ -78,7 +78,12 @@ export function terrainColor(x, z) {
   let color = materialColor('grass', x, z);
   for (let i = 0; i < DUAL_LAYERS.length; i++) {
     const layer = DUAL_LAYERS[i];
-    const cover = dualCoverage(cell.masks[i], cell.u, cell.v, cell.variant, layer.id === 'water' ? 0.008 : 0.09);
+    let cover = dualCoverage(cell.masks[i], cell.u, cell.v, cell.variant, layer.id === 'water' ? 0.008 : 0.09);
+    if (layer.id === 'tile') {
+      const k = (Math.PI * 2) / 3200;
+      const gaps = Math.sin(x * k * 39 + Math.sin(z * k * 11)) * Math.cos(z * k * 37 + Math.sin(x * k * 9));
+      cover *= Math.max(0, Math.min(1, (gaps + 0.45) * 6));
+    }
     if (cover <= 0) continue;
     const fg = materialColor(layer.id, x, z);
     color = color.map((c, j) => c * (1 - cover) + fg[j] * cover);

@@ -120,3 +120,41 @@ export const FOREST_ASSET_CATALOG = Object.freeze([
     file: 'ruin-04-v4.webp',
   },
 ]);
+
+// Render bounds and landing geometry are authored together for each silhouette.
+export const BOULDER_PROFILES = Object.freeze([
+  { id: 'boulder', file: 'boulder-v5', width: 265, height: 185, landing: 120, w: 215, d: 120, topW: 170, topD: 65 },
+  {
+    id: 'boulder-round',
+    file: 'boulder-round-v6',
+    width: 285,
+    height: 180,
+    landing: 136,
+    w: 235,
+    d: 130,
+    topW: 175,
+    topD: 60,
+  },
+  {
+    id: 'boulder-split',
+    file: 'boulder-split-v6',
+    width: 260,
+    height: 190,
+    landing: 122,
+    w: 210,
+    d: 125,
+    topW: 150,
+    topD: 60,
+  },
+  {
+    id: 'boulder-ledge',
+    file: 'boulder-ledge-v6',
+    width: 295,
+    height: 180,
+    landing: 136,
+    w: 245,
+    d: 120,
+    topW: 190,
+    topD: 65,
+  },
+]);
