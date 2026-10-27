@@ -56,7 +56,7 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
     ctx.shadowOffsetY = 0;
   }
   if (parryActive(actor.player) || actor.player.runParryFlash > 0) {
-    ctx.filter = actor.player.runParryFlash > 0 ? 'brightness(3) saturate(.3)' : 'brightness(1.65) saturate(.6)';
+    ctx.filter = actor.player.runParryFlash > 0 ? 'none' : 'brightness(1.65) saturate(.6)';
     ctx.shadowColor = '#b7f5ff';ctx.shadowBlur = 14;
   }
   actor.player.draw(ctx);

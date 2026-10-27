@@ -9,6 +9,12 @@ function updateActorFormulaColorChange(actor) {
   const player = actor?.player;
   if (!player) return;
 
+  if (player.runParryFlash > 0 && !player.dead) {
+    player.formulaTintColor = '#ffffff';
+    player.formulaTintOpacity = 1;
+    return;
+  }
+
   const actionKey = player.actionKey;
   const settings = player.actionSettings?.[actionKey] || {};
   const frameCount = timelineFrameCount(settings);

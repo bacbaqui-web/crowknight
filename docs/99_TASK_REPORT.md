@@ -2110,3 +2110,9 @@ World background → Dust/Afterimage/Ghost/Actor → Projectile → Hit/Death Ef
 - 패링 1/1.25/1.5초로 확대하고 방어 동작이 먼저 끝나지 않도록 유지 시간 보정. 몽둥이를 세우는 런타임 자세, 청백색 발광과 성공 섬광/기존 패링 금속음 연결. 원본 모션 데이터 유지.
 - 관련 검증 59개 통과. 추가 화염 렌더 테스트 1개는 기존 캔버스 mock의 createRadialGradient 미지원으로 실패. 실제 에셋의 자세·미끼·발광은 dev/escape-parry에서 확인.
 - ESLint/Prettier와 전체 검사 생략. actor_runtime_engine.js 581줄, action_trigger_engine.js 620줄: 향후 동작 상태/입력 처리 분리 검토, 이번에는 새 미끼와 시각 효과를 별도 모듈로 분리.
+
+
+## 패링 성공 흰색 섬광
+- 첫 보스 방패가격의 colorChange(#ffffff, opacity 1)와 동일한 실루엣 색상 처리를 패링 성공에 적용. 기존 밝기 필터를 대체하고 종료 시 정상 색상 복귀.
+- 패링 금속음을 재생속도 0.85, gain 0.5로 조정. 관련 테스트 7개 통과 및 브라우저 흰색 섬광 확인. 실제 청취 확인은 미수행.
+- 기존 작은 색상 모듈 재사용, 별도 리팩토링 불필요. ESLint/Prettier 및 전체 검사 생략.
