@@ -325,6 +325,7 @@ function update(dt) {
   captureActorMotionStart(gameActors);
 
   if (controlGuideOpen || quarter?.isPaused()) return;
+  if (runLifecycle.isRunActive() && quarter?.updateArrival(dt, keys, pressed)) return;
   if (runLifecycle.isRunActive()) {
     runUpgrades.update(dt);
     if (runUpgrades.isPaused()) {
@@ -670,6 +671,7 @@ function handleRunStarted() {
   pressed.clear();
   placeEnemyActorsAhead(gameActors, playerActor, world);
   quarter?.reset(gameActors);
+  quarter?.beginArrival(playerActor);
   gameActors.forEach((actor) => {
     actor.runtimeBossKillCounted = false;
   });

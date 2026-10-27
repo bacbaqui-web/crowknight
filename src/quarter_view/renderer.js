@@ -55,8 +55,10 @@ export function createQuarterRenderer({ ctx, world }) {
     view = {
       width: world.viewW,
       height: world.viewH,
-      x: playerActor.player.x + 110,
-      depth: depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
+      x: (world.quarterView.arrival?.x ?? playerActor.player.x) + 110,
+      depth:
+        world.quarterView.arrival?.z ??
+        depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
       zoom: formulaScreenZoom(actors, screenZoom),
     };
     ctx.save();
