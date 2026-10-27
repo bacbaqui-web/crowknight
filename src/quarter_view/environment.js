@@ -1,3 +1,4 @@
+import { BOULDER_PROFILES } from './scenery_catalog.js';
 import { dualWater } from './dual_grid.js';
 import { forestGround, forestHash } from './forest_layout.js';
 import { stunTankOnTerrain } from '../boss_pattern_runtime.js';
@@ -5,12 +6,14 @@ import { depthOf } from './camera.js';
 
 const CELL = 560;
 export const SCENERY_TYPES = Object.freeze({
-  boulder: { w: 180, d: 130, height: 96, climbable: true },
+  boulder: { w: 180, d: 130, height: 120, climbable: true },
   rock: { w: 144, d: 120, height: 52.8, climbable: true },
   hut: { w: 204, d: 168, height: 98.4, climbable: true },
   tree: { w: 50.4, d: 52.8, height: 396, climbable: false },
 });
 export function createEnvironment() {
+  const preview = Number(new globalThis.URLSearchParams(globalThis.location?.search || '').get('boulder'));
+  const startVariant = Number.isInteger(preview) && preview >= 0 && preview < BOULDER_PROFILES.length ? preview : 0;
   let originX = 480;
   const cache = new Map();
   function cell(x, z) {
@@ -19,7 +22,7 @@ export function createEnvironment() {
     const objects = [];
     if (x === 0 && z === 0) {
       objects.push(
-        make('boulder', originX + 190, 0, 'start-boulder'),
+        make('boulder', originX + 190, 0, 'start-boulder', startVariant),
         make('rock', originX + 320, -150, 'start-stones'),
         make('hut', originX - 260, 240, 'start-hut', 4),
         make('hut', originX - 340, 500, 'start-wall', 2),
@@ -29,6 +32,8 @@ export function createEnvironment() {
       );
     } else {
       const density = 4 + Math.floor(forestHash(x + 301, z - 71) * 3);
+      let boulderIndex =
+        (((x * 3 + z * 5) % BOULDER_PROFILES.length) + BOULDER_PROFILES.length) % BOULDER_PROFILES.length;
       let treeIndex = (((x * 4 + z * 7) % 9) + 9) % 9;
       for (let i = 0; i < density; i++) {
         const seed = forestHash(x * 7 + i, z);
@@ -40,7 +45,8 @@ export function createEnvironment() {
         if (i >= 2 && terrain.edge < 200) continue;
         const type =
           terrain.edge < 230 ? (seed < 0.28 ? 'hut' : 'rock') : seed < 0.1 ? 'hut' : seed < 0.3 ? 'rock' : 'tree';
-        const object = make(type === 'rock' && seed > 0.6 ? 'boulder' : type, px, pz, `${key}:${i}`);
+        const actualType = type === 'rock' && forestHash(x * 31 + i, z + 15) > 0.4 ? 'boulder' : type;
+        const object = make(actualType, px, pz, `${key}:${i}`, actualType === 'boulder' ? boulderIndex++ : undefined);
         if (type === 'tree') object.variant = treeIndex++ % 9;
         if (objects.some((o) => Math.hypot(o.x - px, o.z - pz) < (o.type === 'tree' && type === 'tree' ? 100 : 170)))
           continue;
@@ -78,9 +84,13 @@ export function createEnvironment() {
     return objects;
   }
   function make(type, x, z, id, variant = Math.floor(forestHash(Math.floor(x), Math.floor(z)) * 256)) {
+    const profile = type === 'boulder' ? BOULDER_PROFILES[variant % BOULDER_PROFILES.length] : null;
     const groundDecoration = type === 'rock' || (type === 'hut' && [0, 4, 5].includes(variant % 6));
     return {
       ...SCENERY_TYPES[type],
+      ...(profile
+        ? { w: profile.w, d: profile.d, height: profile.landing, topW: profile.topW, topD: profile.topD }
+        : {}),
       ...(groundDecoration
         ? { w: 0, d: 0, height: 0, climbable: false, decorative: true, groundDecoration: true }
         : {}),
@@ -109,10 +119,11 @@ export function createEnvironment() {
     return result;
   }
   const inside = (o, x, z, pad = 0) => Math.abs(x - o.x) < o.w / 2 + pad && Math.abs(z - o.z) < o.d / 2 + pad;
+  const onTop = (o, x, z) => Math.abs(x - o.x) < (o.topW || o.w) / 2 && Math.abs(z - o.z) < (o.topD || o.d) / 2;
   function support(actor, world) {
     const height = world.floorY - actor.player.y;
     return nearby(actor.player.x, depthOf(actor))
-      .filter((o) => o.climbable && inside(o, actor.player.x, depthOf(actor)) && height >= o.height - 2)
+      .filter((o) => o.climbable && onTop(o, actor.player.x, depthOf(actor)) && height >= o.height - 2)
       .sort((a, b) => b.height - a.height)[0];
   }
   function before(actor, world, motionWorld) {
@@ -166,7 +177,7 @@ export function createEnvironment() {
       .filter(
         (o) =>
           o.climbable &&
-          inside(o, x, z) &&
+          onTop(o, x, z) &&
           start.y <= world.floorY - o.height + 2 &&
           p.y >= world.floorY - o.height &&
           p.vy >= 0

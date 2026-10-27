@@ -1,4 +1,4 @@
-import { FOREST_ASSET_CATALOG } from './scenery_catalog.js';
+import { FOREST_ASSET_CATALOG, BOULDER_PROFILES } from './scenery_catalog.js';
 const images = new Map();
 let loading;
 const asset = (name) => new globalThis.URL(`../../assets/quarter-forest/${name}.webp`, import.meta.url).href;
@@ -7,7 +7,7 @@ export const SCENERY_ASSETS = Object.freeze({
   fork: asset('tree-fork-v3'),
   bent: asset('tree-bent-v3'),
   bush: asset('bush-v3'),
-  boulder: asset('boulder-v5'),
+  ...Object.fromEntries(BOULDER_PROFILES.map((p) => [p.id, asset(p.file)])),
   rock: asset('rock-flat-v2'),
   stones: asset('stones-v3'),
   hut: asset('ruin-flat-v2'),
@@ -20,7 +20,7 @@ const variants = {
   rock: ['rock', 'stones'],
   hut: ['hut', 'pillar'],
   bush: ['bush'],
-  boulder: ['boulder'],
+  boulder: BOULDER_PROFILES.map((p) => p.id),
 };
 for (const entry of FOREST_ASSET_CATALOG) variants[entry.type].push(entry.id);
 export const SCENERY_VARIANT_COUNTS = Object.freeze(
@@ -92,10 +92,15 @@ export function createScenerySprite(type, createSurface = () => document.createE
     stamp(ctx, variants.tree[n], 0, 3, 300, 330);
     stamp(ctx, groundCover, n === 2 ? 26 : -18, 9, 68, 28);
   } else if (type === 'boulder') {
-    stamp(ctx, 'boulder', 0, 5, 215, 150);
+    const profile = BOULDER_PROFILES[n];
+    stamp(ctx, profile.id, 0, 5, profile.width, profile.height);
+    stamp(ctx, groundCover, -95, 10, 65, 24);
+    stamp(ctx, variants.bush[(n + 2) % variants.bush.length], 90, 8, 58, 22);
   } else {
     stamp(ctx, variants[type][n], 0, 5, type === 'rock' ? 155 : 270, type === 'rock' ? 90 : 140);
-    stamp(ctx, groundCover, n === 0 ? -57 : 58, 9, 55, 26);
+    stamp(ctx, groundCover, -100, 9, 60, 24);
+    stamp(ctx, variants.bush[(n + 2) % variants.bush.length], 105, 4, 70, 27);
+    stamp(ctx, variants.bush[(n + 3) % variants.bush.length], 20, 12, 48, 18);
   }
   return canvas;
 }

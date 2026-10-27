@@ -130,3 +130,21 @@ test('low stones and steps are ground decoration, separate from climbable boulde
   }
   assert.ok(solid.some((o) => o.type === 'boulder' && o.climbable && o.height > 60));
 });
+
+test('boulders vary across the forest and land only inside their authored top footprint', () => {
+  const env = createEnvironment();
+  const boulders = env.nearby(2500, 2500, 4000, 4000).filter((o) => o.type === 'boulder');
+  assert.equal(new Set(boulders.map((o) => o.variant % 4)).size, 4);
+  for (const variant of [0, 1, 2, 3]) {
+    const rock = boulders.find((o) => o.variant % 4 === variant);
+    const a = actor(rock.x, rock.z, world.floorY - rock.height - 20);
+    a.player.vy = 5;
+    a.player.onGround = false;
+    env.before(a, world, {});
+    a.player.y = world.floorY - rock.height + 10;
+    env.after(a, world);
+    assert.equal(a.quarterPlatform?.id, rock.id);
+    assert.equal(a.player.y, world.floorY - rock.height);
+    assert.ok(rock.topW < rock.w && rock.topD < rock.d);
+  }
+});

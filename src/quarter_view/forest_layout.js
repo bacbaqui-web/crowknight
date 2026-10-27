@@ -32,7 +32,8 @@ export function forestTerrain(x, z) {
     35 * Math.sin(x * K * 4 + z * K * 3) +
     22 * Math.cos(x * K * 7 - z * K * 5) +
     wave;
-  const plaza = Math.max(Math.abs(wrap(x - 220)) - 220, Math.abs(wrap(z - 240)) - 180) + wave * 0.35;
+  const plaza =
+    (Math.hypot(wrap(x - 220) / 220, wrap(z - 240) / 180) - 1) * 180 + 24 * Math.sin(x * K * 13 + z * K * 9) + wave;
   const vertical = Math.abs(wrap(x - 480 - 180 * Math.sin(z * K))) - 62;
   const soil = (Math.hypot(wrap(x - 2350) / 340, wrap(z - 1750) / 260) - 1) * 260 + wave;
   const transition = (a, b, edge, width = 20) => ({ a, b, mix: clamp((edge + width) / (width * 2)) });
