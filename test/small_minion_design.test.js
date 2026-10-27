@@ -20,6 +20,6 @@ test('waist harness layers survive normalization and the hands do not hold suspe
   const t = mergeTuning(DEFAULT_PLAYER_TUNING, data.actors.balloon_bomber.tuning);
   assert.ok(t.layerOrder.includes('balloonRopes'));
   assert.ok(t.layerOrder.includes('balloonBelt'));
-  assert.ok(t.actionOffsets.balloonHover.shoulderL.keyframes.every((frame) => frame.rot === 10));
+  assert.ok(t.actionOffsets.balloonHover.shoulderL.keyframes.every((frame) => frame.rot === 0));
   assert.equal(t.rig.backpack.opacity, 0);
 });

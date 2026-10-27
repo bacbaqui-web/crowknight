@@ -74,8 +74,8 @@ export function drawPuppetPlayer(player, ctx) {
 
 export function drawPuppetLayer(player, ctx, layer, pose, rig) {
   const layers = {
-    balloonRopes: () => drawBalloonHarness(ctx, false),
-    balloonBelt: () => drawBalloonHarness(ctx, true),
+    balloonRopes: () => drawBalloonHarness(ctx, false, player.assets.backpack),
+    balloonBelt: () => drawBalloonHarness(ctx, true, player.assets.backpack),
     leftLeg: () => {
       const hip = player.getPartOffset('hipL');
       const x = rig.hipL.x + hip.x;
