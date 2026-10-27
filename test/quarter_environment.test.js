@@ -1,7 +1,7 @@
 import { URL } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createEnvironment } from '../src/quarter_view/environment.js';
+import { createEnvironment, SCENERY_TYPES } from '../src/quarter_view/environment.js';
 const world = { floorY: 430 };
 function actor(x = 480, z = 0, y = 430) {
   return { quarterDepth: z, player: { x, y, vy: 0, onGround: true } };
@@ -9,7 +9,7 @@ function actor(x = 480, z = 0, y = 430) {
 test('deterministic infinite chunks have bounded cache and clear spawn', () => {
   const env = createEnvironment();
   const first = env.nearby(480, 0);
-  assert.ok(first.some((o) => o.type === 'hut'));
+  assert.ok(first.some((o) => o.type === 'boulder'));
   assert.ok(first.some((o) => o.type === 'tree'));
   for (let i = 0; i < 500; i++) env.nearby(i * 1000, -i * 1000);
   assert.ok(env.cacheSize <= 100);
@@ -21,49 +21,23 @@ test('ground movement cannot tunnel through a rock and can slide along its face'
   env.before(a, world, {});
   a.player.x = 820;
   env.after(a, world);
-  assert.ok(a.player.x < 600);
+  assert.ok(a.player.x < 620);
   env.before(a, world, {});
   a.player.x += 60;
   a.quarterDepth += 40;
   env.after(a, world);
-  assert.ok(a.player.x < 600);
+  assert.ok(a.player.x < 620);
   assert.ok(a.quarterDepth > 0);
-});
-test('jump over side then descend onto rock, stand, and walk off', () => {
-  const env = createEnvironment(),
-    a = actor(580, 0, 350),
-    motion = {};
-  a.player.onGround = false;
-  env.before(a, world, motion);
-  a.player.x = 670;
-  a.player.y = 365;
-  a.player.vy = 4;
-  env.after(a, world);
-  assert.equal(a.player.x, 670);
-  env.before(a, world, motion);
-  assert.equal(motion.floorY, 386);
-  a.player.y = 390;
-  env.after(a, world);
-  assert.equal(a.player.y, 386);
-  assert.equal(a.player.onGround, true);
-  env.before(a, world, motion);
-  env.after(a, world);
-  assert.equal(a.quarterPlatform.type, 'rock');
-  env.before(a, world, motion);
-  a.player.x = 790;
-  env.after(a, world);
-  assert.equal(a.player.onGround, false);
-  assert.equal(a.player.floorY, 430);
 });
 test('roof is a landing surface and trees remain blocking while airborne', () => {
   const env = createEnvironment(),
-    a = actor(220, 240, 330);
+    a = actor(140, 500, 330);
   a.player.onGround = false;
   a.player.vy = 5;
   env.before(a, world, {});
   a.player.y = 350;
   env.after(a, world);
-  assert.equal(a.player.y, 348);
+  assert.equal(a.player.y, world.floorY - SCENERY_TYPES.hut.height);
   assert.equal(a.quarterPlatform.type, 'hut');
   const b = actor(500, -300, 280);
   env.before(b, world, {});
@@ -72,7 +46,7 @@ test('roof is a landing surface and trees remain blocking while airborne', () =>
   assert.ok(b.player.x < 546);
 });
 
-test('native actor physics lands and remains stable on both platform heights', async () => {
+test('native actor physics lands and remains stable on the roof height', async () => {
   const { readFileSync } = await import('node:fs');
   const { PuppetPlayer } = await import('../src/actor_runtime_engine.js');
   const { defaultTuningFor } = await import('../src/actor_tuning_helper.js');
@@ -80,10 +54,7 @@ test('native actor physics lands and remains stable on both platform heights', a
   const { preparePlaneMotion, finishPlaneMotion } = await import('../src/quarter_view/motion.js');
   const saved = JSON.parse(readFileSync(new URL('../data/published.json', import.meta.url)));
   const def = saved.characters.find((a) => a.id === 'player_01');
-  for (const [x, z, height] of [
-    [670, 0, 44],
-    [220, 240, 82],
-  ]) {
+  for (const [x, z, height] of [[140, 500, SCENERY_TYPES.hut.height]]) {
     const env = createEnvironment(),
       p = new PuppetPlayer(x, 250, {});
     p.applyTuning(mergeTuning(defaultTuningFor(def), saved.actors.player_01.tuning));
@@ -110,4 +81,49 @@ test('native actor physics lands and remains stable on both platform heights', a
     assert.equal(p.onGround, true);
     assert.equal(a.quarterPlatform.height, height);
   }
+});
+
+test('low stones and steps are ground decoration, separate from solid boulders', () => {
+  const env = createEnvironment();
+  const all = env.nearby(480, 0, 700, 700, true);
+  const solid = env.nearby(480, 0, 700, 700);
+  for (const id of ['start-stones', 'start-hut']) {
+    const floor = all.find((o) => o.id === id);
+    assert.equal(floor.groundDecoration, true);
+    assert.equal(floor.height, 0);
+    assert.ok(!solid.some((o) => o.id === id));
+    const a = actor(floor.x - 100, floor.z);
+    env.before(a, world, {});
+    a.player.x = floor.x;
+    env.after(a, world);
+    assert.ok(Math.abs(a.player.x - floor.x) < 1e-8);
+    assert.equal(a.player.y, world.floorY);
+  }
+  assert.ok(solid.some((o) => o.type === 'boulder' && !o.climbable && o.height > 0));
+});
+
+test('all four half-size boulders have no landing surface and allow passage behind', () => {
+  const env = createEnvironment();
+  const rocks = env.nearby(2500, 2500, 4000, 4000).filter((o) => o.type === 'boulder');
+  assert.equal(new Set(rocks.map((o) => o.variant % 4)).size, 4);
+  for (const rock of rocks) {
+    assert.equal(rock.climbable, false);
+    assert.ok(rock.w <= 123 && rock.d <= 65);
+  }
+  const rock = env.nearby(480, 0).find((o) => o.type === 'boulder');
+  const a = actor(rock.x, rock.z, 250);
+  a.player.onGround = false;
+  a.player.vy = 5;
+  const motion = {};
+  env.before(a, world, motion);
+  assert.equal(motion.floorY, 430);
+  a.player.y = 400;
+  env.after(a, world);
+  assert.equal(a.quarterPlatform, null);
+  assert.equal(a.player.floorY, 430);
+  const b = actor(rock.x - 130, rock.z - rock.d / 2 - 25);
+  env.before(b, world, {});
+  b.player.x = rock.x + 130;
+  env.after(b, world);
+  assert.ok(Math.abs(b.player.x - (rock.x + 130)) < 1e-8);
 });

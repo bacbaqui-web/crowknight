@@ -1,0 +1,52 @@
+export const ARRIVAL_DURATION = 2.5;
+const FLIGHT = 2.15;
+export function createArrival(world) {
+  let state = null;
+  function begin(actor) {
+    const p = actor.player;
+    state = { actor, x: p.x, z: actor.quarterDepth || 0, time: 0, span: Math.max(600, world.viewW * 0.7) };
+    world.quarterView.arrival = state;
+    p.vx = p.vy = 0;
+    p.facing = 1;
+    advance(0);
+  }
+  function advance(dt, keys, pressed) {
+    if (!state) return false;
+    keys?.clear();
+    pressed?.clear();
+    state.time += Math.max(0, Math.min(0.1, dt));
+    const { actor, x, z, time, span } = state;
+    const p = actor.player;
+    const t = Math.min(1, time / FLIGHT);
+    const remaining = (1 - t) ** 2;
+    p.x = x - span * remaining;
+    actor.quarterDepth = z - 160 * remaining;
+    p.quarterDepth = actor.quarterDepth;
+    p.y = world.floorY - 240 * Math.pow(1 - t, 1.35);
+    p.vx = p.vy = 0;
+    p.onGround = t === 1;
+    p.animTime += dt;
+    p.actionPreview =
+      t < 1 ? { action: 'customAction3', t: 0.45 + Math.sin(time * 3) * 0.025 } : { action: 'idle', t: 0 };
+    if (time >= ARRIVAL_DURATION) {
+      p.x = x;
+      p.y = world.floorY;
+      actor.quarterDepth = p.quarterDepth = z;
+      p.actionPreview = null;
+      p.state = 'idle';
+      p.stateTime = 0;
+      p.onGround = true;
+      actor.quarterPendingInputs?.clear();
+      state = null;
+      world.quarterView.arrival = null;
+    }
+    return true;
+  }
+  return {
+    begin,
+    advance,
+    get active() {
+      return Boolean(state);
+    },
+  };
+}

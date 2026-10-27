@@ -56,8 +56,10 @@ export function createQuarterRenderer({ ctx, world }) {
     view = {
       width: world.viewW,
       height: world.viewH,
-      x: playerActor.player.x + 110,
-      depth: depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
+      x: (world.quarterView.arrival?.x ?? playerActor.player.x) + 110,
+      depth:
+        world.quarterView.arrival?.z ??
+        depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
       zoom: formulaScreenZoom(actors, screenZoom),
     };
     ctx.save();
@@ -74,7 +76,8 @@ export function createQuarterRenderer({ ctx, world }) {
       }));
     const decoy = playerActor.player.runDecoy;
     if (decoy?.time > 0) items.push({ decoy, depth: depthOf(decoy) });
-    items.push(...scenery.visible(view).map((object) => ({ object, depth: object.z + object.d / 2 })));
+    items.push(...scenery.visible(view).map((object) => ({ object,
+      depth: object.groundDecoration ? -Infinity : object.z + object.d / 2 })));
     items
       .sort((a, b) => a.depth - b.depth)
       .forEach(({ actor, object, decoy }) => {

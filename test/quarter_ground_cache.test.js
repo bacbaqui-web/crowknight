@@ -70,7 +70,7 @@ function fixture() {
 
 test('grass and dirt texture is deterministic, varied and opaque', () => {
   const texture = createGroundTexture();
-  assert.equal(texture.pixels.length, 1024 * 1024 * 4);
+  assert.equal(texture.pixels.length, 2048 * 2048 * 4);
   const colors = new Set();
   for (let i = 0; i < texture.pixels.length; i += 4) {
     colors.add([...texture.pixels.slice(i, i + 3)].join(','));

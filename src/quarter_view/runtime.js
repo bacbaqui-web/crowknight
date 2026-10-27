@@ -1,3 +1,4 @@
+import { createArrival } from './arrival.js';
 import { tankPatrolDirection } from '../tank_pattern_helper.js';
 import { createTerrainNavigation, terrainBlocksProjectile } from './terrain_navigation.js';
 import { createEnvironment } from './environment.js';
@@ -18,6 +19,7 @@ import { combatTargetRegions, resolveGroundCollision, sameGroundContact, groundP
 const MAP = { ArrowUp: 'QuarterUp', ArrowDown: 'QuarterDown', KeyZ: 'ArrowUp', KeyX: 'ArrowDown' };
 export function createQuarterRuntime({ ctx, world }) {
   const renderer = createQuarterRenderer({ ctx, world });
+  const arrival = createArrival(world);
   const spawnAround = createSurroundingSpawner(world);
   const environment = createEnvironment();
   const navigate = createTerrainNavigation(environment, world);
@@ -146,6 +148,8 @@ export function createQuarterRuntime({ ctx, world }) {
     onPauseStatus(paused && showStatus);
   }
   return {
+    beginArrival: arrival.begin,
+    updateArrival: arrival.advance,
     prepareInput: (actor, keys) => prepareQuarterFacing(actor, movementInput(keys)),
     startFrame: frameMeter.start,
     finishFrame: frameMeter.finish,
@@ -156,7 +160,7 @@ export function createQuarterRuntime({ ctx, world }) {
       const frozen = paused || externalPaused;
       if (frozen && previousFrozen && !dirty && viewportWidth === world.viewW && viewportHeight === world.viewH)
         return false;
-      renderer.draw(frame);
+      renderer.draw(arrival.active ? { ...frame, actors: [frame.playerActor] } : frame);
       dirty = false;
       viewportWidth = world.viewW;
       viewportHeight = world.viewH;

@@ -1,12 +1,13 @@
-import { FOREST_ASSET_CATALOG } from './scenery_catalog.js';
+import { FOREST_ASSET_CATALOG, BOULDER_PROFILES, BOULDER_SCALE } from './scenery_catalog.js';
 const images = new Map();
 let loading;
 const asset = (name) => new globalThis.URL(`../../assets/quarter-forest/${name}.webp`, import.meta.url).href;
 export const SCENERY_ASSETS = Object.freeze({
-  tree: asset('tree-flat-v2'),
-  fork: asset('tree-fork-v3'),
-  bent: asset('tree-bent-v3'),
+  tree: asset('tree-upright-v7'),
+  fork: asset('tree-fork-v7'),
+  bent: asset('tree-bent-v7'),
   bush: asset('bush-v3'),
+  ...Object.fromEntries(BOULDER_PROFILES.map((p) => [p.id, asset(p.file)])),
   rock: asset('rock-flat-v2'),
   stones: asset('stones-v3'),
   hut: asset('ruin-flat-v2'),
@@ -14,7 +15,13 @@ export const SCENERY_ASSETS = Object.freeze({
   ...Object.fromEntries(FOREST_ASSET_CATALOG.map((entry) => [entry.id, asset(entry.file.replace('.webp', ''))])),
 });
 export const SCENERY_FRAME = Object.freeze({ width: 420, height: 450, anchorX: 210, anchorY: 390 });
-const variants = { tree: ['tree', 'fork', 'bent'], rock: ['rock', 'stones'], hut: ['hut', 'pillar'], bush: ['bush'] };
+const variants = {
+  tree: ['tree', 'fork', 'bent'],
+  rock: ['rock', 'stones'],
+  hut: ['hut', 'pillar'],
+  bush: ['bush'],
+  boulder: BOULDER_PROFILES.map((p) => p.id),
+};
 for (const entry of FOREST_ASSET_CATALOG) variants[entry.type].push(entry.id);
 export const SCENERY_VARIANT_COUNTS = Object.freeze(
   Object.fromEntries(Object.entries(variants).map(([type, list]) => [type, list.length]))
@@ -72,6 +79,7 @@ export function createScenerySprite(type, createSurface = () => document.createE
   canvas.height = SCENERY_FRAME.height;
   const ctx = canvas.getContext('2d');
   ctx.translate(SCENERY_FRAME.anchorX, SCENERY_FRAME.anchorY);
+  if (type === 'boulder') ctx.scale(BOULDER_SCALE, BOULDER_SCALE);
   const n = sceneryVariant(type, variant);
   const groundCover = variants.bush[n % variants.bush.length];
   ctx.fillStyle = '#59664b24';
@@ -84,9 +92,16 @@ export function createScenerySprite(type, createSurface = () => document.createE
     stamp(ctx, groundCover, n === 1 ? -30 : 26, -4, 95, 42);
     stamp(ctx, variants.tree[n], 0, 3, 300, 330);
     stamp(ctx, groundCover, n === 2 ? 26 : -18, 9, 68, 28);
+  } else if (type === 'boulder') {
+    const profile = BOULDER_PROFILES[n];
+    stamp(ctx, profile.id, 0, 5, profile.width, profile.height);
+    stamp(ctx, groundCover, -95, 10, 65, 24);
+    stamp(ctx, variants.bush[(n + 2) % variants.bush.length], 90, 8, 58, 22);
   } else {
     stamp(ctx, variants[type][n], 0, 5, type === 'rock' ? 155 : 270, type === 'rock' ? 90 : 140);
-    stamp(ctx, groundCover, n === 0 ? -57 : 58, 9, 55, 26);
+    stamp(ctx, groundCover, -100, 9, 60, 24);
+    stamp(ctx, variants.bush[(n + 2) % variants.bush.length], 105, 4, 70, 27);
+    stamp(ctx, variants.bush[(n + 3) % variants.bush.length], 20, 12, 48, 18);
   }
   return canvas;
 }

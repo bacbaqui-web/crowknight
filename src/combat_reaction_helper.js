@@ -19,6 +19,7 @@ export function applyInteractionDamage({
   allowParry = true,
   preserveAction = false,
   guarded = false,
+  hitSound,
   invincibleTime = 0,
   comboStep,
   playerActor,
@@ -66,7 +67,7 @@ export function applyInteractionDamage({
   if (lifeSteal && attacker.hp > 0 && !attacker.player.dead) {
     attacker.hp = Math.min(attacker.maxHp, attacker.hp + actualDamage * lifeSteal);
   }
-  if (!blocking) world?.combatSounds?.contact('hit', attacker, target);
+  if (!blocking) world?.combatSounds?.contact('hit', attacker, target, hitSound);
   target.invulnTime = Math.max(target.invulnTime || 0, Number(invincibleTime || 0));
   if (isRuntimeDebugEnabled()) {
     debugInteractionRuntimeLog('damage-applied', {

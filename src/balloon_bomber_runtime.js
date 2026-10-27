@@ -1,3 +1,4 @@
+import { startDeathRagdoll, updateDeathRagdoll } from './death_ragdoll_engine.js';
 import { interactionReactionFromValue } from './interaction_region_engine.js';
 
 export const BALLOON_BOMBER = Object.freeze({
@@ -52,6 +53,14 @@ export function updateBalloonPlayer(player, dt, target, world) {
       state.impactTime = 0;
       player.dead = true;
       player.onGround = true;
+      startDeathRagdoll(player, { x: 0, y: -1, power: 0.65 }, world);
+      const excluded = new Set(['cape', 'backpack', 'weapon', 'shield'].map((key) => player.assets[key]));
+      player.deathRagdoll.parts = player.deathRagdoll.parts.filter((part) => !excluded.has(part.image));
+      for (const part of player.deathRagdoll.parts) {
+        part.x = player.x * 2 - part.x;
+        part.y = Math.min(floor - part.h * 0.18, 2 * (player.y - 55 * (player.transform.scale || 1)) - part.y);
+        part.rot += Math.PI;
+      }
       const finish = state.onImpact;
       state.onImpact = null;
       finish?.();
@@ -59,6 +68,7 @@ export function updateBalloonPlayer(player, dt, target, world) {
     }
   } else {
     state.impactTime += dt;
+    updateDeathRagdoll(player, dt, world);
   }
   return true;
 }

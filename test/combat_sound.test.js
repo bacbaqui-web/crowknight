@@ -48,3 +48,21 @@ test('실제 피해와 방어/패링을 구분하고 회피에는 타격음을 �
   assert.deepEqual(calls, ['clubHit', 'parry', 'block']);
   assert.equal(target.hp, 76); // Existing guard behavior absorbs 80% of the second hit.
 });
+
+test('arrow hit override respects damage, evasion and guard', () => {
+  const calls = [];
+  const world = { combatSounds: createCombatSoundController((name) => calls.push(name)) };
+  const attacker = { group: 'mobs', player: { x: 0, actions: [], customActions: [] } };
+  const target = { hp: 100, player: { x: 20, actions: [], customActions: [] } };
+  const hit = () => applyInteractionDamage({ attacker, target, damage: 10, world, hitSound: 'arrowHit' });
+  hit();
+  target.player.runEvadeTime = 1;
+  hit();
+  target.player.runEvadeTime = 0;
+  target.player.runSkills = {};
+  target.player.runSkillActions = { guard: 'guard' };
+  target.player.customActionKey = 'guard';
+  hit();
+  assert.deepEqual(calls, ['arrowHit', 'block']);
+  assert.equal(target.hp, 88);
+});

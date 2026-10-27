@@ -1,0 +1,330 @@
+[
+  {
+    "id": 27,
+    "title": "Punch 6",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-6-166699/",
+    "src": "https://cdn.pixabay.com/audio/2023/09/15/audio_681314742d.mp3",
+    "category": "명중",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 28,
+    "title": "Hitting Wood",
+    "author": "altfuture (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-hitting-wood-6791/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_3b8e47d213.mp3",
+    "note": "나무 타격 여러 회 · 마음에 드는 구간을 선택해 주세요",
+    "category": "명중",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 29,
+    "title": "Punch (3)",
+    "author": "johnfolker (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-3-103985/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/24/audio_83597a113a.mp3",
+    "category": "명중",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 30,
+    "title": "Punch (4)",
+    "author": "johnfolker (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-4-84743/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/15/audio_f4be0f7758.mp3",
+    "category": "명중",
+    "status": "new",
+    "approved": false
+  },
+  {
+    "id": 23,
+    "title": "Fist Punch or kick",
+    "author": "rcroller (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-fist-punch-or-kick-7171/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_420245a900.mp3",
+    "status": "approved",
+    "approved": true,
+    "note": "게임 적용 · 몽둥이 명중음",
+    "compare": true
+  },
+  {
+    "id": 24,
+    "title": "Punch 2",
+    "author": "JakeEaton (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-2-37333/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/10/audio_d2cdbf44ba.mp3",
+    "status": "previous",
+    "approved": false
+  },
+  {
+    "id": 25,
+    "title": "Impact Thud",
+    "author": "DRAGON-STUDIO",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-impact-thud-372473/",
+    "src": "https://cdn.pixabay.com/audio/2025/07/09/audio_835365b1c0.mp3",
+    "status": "previous",
+    "approved": false
+  },
+  {
+    "id": 26,
+    "title": "Combat Impact",
+    "author": "Universfield",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-combat-impact-352458/",
+    "src": "https://cdn.pixabay.com/audio/2025/05/31/audio_9345bfe4b3.mp3",
+    "status": "previous",
+    "approved": false
+  },
+  {
+    "id": 19,
+    "title": "shield guard",
+    "author": "nekoninja (Freesound)",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-shield-guard-6963/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_9f712797d5.mp3",
+    "status": "previous",
+    "approved": false
+  },
+  {
+    "id": 20,
+    "title": "Metal Impact",
+    "author": "Rickplayer (Freesound)",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/es/sound-effects/pel%C3%ADculas-y-efectos-especiales-metal-impact-6212/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/04/audio_3c2e15a1e8.mp3",
+    "status": "previous",
+    "approved": false
+  },
+  {
+    "id": 21,
+    "title": "Punch Knuckle Blunt Medium",
+    "author": "Khoamthanh",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-knuckle-blunt-medium-503895/",
+    "src": "https://cdn.pixabay.com/audio/2026/03/17/audio_4d48e16429.mp3",
+    "status": "approved",
+    "approved": true,
+    "note": "게임 적용 · 화살 명중음 (기존 대비 음량 50%)",
+    "compare": false
+  },
+  {
+    "id": 22,
+    "title": "Hit Flesh 01",
+    "author": "u_xjrmmgxfru",
+    "category": "명중",
+    "url": "https://pixabay.com/pt/sound-effects/filme-e-efeitos-especiais-hit-flesh-01-266311/",
+    "src": "https://cdn.pixabay.com/audio/2024/11/19/audio_f1256606d8.mp3",
+    "status": "previous",
+    "approved": false
+  },
+  {
+    "id": "14-4",
+    "title": "Sword Swipes · 4번째 추출",
+    "author": "deleted_user_6479820 (Freesound)",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "src": "../../assets/audio/combat/pixabay/sword-swipe-4.wav",
+    "status": "approved",
+    "approved": true,
+    "note": "✓ 칼 휘두르기 적용 · 원본 3.49~3.82초"
+  },
+  {
+    "id": "14-5",
+    "title": "Sword Swipes · 5번째 추출",
+    "author": "deleted_user_6479820 (Freesound)",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "src": "../../assets/audio/combat/pixabay/sword-swipe-5.wav",
+    "status": "approved",
+    "approved": true,
+    "note": "✓ 칼 휘두르기 적용 · 원본 4.07~4.55초"
+  },
+  {
+    "id": 13,
+    "title": "Sword Air Swing 2",
+    "author": "u_xg7ssi08yr",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-air-swing-2-437695/",
+    "src": "https://cdn.pixabay.com/audio/2025/11/16/audio_df9e9bb9db.mp3",
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "id": 14,
+    "title": "Sword Swipes",
+    "author": "deleted_user_6479820 (Freesound)",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-swipes-7174/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_3dd9debba1.mp3",
+    "approved": false,
+    "status": "previous",
+    "note": "원본 · 네 번째와 다섯 번째 구간만 칼 휘두르기로 적용"
+  },
+  {
+    "id": 15,
+    "title": "Shield Block Shortsword",
+    "author": "SectionSound",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
+    "src": "https://cdn.pixabay.com/audio/2023/03/25/audio_b0c7773b14.mp3",
+    "approved": true,
+    "status": "approved"
+  },
+  {
+    "id": 16,
+    "title": "Sword block combo",
+    "author": "ethanchase7744 (Freesound)",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-block-combo-100358/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/24/audio_650301389b.mp3",
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "id": 17,
+    "title": "Hit Swing Sword Small 2",
+    "author": "Eponn (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-hit-swing-sword-small-2-95566/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/19/audio_6944ac0f4e.mp3",
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "id": 18,
+    "title": "hard punch",
+    "author": "animationIsaac (Freesound)",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-hard-punch-90179/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/15/audio_7143375ab8.mp3",
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Sword Slash and Swing",
+    "author": "DavidDumaisAudio",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/",
+    "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_f5a8065509.mp3",
+    "category": "칼 휘두르기",
+    "id": 1,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Swing Whoosh 1",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-1-198494/",
+    "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_429c1a01f1.mp3",
+    "category": "몽둥이 휘두르기",
+    "id": 2,
+    "approved": true,
+    "status": "approved"
+  },
+  {
+    "title": "Swing Whoosh 4",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-4-198496/",
+    "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_3163472c7d.mp3",
+    "category": "몽둥이 휘두르기",
+    "id": 3,
+    "approved": true,
+    "status": "approved"
+  },
+  {
+    "title": "Swing Whoosh 5",
+    "author": "floraphonic",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-5-198498/",
+    "src": "https://cdn.pixabay.com/audio/2024/03/27/audio_c93e2ad962.mp3",
+    "category": "휘두르기",
+    "id": 4,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Sword Slice",
+    "author": "DRAGON-STUDIO",
+    "category": "칼 휘두르기",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
+    "src": "https://cdn.pixabay.com/audio/2025/08/23/audio_4c7ad7fc88.mp3",
+    "id": 5,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Sword Slash With Metal Shield Impact",
+    "author": "DavidDumaisAudio",
+    "category": "방패 방어",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-with-metal-shield-impact-185433/",
+    "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_17bc9d439c.mp3",
+    "id": 6,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Sword Slash With Metallic Impact",
+    "author": "DavidDumaisAudio",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-with-metallic-impact-185435/",
+    "src": "https://cdn.pixabay.com/audio/2024/01/11/audio_5341835895.mp3",
+    "id": 7,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Footsteps Grass 1",
+    "author": "SilentStrikeZ (Freesound)",
+    "category": "발걸음",
+    "url": "https://pixabay.com/sound-effects/nature-footsteps-grass-1-6810/",
+    "src": "https://cdn.pixabay.com/audio/2021/08/09/audio_fd7851ba55.mp3",
+    "id": 8,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Grass Field Walking Sound",
+    "author": "FeedTheStrayCats",
+    "category": "발걸음",
+    "url": "https://pixabay.com/sound-effects/nature-grass-field-walking-sound-354514/",
+    "src": "https://cdn.pixabay.com/audio/2025/06/04/audio_62343f1d93.mp3",
+    "id": 9,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Medium Explosion",
+    "author": "JuveriSetila (Freesound)",
+    "category": "폭발",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-medium-explosion-40472/",
+    "src": "https://cdn.pixabay.com/audio/2022/03/10/audio_174242f3f4.mp3",
+    "id": 10,
+    "approved": true,
+    "status": "approved"
+  },
+  {
+    "title": "Loud Explosion",
+    "author": "DRAGON-STUDIO",
+    "category": "폭발",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-loud-explosion-425457/",
+    "src": "https://cdn.pixabay.com/audio/2025/10/24/audio_47a15da0f9.mp3",
+    "id": 11,
+    "approved": false,
+    "status": "previous"
+  },
+  {
+    "title": "Punch Impact Hit",
+    "author": "Universfield",
+    "category": "명중",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-punch-impact-hit-567196/",
+    "src": "https://cdn.pixabay.com/audio/2026/07/14/audio_aba33aba5f.mp3",
+    "id": 12,
+    "approved": false,
+    "status": "previous"
+  }
+]

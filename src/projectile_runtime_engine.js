@@ -71,7 +71,8 @@ export function updateProjectileRuntime({ actors = [], playerActor = null, world
   actors.forEach((actor) => spawnActorProjectileIfNeeded(actor, playerActor, world));
   projectilePool.forEach((projectile) => {
     advanceProjectile(projectile, dt, enemyTarget(playerActor));
-    if (!projectile.ratTrap && world?.quarterView?.blocksProjectile?.(projectile)) projectile.active = false;
+    if (!projectile.ratTrap && projectile.bossHazard !== 'mine' && world?.quarterView?.blocksProjectile?.(projectile))
+      projectile.active = false;
   });
   projectilePool = projectilePool.filter(
     (projectile) => projectile.active && !projectileOutOfBounds(projectile, world)
