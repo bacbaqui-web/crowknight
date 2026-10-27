@@ -49,3 +49,41 @@ test('jump rises then falls to the exact destination without overshoot', () => {
   assert.equal(actor.player.x, 480);
   assert.equal(actor.player.onGround, true);
 });
+
+test('landing dust and subtle shake fire once at contact, not in the air or again on settle', () => {
+  const world = { floorY: 430, viewW: 1280, quarterView: {} };
+  const actor = { player: { x: 480, y: 430, animTime: 0 } };
+  let dust = 0,
+    shakes = 0,
+    updates = 0;
+  const effects = {
+    update() {
+      updates++;
+    },
+    emitLandingDust(p, speed, strength) {
+      assert.equal(p.y, 430);
+      assert.equal(p.x, 480);
+      assert.equal(strength, 0.55);
+      dust++;
+    },
+    shakeScreen(options) {
+      assert.equal(options.direction, 'vertical');
+      assert.ok(options.magnitude < 3 && options.duration < 0.15);
+      shakes++;
+    },
+  };
+  const intro = createArrival(world);
+  intro.begin(actor);
+  for (let i = 0; i < 11; i++) intro.advance(0.1, null, null, effects);
+  assert.equal(dust + shakes, 0);
+  intro.advance(0.1, null, null, effects);
+  assert.equal(dust, 1);
+  assert.equal(shakes, 1);
+  for (let i = 0; i < 4; i++) intro.advance(0.1, null, null, effects);
+  assert.equal(dust, 1);
+  assert.equal(shakes, 1);
+  assert.ok(updates >= 14);
+  intro.begin(actor);
+  for (let i = 0; i < 12; i++) intro.advance(0.1, null, null, effects);
+  assert.equal(dust, 2);
+});
