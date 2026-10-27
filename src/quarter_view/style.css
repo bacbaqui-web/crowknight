@@ -272,3 +272,21 @@
     padding: 6px 8px;
   }
 }
+
+/* Public play view: keep authoring/debug controls out of the game. */
+.quarter-label,
+#quarterPause,
+#quarterHitboxes,
+#quarterFps,
+#quarterPerformance,
+#quarterHitboxLegend,
+#quarterTrajectoryPanel,
+#quarterAttackSettings,
+#quarterEffectEditor,
+.quarter-start-guide {
+  display: none !important;
+}
+.stage-wrap:has(#startScreen:not(.is-hidden)) > :not(#startScreen),
+body:has(#startScreen:not(.is-hidden)) > div:has(#combatSoundToggle) {
+  visibility: hidden !important;
+}

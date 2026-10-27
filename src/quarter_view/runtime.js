@@ -200,8 +200,6 @@ export function createQuarterRuntime({ ctx, world }) {
         actors.forEach((actor) => {
           if (actor !== hero) spawnAround(actor, hero);
         });
-      if (testMode && document.querySelector('#quarterHitboxes').getAttribute('aria-pressed') !== 'true')
-        document.querySelector('#quarterHitboxes').click();
       attackSettings.reset(actors);
       effectEditor.reset(actors);
       paused =
