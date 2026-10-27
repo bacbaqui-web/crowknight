@@ -1,4 +1,4 @@
-import { FOREST_ASSET_CATALOG, BOULDER_PROFILES } from './scenery_catalog.js';
+import { FOREST_ASSET_CATALOG, BOULDER_PROFILES, BOULDER_SCALE } from './scenery_catalog.js';
 const images = new Map();
 let loading;
 const asset = (name) => new globalThis.URL(`../../assets/quarter-forest/${name}.webp`, import.meta.url).href;
@@ -79,6 +79,7 @@ export function createScenerySprite(type, createSurface = () => document.createE
   canvas.height = SCENERY_FRAME.height;
   const ctx = canvas.getContext('2d');
   ctx.translate(SCENERY_FRAME.anchorX, SCENERY_FRAME.anchorY);
+  if (type === 'boulder') ctx.scale(BOULDER_SCALE, BOULDER_SCALE);
   const n = sceneryVariant(type, variant);
   const groundCover = variants.bush[n % variants.bush.length];
   ctx.fillStyle = '#59664b24';

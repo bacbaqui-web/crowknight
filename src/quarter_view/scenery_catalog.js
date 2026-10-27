@@ -158,3 +158,5 @@ export const BOULDER_PROFILES = Object.freeze([
     topD: 65,
   },
 ]);
+
+export const BOULDER_SCALE = 0.5;
