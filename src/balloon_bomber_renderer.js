@@ -1,7 +1,7 @@
 // The intact grunt uses the ordinary editable puppet. Only its defeat needs a special composition.
 export function drawBalloonDefeat(player, ctx, drawLayer) {
   const s = player.balloonState;
-  if (!s || s.phase === 'hover') return false;
+  if (!s || s.phase === 'hover' || s.phase === 'impact') return false;
   const pose = player.getPose(),
     rig = player.rig,
     scale = player.transform.scale || 1;
