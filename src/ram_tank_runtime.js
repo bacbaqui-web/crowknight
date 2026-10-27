@@ -1,4 +1,4 @@
-export const RAM_TANK = Object.freeze({ warning: 1, charge: 0.9, brake: 0.3, recovery: 1.2, speed: 850 });
+export const RAM_TANK = Object.freeze({ warning: 1, charge: 0.9, brake: 0.3, recovery: 1.2, speed: 1700 });
 export const TANK_PART_ORDER = [
   'shield',
   'lowerLegR',

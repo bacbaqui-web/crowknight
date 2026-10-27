@@ -155,7 +155,7 @@ test('full range AI starts charge, locks side facing, and waits for cooldown bef
 });
 test('collision deals one hit per charge and recovery is harmless', () => {
   const a = actor();
-  const target = actor('powder_chief', 500);
+  const target = actor('powder_chief', 200 + tankChargeDistance(1.3) + 45);
   target.hp = 200;
   target.maxHp = 200;
   start(a);
@@ -165,7 +165,7 @@ test('collision deals one hit per charge and recovery is harmless', () => {
   assert.equal(target.hp, 180);
   target.invulnTime = 0;
   target.hurtCooldown = 0;
-  target.player.x = 500;
+  target.player.x = a.player.x + 45;
   resolveCombat(args);
   assert.equal(target.hp, 180);
   advance(a, 1.2);

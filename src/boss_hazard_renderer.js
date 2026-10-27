@@ -30,9 +30,12 @@ export function drawBossHazard(ctx, h, project = null) {
   at(h, () => {
     ctx.save();
     ctx.translate(h.x, h.y);
-    if(fire) {ctx.shadowColor='#ff3c13';ctx.shadowBlur=22;}
+    if (fire) {
+      ctx.shadowColor = '#ff3c13';
+      ctx.shadowBlur = 22;
+    }
     if (h.phase === 'blast' && kind !== 'punch') {
-      drawFireBurst(ctx,h.radius,h.phaseTime,project ? QUARTER_PROJECTION.slope : .5);
+      drawFireBurst(ctx, h.radius, h.phaseTime, project ? QUARTER_PROJECTION.slope : 0.5);
     } else if (kind === 'punch') {
       ctx.fillStyle = '#b8ab7a';
       ctx.strokeStyle = '#242720';
@@ -41,12 +44,30 @@ export function drawBossHazard(ctx, h, project = null) {
       ctx.arc(0, -30, 23, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+    } else if (kind === 'mine') {
+      drawContactMine(ctx, h.age);
     } else if (kind === 'missile') {
       ctx.rotate(t < 0.35 ? 0 : Math.PI);
-      ctx.fillStyle='#d5d9ce';ctx.strokeStyle='#403d31';ctx.lineWidth=2;
-      ctx.beginPath();ctx.moveTo(0,-34);ctx.lineTo(9,-12);ctx.lineTo(9,12);ctx.lineTo(-9,12);ctx.lineTo(-9,-12);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.fillStyle='#c85434';ctx.fillRect(-8,-10,16,7);
-      ctx.fillStyle='#ffba4f';ctx.beginPath();ctx.moveTo(-6,12);ctx.lineTo(0,32+Math.sin(h.age*65)*8);ctx.lineTo(6,12);ctx.fill();
+      ctx.fillStyle = '#d5d9ce';
+      ctx.strokeStyle = '#403d31';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -34);
+      ctx.lineTo(9, -12);
+      ctx.lineTo(9, 12);
+      ctx.lineTo(-9, 12);
+      ctx.lineTo(-9, -12);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#c85434';
+      ctx.fillRect(-8, -10, 16, 7);
+      ctx.fillStyle = '#ffba4f';
+      ctx.beginPath();
+      ctx.moveTo(-6, 12);
+      ctx.lineTo(0, 32 + Math.sin(h.age * 65) * 8);
+      ctx.lineTo(6, 12);
+      ctx.fill();
     } else if (fire) {
       drawFlameSprite(ctx, h.owner.player.assets.flame, -25, -50, 50, 65, h.age, h.id || 0);
     } else {
@@ -68,4 +89,27 @@ export function drawBossHazard(ctx, h, project = null) {
     }
     ctx.restore();
   });
+}
+
+function drawContactMine(ctx, age) {
+  ctx.fillStyle = '#756444';
+  ctx.strokeStyle = '#242720';
+  ctx.lineWidth = 3;
+  ctx.fillRect(-23, -39, 46, 35);
+  ctx.strokeRect(-23, -39, 46, 35);
+  ctx.fillStyle = '#a18b58';
+  ctx.fillRect(-23, -46, 46, 9);
+  ctx.strokeRect(-23, -46, 46, 9);
+  ctx.fillStyle = '#3c4037';
+  ctx.fillRect(-15, -45, 6, 40);
+  ctx.fillRect(9, -45, 6, 40);
+  ctx.fillStyle = '#d8bc67';
+  ctx.fillRect(-7, -30, 14, 16);
+  ctx.fillStyle = '#513927';
+  ctx.fillRect(-1, -27, 2, 7);
+  ctx.fillRect(-1, -18, 2, 2);
+  ctx.fillStyle = Math.sin(age * 5) > 0 ? '#f76b40' : '#9c3428';
+  ctx.beginPath();
+  ctx.arc(0, -42, 3, 0, Math.PI * 2);
+  ctx.fill();
 }
