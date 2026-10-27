@@ -5,6 +5,7 @@ import {mergeTuning} from '../../src/project_data_normalizer_helper.js';
 import {DEFAULT_PLAYER_TUNING} from '../../src/player_default_tuning_data.js';
 import {prepareSkillActions} from '../../src/skill_runtime_helper.js';
 import {createBlinkDecoy,drawBlinkDecoy} from '../../src/blink_decoy.js';
+import {updateFormulaColorChanges} from '../../src/color_change_formula_runtime_helper.js';
 import {drawActor} from '../../src/actor_canvas_renderer.js';
 const data=await fetch('../../data/published.json').then(r=>r.json()),def=data.actors.player_01;
 const sources=Object.fromEntries(Object.entries(def.assets).map(([k,v])=>[k,typeof v==='string'?new URL('../../'+v,location.href).href:v]));
@@ -14,5 +15,5 @@ const hero=make(180),decoy=createBlinkDecoy(hero);hero.player.x=450;
 const guard=make(760);guard.player.customActionKey=guard.player.runSkillActions.guard;guard.player.customActionTime=1;guard.player.customActionDuration=1;guard.player.runParryTime=1;
 const ctx=document.querySelector('canvas').getContext('2d');let flash=0;
 document.querySelector('#flash').onclick=()=>flash=.25;
-let last=performance.now();function frame(now){flash=Math.max(0,flash-(now-last)/1000);last=now;guard.player.runParryFlash=flash;ctx.clearRect(0,0,1000,430);drawBlinkDecoy(ctx,decoy);for(const a of [hero,guard])drawActor(ctx,{quarterView:{},floorY:330},a,{selectedActor:null,activeEditPartKey:()=>null,activeEditPartKeys:()=>[]});requestAnimationFrame(frame);}requestAnimationFrame(frame);
+let last=performance.now();function frame(now){flash=Math.max(0,flash-(now-last)/1000);last=now;guard.player.runParryFlash=flash;updateFormulaColorChanges([guard]);ctx.clearRect(0,0,1000,430);drawBlinkDecoy(ctx,decoy);for(const a of [hero,guard])drawActor(ctx,{quarterView:{},floorY:330},a,{selectedActor:null,activeEditPartKey:()=>null,activeEditPartKeys:()=>[]});requestAnimationFrame(frame);}requestAnimationFrame(frame);
 </script></html>
