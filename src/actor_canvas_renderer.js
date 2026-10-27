@@ -1,3 +1,4 @@
+import { parryActive, drawParryFeedback } from './parry_visual_helper.js';
 import { drawRollStamina } from './movement_skill_helper.js';
 import { chargeAttackScale } from './charge_attack_helper.js';
 import { drawHealthMeter } from './actor_health_helper.js';
@@ -54,8 +55,13 @@ export function drawActor(ctx, world, actor, { selectedActor, activeEditPartKey,
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
   }
+  if (parryActive(actor.player) || actor.player.runParryFlash > 0) {
+    ctx.filter = actor.player.runParryFlash > 0 ? 'none' : 'brightness(1.65) saturate(.6)';
+    ctx.shadowColor = '#b7f5ff';ctx.shadowBlur = 14;
+  }
   actor.player.draw(ctx);
   ctx.restore();
+  drawParryFeedback(ctx, actor.player);
   actor.player.glowPart = previousGlowPart;
   actor.player.glowParts = previousGlowParts;
 

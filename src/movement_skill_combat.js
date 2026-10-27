@@ -1,3 +1,4 @@
+import { createBlinkDecoy } from './blink_decoy.js';
 import { applyInteractionDamage } from './combat_reaction_helper.js';
 import { plungeDamage } from './movement_skill_helper.js';
 import { constrainGroundPosition } from './quarter_view/bounds.js';
@@ -6,6 +7,7 @@ export function resolveMovementSkills({actors,playerActor,world,...callbacks}) {
   if(!ranks || p.dead || playerActor.hp<=0) return;
   if(p.runBlinkPending) {
     p.runBlinkPending=false;
+    createBlinkDecoy(playerActor);
     const distance=180+Math.max(0,ranks.blink-1)*20;
     const aim=world?.quarterView ? playerActor.quarterAim || {x:p.facing||1,z:0} : {x:p.facing||1,z:0};
     const length=Math.hypot(aim.x,aim.z)||1;

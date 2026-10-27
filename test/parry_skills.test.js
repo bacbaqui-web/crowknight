@@ -11,7 +11,7 @@ function actor(group = 'mobs', x = 0) {
 test('타이밍 패링은 한번만 포인트를 주며 최대 5개, 강화로 판정과 스턴 증가', () => {
   const enemy = actor(), hero = actor('players');
   hero.player.runSkills.parry = 3;hero.player.customActionKey = 'guard';
-  assert.deepEqual(parryStats(hero.player), {window: 0.21, stun: 1.1});
+  assert.deepEqual(parryStats(hero.player), {window: 1.5, stun: 1.1});
   for (let i = 0; i < 7; i++) {
     hero.player.runParryTime = 0.1;
     assert.equal(trySkillParry(enemy, hero), true);

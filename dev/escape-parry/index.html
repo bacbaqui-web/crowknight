@@ -1,0 +1,19 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>순보 미끼 · 몽둥이 패링</title><style>body{background:#14212c;color:#e9f5ff;font:16px sans-serif;margin:24px}canvas{max-width:100%;background:#233847}button{padding:12px;margin:8px}</style><h1>순보 미끼 · 몽둥이 패링</h1><p>왼쪽: 원래 자리에 남은 미끼 / 가운데: 탈출한 까마귀 / 오른쪽: 패링 자세</p><button id="flash">패링 성공 섬광</button><canvas width="1000" height="430"></canvas><script type="module">
+import {loadCharacterAssets} from '../../src/asset_loader_helper.js';
+import {PuppetPlayer} from '../../src/actor_runtime_engine.js';
+import {mergeTuning} from '../../src/project_data_normalizer_helper.js';
+import {DEFAULT_PLAYER_TUNING} from '../../src/player_default_tuning_data.js';
+import {prepareSkillActions} from '../../src/skill_runtime_helper.js';
+import {createBlinkDecoy,drawBlinkDecoy} from '../../src/blink_decoy.js';
+import {updateFormulaColorChanges} from '../../src/color_change_formula_runtime_helper.js';
+import {drawActor} from '../../src/actor_canvas_renderer.js';
+const data=await fetch('../../data/published.json').then(r=>r.json()),def=data.actors.player_01;
+const sources=Object.fromEntries(Object.entries(def.assets).map(([k,v])=>[k,typeof v==='string'?new URL('../../'+v,location.href).href:v]));
+const assets=await loadCharacterAssets('player_01','',sources);
+function make(x){const tuning=mergeTuning(DEFAULT_PLAYER_TUNING,def.tuning);prepareSkillActions(tuning);const p=new PuppetPlayer(x,330,assets);p.applyTuning(tuning);p.runSkillActions=tuning.skillActions;p.runSkills={blink:1,parry:1};p.captureEditRegions=false;return {player:p,hp:100,maxHp:100,group:'players',tint:'#9ad9ca'};}
+const hero=make(180),decoy=createBlinkDecoy(hero);hero.player.x=450;
+const guard=make(760);guard.player.customActionKey=guard.player.runSkillActions.guard;guard.player.customActionTime=1;guard.player.customActionDuration=1;guard.player.runParryTime=1;
+const ctx=document.querySelector('canvas').getContext('2d');let flash=0;
+document.querySelector('#flash').onclick=()=>flash=.25;
+let last=performance.now();function frame(now){flash=Math.max(0,flash-(now-last)/1000);last=now;guard.player.runParryFlash=flash;updateFormulaColorChanges([guard]);ctx.clearRect(0,0,1000,430);drawBlinkDecoy(ctx,decoy);for(const a of [hero,guard])drawActor(ctx,{quarterView:{},floorY:330},a,{selectedActor:null,activeEditPartKey:()=>null,activeEditPartKeys:()=>[]});requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></html>

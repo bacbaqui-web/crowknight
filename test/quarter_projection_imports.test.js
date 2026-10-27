@@ -21,7 +21,7 @@ test('all browser projection consumers resolve to the same fresh modules before 
   vm.runInNewContext(inline[1], context);
   assert.equal(maps[0].type, 'importmap');
   const imports = JSON.parse(maps[0].textContent).imports;
-  assert.equal(Object.keys(imports).length, 61);
+  assert.equal(Object.keys(imports).length, 63);
   for (const name of [
     'camera',
     'environment',
@@ -31,6 +31,8 @@ test('all browser projection consumers resolve to the same fresh modules before 
     'ground_texture',
     'ground_patterns',
     'dual_grid',
+    'arrival',
+    'arrival_visual',
     'ground_shaders',
     'gpu_ground_renderer',
     'attack_geometry',

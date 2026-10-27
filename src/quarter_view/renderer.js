@@ -1,3 +1,5 @@
+import { drawArrival } from './arrival_visual.js';
+import { drawBlinkDecoy } from '../blink_decoy.js';
 import { drawMageRainAtmosphere } from '../mage_rain_effect.js';
 import { createBossCompass } from './boss_compass.js';
 import { createSceneryRenderer } from './scenery_renderer.js';
@@ -55,8 +57,10 @@ export function createQuarterRenderer({ ctx, world }) {
     view = {
       width: world.viewW,
       height: world.viewH,
-      x: playerActor.player.x + 110,
-      depth: depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
+      x: (world.quarterView.arrival?.x ?? playerActor.player.x) + 110,
+      depth:
+        world.quarterView.arrival?.z ??
+        depthOf(playerActor) - followJump(playerActor, world.floorY) / QUARTER_PROJECTION.slope,
       zoom: formulaScreenZoom(actors, screenZoom),
     };
     ctx.save();
@@ -71,14 +75,14 @@ export function createQuarterRenderer({ ctx, world }) {
           ? Math.max(depthOf(actor), actor.quarterPlatform.z + actor.quarterPlatform.d / 2 + 1)
           : depthOf(actor),
       }));
-    items.push(
-      ...scenery
-        .visible(view)
-        .map((object) => ({ object, depth: object.groundDecoration ? -Infinity : object.z + object.d / 2 }))
-    );
+    const decoy = playerActor.player.runDecoy;
+    if (decoy?.time > 0) items.push({ decoy, depth: depthOf(decoy) });
+    items.push(...scenery.visible(view).map((object) => ({ object,
+      depth: object.groundDecoration ? -Infinity : object.z + object.d / 2 })));
     items
       .sort((a, b) => a.depth - b.depth)
-      .forEach(({ actor, object }) => {
+      .forEach(({ actor, object, decoy }) => {
+        if (decoy) { const restore = projectEntity(decoy); try { drawBlinkDecoy(ctx, decoy); } finally { restore(); } return; }
         if (object) {
           scenery.draw(object, view, playerActor);
           return;
@@ -99,6 +103,10 @@ export function createQuarterRenderer({ ctx, world }) {
               () => {
                 const restore = projectEntity(actor);
                 try {
+                  if (world.quarterView.arrival?.actor === actor) {
+                    drawArrival(ctx, world, actor, world.quarterView.arrival.time);
+                    return;
+                  }
                   drawActor(
                     ctx,
                     actor.quarterPlatform
