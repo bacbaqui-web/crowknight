@@ -13,13 +13,14 @@ export function updateTrapperAi(actor, target, world, dt) {
   }
   if (actor.hitStun > 0 || p.runParryStun > 0) return true;
   const distance = world?.quarterView?.distance(actor, target) ?? Math.abs(p.x - target.player.x);
-  if (distance < 420 && s.age >= s.nextSet) {
+  const relocated = !s.lastSet || Math.hypot(p.x - s.lastSet.x, (actor.quarterDepth || 0) - s.lastSet.z) >= 80;
+  if (distance < 420 && s.age >= s.nextSet && relocated) {
     if (requestRuntimeAction(p, 'trapSet', p.facing)) {
       s.placed = false;
       s.nextSet = s.age + TRAPPER.interval;
     }
-  } else if (distance < 170 || distance > 300) {
-    s.retreat = distance < 170;
+  } else if (s.lastSet || distance < 170 || distance > 300) {
+    s.retreat = distance < (s.lastSet ? 300 : 170);
     if (s.retreat) p.facing *= -1;
     requestRuntimeAction(p, 'trapWalk', p.facing);
   }
@@ -43,6 +44,7 @@ export function collectTraps(actor, world, pool) {
     (t) => t.ratTrap && t.owner === actor && t.active && ['arming', 'armed'].includes(t.phase)
   );
   if (existing.length >= TRAPPER.limit) return [];
+  s.lastSet = { x: p.x, z: actor.quarterDepth || 0 };
   return [makeTrap(actor, world)];
 }
 export function makeTrap(actor, world) {

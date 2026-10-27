@@ -232,3 +232,20 @@ test('lethal trap triggers player death once without immobilizing a corpse', () 
   assert.equal(deaths, 1);
   assert.equal(a.player.trapRootTime || 0, 0);
 });
+
+test('trap fairy relocates before placing again and keeps hands empty while running', () => {
+  const a = actor(),
+    target = actor('player_01');
+  target.player.x = a.player.x + 250;
+  a.player.trapperState = { age: 10, nextSet: 0, lastSet: { x: a.player.x, z: 0 }, placed: true };
+  updateTrapperAi(a, target, world, 0.01);
+  assert.equal(a.player.actionKey, 'trapWalk');
+  assert.equal(a.player.facing, -1);
+  a.player.customActionKey = null;
+  a.player.customActionTime = 0;
+  a.player.x -= 100;
+  updateTrapperAi(a, target, world, 0.01);
+  assert.equal(a.player.actionKey, 'trapSet');
+  a.player.actionPreview = { action: 'trapWalk', t: 0.5 };
+  assert.equal(a.player.getPartOffset('weapon').opacity, 0);
+});
